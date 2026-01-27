@@ -197,6 +197,25 @@ bot.on('text', async (ctx) => {
     const user = await db.getUser(telegramId);
     if (!user) return;
 
+    // Check if waiting for feedback
+    if (user.waiting_feedback) {
+      // Save feedback
+      await db.saveFeedback(telegramId, 'disliked', text);
+      await db.updateUser(telegramId, { waiting_feedback: false });
+      
+      await ctx.reply(
+`✅ Rahmat fikringiz uchun!
+
+Biz sizning fikringizni inobatga olamiz va yaxshilanishga harakat qilamiz.
+
+Agar keyinchalik fikringiz o'zgarsa, kurslarimizga qaytishingiz mumkin! 🙌`,
+        { parse_mode: 'HTML' }
+      );
+      
+      console.log(`📝 Feedback saved from ${telegramId}: ${text}`);
+      return;
+    }
+
     const step = user.custdev_step;
 
     if (step === -1) {
@@ -500,67 +519,120 @@ export async function sendVideoPitch(telegramId, forceTest = false) {
   // Default pitch text if not set
   const defaultPitchText = `🎬 <b>Maxsus video xabar!</b>
 
-{{ism}}, siz bepul darslarni muvaffaqiyatli tugatdingiz! 🎉
-
-Endi <b>to'liq SMM kursga</b> kirish vaqti keldi.
-
-Premium kursda:
-✅ 50+ video darslar
-✅ Amaliy topshiriqlar  
-✅ Shaxsiy mentorlik
-✅ Sertifikat
-✅ Yopiq community
-
-⏳ <b>Chegirma vaqti cheklangan!</b>`;
+Bepul darslar yoqdimi? 👇`;
 
   let text = await replaceVars(pitch?.text || defaultPitchText, user);
 
   console.log(`📤 Sending video pitch to ${telegramId}`);
-  console.log(`   Has video: ${!!pitch?.video_file_id}`);
-  console.log(`   Has audio: ${!!pitch?.audio_file_id}`);
-  console.log(`   Has image: ${!!pitch?.image_file_id}`);
+
+  // Ha/Yo'q tugmalari
+  const feedbackButtons = Markup.inlineKeyboard([
+    [
+      Markup.button.callback('👍 Ha, yoqdi!', 'feedback_yes'),
+      Markup.button.callback('👎 Yo\'q', 'feedback_no')
+    ]
+  ]);
 
   try {
     if (pitch?.video_file_id) {
       await bot.telegram.sendVideo(telegramId, pitch.video_file_id, { 
         caption: text, 
-        parse_mode: 'HTML' 
+        parse_mode: 'HTML',
+        ...feedbackButtons
       });
-      console.log(`✅ Video pitch sent to ${telegramId}`);
     } else if (pitch?.audio_file_id) {
       await bot.telegram.sendVoice(telegramId, pitch.audio_file_id, { 
         caption: text, 
-        parse_mode: 'HTML' 
+        parse_mode: 'HTML',
+        ...feedbackButtons
       });
-      console.log(`✅ Audio pitch sent to ${telegramId}`);
     } else if (pitch?.image_file_id) {
       await bot.telegram.sendPhoto(telegramId, pitch.image_file_id, { 
         caption: text, 
-        parse_mode: 'HTML' 
+        parse_mode: 'HTML',
+        ...feedbackButtons
       });
-      console.log(`✅ Image pitch sent to ${telegramId}`);
     } else {
-      // No media - send text only with CTA button
       await bot.telegram.sendMessage(telegramId, text, { 
         parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-          [Markup.button.callback('✅ Batafsil ko\'rish', 'show_sales_pitch')]
-        ])
+        ...feedbackButtons
       });
-      console.log(`✅ Text pitch sent to ${telegramId}`);
     }
+    console.log(`✅ Pitch sent to ${telegramId}`);
   } catch (e) {
     console.error(`❌ Error sending pitch to ${telegramId}:`, e.message);
-    // Fallback to text only
-    try {
-      await bot.telegram.sendMessage(telegramId, text, { parse_mode: 'HTML' });
-    } catch (e2) {
-      console.error(`❌ Fallback also failed:`, e2.message);
-    }
   }
 
   await db.updateUser(telegramId, { funnel_step: 9 });
 }
+
+// ============ FEEDBACK HANDLERS ============
+
+// Ha - yoqdi
+bot.action('feedback_yes', async (ctx) => {
+  await ctx.answerCbQuery('Rahmat! 🎉');
+  
+  // Save feedback
+  await db.saveFeedback(ctx.from.id, 'liked', 'Bepul darslar yoqdi');
+  
+  // Edit message to remove buttons
+  try {
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  } catch (e) {}
+  
+  // Send SMM channel info
+  const smmChannelInfo = await db.getBotMessage('smm_channel_info') || 
+`🎯 <b>Ajoyib!</b>
+
+Bizda bepul SMM kanal ham bor!
+
+📢 Kanalda:
+• Kunlik SMM bo'yicha maslahatlar
+• Case study'lar
+• Bepul materiallar
+• Yangiliklar va trendlar
+
+Qo'shiling va rivojlaning! 👇`;
+
+  const channelLink = await db.getSetting('free_smm_channel') || await db.getBotMessage('free_smm_channel') || 'https://t.me/your_smm_channel';
+
+  await ctx.reply(smmChannelInfo, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.url('📢 Kanalga qo\'shilish', channelLink)],
+      [Markup.button.callback('💰 Kurs narxlarini ko\'rish', 'show_prices')]
+    ])
+  });
+});
+
+// Yo'q - yoqmadi
+bot.action('feedback_no', async (ctx) => {
+  await ctx.answerCbQuery();
+  
+  // Edit message to remove buttons
+  try {
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  } catch (e) {}
+  
+  // Ask for reason
+  await ctx.reply(
+`😔 Afsuski yoqmadi...
+
+Iltimos, sababini yozing - bu bizga yaxshilanishga yordam beradi!
+
+<i>Oddiy xabar yozing (masalan: "tushunarsiz", "qiziq emas", "vaqtim yo'q" va h.k.)</i>`, 
+    { parse_mode: 'HTML' }
+  );
+  
+  // Set user state to waiting for feedback
+  await db.updateUser(ctx.from.id, { waiting_feedback: true });
+});
+
+// Show prices after channel join
+bot.action('show_prices', async (ctx) => {
+  await ctx.answerCbQuery();
+  await sendSalesPitch(ctx.from.id);
+});
 
 export async function sendSalesPitch(telegramId) {
   const user = await db.getUser(telegramId);
