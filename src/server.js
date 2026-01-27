@@ -604,6 +604,27 @@ app.post('/api/test/full-flow', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ FEEDBACK API ============
+app.get('/api/feedback', authMiddleware, async (req, res) => {
+  try {
+    const { getAllFeedback } = await import('./database.js');
+    const feedback = await getAllFeedback();
+    res.json(feedback);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/feedback/stats', authMiddleware, async (req, res) => {
+  try {
+    const { getFeedbackStats } = await import('./database.js');
+    const stats = await getFeedbackStats();
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/payments', authMiddleware, async (req, res) => {
   try {
     const { getAllPayments } = await import('./database.js');
