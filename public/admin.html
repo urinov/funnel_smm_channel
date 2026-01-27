@@ -728,6 +728,7 @@
         <button onclick="showTab('lessons')" id="tab-lessons" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Darslar"><span class="text-2xl">📚</span></button>
         <button onclick="showTab('media')" id="tab-media" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Media"><span class="text-2xl">📁</span></button>
         <button onclick="showTab('custdev')" id="tab-custdev" class="sidebar-item w-14 h-14 flex items-center justify-center" title="CustDev"><span class="text-2xl">📝</span></button>
+        <button onclick="showTab('feedback')" id="tab-feedback" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Feedbacklar"><span class="text-2xl">💬</span></button>
         <button onclick="showTab('settings')" id="tab-settings" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Sozlamalar"><span class="text-2xl">⚙️</span></button>
       </nav>
       <button onclick="logout()" class="sidebar-item w-14 h-14 flex items-center justify-center text-red-500" title="Chiqish"><span class="text-2xl">🚪</span></button>
@@ -1033,6 +1034,62 @@
         <div class="glass-card rounded-3xl p-6">
           <h3 class="font-bold text-lg mb-6">📊 CustDev Statistikasi (Batafsil)</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="custdevStats"></div>
+        </div>
+      </div>
+
+      <!-- Feedback -->
+      <div id="content-feedback" class="hidden">
+        <!-- Feedback Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-2xl">👍</div>
+              <div>
+                <p class="text-gray-500 text-sm">Yoqdi</p>
+                <p id="feedbackLiked" class="text-3xl font-bold text-green-600">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center text-white text-2xl">👎</div>
+              <div>
+                <p class="text-gray-500 text-sm">Yoqmadi</p>
+                <p id="feedbackDisliked" class="text-3xl font-bold text-red-600">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-2xl">💬</div>
+              <div>
+                <p class="text-gray-500 text-sm">Jami</p>
+                <p id="feedbackTotal" class="text-3xl font-bold gradient-text">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback List -->
+        <div class="glass-card rounded-3xl p-6">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h3 class="font-bold text-xl">💬 Foydalanuvchi Feedbacklari</h3>
+              <p class="text-gray-500 text-sm mt-1">"Yo'q" degan odamlarning sababalari</p>
+            </div>
+            <div class="flex gap-2">
+              <select id="feedbackFilter" onchange="filterFeedback()" class="px-4 py-2 rounded-xl glass-input">
+                <option value="all">Hammasi</option>
+                <option value="liked">👍 Yoqdi</option>
+                <option value="disliked">👎 Yoqmadi</option>
+              </select>
+              <button onclick="loadFeedback()" class="px-4 py-2 rounded-xl glass-card">🔄</button>
+            </div>
+          </div>
+          
+          <div class="space-y-3" id="feedbackList">
+            <p class="text-gray-500 text-center py-8">Yuklanmoqda...</p>
+          </div>
         </div>
       </div>
 
@@ -1565,7 +1622,7 @@ function filterMediaPicker(t) { loadMediaPicker(t); }
 function selectMedia(f) { if (mediaPickerTarget) document.getElementById(mediaPickerTarget).value = f; closeModal('mediaPickerModal'); }
 
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadSubscriptionPlans(), loadReminders()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadFeedback(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadSubscriptionPlans(), loadReminders()]);
   await loadPostLessonFlow();
 }
 
@@ -2333,6 +2390,74 @@ async function loadCustDev() {
   } catch(e) { console.error(e); }
 }
 
+// ============ Feedback Functions ============
+var allFeedback = [];
+
+async function loadFeedback() {
+  try {
+    allFeedback = await (await fetch('/api/feedback', {headers: {Authorization: auth}})).json();
+    renderFeedback();
+    
+    // Load stats
+    var stats = await (await fetch('/api/feedback/stats', {headers: {Authorization: auth}})).json();
+    var liked = 0, disliked = 0;
+    for (var i = 0; i < stats.length; i++) {
+      if (stats[i].feedback_type === 'liked') liked = parseInt(stats[i].count);
+      if (stats[i].feedback_type === 'disliked') disliked = parseInt(stats[i].count);
+    }
+    document.getElementById('feedbackLiked').textContent = liked;
+    document.getElementById('feedbackDisliked').textContent = disliked;
+    document.getElementById('feedbackTotal').textContent = liked + disliked;
+  } catch(e) { console.error(e); }
+}
+
+function renderFeedback() {
+  var filter = document.getElementById('feedbackFilter').value;
+  var filtered = allFeedback;
+  
+  if (filter === 'liked') {
+    filtered = allFeedback.filter(function(f) { return f.feedback_type === 'liked'; });
+  } else if (filter === 'disliked') {
+    filtered = allFeedback.filter(function(f) { return f.feedback_type === 'disliked'; });
+  }
+  
+  if (!filtered.length) {
+    document.getElementById('feedbackList').innerHTML = '<p class="text-gray-500 text-center py-8">Feedback yo\'q</p>';
+    return;
+  }
+  
+  var html = '';
+  for (var i = 0; i < filtered.length; i++) {
+    var f = filtered[i];
+    var isLiked = f.feedback_type === 'liked';
+    var bgClass = isLiked ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+    var iconClass = isLiked ? '👍' : '👎';
+    var date = new Date(f.created_at).toLocaleDateString('uz-UZ') + ' ' + new Date(f.created_at).toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'});
+    
+    html += '<div class="p-4 rounded-2xl border ' + bgClass + '">';
+    html += '<div class="flex justify-between items-start">';
+    html += '<div class="flex items-start gap-3">';
+    html += '<span class="text-2xl">' + iconClass + '</span>';
+    html += '<div>';
+    html += '<p class="font-medium">' + (f.full_name || 'Nomsiz') + '</p>';
+    html += '<p class="text-sm text-gray-500">@' + (f.username || '-') + ' | ' + (f.phone || '-') + '</p>';
+    if (f.feedback_text && f.feedback_text !== 'Bepul darslar yoqdi') {
+      html += '<p class="mt-2 p-2 bg-white rounded-lg text-gray-700">"' + f.feedback_text + '"</p>';
+    }
+    html += '</div>';
+    html += '</div>';
+    html += '<span class="text-xs text-gray-400">' + date + '</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+  
+  document.getElementById('feedbackList').innerHTML = html;
+}
+
+function filterFeedback() {
+  renderFeedback();
+}
+
 function renderCustDevCharts(st) {
   var chartColors = [
     'rgba(139, 92, 246, 0.8)',
@@ -3007,27 +3132,51 @@ async function testFullFlow() {
 
 function openFlowSettingsModal() {
   var html = '<div class="space-y-4">' +
+    // Pitch delay
     '<div class="glass rounded-xl p-4">' +
-      '<label class="font-medium text-gray-700 mb-2 block">⏱️ Pitch yuborish vaqti (4-darsdan keyin)</label>' +
-      '<div class="flex gap-2">' +
-        '<input type="number" id="flowPitchDelayInput" class="flex-1 px-4 py-3 rounded-xl glass-input" value="1" min="0" max="48">' +
-        '<span class="px-4 py-3 text-gray-500">soat</span>' +
+      '<label class="font-medium text-gray-700 mb-3 block">🎬 Pitch yuborish vaqti (4-darsdan keyin)</label>' +
+      '<div class="flex gap-2 items-center">' +
+        '<select id="flowPitchType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleDelayInput(\'pitch\')">' +
+          '<option value="instant">⚡ Darhol</option>' +
+          '<option value="seconds">Sekund</option>' +
+          '<option value="minutes" selected>Minut</option>' +
+          '<option value="hours">Soat</option>' +
+        '</select>' +
+        '<input type="number" id="flowPitchValue" class="w-24 px-3 py-2 rounded-xl glass-input" value="5" min="1">' +
+        '<span id="flowPitchUnit" class="text-gray-500 text-sm">minut</span>' +
       '</div>' +
-      '<p class="text-xs text-gray-400 mt-1">0 = darhol yuboriladi</p>' +
     '</div>' +
+    // Sales delay
     '<div class="glass rounded-xl p-4">' +
-      '<label class="font-medium text-gray-700 mb-2 block">⏱️ To\'lov taklifi (Pitch dan keyin)</label>' +
-      '<div class="flex gap-2">' +
-        '<input type="number" id="flowSalesDelayInput" class="flex-1 px-4 py-3 rounded-xl glass-input" value="3" min="0" max="48">' +
-        '<span class="px-4 py-3 text-gray-500">soat</span>' +
+      '<label class="font-medium text-gray-700 mb-3 block">💳 To\'lov taklifi (Pitch dan keyin)</label>' +
+      '<div class="flex gap-2 items-center">' +
+        '<select id="flowSalesType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleDelayInput(\'sales\')">' +
+          '<option value="instant">⚡ Darhol</option>' +
+          '<option value="seconds">Sekund</option>' +
+          '<option value="minutes" selected>Minut</option>' +
+          '<option value="hours">Soat</option>' +
+        '</select>' +
+        '<input type="number" id="flowSalesValue" class="w-24 px-3 py-2 rounded-xl glass-input" value="3" min="1">' +
+        '<span id="flowSalesUnit" class="text-gray-500 text-sm">minut</span>' +
       '</div>' +
     '</div>' +
+    // Soft attack delay
     '<div class="glass rounded-xl p-4">' +
-      '<label class="font-medium text-gray-700 mb-2 block">⏱️ Soft Eslatma (To\'lov dan keyin, agar to\'lamasa)</label>' +
-      '<div class="flex gap-2">' +
-        '<input type="number" id="flowSoftDelayInput" class="flex-1 px-4 py-3 rounded-xl glass-input" value="24" min="1" max="72">' +
-        '<span class="px-4 py-3 text-gray-500">soat</span>' +
+      '<label class="font-medium text-gray-700 mb-3 block">🔔 Soft Eslatma (to\'lamasa)</label>' +
+      '<div class="flex gap-2 items-center">' +
+        '<select id="flowSoftType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleDelayInput(\'soft\')">' +
+          '<option value="instant">⚡ Darhol</option>' +
+          '<option value="seconds">Sekund</option>' +
+          '<option value="minutes">Minut</option>' +
+          '<option value="hours" selected>Soat</option>' +
+        '</select>' +
+        '<input type="number" id="flowSoftValue" class="w-24 px-3 py-2 rounded-xl glass-input" value="24" min="1">' +
+        '<span id="flowSoftUnit" class="text-gray-500 text-sm">soat</span>' +
       '</div>' +
+      '<label class="flex items-center gap-2 mt-3">' +
+        '<input type="checkbox" id="flowSoftEnabled" checked class="rounded">' +
+        '<span class="text-sm text-gray-600">Soft eslatma faol</span>' +
+      '</label>' +
     '</div>' +
     '<button onclick="saveFlowSettings()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Saqlash</button>' +
   '</div>';
@@ -3035,37 +3184,86 @@ function openFlowSettingsModal() {
   showCustomModal('⚙️ Progrev Flow vaqtlari', html);
 }
 
+function toggleDelayInput(type) {
+  var selectEl = document.getElementById('flow' + type.charAt(0).toUpperCase() + type.slice(1) + 'Type');
+  var valueEl = document.getElementById('flow' + type.charAt(0).toUpperCase() + type.slice(1) + 'Value');
+  var unitEl = document.getElementById('flow' + type.charAt(0).toUpperCase() + type.slice(1) + 'Unit');
+  
+  if (selectEl.value === 'instant') {
+    valueEl.style.display = 'none';
+    unitEl.textContent = '';
+  } else {
+    valueEl.style.display = 'block';
+    var units = {seconds: 'sekund', minutes: 'minut', hours: 'soat'};
+    unitEl.textContent = units[selectEl.value] || '';
+  }
+}
+
+function convertToMinutes(type, value) {
+  if (type === 'instant') return 0;
+  if (type === 'seconds') return value / 60;
+  if (type === 'minutes') return value;
+  if (type === 'hours') return value * 60;
+  return value;
+}
+
+function formatDelay(minutes) {
+  if (minutes === 0) return 'Darhol';
+  if (minutes < 1) return Math.round(minutes * 60) + ' sek';
+  if (minutes < 60) return Math.round(minutes) + ' min';
+  return Math.round(minutes / 60) + ' soat';
+}
+
 async function saveFlowSettings() {
-  var pitchDelay = document.getElementById('flowPitchDelayInput').value;
-  var salesDelay = document.getElementById('flowSalesDelayInput').value;
-  var softDelay = document.getElementById('flowSoftDelayInput').value;
+  var pitchType = document.getElementById('flowPitchType').value;
+  var pitchValue = parseInt(document.getElementById('flowPitchValue').value) || 0;
+  var pitchMinutes = convertToMinutes(pitchType, pitchValue);
+  
+  var salesType = document.getElementById('flowSalesType').value;
+  var salesValue = parseInt(document.getElementById('flowSalesValue').value) || 0;
+  var salesMinutes = convertToMinutes(salesType, salesValue);
+  
+  var softType = document.getElementById('flowSoftType').value;
+  var softValue = parseInt(document.getElementById('flowSoftValue').value) || 0;
+  var softMinutes = convertToMinutes(softType, softValue);
+  
+  var softEnabled = document.getElementById('flowSoftEnabled').checked;
   
   try {
-    await fetch('/api/messages/pitch_delay_hours', {
+    // Save as minutes to database
+    await fetch('/api/messages/pitch_delay_minutes', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
-      body: JSON.stringify({text: pitchDelay})
+      body: JSON.stringify({text: String(pitchMinutes)})
     });
-    await fetch('/api/messages/sales_delay', {
+    await fetch('/api/messages/sales_delay_minutes', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
-      body: JSON.stringify({text: salesDelay})
+      body: JSON.stringify({text: String(salesMinutes)})
     });
-    await fetch('/api/messages/soft_attack_delay', {
+    await fetch('/api/messages/soft_attack_delay_minutes', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
-      body: JSON.stringify({text: softDelay})
+      body: JSON.stringify({text: String(softMinutes)})
+    });
+    await fetch('/api/messages/soft_attack_disabled', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: String(!softEnabled)})
     });
     
     closeCustomModal();
     alert('✅ Vaqtlar saqlandi!');
     
     // Update UI
-    document.getElementById('flowPitchDelay').textContent = pitchDelay + ' soat';
-    document.getElementById('flowPitchDelayBadge').textContent = '+' + pitchDelay + ' soat';
-    document.getElementById('flowSalesDelay').textContent = salesDelay + ' soat';
-    document.getElementById('flowSalesDelayBadge').textContent = '+' + salesDelay + ' soat';
-    document.getElementById('flowSoftDelayBadge').textContent = '+' + softDelay + ' soat';
+    try {
+      document.getElementById('flowPitchDelay').textContent = formatDelay(pitchMinutes);
+      document.getElementById('flowPitchDelayBadge').textContent = '+' + formatDelay(pitchMinutes);
+      document.getElementById('flowSalesDelay').textContent = formatDelay(salesMinutes);
+      document.getElementById('flowSalesDelayBadge').textContent = '+' + formatDelay(salesMinutes);
+      document.getElementById('flowSoftDelayBadge').textContent = '+' + formatDelay(softMinutes);
+    } catch(e) {}
+    
   } catch(e) {
     alert('❌ Xatolik: ' + e.message);
   }
