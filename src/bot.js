@@ -436,23 +436,20 @@ async function scheduleNextLesson(telegramId) {
 async function schedulePostLesson(telegramId) {
   const user = await db.getUser(telegramId);
   
-  // Get pitch settings
-  const pitch = await db.getPitchMedia();
-  const pitchDelayMinutes = pitch?.delay_minutes ?? (pitch?.delay_hours ? pitch.delay_hours * 60 : 0);
+  // Get pitch delay from dashboard settings (stored in minutes)
+  const pitchDelayStr = await db.getBotMessage('pitch_delay_minutes');
+  let pitchDelayMinutes = parseFloat(pitchDelayStr) || 0;
   
-  // Get configurable delays from database (in minutes for precision)
-  const salesDelayStr = await db.getBotMessage('sales_delay_minutes') || await db.getBotMessage('sales_delay');
-  const softDelayStr = await db.getBotMessage('soft_attack_delay_minutes') || await db.getBotMessage('soft_attack_delay');
+  // Get sales delay from dashboard settings (stored in minutes)
+  const salesDelayStr = await db.getBotMessage('sales_delay_minutes');
+  let salesDelayMinutes = parseFloat(salesDelayStr) || 3;
+  
+  // Get soft attack delay from dashboard settings (stored in minutes)
+  const softDelayStr = await db.getBotMessage('soft_attack_delay_minutes');
+  let softAttackDelayMinutes = parseFloat(softDelayStr) || 1440; // default 24 hours
+  
+  // Check if soft attack is disabled
   const softDisabledStr = await db.getBotMessage('soft_attack_disabled');
-  
-  // Convert to minutes (if old format was hours, multiply by 60)
-  let salesDelayMinutes = parseInt(salesDelayStr) || 5; // default 5 minutes
-  let softAttackDelayMinutes = parseInt(softDelayStr) || 1440; // default 24 hours
-  
-  // Check if old hour-based format (small numbers like 1, 2, 24)
-  if (salesDelayMinutes <= 24) salesDelayMinutes = salesDelayMinutes * 60; // assume hours
-  if (softAttackDelayMinutes <= 48) softAttackDelayMinutes = softAttackDelayMinutes * 60; // assume hours
-  
   const softAttackDisabled = softDisabledStr === 'true';
 
   console.log(`📊 Progrev settings for ${telegramId}:`);
@@ -471,7 +468,7 @@ async function schedulePostLesson(telegramId) {
   console.log(`✅ Step 1: Congrats sent to ${telegramId}`);
 
   // ============ STEP 2: VIDEO PITCH ============
-  if (pitchDelayMinutes === 0) {
+  if (pitchDelayMinutes <= 0) {
     // Send immediately with small delay for better UX
     await delay(3000); // 3 seconds
     await sendVideoPitch(telegramId);
@@ -483,9 +480,11 @@ async function schedulePostLesson(telegramId) {
   }
 
   // ============ STEP 3: SALES PITCH ============
+  // Note: Sales pitch may be triggered by feedback_yes button click now
+  // But we also schedule it as backup
   const totalSalesDelay = pitchDelayMinutes + salesDelayMinutes;
   
-  if (totalSalesDelay === 0) {
+  if (totalSalesDelay <= 0) {
     // Send immediately after pitch
     await delay(5000); // 5 seconds after pitch
     await sendSalesPitch(telegramId);
@@ -568,9 +567,9 @@ Bepul darslar yoqdimi? 👇`;
 
 // ============ FEEDBACK HANDLERS ============
 
-// Ha - yoqdi
+// Ha - yoqdi → to'g'ridan-to'g'ri narxlar
 bot.action('feedback_yes', async (ctx) => {
-  await ctx.answerCbQuery('Rahmat! 🎉');
+  await ctx.answerCbQuery('Ajoyib! 🎉');
   
   // Save feedback
   await db.saveFeedback(ctx.from.id, 'liked', 'Bepul darslar yoqdi');
@@ -580,32 +579,15 @@ bot.action('feedback_yes', async (ctx) => {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   } catch (e) {}
   
-  // Send SMM channel info
-  const smmChannelInfo = await db.getBotMessage('smm_channel_info') || 
-`🎯 <b>Ajoyib!</b>
-
-Bizda bepul SMM kanal ham bor!
-
-📢 Kanalda:
-• Kunlik SMM bo'yicha maslahatlar
-• Case study'lar
-• Bepul materiallar
-• Yangiliklar va trendlar
-
-Qo'shiling va rivojlaning! 👇`;
-
-  const channelLink = await db.getSetting('free_smm_channel') || await db.getBotMessage('free_smm_channel') || 'https://t.me/your_smm_channel';
-
-  await ctx.reply(smmChannelInfo, {
-    parse_mode: 'HTML',
-    ...Markup.inlineKeyboard([
-      [Markup.button.url('📢 Kanalga qo\'shilish', channelLink)],
-      [Markup.button.callback('💰 Kurs narxlarini ko\'rish', 'show_prices')]
-    ])
-  });
+  // Send short message then prices
+  await ctx.reply('🎉 Ajoyib! Unda davom etamiz...');
+  await delay(1000);
+  
+  // Show prices directly
+  await sendSalesPitch(ctx.from.id);
 });
 
-// Yo'q - yoqmadi
+// Yo'q - yoqmadi → sabab so'rash
 bot.action('feedback_no', async (ctx) => {
   await ctx.answerCbQuery();
   
@@ -616,11 +598,11 @@ bot.action('feedback_no', async (ctx) => {
   
   // Ask for reason
   await ctx.reply(
-`😔 Afsuski yoqmadi...
+`😔 Afsuski yoqmabdi...
 
 Iltimos, sababini yozing - bu bizga yaxshilanishga yordam beradi!
 
-<i>Oddiy xabar yozing (masalan: "tushunarsiz", "qiziq emas", "vaqtim yo'q" va h.k.)</i>`, 
+<i>(Oddiy xabar yozing)</i>`, 
     { parse_mode: 'HTML' }
   );
   
@@ -628,7 +610,7 @@ Iltimos, sababini yozing - bu bizga yaxshilanishga yordam beradi!
   await db.updateUser(ctx.from.id, { waiting_feedback: true });
 });
 
-// Show prices after channel join
+// Show prices button (agar kerak bo'lsa)
 bot.action('show_prices', async (ctx) => {
   await ctx.answerCbQuery();
   await sendSalesPitch(ctx.from.id);
