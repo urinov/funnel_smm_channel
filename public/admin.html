@@ -2430,11 +2430,11 @@ function renderFeedback() {
   for (var i = 0; i < filtered.length; i++) {
     var f = filtered[i];
     var isLiked = f.feedback_type === 'liked';
-    var bgClass = isLiked ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+    var bgClass = isLiked ? 'bg-green-50 border-green-200 hover:bg-green-100' : 'bg-red-50 border-red-200 hover:bg-red-100';
     var iconClass = isLiked ? '👍' : '👎';
     var date = new Date(f.created_at).toLocaleDateString('uz-UZ') + ' ' + new Date(f.created_at).toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'});
     
-    html += '<div class="p-4 rounded-2xl border ' + bgClass + '">';
+    html += '<div class="p-4 rounded-2xl border cursor-pointer transition-all ' + bgClass + '" onclick=\'showFeedbackUserCard(' + JSON.stringify(f).replace(/'/g, "\\'") + ')\'>';
     html += '<div class="flex justify-between items-start">';
     html += '<div class="flex items-start gap-3">';
     html += '<span class="text-2xl">' + iconClass + '</span>';
@@ -2446,12 +2446,111 @@ function renderFeedback() {
     }
     html += '</div>';
     html += '</div>';
+    html += '<div class="text-right">';
     html += '<span class="text-xs text-gray-400">' + date + '</span>';
+    html += '<p class="text-xs text-violet-500 mt-1">👆 Batafsil</p>';
+    html += '</div>';
     html += '</div>';
     html += '</div>';
   }
   
   document.getElementById('feedbackList').innerHTML = html;
+}
+
+function showFeedbackUserCard(feedback) {
+  // Find full user data
+  var user = allUsers.find(function(u) { return u.telegram_id == feedback.telegram_id; });
+  
+  var html = '<div class="space-y-4">';
+  
+  // User avatar and basic info
+  html += '<div class="flex items-center gap-4 p-4 glass rounded-2xl">';
+  html += '<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">';
+  html += (feedback.full_name || 'N').charAt(0).toUpperCase();
+  html += '</div>';
+  html += '<div class="flex-1">';
+  html += '<h3 class="font-bold text-xl">' + (feedback.full_name || 'Nomsiz') + '</h3>';
+  html += '<p class="text-gray-500">@' + (feedback.username || 'username yo\'q') + '</p>';
+  html += '</div>';
+  html += '<div class="text-right">';
+  if (feedback.feedback_type === 'liked') {
+    html += '<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">👍 Yoqdi</span>';
+  } else {
+    html += '<span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-medium">👎 Yoqmadi</span>';
+  }
+  html += '</div>';
+  html += '</div>';
+  
+  // Feedback text
+  if (feedback.feedback_text && feedback.feedback_text !== 'Bepul darslar yoqdi') {
+    html += '<div class="p-4 glass rounded-2xl">';
+    html += '<p class="text-sm text-gray-500 mb-2">💬 Sababi:</p>';
+    html += '<p class="text-lg font-medium text-gray-800">"' + feedback.feedback_text + '"</p>';
+    html += '</div>';
+  }
+  
+  // Contact info
+  html += '<div class="grid grid-cols-2 gap-3">';
+  html += '<div class="p-4 glass rounded-2xl">';
+  html += '<p class="text-xs text-gray-500 mb-1">📱 Telefon</p>';
+  html += '<p class="font-medium">' + (feedback.phone || 'Yo\'q') + '</p>';
+  html += '</div>';
+  html += '<div class="p-4 glass rounded-2xl">';
+  html += '<p class="text-xs text-gray-500 mb-1">🆔 Telegram ID</p>';
+  html += '<p class="font-medium font-mono">' + feedback.telegram_id + '</p>';
+  html += '</div>';
+  html += '</div>';
+  
+  // User stats (if available)
+  if (user) {
+    html += '<div class="grid grid-cols-3 gap-3">';
+    html += '<div class="p-3 glass rounded-xl text-center">';
+    html += '<p class="text-2xl font-bold text-violet-600">' + (user.current_lesson || 0) + '</p>';
+    html += '<p class="text-xs text-gray-500">Dars</p>';
+    html += '</div>';
+    html += '<div class="p-3 glass rounded-xl text-center">';
+    html += '<p class="text-2xl font-bold ' + (user.is_paid ? 'text-green-600' : 'text-gray-400') + '">' + (user.is_paid ? '💎' : '🆓') + '</p>';
+    html += '<p class="text-xs text-gray-500">' + (user.is_paid ? 'Premium' : 'Free') + '</p>';
+    html += '</div>';
+    html += '<div class="p-3 glass rounded-xl text-center">';
+    html += '<p class="text-2xl font-bold text-blue-600">' + (user.funnel_step || 0) + '</p>';
+    html += '<p class="text-xs text-gray-500">Funnel</p>';
+    html += '</div>';
+    html += '</div>';
+    
+    // Additional user info
+    if (user.age_group || user.occupation || user.income_level) {
+      html += '<div class="p-4 glass rounded-2xl">';
+      html += '<p class="text-sm text-gray-500 mb-3">📊 CustDev ma\'lumotlari:</p>';
+      html += '<div class="space-y-2">';
+      if (user.age_group) html += '<p><span class="text-gray-500">Yosh:</span> <span class="font-medium">' + user.age_group + '</span></p>';
+      if (user.occupation) html += '<p><span class="text-gray-500">Kasb:</span> <span class="font-medium">' + user.occupation + '</span></p>';
+      if (user.income_level) html += '<p><span class="text-gray-500">Daromad:</span> <span class="font-medium">' + user.income_level + '</span></p>';
+      if (user.main_problem) html += '<p><span class="text-gray-500">Muammo:</span> <span class="font-medium">' + user.main_problem + '</span></p>';
+      html += '</div>';
+      html += '</div>';
+    }
+    
+    // Registration date
+    html += '<div class="p-3 glass rounded-xl text-center">';
+    html += '<p class="text-xs text-gray-500">Ro\'yxatdan o\'tgan: ' + new Date(user.created_at).toLocaleDateString('uz-UZ') + '</p>';
+    html += '</div>';
+  }
+  
+  // Feedback date
+  html += '<div class="p-3 bg-gray-100 rounded-xl text-center">';
+  html += '<p class="text-xs text-gray-500">Feedback vaqti: ' + new Date(feedback.created_at).toLocaleString('uz-UZ') + '</p>';
+  html += '</div>';
+  
+  // Action buttons
+  html += '<div class="flex gap-2">';
+  html += '<a href="https://t.me/' + (feedback.username || '') + '" target="_blank" class="flex-1 py-3 rounded-xl glass-btn text-white text-center font-medium">💬 Telegram</a>';
+  html += '<button onclick="closeCustomModal()" class="flex-1 py-3 rounded-xl glass text-gray-700 font-medium">Yopish</button>';
+  html += '</div>';
+  
+  html += '</div>';
+  
+  showCustomModal('👤 ' + (feedback.full_name || 'Foydalanuvchi'), html);
 }
 
 function filterFeedback() {
