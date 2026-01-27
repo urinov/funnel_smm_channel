@@ -519,11 +519,13 @@ app.post('/api/test/pitch', authMiddleware, async (req, res) => {
     const { sendVideoPitch } = await import('./bot.js');
     const adminId = parseInt(process.env.ADMIN_IDS?.split(',')[0]);
     if (!adminId) {
-      return res.status(400).json({ error: 'ADMIN_IDS not set' });
+      return res.status(400).json({ error: 'ADMIN_IDS not set in environment variables' });
     }
-    await sendVideoPitch(adminId);
-    res.json({ success: true });
+    console.log('🧪 Testing pitch for admin:', adminId);
+    await sendVideoPitch(adminId, true); // true = force send (ignore is_paid check)
+    res.json({ success: true, message: 'Pitch sent to ' + adminId });
   } catch (e) {
+    console.error('❌ Test pitch error:', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -533,11 +535,13 @@ app.post('/api/test/sales', authMiddleware, async (req, res) => {
     const { sendSalesPitch } = await import('./bot.js');
     const adminId = parseInt(process.env.ADMIN_IDS?.split(',')[0]);
     if (!adminId) {
-      return res.status(400).json({ error: 'ADMIN_IDS not set' });
+      return res.status(400).json({ error: 'ADMIN_IDS not set in environment variables' });
     }
+    console.log('🧪 Testing sales for admin:', adminId);
     await sendSalesPitch(adminId);
-    res.json({ success: true });
+    res.json({ success: true, message: 'Sales sent to ' + adminId });
   } catch (e) {
+    console.error('❌ Test sales error:', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -547,11 +551,55 @@ app.post('/api/test/soft-attack', authMiddleware, async (req, res) => {
     const { sendSoftAttack } = await import('./bot.js');
     const adminId = parseInt(process.env.ADMIN_IDS?.split(',')[0]);
     if (!adminId) {
-      return res.status(400).json({ error: 'ADMIN_IDS not set' });
+      return res.status(400).json({ error: 'ADMIN_IDS not set in environment variables' });
     }
-    await sendSoftAttack(adminId);
-    res.json({ success: true });
+    console.log('🧪 Testing soft-attack for admin:', adminId);
+    await sendSoftAttack(adminId, true); // true = force send
+    res.json({ success: true, message: 'Soft attack sent to ' + adminId });
   } catch (e) {
+    console.error('❌ Test soft-attack error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Full flow test - sends all messages with short delays
+app.post('/api/test/full-flow', authMiddleware, async (req, res) => {
+  try {
+    const { sendVideoPitch, sendSalesPitch, sendSoftAttack, bot } = await import('./bot.js');
+    const adminId = parseInt(process.env.ADMIN_IDS?.split(',')[0]);
+    if (!adminId) {
+      return res.status(400).json({ error: 'ADMIN_IDS not set in environment variables' });
+    }
+    
+    console.log('🚀 Starting full flow test for admin:', adminId);
+    
+    // Step 1: Congratulations
+    await bot.telegram.sendMessage(adminId, '🎉 <b>Tabriklaymiz!</b>\n\nSiz barcha bepul darslarni muvaffaqiyatli tugatdingiz!\n\n<i>(Bu test xabari - haqiqiy flow 1 soatdan keyin davom etadi)</i>', { parse_mode: 'HTML' });
+    
+    // Step 2: Pitch (3 sec delay for test)
+    setTimeout(async () => {
+      try {
+        await sendVideoPitch(adminId, true);
+      } catch (e) { console.error('Pitch error:', e); }
+    }, 3000);
+    
+    // Step 3: Sales (6 sec delay for test)
+    setTimeout(async () => {
+      try {
+        await sendSalesPitch(adminId);
+      } catch (e) { console.error('Sales error:', e); }
+    }, 6000);
+    
+    // Step 4: Soft attack (9 sec delay for test)
+    setTimeout(async () => {
+      try {
+        await sendSoftAttack(adminId, true);
+      } catch (e) { console.error('Soft attack error:', e); }
+    }, 9000);
+    
+    res.json({ success: true, message: 'Full flow started. Check Telegram in next 10 seconds.' });
+  } catch (e) {
+    console.error('❌ Full flow error:', e);
     res.status(500).json({ error: e.message });
   }
 });
