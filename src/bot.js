@@ -486,11 +486,11 @@ async function schedulePostLesson(telegramId) {
   }
 }
 
-export async function sendVideoPitch(telegramId) {
+export async function sendVideoPitch(telegramId, forceTest = false) {
   const user = await db.getUser(telegramId);
   
-  // Skip if already paid
-  if (user?.is_paid) {
+  // Skip if already paid (unless force test)
+  if (!forceTest && user?.is_paid) {
     console.log(`User ${telegramId} already paid, skipping video pitch`);
     return;
   }
@@ -695,9 +695,9 @@ export async function sendExtendOptions(telegramId, messageText) {
   });
 }
 
-export async function sendSoftAttack(telegramId) {
+export async function sendSoftAttack(telegramId, forceTest = false) {
   const user = await db.getUser(telegramId);
-  if (user.is_paid) {
+  if (!forceTest && user?.is_paid) {
     console.log(`User ${telegramId} already paid, skipping soft attack`);
     return;
   }
