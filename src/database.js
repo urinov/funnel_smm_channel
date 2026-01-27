@@ -217,6 +217,17 @@ export async function initDatabase() {
       )
     `);
 
+    // ============ FEEDBACK TABLE ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_feedback (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        feedback_type VARCHAR(50) NOT NULL,
+        feedback_text TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // ============ MIGRATIONS - Add missing columns ============
     console.log('Running migrations...');
     
@@ -255,6 +266,17 @@ export async function initDatabase() {
       } catch (e) {
         // Ignore if column already exists
       }
+    }
+    
+    // User table migrations
+    const userMigrations = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS waiting_feedback BOOLEAN DEFAULT FALSE`
+    ];
+    
+    for (const sql of userMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
     }
     
     console.log('Migrations completed');
@@ -1161,6 +1183,43 @@ export async function getSubscriptionStats() {
     FROM subscriptions
     WHERE is_active = true
     GROUP BY plan_id
+  `);
+  return rows;
+}
+
+// ============ FEEDBACK FUNCTIONS ============
+export async function saveFeedback(telegramId, feedbackType, feedbackText) {
+  await pool.query(`
+    INSERT INTO user_feedback (telegram_id, feedback_type, feedback_text)
+    VALUES ($1, $2, $3)
+  `, [telegramId, feedbackType, feedbackText]);
+}
+
+export async function getAllFeedback() {
+  const { rows } = await pool.query(`
+    SELECT 
+      f.id,
+      f.telegram_id,
+      f.feedback_type,
+      f.feedback_text,
+      f.created_at,
+      u.full_name,
+      u.username,
+      u.phone
+    FROM user_feedback f
+    LEFT JOIN users u ON f.telegram_id = u.telegram_id
+    ORDER BY f.created_at DESC
+  `);
+  return rows;
+}
+
+export async function getFeedbackStats() {
+  const { rows } = await pool.query(`
+    SELECT 
+      feedback_type,
+      COUNT(*) as count
+    FROM user_feedback
+    GROUP BY feedback_type
   `);
   return rows;
 }
