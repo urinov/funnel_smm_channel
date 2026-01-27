@@ -1,0 +1,3308 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #e0e5ec 0%, #d4dbe6 25%, #c9d6e3 50%, #dde4ed 75%, #e8ecf1 100%);
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+    }
+    .glass-card:hover {
+      background: rgba(255, 255, 255, 0.75);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .glass-modal {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    .glass-input {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+      outline: none;
+    }
+    .glass-btn {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(109, 40, 217, 0.9) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+    .glass-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    }
+    .glass-btn-success {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+    }
+    .glass-btn-success:hover {
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    }
+    .sidebar-item {
+      transition: all 0.2s ease;
+      border-radius: 16px;
+    }
+    .sidebar-item:hover { background: rgba(139, 92, 246, 0.1); }
+    .sidebar-item.active { background: rgba(139, 92, 246, 0.15); color: #7c3aed; }
+    .gradient-text {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-text-green {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-text-blue {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+    .filter-btn-active { background: rgba(139, 92, 246, 0.2) !important; color: #7c3aed !important; font-weight: 600 !important; }
+    .bf-active { background: rgba(139, 92, 246, 0.2) !important; color: #7c3aed !important; font-weight: 600 !important; }
+    .floating-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .orb-1 { width: 500px; height: 500px; background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%); top: -150px; right: -150px; }
+    .orb-2 { width: 400px; height: 400px; background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%); bottom: -100px; left: -100px; }
+    .orb-3 { width: 300px; height: 300px; background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%); top: 40%; left: 20%; }
+  </style>
+</head>
+<body class="overflow-x-hidden">
+
+<div class="floating-orb orb-1"></div>
+<div class="floating-orb orb-2"></div>
+<div class="floating-orb orb-3"></div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+  <div class="glass-modal rounded-3xl p-8 max-w-md w-full mx-4">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 glass-card rounded-2xl flex items-center justify-center mx-auto mb-4"><span class="text-3xl">🚀</span></div>
+      <h2 class="text-2xl font-bold text-gray-800">Xush kelibsiz!</h2>
+      <p class="text-gray-500 mt-2">Admin panelga kirish</p>
+    </div>
+    <form id="loginForm" class="space-y-4">
+      <input type="text" id="username" class="w-full px-4 py-3 rounded-xl glass-input text-gray-700" placeholder="Login" required>
+      <input type="password" id="password" class="w-full px-4 py-3 rounded-xl glass-input text-gray-700" placeholder="Parol" required>
+      <button class="w-full py-3 rounded-xl glass-btn text-white font-semibold">Kirish</button>
+      <p id="loginError" class="text-red-500 text-center text-sm hidden">Noto'g'ri login yoki parol</p>
+    </form>
+  </div>
+</div>
+
+<!-- Media Picker Modal -->
+<div id="mediaPickerModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center">
+      <h2 class="font-bold text-xl text-gray-800">📁 Media kutubxonasi</h2>
+      <button onclick="closeModal('mediaPickerModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6">
+      <div class="flex gap-2 mb-4 flex-wrap">
+        <button onclick="filterMediaPicker('all')" class="px-4 py-2 rounded-xl glass-card text-sm font-medium">Hammasi</button>
+        <button onclick="filterMediaPicker('video')" class="px-4 py-2 rounded-xl glass-card text-sm text-blue-600">📹 Video</button>
+        <button onclick="filterMediaPicker('photo')" class="px-4 py-2 rounded-xl glass-card text-sm text-green-600">🖼 Rasm</button>
+        <button onclick="filterMediaPicker('audio')" class="px-4 py-2 rounded-xl glass-card text-sm text-orange-600">🎵 Audio</button>
+      </div>
+      <div id="mediaPickerList" class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[50vh] overflow-y-auto scrollbar-thin"></div>
+      <p id="mediaPickerEmpty" class="text-center text-gray-400 py-8 hidden">Media topilmadi</p>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div id="userModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">👤 Foydalanuvchi</h2>
+      <button onclick="closeModal('userModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div id="userModalContent" class="p-6"></div>
+  </div>
+</div>
+
+<!-- Lesson Modal -->
+<div id="lessonModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800" id="lessonModalTitle">📚 Dars</h2>
+      <button onclick="closeModal('lessonModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <input type="hidden" id="lessonId">
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Dars nomi</label>
+        <input type="text" id="lessonTitle" class="w-full px-4 py-3 rounded-xl glass-input">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Matn</label>
+        <textarea id="lessonContent" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none"></textarea>
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <label class="text-sm font-medium">📹 Video</label>
+          <button onclick="openMediaPicker('video', 'lessonVideo')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">📁 Kutubxonadan</button>
+        </div>
+        <input type="text" id="lessonVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs" placeholder="Video File ID">
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <label class="text-sm font-medium">🖼 Rasm</label>
+          <button onclick="openMediaPicker('photo', 'lessonImage')" class="px-4 py-2 rounded-xl glass-btn-success text-white text-sm">📁 Kutubxonadan</button>
+        </div>
+        <input type="text" id="lessonImage" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs" placeholder="Image File ID">
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <label class="text-sm font-medium">🎤 Audio</label>
+          <button onclick="openMediaPicker('audio', 'lessonAudio')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">📁 Kutubxonadan</button>
+        </div>
+        <input type="text" id="lessonAudio" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs" placeholder="Audio File ID">
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <label class="text-sm font-medium mb-4 block">⏱ Keyingi darsga o'tish vaqti</label>
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="delayType" id="delayImmediate" value="immediate" checked onchange="toggleDelayInput()" class="w-5 h-5 accent-violet-500">
+            <span class="font-medium">🚀 Darhol yuborilsin</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="delayType" id="delayTimed" value="timed" onchange="toggleDelayInput()" class="w-5 h-5 accent-violet-500">
+            <span class="font-medium">⏰ Vaqt belgilash</span>
+          </label>
+          <div id="delayInputDiv" class="hidden pl-8 pt-2">
+            <div class="flex gap-3">
+              <input type="number" id="lessonDelayValue" class="w-24 px-4 py-3 rounded-xl glass-input" value="24" min="1">
+              <select id="lessonDelayUnit" class="flex-1 px-4 py-3 rounded-xl glass-input">
+                <option value="hours" selected>Soat</option>
+                <option value="days">Kun</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 p-4 glass-card rounded-xl">
+        <input type="checkbox" id="lessonShowBtn" checked class="w-5 h-5 accent-violet-500">
+        <label class="font-medium">"Ko'rib bo'ldim" tugmasini ko'rsatish</label>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Tugma matni</label>
+        <input type="text" id="lessonBtnText" class="w-full px-4 py-3 rounded-xl glass-input" value="Videoni ko'rib bo'ldim ✅">
+      </div>
+      <button onclick="saveLesson()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- CustDev Modal -->
+<div id="custdevModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800" id="custdevModalTitle">📝 Savol</h2>
+      <button onclick="closeModal('custdevModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <input type="hidden" id="custdevId">
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Savol matni</label>
+        <textarea id="custdevText" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-2 block">Qaysi darsdan keyin</label>
+          <input type="number" id="custdevLesson" class="w-full px-4 py-3 rounded-xl glass-input" value="1" min="1">
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-2 block">Turi</label>
+          <select id="custdevType" class="w-full px-4 py-3 rounded-xl glass-input" onchange="toggleCustdevOptions()">
+            <option value="buttons">Tugmalar</option>
+            <option value="text">Matn</option>
+          </select>
+        </div>
+      </div>
+      <div id="custdevOptionsDiv">
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Javob variantlari</label>
+        <textarea id="custdevOptions" rows="4" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="16-22&#10;23-30&#10;31-40"></textarea>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Bazada saqlash (field_name)</label>
+        <input type="text" id="custdevField" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="age_group">
+      </div>
+      <button onclick="saveCustDev()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pitch Modal -->
+<div id="pitchModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">🎬 Darsdan keyingi xabar</h2>
+      <button onclick="closeModal('pitchModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Matn</label>
+        <textarea id="pitchText" rows="4" class="w-full px-4 py-3 rounded-xl glass-input resize-none"></textarea>
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <label class="text-sm font-medium">📹 Video</label>
+          <button onclick="openMediaPicker('video', 'pitchVideo')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">📁 Kutubxonadan</button>
+        </div>
+        <input type="text" id="pitchVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="glass-card rounded-2xl p-4">
+          <label class="text-sm font-medium mb-2 block">🖼 Rasm</label>
+          <input type="text" id="pitchImage" class="w-full px-3 py-2 rounded-lg glass-input font-mono text-xs">
+        </div>
+        <div class="glass-card rounded-2xl p-4">
+          <label class="text-sm font-medium mb-2 block">🎤 Audio</label>
+          <input type="text" id="pitchAudio" class="w-full px-3 py-2 rounded-lg glass-input font-mono text-xs">
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Kutish (soat)</label>
+        <input type="number" id="pitchDelay" class="w-full px-4 py-3 rounded-xl glass-input" value="2">
+      </div>
+      <button onclick="savePitch()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Broadcast Modal -->
+<div id="broadcastModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">📨 Xabar yuborish (Broadcast)</h2>
+      <button onclick="closeModal('broadcastModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <!-- Audience Selection -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">🎯 Kimga yuborish</h4>
+        
+        <!-- Quick filters -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button onclick="setBroadcastQuickFilter('all')" id="bf-all" class="px-4 py-2 rounded-xl glass text-sm font-medium bf-active">👥 Hammaga</button>
+          <button onclick="setBroadcastQuickFilter('paid')" id="bf-paid" class="px-4 py-2 rounded-xl glass text-sm font-medium">💎 Premium</button>
+          <button onclick="setBroadcastQuickFilter('free')" id="bf-free" class="px-4 py-2 rounded-xl glass text-sm font-medium">🆓 Free</button>
+          <button onclick="setBroadcastQuickFilter('custom')" id="bf-custom" class="px-4 py-2 rounded-xl glass text-sm font-medium">⚙️ Maxsus filter</button>
+        </div>
+        
+        <!-- Advanced filters (hidden by default) -->
+        <div id="broadcastAdvancedFilters" class="hidden space-y-4 pt-4 border-t border-gray-200">
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Status filter -->
+            <div>
+              <label class="text-sm font-medium text-gray-600 mb-2 block">📊 Status</label>
+              <select id="bfStatus" class="w-full px-4 py-3 rounded-xl glass-input">
+                <option value="all">Hammasi</option>
+                <option value="paid">💎 Faqat Premium</option>
+                <option value="free">🆓 Faqat Free</option>
+              </select>
+            </div>
+            
+            <!-- Lesson filter -->
+            <div>
+              <label class="text-sm font-medium text-gray-600 mb-2 block">📚 Dars bo'yicha</label>
+              <select id="bfLesson" class="w-full px-4 py-3 rounded-xl glass-input">
+                <option value="all">Barcha darslar</option>
+                <option value="0">0-dars (yangi)</option>
+                <option value="1">1-dars</option>
+                <option value="2">2-dars</option>
+                <option value="3">3-dars</option>
+                <option value="4">4-dars</option>
+                <option value="completed">✅ Darslarni tugatgan</option>
+              </select>
+            </div>
+            
+            <!-- CustDev filter -->
+            <div>
+              <label class="text-sm font-medium text-gray-600 mb-2 block">📝 CustDev</label>
+              <select id="bfCustdev" class="w-full px-4 py-3 rounded-xl glass-input">
+                <option value="all">Hammasi</option>
+                <option value="completed">✅ To'ldirgan</option>
+                <option value="not">⏳ To'ldirmagan</option>
+              </select>
+            </div>
+            
+            <!-- Date filter -->
+            <div>
+              <label class="text-sm font-medium text-gray-600 mb-2 block">📅 Ro'yxatdan o'tgan</label>
+              <select id="bfDate" class="w-full px-4 py-3 rounded-xl glass-input">
+                <option value="all">Barcha vaqt</option>
+                <option value="today">Bugun</option>
+                <option value="week">Shu hafta</option>
+                <option value="month">Shu oy</option>
+                <option value="old">1 oydan oldin</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Age group filter -->
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">👤 Yosh guruhi</label>
+            <div class="flex flex-wrap gap-2">
+              <label class="flex items-center gap-2 px-3 py-2 rounded-lg glass cursor-pointer">
+                <input type="checkbox" id="bfAge-all" checked onchange="toggleAgeFilter(this)" class="accent-violet-500"> Hammasi
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 rounded-lg glass cursor-pointer">
+                <input type="checkbox" class="bfAge accent-violet-500" value="16-22"> 16-22
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 rounded-lg glass cursor-pointer">
+                <input type="checkbox" class="bfAge accent-violet-500" value="23-30"> 23-30
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 rounded-lg glass cursor-pointer">
+                <input type="checkbox" class="bfAge accent-violet-500" value="31-40"> 31-40
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 rounded-lg glass cursor-pointer">
+                <input type="checkbox" class="bfAge accent-violet-500" value="40+"> 40+
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Audience count -->
+        <div class="mt-4 p-3 rounded-xl bg-violet-50 flex justify-between items-center">
+          <span class="text-sm text-gray-600">Tanlangan auditoriya:</span>
+          <span id="broadcastAudienceCount" class="font-bold text-violet-700">0 ta</span>
+        </div>
+      </div>
+      
+      <!-- Message Content -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">✉️ Xabar matni</h4>
+        <textarea id="broadcastText" rows="5" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="Salom {{ism}}! Sizga maxsus taklif..."></textarea>
+        
+        <div class="mt-3 p-3 rounded-xl bg-blue-50">
+          <p class="text-xs font-semibold text-blue-700 mb-2">📝 O'zgaruvchilar:</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div class="bg-white/70 rounded-lg p-2 cursor-pointer hover:bg-white" onclick="insertVar('{{fio}}')"><code class="text-violet-600">{{fio}}</code> - To'liq ism</div>
+            <div class="bg-white/70 rounded-lg p-2 cursor-pointer hover:bg-white" onclick="insertVar('{{ism}}')"><code class="text-violet-600">{{ism}}</code> - Ism</div>
+            <div class="bg-white/70 rounded-lg p-2 cursor-pointer hover:bg-white" onclick="insertVar('{{telefon}}')"><code class="text-violet-600">{{telefon}}</code> - Telefon</div>
+            <div class="bg-white/70 rounded-lg p-2 cursor-pointer hover:bg-white" onclick="insertVar('{{dars}}')"><code class="text-violet-600">{{dars}}</code> - Dars</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Media -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">📎 Media (ixtiyoriy)</h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-500 mb-2 block">🖼 Rasm</label>
+            <div class="flex gap-2">
+              <input type="text" id="broadcastPhoto" class="flex-1 px-4 py-3 rounded-xl glass-input" placeholder="URL yoki File ID">
+              <button onclick="openMediaPicker('photo', 'broadcastPhoto')" class="px-4 py-3 rounded-xl glass-btn text-white text-sm">📁</button>
+            </div>
+          </div>
+          <div>
+            <label class="text-sm text-gray-500 mb-2 block">📹 Video</label>
+            <div class="flex gap-2">
+              <input type="text" id="broadcastVideo" class="flex-1 px-4 py-3 rounded-xl glass-input" placeholder="File ID">
+              <button onclick="openMediaPicker('video', 'broadcastVideo')" class="px-4 py-3 rounded-xl glass-btn text-white text-sm">📁</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Buttons -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">🔘 Tugma qo'shish (ixtiyoriy)</h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-500 mb-2 block">Tugma matni</label>
+            <input type="text" id="broadcastBtnText" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="Batafsil →">
+          </div>
+          <div>
+            <label class="text-sm text-gray-500 mb-2 block">Tugma URL</label>
+            <input type="text" id="broadcastBtnUrl" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="https://...">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Schedule -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">⏰ Qachon yuborish</h4>
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="broadcastSchedule" value="now" checked class="w-5 h-5 accent-violet-500">
+            <span class="font-medium">🚀 Hozir yuborish</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="broadcastSchedule" value="scheduled" class="w-5 h-5 accent-violet-500" onchange="toggleScheduleInput()">
+            <span class="font-medium">📅 Vaqt belgilash</span>
+          </label>
+          <div id="broadcastScheduleDiv" class="hidden pl-8">
+            <input type="datetime-local" id="broadcastScheduleTime" class="px-4 py-3 rounded-xl glass-input">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Result -->
+      <div id="broadcastResult" class="hidden p-4 rounded-xl"></div>
+      
+      <!-- Action buttons -->
+      <div class="flex gap-3">
+        <button onclick="previewBroadcast()" class="flex-1 py-4 rounded-xl glass text-gray-700 font-semibold">👁 Ko'rish</button>
+        <button onclick="sendBroadcast()" id="broadcastBtn" class="flex-1 py-4 rounded-xl glass-btn-success text-white font-semibold text-lg">📤 Yuborish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Buyer Detail Modal -->
+<div id="buyerModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">👤 Xaridor ma'lumotlari</h2>
+      <button onclick="closeModal('buyerModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <!-- User Info -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">📋 Asosiy ma'lumotlar</h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-500">👤 Ism</p>
+            <p id="buyerName" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">📱 Telefon</p>
+            <p id="buyerPhone" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">💬 Username</p>
+            <p id="buyerUsername" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">🆔 Telegram ID</p>
+            <p id="buyerTelegramId" class="font-medium">-</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment Info -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">💳 To'lov ma'lumotlari</h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-500">💰 Summa</p>
+            <p id="buyerAmount" class="font-bold text-green-600">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">🏦 To'lov usuli</p>
+            <p id="buyerMethod" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">📅 To'lov sanasi</p>
+            <p id="buyerPaymentDate" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">✅ Holat</p>
+            <p id="buyerStatus" class="font-medium">-</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Time Analysis -->
+      <div class="glass-card rounded-2xl p-5 bg-gradient-to-r from-violet-500/10 to-purple-500/10">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">⏱ Vaqt tahlili</h4>
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-xs text-gray-500">📥 Ro'yxatdan o'tgan</p>
+            <p id="buyerRegistered" class="font-medium text-sm">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">💳 Sotib olgan</p>
+            <p id="buyerPurchased" class="font-medium text-sm">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">⏳ Ketgan vaqt</p>
+            <p id="buyerTimeToPurchase" class="font-bold text-lg text-violet-600">-</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- CustDev Data -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">📊 CustDev javoblari</h4>
+        <div id="buyerCustdevData" class="space-y-3">
+          <p class="text-gray-400 text-center">Ma'lumot yo'q</p>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="flex gap-3">
+        <a id="buyerTelegramLink" href="#" target="_blank" class="flex-1 px-4 py-3 rounded-xl glass-btn text-white text-center font-medium">💬 Telegram'da yozish</a>
+        <button onclick="closeModal('buyerModal')" class="px-6 py-3 rounded-xl glass text-gray-700 font-medium">Yopish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Post-Lesson Flow Modal -->
+<div id="postLessonModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">🎯 Darsdan keyingi oqim</h2>
+      <button onclick="closeModal('postLessonModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <!-- 1. Tabriklov -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm">1</span> Tabriklov xabari</h4>
+        <textarea id="plCongrats" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
+        <p class="text-xs text-gray-400 mt-2">⚡ Darhol yuboriladi</p>
+      </div>
+      
+      <!-- 2. Pitch -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-violet-500 text-white flex items-center justify-center text-sm">2</span> Pitch xabari</h4>
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="plPitchType" value="immediate" onchange="togglePlPitchDelay()" class="w-5 h-5 accent-violet-500">
+            <span class="font-medium">🚀 Darhol yuborilsin</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="plPitchType" value="timed" checked onchange="togglePlPitchDelay()" class="w-5 h-5 accent-violet-500">
+            <span class="font-medium">⏰ Vaqt belgilash</span>
+          </label>
+          <div id="plPitchDelayDiv" class="pl-8 flex gap-3">
+            <input type="number" id="plPitchDelay" class="w-24 px-4 py-3 rounded-xl glass-input" value="2" min="1">
+            <span class="py-3 text-gray-600">soatdan keyin</span>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">📝 Pitch matni va media "Pitch xabar" bo'limidan sozlanadi</p>
+      </div>
+      
+      <!-- 3. To'lov -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">3</span> To'lov tugmalari</h4>
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="plSalesType" value="immediate" onchange="togglePlSalesDelay()" class="w-5 h-5 accent-blue-500">
+            <span class="font-medium">🚀 Darhol yuborilsin (pitch bilan birga)</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="plSalesType" value="timed" checked onchange="togglePlSalesDelay()" class="w-5 h-5 accent-blue-500">
+            <span class="font-medium">⏰ Vaqt belgilash</span>
+          </label>
+          <div id="plSalesDelayDiv" class="pl-8 flex gap-3">
+            <input type="number" id="plSalesDelay" class="w-24 px-4 py-3 rounded-xl glass-input" value="1" min="1">
+            <span class="py-3 text-gray-600">soat (pitch dan keyin)</span>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">📝 To'lov matni "To'lov xabari" bo'limidan sozlanadi</p>
+      </div>
+      
+      <!-- 4. Soft Attack -->
+      <div class="glass-card rounded-2xl p-5">
+        <h4 class="font-semibold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm">4</span> Eslatma (Soft Attack)</h4>
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="plSoftType" value="disabled" onchange="togglePlSoftDelay()" class="w-5 h-5 accent-orange-500">
+            <span class="font-medium">❌ Yuborilmasin</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+            <input type="radio" name="plSoftType" value="timed" checked onchange="togglePlSoftDelay()" class="w-5 h-5 accent-orange-500">
+            <span class="font-medium">⏰ Vaqt belgilash</span>
+          </label>
+          <div id="plSoftDelayDiv" class="pl-8 flex gap-3">
+            <input type="number" id="plSoftDelay" class="w-24 px-4 py-3 rounded-xl glass-input" value="24" min="1">
+            <span class="py-3 text-gray-600">soat (to'lov dan keyin)</span>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">⚠️ Faqat to'lamagan foydalanuvchilarga yuboriladi</p>
+      </div>
+      
+      <button onclick="savePostLessonFlow()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sales Message Modal -->
+<div id="salesMessageModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">💳 To'lov xabari</h2>
+      <button onclick="closeModal('salesMessageModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Xabar matni</label>
+        <textarea id="salesText" rows="5" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="SMM PRO KURSGA TAKLIF!"></textarea>
+      </div>
+      <div class="glass-card rounded-2xl p-4">
+        <p class="text-sm font-semibold text-violet-700 mb-2">📝 O'zgaruvchilar:</p>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-white/50 rounded-lg p-2"><code class="text-violet-600">{{ism}}</code> - Faqat ism</div>
+          <div class="bg-white/50 rounded-lg p-2"><code class="text-violet-600">{{price}}</code> - Narx</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400">💡 Payme va Click tugmalari avtomatik qo'shiladi</p>
+      <button onclick="saveSalesMessage()" class="w-full py-4 rounded-xl glass-btn-success text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Soft Attack Modal -->
+<div id="softAttackModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800">🔔 Eslatma xabari</h2>
+      <button onclick="closeModal('softAttackModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Xabar matni</label>
+        <textarea id="softAttackText" rows="5" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🤔 Hali qaror qilmadingizmi?"></textarea>
+      </div>
+      <div class="glass-card rounded-2xl p-4">
+        <p class="text-sm font-semibold text-violet-700 mb-2">📝 O'zgaruvchilar:</p>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-white/50 rounded-lg p-2"><code class="text-violet-600">{{ism}}</code> - Faqat ism</div>
+          <div class="bg-white/50 rounded-lg p-2"><code class="text-violet-600">{{price}}</code> - Narx</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400">⚠️ Faqat to'lamagan foydalanuvchilarga yuboriladi. Payme va Click tugmalari avtomatik qo'shiladi.</p>
+      <button onclick="saveSoftAttack()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="hidden min-h-screen">
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="fixed left-4 top-4 bottom-4 w-20 glass rounded-3xl flex flex-col items-center py-6 z-40">
+      <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center mb-8"><span class="text-2xl">🚀</span></div>
+      <nav class="flex-1 flex flex-col items-center gap-2">
+        <button onclick="showTab('stats')" id="tab-stats" class="sidebar-item active w-14 h-14 flex items-center justify-center" title="Statistika"><span class="text-2xl">📊</span></button>
+        <button onclick="showTab('payments')" id="tab-payments" class="sidebar-item w-14 h-14 flex items-center justify-center" title="To'lovlar"><span class="text-2xl">💰</span></button>
+        <button onclick="showTab('users')" id="tab-users" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Foydalanuvchilar"><span class="text-2xl">👥</span></button>
+        <button onclick="showTab('lessons')" id="tab-lessons" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Darslar"><span class="text-2xl">📚</span></button>
+        <button onclick="showTab('media')" id="tab-media" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Media"><span class="text-2xl">📁</span></button>
+        <button onclick="showTab('custdev')" id="tab-custdev" class="sidebar-item w-14 h-14 flex items-center justify-center" title="CustDev"><span class="text-2xl">📝</span></button>
+        <button onclick="showTab('settings')" id="tab-settings" class="sidebar-item w-14 h-14 flex items-center justify-center" title="Sozlamalar"><span class="text-2xl">⚙️</span></button>
+      </nav>
+      <button onclick="logout()" class="sidebar-item w-14 h-14 flex items-center justify-center text-red-500" title="Chiqish"><span class="text-2xl">🚪</span></button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-28 flex-1 p-6 min-h-screen">
+      <header class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p class="text-gray-500 mt-1" id="currentDate"></p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="openBroadcastModal()" class="px-6 py-3 rounded-2xl glass-btn-success text-white font-medium flex items-center gap-2"><span>📨</span> Xabar</button>
+          <button onclick="loadAll()" class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center text-xl">🔄</button>
+        </div>
+      </header>
+
+      <!-- Stats -->
+      <div id="content-stats">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-2xl">👥</div>
+              <div><p class="text-gray-500 text-sm">Jami</p><p id="totalUsers" class="text-3xl font-bold gradient-text">0</p></div>
+            </div>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white text-2xl">💎</div>
+              <div><p class="text-gray-500 text-sm">Premium</p><p id="paidUsers" class="text-3xl font-bold gradient-text-green">0</p></div>
+            </div>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-2xl">💵</div>
+              <div><p class="text-gray-500 text-sm">Oylik</p><p id="monthlyRevenue" class="text-xl font-bold gradient-text-blue">0</p></div>
+            </div>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl">📈</div>
+              <div><p class="text-gray-500 text-sm">Bugun</p><p id="todayUsers" class="text-3xl font-bold text-orange-500">+0</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card rounded-3xl p-6 mb-8">
+          <h2 class="font-bold text-xl text-gray-800 mb-6">📊 Funnel</h2>
+          <div id="funnelStats" class="grid grid-cols-3 md:grid-cols-6 gap-3"></div>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">📈 Obunachi</h2><canvas id="subscribersChart"></canvas></div>
+          <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">💰 Daromad</h2><canvas id="revenueChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Payments -->
+      <div id="content-payments" class="hidden">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-6"><p class="text-gray-500 text-sm mb-1">Bugun</p><p id="payToday" class="text-2xl font-bold gradient-text-green">0</p><p id="payTodayCount" class="text-xs text-gray-400">0 ta</p></div>
+          <div class="glass-card rounded-3xl p-6"><p class="text-gray-500 text-sm mb-1">Hafta</p><p id="payWeek" class="text-2xl font-bold gradient-text-blue">0</p><p id="payWeekCount" class="text-xs text-gray-400">0 ta</p></div>
+          <div class="glass-card rounded-3xl p-6"><p class="text-gray-500 text-sm mb-1">Oy</p><p id="payMonth" class="text-2xl font-bold gradient-text">0</p><p id="payMonthCount" class="text-xs text-gray-400">0 ta</p></div>
+          <div class="glass-card rounded-3xl p-6"><p class="text-gray-500 text-sm mb-1">Yil</p><p id="payYear" class="text-2xl font-bold text-orange-500">0</p><p id="payYearCount" class="text-xs text-gray-400">0 ta</p></div>
+        </div>
+        
+        <!-- Payment Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">💳 To'lov usullari</h3>
+            <div class="h-48"><canvas id="paymentMethodChart"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-5 md:col-span-2">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">📈 Oylik daromad trendi</h3>
+            <div class="h-48"><canvas id="monthlyTrendChart"></canvas></div>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-6 border-l-4 border-blue-500"><div class="flex items-center gap-4"><span class="text-3xl">💳</span><div><p class="text-gray-500 text-sm">Payme</p><p id="paymeTotal" class="text-2xl font-bold text-blue-600">0</p><p id="paymeCount" class="text-xs text-gray-400">0 ta</p></div></div></div>
+          <div class="glass-card rounded-3xl p-6 border-l-4 border-green-500"><div class="flex items-center gap-4"><span class="text-3xl">💠</span><div><p class="text-gray-500 text-sm">Click</p><p id="clickTotal" class="text-2xl font-bold text-green-600">0</p><p id="clickCount" class="text-xs text-gray-400">0 ta</p></div></div></div>
+        </div>
+        <div class="glass-card rounded-3xl overflow-hidden">
+          <div class="px-6 py-4 border-b border-white/30"><h2 class="font-bold text-lg">💳 Oxirgi to'lovlar</h2></div>
+          <table class="w-full text-sm"><thead class="bg-white/30"><tr><th class="px-6 py-4 text-left">Sana</th><th class="px-6 py-4 text-left">Foydalanuvchi</th><th class="px-6 py-4 text-left">Summa</th><th class="px-6 py-4 text-left">Manba</th><th class="px-6 py-4 text-left">Status</th></tr></thead><tbody id="paymentsTable" class="divide-y divide-white/20"></tbody></table>
+        </div>
+        
+        <!-- Buyer Analytics Section -->
+        <div class="glass-card rounded-3xl p-6 mt-6">
+          <h2 class="font-bold text-lg mb-6">📊 Sotib olganlar tahlili</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <!-- Avg Time to Purchase -->
+            <div class="glass rounded-2xl p-5 text-center">
+              <p class="text-sm text-gray-500 mb-2">⏱ O'rtacha sotib olish vaqti</p>
+              <p id="avgTimeToPurchase" class="text-2xl font-bold text-violet-600">-</p>
+              <p class="text-xs text-gray-400 mt-1">Start dan to'lovgacha</p>
+            </div>
+            
+            <!-- Fastest Purchase -->
+            <div class="glass rounded-2xl p-5 text-center">
+              <p class="text-sm text-gray-500 mb-2">🚀 Eng tez sotib olgan</p>
+              <p id="fastestPurchase" class="text-2xl font-bold text-green-600">-</p>
+              <p class="text-xs text-gray-400 mt-1">Minimum vaqt</p>
+            </div>
+            
+            <!-- Slowest Purchase -->
+            <div class="glass rounded-2xl p-5 text-center">
+              <p class="text-sm text-gray-500 mb-2">🐢 Eng sekin sotib olgan</p>
+              <p id="slowestPurchase" class="text-2xl font-bold text-orange-600">-</p>
+              <p class="text-xs text-gray-400 mt-1">Maksimum vaqt</p>
+            </div>
+            
+            <!-- Conversion Rate -->
+            <div class="glass rounded-2xl p-5 text-center">
+              <p class="text-sm text-gray-500 mb-2">📈 Konversiya</p>
+              <p id="conversionRate" class="text-2xl font-bold text-blue-600">-</p>
+              <p class="text-xs text-gray-400 mt-1">Sotib olish foizi</p>
+            </div>
+          </div>
+          
+          <!-- Buyer CustDev Analysis -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Age Distribution of Buyers -->
+            <div class="glass rounded-2xl p-5">
+              <h3 class="font-semibold text-sm mb-4">👤 Yoshlar bo'yicha (sotib olganlar)</h3>
+              <div id="buyerAgeStats" class="space-y-2"></div>
+            </div>
+            
+            <!-- Occupation of Buyers -->
+            <div class="glass rounded-2xl p-5">
+              <h3 class="font-semibold text-sm mb-4">💼 Kasblar bo'yicha (sotib olganlar)</h3>
+              <div id="buyerOccupationStats" class="space-y-2"></div>
+            </div>
+            
+            <!-- Problems of Buyers -->
+            <div class="glass rounded-2xl p-5">
+              <h3 class="font-semibold text-sm mb-4">🎯 Muammolar (sotib olganlar)</h3>
+              <div id="buyerProblemStats" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div id="content-users" class="hidden">
+        <!-- User Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">👥 Premium vs Free</h3>
+            <div class="h-48"><canvas id="userTypeChart"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">📚 Darslar bo'yicha</h3>
+            <div class="h-48"><canvas id="lessonDistChart"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">📈 Haftalik o'sish</h3>
+            <div class="h-48"><canvas id="weeklyGrowthChart"></canvas></div>
+          </div>
+        </div>
+        
+        <div class="glass-card rounded-3xl overflow-hidden">
+          <div class="px-6 py-4 border-b border-white/30">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+              <h2 class="font-bold text-lg">👥 Foydalanuvchilar <span id="usersFilteredCount" class="text-sm font-normal text-gray-500"></span></h2>
+              <div class="flex gap-3">
+                <button onclick="exportExcel()" class="px-4 py-2 rounded-xl glass-btn-success text-white text-sm">📥 Excel</button>
+                <input type="text" id="searchInput" placeholder="🔍 Ism, telefon, username..." class="px-4 py-2 rounded-xl glass-input w-64" onkeyup="applyFilters()">
+              </div>
+            </div>
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">Status:</span>
+                <button onclick="setFilter('status', 'all')" id="filter-status-all" class="px-3 py-1.5 rounded-lg glass text-xs font-medium filter-btn-active">Hammasi</button>
+                <button onclick="setFilter('status', 'paid')" id="filter-status-paid" class="px-3 py-1.5 rounded-lg glass text-xs font-medium">💎 Premium</button>
+                <button onclick="setFilter('status', 'free')" id="filter-status-free" class="px-3 py-1.5 rounded-lg glass text-xs font-medium">🆓 Free</button>
+              </div>
+              <div class="w-px bg-gray-300 mx-2"></div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">CustDev:</span>
+                <button onclick="setFilter('custdev', 'all')" id="filter-custdev-all" class="px-3 py-1.5 rounded-lg glass text-xs font-medium filter-btn-active">Hammasi</button>
+                <button onclick="setFilter('custdev', 'done')" id="filter-custdev-done" class="px-3 py-1.5 rounded-lg glass text-xs font-medium">✅ Javob bergan</button>
+                <button onclick="setFilter('custdev', 'pending')" id="filter-custdev-pending" class="px-3 py-1.5 rounded-lg glass text-xs font-medium">⏳ Kutilmoqda</button>
+              </div>
+              <div class="w-px bg-gray-300 mx-2"></div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">Dars:</span>
+                <select id="filter-lesson" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg glass text-xs">
+                  <option value="all">Hammasi</option>
+                  <option value="0">0-dars</option>
+                  <option value="1">1-dars</option>
+                  <option value="2">2-dars</option>
+                  <option value="3">3-dars</option>
+                  <option value="4">4-dars</option>
+                  <option value="5+">5+ dars</option>
+                </select>
+              </div>
+              <div class="w-px bg-gray-300 mx-2"></div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">Saralash:</span>
+                <select id="filter-sort" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg glass text-xs">
+                  <option value="newest">Yangi → Eski</option>
+                  <option value="oldest">Eski → Yangi</option>
+                  <option value="name">Ism bo'yicha</option>
+                  <option value="lesson-high">Dars: Ko'p → Kam</option>
+                  <option value="lesson-low">Dars: Kam → Ko'p</option>
+                </select>
+              </div>
+              <div class="w-px bg-gray-300 mx-2"></div>
+              <button onclick="resetAllFilters()" class="px-3 py-1.5 rounded-lg glass text-xs font-medium text-red-500 hover:bg-red-50">🔄 Tozalash</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+            <table class="w-full text-sm"><thead class="bg-white/30 sticky top-0"><tr><th class="px-6 py-4 text-left">Ism</th><th class="px-6 py-4 text-left">Telefon</th><th class="px-6 py-4 text-left">Dars</th><th class="px-6 py-4 text-left">Status</th><th class="px-6 py-4 text-left">CustDev</th><th class="px-6 py-4 text-left">Sana</th></tr></thead><tbody id="usersTable" class="divide-y divide-white/20"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lessons -->
+      <div id="content-lessons" class="hidden">
+        <div class="glass-card rounded-3xl overflow-hidden">
+          <div class="px-6 py-4 border-b border-white/30 flex justify-between items-center">
+            <h2 class="font-bold text-lg">📚 Darslar</h2>
+            <button onclick="addLesson()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">+ Yangi dars</button>
+          </div>
+          <div id="lessonsList" class="divide-y divide-white/20"></div>
+        </div>
+      </div>
+
+      <!-- Media -->
+      <div id="content-media" class="hidden">
+        <div class="glass-card rounded-3xl p-6">
+          <h2 class="font-bold text-xl mb-6">📁 Media kutubxonasi</h2>
+          <div class="glass rounded-2xl p-5 mb-6">
+            <p class="font-semibold text-violet-700 mb-3">💡 Qanday ishlaydi:</p>
+            <ol class="text-sm text-gray-600 space-y-1">
+              <li>1. Botga video/rasm/audio yuboring</li>
+              <li>2. Izoh yozing: "1-dars video"</li>
+              <li>3. "📁 Kutubxonadan" tugmasini bosing</li>
+            </ol>
+          </div>
+          <div class="flex gap-2 mb-6 flex-wrap">
+            <button onclick="loadMedia('all')" class="px-4 py-2 rounded-xl glass-card font-medium text-sm">Hammasi</button>
+            <button onclick="loadMedia('video')" class="px-4 py-2 rounded-xl glass-card text-sm text-blue-600">📹 Video</button>
+            <button onclick="loadMedia('photo')" class="px-4 py-2 rounded-xl glass-card text-sm text-green-600">🖼 Rasm</button>
+            <button onclick="loadMedia('audio')" class="px-4 py-2 rounded-xl glass-card text-sm text-orange-600">🎵 Audio</button>
+          </div>
+          <div id="mediaList" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+          <p id="mediaEmpty" class="text-center text-gray-400 py-12 hidden">Media topilmadi</p>
+        </div>
+      </div>
+
+      <!-- CustDev -->
+      <div id="content-custdev" class="hidden">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-5">
+            <p class="text-gray-500 text-sm mb-1">Jami savollar</p>
+            <p id="custdevTotalQ" class="text-2xl font-bold gradient-text">0</p>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <p class="text-gray-500 text-sm mb-1">Javob berganlar</p>
+            <p id="custdevAnswered" class="text-2xl font-bold gradient-text-green">0</p>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <p class="text-gray-500 text-sm mb-1">Javob bermagan</p>
+            <p id="custdevNotAnswered" class="text-2xl font-bold text-orange-500">0</p>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <p class="text-gray-500 text-sm mb-1">Konversiya</p>
+            <p id="custdevConversion" class="text-2xl font-bold gradient-text-blue">0%</p>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">📊 Yosh guruhi</h3>
+            <div class="h-48"><canvas id="ageChart"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">💼 Kasb/Faoliyat</h3>
+            <div class="h-48"><canvas id="occupationChart"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">💰 Daromad</h3>
+            <div class="h-48"><canvas id="incomeChart"></canvas></div>
+          </div>
+          <div class="glass-card rounded-3xl p-5">
+            <h3 class="font-semibold text-gray-700 mb-4 text-center">💵 Byudjet</h3>
+            <div class="h-48"><canvas id="budgetChart"></canvas></div>
+          </div>
+        </div>
+        
+        <div class="glass-card rounded-3xl overflow-hidden mb-6">
+          <div class="px-6 py-4 border-b border-white/30 flex justify-between items-center">
+            <h2 class="font-bold text-lg">📝 CustDev Savollar</h2>
+            <button onclick="addCustDev()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">+ Yangi savol</button>
+          </div>
+          <div id="custdevList" class="divide-y divide-white/20"></div>
+        </div>
+        <div class="glass-card rounded-3xl p-6">
+          <h3 class="font-bold text-lg mb-6">📊 CustDev Statistikasi (Batafsil)</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="custdevStats"></div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div id="content-settings" class="hidden">
+        <!-- Settings Tabs -->
+        <div class="glass-card rounded-3xl p-2 mb-6">
+          <div class="flex gap-2">
+            <button onclick="showSettingsTab('channel')" id="settings-tab-channel" class="flex-1 py-3 px-6 rounded-2xl font-medium transition-all bg-violet-500 text-white">
+              📢 Kanal va Obuna
+            </button>
+            <button onclick="showSettingsTab('messages')" id="settings-tab-messages" class="flex-1 py-3 px-6 rounded-2xl font-medium transition-all text-gray-600 hover:bg-gray-100">
+              📝 Xabarlar
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 1: Kanal va Obuna -->
+        <div id="settings-content-channel">
+          <!-- Channel Settings -->
+          <div class="glass-card rounded-3xl p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h3 class="font-bold text-xl">📢 Premium kanal</h3>
+                <p class="text-gray-500 text-sm mt-1">To'lov qilganlarga kirish uchun</p>
+              </div>
+            </div>
+            
+            <div class="glass rounded-2xl p-5">
+              <label class="text-sm font-medium text-gray-600 mb-3 block">🤖 Kanal ID</label>
+              <div class="flex gap-3">
+                <input type="text" id="premiumChannelId" class="flex-1 px-4 py-3 rounded-xl glass-input text-lg font-mono" placeholder="-1001234567890">
+                <button onclick="saveChannelId()" class="px-6 py-3 rounded-xl glass-btn text-white font-medium">💾 Saqlash</button>
+              </div>
+              <div class="mt-3 p-3 bg-blue-50 rounded-xl text-sm">
+                <p class="font-medium text-blue-800 mb-1">📌 Kanal ID qanday olinadi?</p>
+                <ol class="text-blue-600 space-y-1">
+                  <li>1. @userinfobot ga boring</li>
+                  <li>2. Kanalingizdan biror xabarni forward qiling</li>
+                  <li>3. Bot kanal ID ni ko'rsatadi (masalan: -1001234567890)</li>
+                </ol>
+              </div>
+              <div class="mt-3 p-3 bg-green-50 rounded-xl text-sm">
+                <p class="text-green-700">✅ <b>Bu yerda saqlasangiz bas!</b> Render.com o'zgartirish shart emas.</p>
+              </div>
+            </div>
+            <input type="hidden" id="premiumChannelLink" value="">
+          </div>
+          
+          <!-- Subscription Plans -->
+          <div class="glass-card rounded-3xl p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h3 class="font-bold text-xl">💰 Obuna narxlari</h3>
+                <p class="text-gray-500 text-sm mt-1">Har bir reja narxini o'zgartiring va saqlang</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="subscriptionPlansGrid">
+              <!-- Plans will be loaded here -->
+            </div>
+            
+            <button onclick="saveAllPlans()" class="mt-4 w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Barcha narxlarni saqlash</button>
+          </div>
+          <input type="hidden" id="basePriceInput" value="0">
+          <input type="hidden" id="autoCalculatePrices" value="false">
+        </div>
+
+        <!-- TAB 2: Xabarlar - PROGREV FLOW -->
+        <div id="settings-content-messages" class="hidden">
+          
+          <!-- ========== PROGREV FLOW - VISUAL FUNNEL ========== -->
+          <div class="glass-card rounded-3xl p-6 mb-6 overflow-hidden">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h3 class="font-bold text-xl">🎯 Sotuvga olib boruvchi Progrev Flow</h3>
+                <p class="text-gray-500 text-sm mt-1">4-dars tugagandan keyin avtomatik yuboriladi</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">✅ Faol</span>
+                <button onclick="openFlowSettingsModal()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">⚙️ Vaqtlarni sozlash</button>
+              </div>
+            </div>
+            
+            <!-- Visual Flow -->
+            <div class="relative">
+              <!-- Trigger -->
+              <div class="flex items-center gap-4 mb-2">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white shadow-lg">
+                  <span class="text-xl">🎓</span>
+                </div>
+                <div class="flex-1 p-4 rounded-2xl bg-gray-100 border-2 border-gray-300">
+                  <p class="font-bold text-gray-800">TRIGGER: 4-Dars ko'rildi</p>
+                  <p class="text-sm text-gray-500">Foydalanuvchi oxirgi bepul darsni tugatganda</p>
+                </div>
+              </div>
+              
+              <!-- Arrow -->
+              <div class="ml-6 h-8 border-l-2 border-dashed border-violet-300 flex items-center">
+                <span class="ml-4 text-xs text-gray-400 bg-white px-2">⚡ Darhol</span>
+              </div>
+              
+              <!-- Step 1: Congrats -->
+              <div class="flex items-center gap-4 mb-2 group cursor-pointer" onclick="openCongratsModal()">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                  <span class="font-bold">1</span>
+                </div>
+                <div class="flex-1 p-4 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 group-hover:border-green-400 transition-colors">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="font-bold text-green-800">🎉 Tabriklov xabari</p>
+                      <p class="text-sm text-green-600 mt-1">"Tabriklayman! Barcha darslarni muvaffaqiyatli tugatdingiz..."</p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-green-200 text-green-700">Darhol</span>
+                  </div>
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs text-gray-400">📊 Open rate: ~95%</span>
+                    <button class="text-xs text-violet-600 hover:underline">✏️ Tahrirlash</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Arrow with delay -->
+              <div class="ml-6 h-12 border-l-2 border-dashed border-violet-300 flex items-center">
+                <div class="ml-4 flex items-center gap-2">
+                  <span class="text-lg">⏱️</span>
+                  <div class="px-3 py-1.5 rounded-full bg-violet-100 border border-violet-300">
+                    <span class="text-sm font-medium text-violet-700" id="flowPitchDelay">1 soat</span>
+                  </div>
+                  <span class="text-xs text-gray-400">kutish</span>
+                </div>
+              </div>
+              
+              <!-- Step 2: Pitch Video -->
+              <div class="flex items-center gap-4 mb-2 group cursor-pointer" onclick="openPitchModal()">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                  <span class="font-bold">2</span>
+                </div>
+                <div class="flex-1 p-4 rounded-2xl bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200 group-hover:border-violet-400 transition-colors">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="font-bold text-violet-800">🎬 Video Pitch</p>
+                      <p class="text-sm text-violet-600 mt-1" id="pitchTextPreview">"Maxsus video xabar! To'liq kursga tayyormisiz?"</p>
+                      <div class="flex items-center gap-2 mt-2">
+                        <span class="text-xs px-2 py-0.5 rounded bg-violet-200 text-violet-700">📹 Video</span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-violet-200 text-violet-700">🖼 Rasm</span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-green-200 text-green-700">✅ O'rnatilgan</span>
+                      </div>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-violet-200 text-violet-700" id="flowPitchDelayBadge">+1 soat</span>
+                  </div>
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs text-gray-400">📊 CTR: ~45%</span>
+                    <button class="text-xs text-violet-600 hover:underline">✏️ Tahrirlash</button>
+                    <button class="text-xs text-blue-600 hover:underline">👁 Preview</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Arrow with delay -->
+              <div class="ml-6 h-12 border-l-2 border-dashed border-blue-300 flex items-center">
+                <div class="ml-4 flex items-center gap-2">
+                  <span class="text-lg">⏱️</span>
+                  <div class="px-3 py-1.5 rounded-full bg-blue-100 border border-blue-300">
+                    <span class="text-sm font-medium text-blue-700" id="flowSalesDelay">3 soat</span>
+                  </div>
+                  <span class="text-xs text-gray-400">kutish</span>
+                </div>
+              </div>
+              
+              <!-- Step 3: Sales CTA -->
+              <div class="flex items-center gap-4 mb-2 group cursor-pointer" onclick="openSalesMessageModal()">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                  <span class="font-bold">3</span>
+                </div>
+                <div class="flex-1 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="font-bold text-blue-800">💳 To'lov taklifi</p>
+                      <p class="text-sm text-blue-600 mt-1" id="salesTextPreview">"SMM PRO KURSGA TAKLIF!"</p>
+                      <div class="flex items-center gap-2 mt-2">
+                        <span class="text-xs px-2 py-0.5 rounded bg-green-200 text-green-700">💳 Payme</span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-blue-200 text-blue-700">💎 Click</span>
+                      </div>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-blue-200 text-blue-700" id="flowSalesDelayBadge">+3 soat</span>
+                  </div>
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs text-gray-400">📊 Conversion: ~12%</span>
+                    <button class="text-xs text-violet-600 hover:underline">✏️ Tahrirlash</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Conditional branch -->
+              <div class="ml-6 h-8 border-l-2 border-dashed border-orange-300 flex items-center">
+                <div class="ml-4 flex items-center gap-2">
+                  <span class="text-lg">❓</span>
+                  <span class="text-xs text-orange-600 font-medium">Agar 24 soat ichida TO'LAMASA</span>
+                </div>
+              </div>
+              
+              <!-- Step 4: Soft Attack -->
+              <div class="flex items-center gap-4 mb-2 group cursor-pointer" onclick="openSoftAttackModal()">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                  <span class="font-bold">4</span>
+                </div>
+                <div class="flex-1 p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 group-hover:border-orange-400 transition-colors">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="font-bold text-orange-800">🔔 Soft Reminder</p>
+                      <p class="text-sm text-orange-600 mt-1" id="softAttackTextPreview">"Hali qaror qilmadingizmi? Chegirma tugamoqda!"</p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-orange-200 text-orange-700" id="flowSoftDelayBadge">+24 soat</span>
+                  </div>
+                  <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs text-gray-400">📊 Recovery: ~8%</span>
+                    <button class="text-xs text-violet-600 hover:underline">✏️ Tahrirlash</button>
+                    <label class="flex items-center gap-1 text-xs">
+                      <input type="checkbox" id="softAttackEnabled" checked class="rounded">
+                      <span class="text-gray-500">Faol</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Success outcome -->
+              <div class="ml-6 h-8 border-l-2 border-dashed border-green-400"></div>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white shadow-lg">
+                  <span class="text-xl">🎯</span>
+                </div>
+                <div class="flex-1 p-4 rounded-2xl bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-400">
+                  <p class="font-bold text-green-800">✅ TO'LOV QILDI → Premium kanalga kirish</p>
+                  <p class="text-sm text-green-600">Avtomatik invite link yuboriladi</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Quick Test -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-700">🧪 Test rejimi</p>
+                  <p class="text-xs text-gray-500">O'zingizga darhol yuborish (kutmasdan)</p>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="testFullFlow()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition-shadow">
+                    🚀 To'liq Flow
+                  </button>
+                  <button onclick="testPitch()" class="px-4 py-2 rounded-xl glass text-gray-700 text-sm">📤 Pitch</button>
+                  <button onclick="testSales()" class="px-4 py-2 rounded-xl glass text-gray-700 text-sm">💳 To'lov</button>
+                  <button onclick="testSoftAttack()" class="px-4 py-2 rounded-xl glass text-gray-700 text-sm">🔔 Eslatma</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ========== OBUNA ESLATMALARI ========== -->
+          <div class="glass-card rounded-3xl p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h3 class="font-bold text-xl">⏰ Obuna eslatmalari</h3>
+                <p class="text-gray-500 text-sm mt-1">Premium obuna tugashidan oldin yuboriladi</p>
+              </div>
+              <button onclick="saveReminders()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">💾 Saqlash</button>
+            </div>
+            
+            <!-- Timeline -->
+            <div class="relative">
+              <!-- Day 5 -->
+              <div class="flex gap-4 mb-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold border-2 border-yellow-300">5</div>
+                  <div class="w-0.5 h-full bg-yellow-200 mt-2"></div>
+                </div>
+                <div class="flex-1 glass rounded-2xl p-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-yellow-700">📅 5 kun oldin</span>
+                    <span class="text-xs text-gray-400">Yumshoq eslatma</span>
+                  </div>
+                  <textarea id="reminder_5d" rows="2" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="Hurmatli {{ism}}, obunangiz tugashiga 5 kun qoldi..."></textarea>
+                </div>
+              </div>
+              
+              <!-- Day 3 -->
+              <div class="flex gap-4 mb-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold border-2 border-orange-300">3</div>
+                  <div class="w-0.5 h-full bg-orange-200 mt-2"></div>
+                </div>
+                <div class="flex-1 glass rounded-2xl p-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-orange-700">⚠️ 3 kun oldin</span>
+                    <span class="text-xs text-gray-400">O'rtacha urgency</span>
+                  </div>
+                  <textarea id="reminder_3d" rows="2" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="{{ism}}, obunangiz 3 kun ichida tugaydi..."></textarea>
+                </div>
+              </div>
+              
+              <!-- Day 1 -->
+              <div class="flex gap-4 mb-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold border-2 border-red-300">1</div>
+                  <div class="w-0.5 h-full bg-red-200 mt-2"></div>
+                </div>
+                <div class="flex-1 glass rounded-2xl p-4 border-l-4 border-red-400">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-red-700">🚨 ERTAGA tugaydi!</span>
+                    <span class="text-xs text-red-500 font-medium">Yuqori urgency</span>
+                  </div>
+                  <textarea id="reminder_1d" rows="2" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="DIQQAT {{ism}}! Obunangiz ERTAGA tugaydi!"></textarea>
+                </div>
+              </div>
+              
+              <!-- Expired -->
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center">
+                  <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold border-2 border-gray-300">❌</div>
+                </div>
+                <div class="flex-1 glass rounded-2xl p-4 bg-gray-50">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">Obuna tugadi</span>
+                    <span class="text-xs text-gray-400">Kanaldan chiqariladi</span>
+                  </div>
+                  <textarea id="reminder_expired" rows="2" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="{{ism}}, obunangiz tugadi. Qayta obuna bo'lish uchun..."></textarea>
+                </div>
+              </div>
+            </div>
+            
+            <p class="mt-4 text-xs text-gray-500">
+              O'zgaruvchilar: 
+              <code class="bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">{{ism}}</code>
+              <code class="bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded ml-1">{{fio}}</code>
+              <code class="bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded ml-1">{{tugash_sanasi}}</code>
+            </p>
+          </div>
+          
+          <!-- ========== STATISTIKA ========== -->
+          <div class="glass-card rounded-3xl p-6">
+            <h3 class="font-bold text-xl mb-4">📊 Progrev statistikasi</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="glass rounded-2xl p-4 text-center">
+                <p class="text-3xl font-bold text-violet-600" id="statPitchSent">0</p>
+                <p class="text-xs text-gray-500 mt-1">Pitch yuborildi</p>
+              </div>
+              <div class="glass rounded-2xl p-4 text-center">
+                <p class="text-3xl font-bold text-blue-600" id="statSalesSent">0</p>
+                <p class="text-xs text-gray-500 mt-1">To'lov taklifi</p>
+              </div>
+              <div class="glass rounded-2xl p-4 text-center">
+                <p class="text-3xl font-bold text-green-600" id="statConversions">0</p>
+                <p class="text-xs text-gray-500 mt-1">Sotib oldi</p>
+              </div>
+              <div class="glass rounded-2xl p-4 text-center">
+                <p class="text-3xl font-bold text-orange-600" id="statConvRate">0%</p>
+                <p class="text-xs text-gray-500 mt-1">Konversiya</p>
+              </div>
+            </div>
+          </div>
+          
+        </div><!-- END settings-content-messages -->
+      </div><!-- END content-settings -->
+    </main>
+  </div>
+</div>
+
+<script>
+let auth = '';
+let allUsers = [];
+let allLessons = [];
+let allPayments = [];
+let allCustDev = [];
+let allMedia = [];
+let pitchData = {};
+let sChart, rChart;
+let ageChart, occupationChart, incomeChart, budgetChart;
+let userTypeChart, lessonDistChart, weeklyGrowthChart;
+let paymentMethodChart, monthlyTrendChart;
+let mediaPickerTarget = null;
+let mediaPickerType = null;
+let userFilters = { status: 'all', custdev: 'all', lesson: 'all', sort: 'newest' };
+
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+
+const saved = localStorage.getItem('adminAuth');
+if (saved) { auth = saved; showDashboard(); }
+
+document.getElementById('loginForm').onsubmit = async function(e) {
+  e.preventDefault();
+  auth = 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('password').value);
+  try {
+    const r = await fetch('/api/stats', {headers: {Authorization: auth}});
+    if (r.ok) { localStorage.setItem('adminAuth', auth); showDashboard(); }
+    else document.getElementById('loginError').classList.remove('hidden');
+  } catch(err) { document.getElementById('loginError').classList.remove('hidden'); }
+};
+
+function showDashboard() {
+  document.getElementById('loginModal').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  loadAll();
+}
+
+function logout() { localStorage.removeItem('adminAuth'); location.reload(); }
+
+function showTab(t) {
+  document.querySelectorAll('[id^="content-"]').forEach(function(e) { e.classList.add('hidden'); });
+  document.querySelectorAll('[id^="tab-"]').forEach(function(e) { e.classList.remove('active'); });
+  document.getElementById('content-' + t).classList.remove('hidden');
+  document.getElementById('tab-' + t).classList.add('active');
+  if (t === 'media') loadMedia('all');
+}
+
+// Settings sub-tabs
+function showSettingsTab(tab) {
+  // Hide all settings content
+  document.getElementById('settings-content-channel').classList.add('hidden');
+  document.getElementById('settings-content-messages').classList.add('hidden');
+  
+  // Reset tab styles
+  document.getElementById('settings-tab-channel').classList.remove('bg-violet-500', 'text-white');
+  document.getElementById('settings-tab-channel').classList.add('text-gray-600', 'hover:bg-gray-100');
+  document.getElementById('settings-tab-messages').classList.remove('bg-violet-500', 'text-white');
+  document.getElementById('settings-tab-messages').classList.add('text-gray-600', 'hover:bg-gray-100');
+  
+  // Show selected tab
+  document.getElementById('settings-content-' + tab).classList.remove('hidden');
+  document.getElementById('settings-tab-' + tab).classList.remove('text-gray-600', 'hover:bg-gray-100');
+  document.getElementById('settings-tab-' + tab).classList.add('bg-violet-500', 'text-white');
+}
+
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function fmtDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('uz-UZ'); }
+function fmtDateTime(d) { if (!d) return '-'; var x = new Date(d); return x.toLocaleDateString('uz-UZ') + ' ' + x.toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'}); }
+function fmtMoney(t) { return Math.round(t / 100).toLocaleString('uz-UZ') + " so'm"; }
+function getMediaIcon(t) { var icons = {video: '📹', photo: '🖼', voice: '🎤', audio: '🎵', video_note: '⭕'}; return icons[t] || '📄'; }
+
+async function loadMedia(type) {
+  try {
+    var url = type === 'all' ? '/api/media' : '/api/media/' + type;
+    allMedia = await (await fetch(url, {headers: {Authorization: auth}})).json();
+    var el = document.getElementById('mediaCountInfo'); if (el) el.textContent = allMedia.length;
+    if (!allMedia.length) {
+      document.getElementById('mediaList').innerHTML = '';
+      document.getElementById('mediaEmpty').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('mediaEmpty').classList.add('hidden');
+    var html = '';
+    for (var i = 0; i < allMedia.length; i++) {
+      var m = allMedia[i];
+      var caption = m.caption ? '<p class="text-xs text-gray-700 mt-1 truncate">📝 ' + m.caption + '</p>' : '<p class="text-xs text-gray-400 mt-1 italic">Izoh yoq</p>';
+      html += '<div class="glass-card rounded-2xl p-4"><div class="flex justify-between items-start mb-3"><span class="text-3xl">' + getMediaIcon(m.file_type) + '</span><div class="flex gap-1"><button onclick="editMediaCaption(' + m.id + ')" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm">✏️</button><button onclick="deleteMediaItem(' + m.id + ')" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm text-red-500">🗑</button></div></div><p class="font-medium text-sm truncate">' + (m.file_name || m.file_type) + '</p>' + caption + '<button onclick="copyFileId(\'' + m.file_id + '\')" class="mt-3 w-full py-2 rounded-xl glass text-xs font-medium">📋 Nusxalash</button></div>';
+    }
+    document.getElementById('mediaList').innerHTML = html;
+  } catch(e) { console.error(e); }
+}
+
+function copyFileId(f) { navigator.clipboard.writeText(f); alert('✅ Nusxalandi!'); }
+
+function copyUserInfo(tid) {
+  var u = allUsers.find(function(x) { return String(x.telegram_id) === String(tid); });
+  if (!u) return;
+  
+  var info = '👤 ' + (u.full_name || '-') + '\n';
+  info += '📱 ' + (u.phone || '-') + '\n';
+  info += '📲 ' + (u.username ? '@' + u.username : '-') + '\n';
+  info += '🆔 ' + u.telegram_id + '\n';
+  info += '📊 ' + (u.is_paid ? 'Premium' : 'Free') + '\n';
+  info += '📚 ' + (u.current_lesson || 0) + '-dars\n';
+  info += '\n📝 CustDev:\n';
+  if (u.age_group) info += '• Yosh: ' + u.age_group + '\n';
+  if (u.occupation) info += '• Kasb: ' + u.occupation + '\n';
+  if (u.income_level) info += '• Daromad: ' + u.income_level + '\n';
+  if (u.previous_courses) info += '• Oldin kurs: ' + u.previous_courses + '\n';
+  if (u.budget_range) info += '• Byudjet: ' + u.budget_range + '\n';
+  if (u.main_problem) info += '• Muammo: ' + u.main_problem + '\n';
+  if (u.goal) info += '• Maqsad: ' + u.goal + '\n';
+  
+  navigator.clipboard.writeText(info);
+  alert('✅ Ma\'lumotlar nusxalandi!');
+}
+
+async function editMediaCaption(id) {
+  var m = allMedia.find(function(x) { return x.id === id; });
+  var n = prompt('📝 Izoh:', m ? m.caption || '' : '');
+  if (n === null) return;
+  try {
+    await fetch('/api/media/' + id, {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify({caption: n})});
+    loadMedia('all');
+  } catch(e) { alert('Xatolik'); }
+}
+
+async function deleteMediaItem(id) {
+  if (!confirm('O\'chirmoqchimisiz?')) return;
+  try { await fetch('/api/media/' + id, {method: 'DELETE', headers: {Authorization: auth}}); loadMedia('all'); } catch(e) { alert('Xatolik'); }
+}
+
+function openMediaPicker(type, target) {
+  mediaPickerTarget = target;
+  mediaPickerType = type;
+  loadMediaPicker(type);
+  openModal('mediaPickerModal');
+}
+
+async function loadMediaPicker(type) {
+  try {
+    var url = type === 'all' ? '/api/media' : '/api/media/' + type;
+    var media = await (await fetch(url, {headers: {Authorization: auth}})).json();
+    if (!media.length) {
+      document.getElementById('mediaPickerList').innerHTML = '';
+      document.getElementById('mediaPickerEmpty').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('mediaPickerEmpty').classList.add('hidden');
+    var html = '';
+    for (var i = 0; i < media.length; i++) {
+      var m = media[i];
+      var cap = m.caption ? '<p class="text-xs text-gray-600 truncate mt-1">📝 ' + m.caption + '</p>' : '';
+      html += '<div class="glass-card rounded-2xl p-4 cursor-pointer hover:scale-105 transition" onclick="selectMedia(\'' + m.file_id + '\')"><div class="text-center"><span class="text-4xl">' + getMediaIcon(m.file_type) + '</span><p class="font-medium text-sm mt-3 truncate">' + (m.file_name || m.file_type) + '</p>' + cap + '</div></div>';
+    }
+    document.getElementById('mediaPickerList').innerHTML = html;
+  } catch(e) { console.error(e); }
+}
+
+function filterMediaPicker(t) { loadMediaPicker(t); }
+function selectMedia(f) { if (mediaPickerTarget) document.getElementById(mediaPickerTarget).value = f; closeModal('mediaPickerModal'); }
+
+async function loadAll() {
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadSubscriptionPlans(), loadReminders()]);
+  await loadPostLessonFlow();
+}
+
+async function loadStats() {
+  try {
+    var d = await (await fetch('/api/stats', {headers: {Authorization: auth}})).json();
+    document.getElementById('totalUsers').textContent = d.total_users || 0;
+    document.getElementById('paidUsers').textContent = d.paid_users || 0;
+    document.getElementById('monthlyRevenue').textContent = fmtMoney(d.monthly_revenue || 0);
+    document.getElementById('todayUsers').textContent = '+' + (d.today_users || 0);
+    var el = document.getElementById('usersCountInfo'); if (el) el.textContent = d.total_users || 0;
+    
+    var fn = {0: 'Yangi', 1: 'Start', 2: '1-Dars', 3: 'CustDev', 4: '2-Dars', 5: 'CustDev', 6: '3-Dars', 7: 'CustDev', 8: '4-Dars', 9: 'Pitch', 10: 'Sotish', 11: 'Premium'};
+    var funnelHtml = '';
+    var fd = d.funnel_distribution || [];
+    for (var i = 0; i < fd.length; i++) {
+      funnelHtml += '<div class="glass-card rounded-2xl p-4 text-center"><p class="text-xs text-gray-500 mb-1">' + (fn[fd[i].funnel_step] || fd[i].funnel_step) + '</p><p class="text-2xl font-bold gradient-text">' + fd[i].count + '</p></div>';
+    }
+    document.getElementById('funnelStats').innerHTML = funnelHtml;
+    
+    var pa = await (await fetch('/api/payments/analytics', {headers: {Authorization: auth}})).json();
+    document.getElementById('payToday').textContent = fmtMoney(pa.today && pa.today.amount || 0);
+    document.getElementById('payTodayCount').textContent = (pa.today && pa.today.count || 0) + ' ta';
+    document.getElementById('payWeek').textContent = fmtMoney(pa.week && pa.week.amount || 0);
+    document.getElementById('payWeekCount').textContent = (pa.week && pa.week.count || 0) + ' ta';
+    document.getElementById('payMonth').textContent = fmtMoney(pa.month && pa.month.amount || 0);
+    document.getElementById('payMonthCount').textContent = (pa.month && pa.month.count || 0) + ' ta';
+    document.getElementById('payYear').textContent = fmtMoney(pa.year && pa.year.amount || 0);
+    document.getElementById('payYearCount').textContent = (pa.year && pa.year.count || 0) + ' ta';
+    document.getElementById('paymeTotal').textContent = fmtMoney(pa.payme && pa.payme.amount || 0);
+    document.getElementById('paymeCount').textContent = (pa.payme && pa.payme.count || 0) + ' ta';
+    document.getElementById('clickTotal').textContent = fmtMoney(pa.click && pa.click.amount || 0);
+    document.getElementById('clickCount').textContent = (pa.click && pa.click.count || 0) + ' ta';
+    
+    // Payment Method Chart
+    var paymeAmt = pa.payme && pa.payme.amount || 0;
+    var clickAmt = pa.click && pa.click.amount || 0;
+    
+    if (paymentMethodChart) paymentMethodChart.destroy();
+    var pmCtx = document.getElementById('paymentMethodChart');
+    if (pmCtx) {
+      paymentMethodChart = new Chart(pmCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Payme', 'Click'],
+          datasets: [{
+            data: [paymeAmt / 100, clickAmt / 100],
+            backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+          }
+        }
+      });
+    }
+    
+    // Monthly Trend Chart
+    if (monthlyTrendChart) monthlyTrendChart.destroy();
+    var mtCtx = document.getElementById('monthlyTrendChart');
+    if (mtCtx && pa.daily) {
+      var dailyRev = (pa.daily || []).slice(-30).reverse();
+      monthlyTrendChart = new Chart(mtCtx, {
+        type: 'bar',
+        data: {
+          labels: dailyRev.map(function(d) { return d.date ? d.date.slice(5) : ''; }),
+          datasets: [{
+            data: dailyRev.map(function(d) { return d.amount / 100; }),
+            backgroundColor: 'rgba(139, 92, 246, 0.6)',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+        }
+      });
+    }
+    
+    var sub = await (await fetch('/api/subscribers/daily', {headers: {Authorization: auth}})).json();
+    if (sChart) sChart.destroy();
+    var dl = (sub.daily || []).reverse().slice(-14);
+    sChart = new Chart(document.getElementById('subscribersChart'), {
+      type: 'line',
+      data: {
+        labels: dl.map(function(x) { return x.date ? x.date.slice(5, 10) : ''; }),
+        datasets: [{data: dl.map(function(x) { return x.count; }), borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', tension: 0.4, fill: true, borderWidth: 3, pointRadius: 0}]
+      },
+      options: {responsive: true, plugins: {legend: {display: false}}, scales: {x: {grid: {display: false}}, y: {grid: {color: 'rgba(0,0,0,0.05)'}}}}
+    });
+    
+    if (rChart) rChart.destroy();
+    var dr = (pa.daily || []).reverse().slice(-14);
+    rChart = new Chart(document.getElementById('revenueChart'), {
+      type: 'line',
+      data: {
+        labels: dr.map(function(x) { return x.date ? x.date.slice(5, 10) : ''; }),
+        datasets: [{data: dr.map(function(x) { return x.amount / 100; }), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true, borderWidth: 3, pointRadius: 0}]
+      },
+      options: {responsive: true, plugins: {legend: {display: false}}, scales: {x: {grid: {display: false}}, y: {grid: {color: 'rgba(0,0,0,0.05)'}}}}
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function loadUsers() {
+  try {
+    allUsers = await (await fetch('/api/users', {headers: {Authorization: auth}})).json();
+    applyFilters();
+    renderUserCharts();
+  } catch(e) { console.error(e); }
+}
+
+function renderUserCharts() {
+  // Premium vs Free chart
+  var paid = 0, free = 0;
+  for (var i = 0; i < allUsers.length; i++) {
+    if (allUsers[i].is_paid) paid++; else free++;
+  }
+  
+  if (userTypeChart) userTypeChart.destroy();
+  var ctx1 = document.getElementById('userTypeChart');
+  if (ctx1) {
+    userTypeChart = new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: ['Premium', 'Free'],
+        datasets: [{
+          data: [paid, free],
+          backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(156, 163, 175, 0.5)'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+        }
+      }
+    });
+  }
+  
+  // Lesson distribution chart
+  var lessonDist = {};
+  for (var j = 0; j < allUsers.length; j++) {
+    var lesson = allUsers[j].current_lesson || 0;
+    lessonDist[lesson] = (lessonDist[lesson] || 0) + 1;
+  }
+  var lessonLabels = Object.keys(lessonDist).sort(function(a,b) { return a - b; });
+  var lessonData = lessonLabels.map(function(k) { return lessonDist[k]; });
+  
+  if (lessonDistChart) lessonDistChart.destroy();
+  var ctx2 = document.getElementById('lessonDistChart');
+  if (ctx2) {
+    lessonDistChart = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: lessonLabels.map(function(l) { return l + '-dars'; }),
+        datasets: [{
+          data: lessonData,
+          backgroundColor: 'rgba(139, 92, 246, 0.7)',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+  
+  // Weekly growth chart (last 7 days)
+  var weeklyData = {};
+  var today = new Date();
+  for (var d = 6; d >= 0; d--) {
+    var date = new Date(today);
+    date.setDate(date.getDate() - d);
+    var key = date.toISOString().slice(0, 10);
+    weeklyData[key] = 0;
+  }
+  for (var u = 0; u < allUsers.length; u++) {
+    if (allUsers[u].created_at) {
+      var userDate = allUsers[u].created_at.slice(0, 10);
+      if (weeklyData.hasOwnProperty(userDate)) {
+        weeklyData[userDate]++;
+      }
+    }
+  }
+  
+  if (weeklyGrowthChart) weeklyGrowthChart.destroy();
+  var ctx3 = document.getElementById('weeklyGrowthChart');
+  if (ctx3) {
+    weeklyGrowthChart = new Chart(ctx3, {
+      type: 'line',
+      data: {
+        labels: Object.keys(weeklyData).map(function(d) { return d.slice(5); }),
+        datasets: [{
+          data: Object.values(weeklyData),
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4,
+          fill: true,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: '#f59e0b'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+}
+
+function renderUsers(u) {
+  var html = '';
+  for (var i = 0; i < u.length; i++) {
+    var x = u[i];
+    var status = x.is_paid ? '<span class="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 text-white text-xs">Premium</span>' : '<span class="px-3 py-1 rounded-full glass text-xs">Free</span>';
+    html += '<tr class="hover:bg-white/30 cursor-pointer transition" onclick="showUser(\'' + x.telegram_id + '\')"><td class="px-6 py-4 font-medium">' + (x.full_name || '-') + '</td><td class="px-6 py-4 text-gray-500">' + (x.phone || '-') + '</td><td class="px-6 py-4"><span class="px-3 py-1 rounded-full glass text-xs">' + (x.current_lesson || 0) + '/' + (allLessons.length || 4) + '</span></td><td class="px-6 py-4">' + status + '</td><td class="px-6 py-4 text-xl">' + (x.age_group ? '✅' : '⏳') + '</td><td class="px-6 py-4 text-gray-500">' + fmtDate(x.created_at) + '</td></tr>';
+  }
+  document.getElementById('usersTable').innerHTML = html;
+}
+
+function setFilter(type, value) {
+  userFilters[type] = value;
+  // Update button states
+  document.querySelectorAll('[id^="filter-' + type + '-"]').forEach(function(btn) {
+    btn.classList.remove('filter-btn-active');
+  });
+  var activeBtn = document.getElementById('filter-' + type + '-' + value);
+  if (activeBtn) activeBtn.classList.add('filter-btn-active');
+  applyFilters();
+}
+
+function applyFilters() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var lessonFilter = document.getElementById('filter-lesson').value;
+  var sortBy = document.getElementById('filter-sort').value;
+  
+  var filtered = allUsers.filter(function(u) {
+    // Text search
+    var matchesSearch = (u.full_name || '').toLowerCase().indexOf(q) >= 0 || 
+                        (u.phone || '').indexOf(q) >= 0 || 
+                        (u.username || '').toLowerCase().indexOf(q) >= 0;
+    if (!matchesSearch) return false;
+    
+    // Status filter
+    if (userFilters.status === 'paid' && !u.is_paid) return false;
+    if (userFilters.status === 'free' && u.is_paid) return false;
+    
+    // CustDev filter
+    var hasCustdev = u.age_group || u.occupation || u.income_level || u.main_problem || u.goal;
+    if (userFilters.custdev === 'done' && !hasCustdev) return false;
+    if (userFilters.custdev === 'pending' && hasCustdev) return false;
+    
+    // Lesson filter
+    if (lessonFilter !== 'all') {
+      var userLesson = u.current_lesson || 0;
+      if (lessonFilter === '5+') {
+        if (userLesson < 5) return false;
+      } else {
+        if (userLesson !== parseInt(lessonFilter)) return false;
+      }
+    }
+    
+    return true;
+  });
+  
+  // Sort
+  filtered.sort(function(a, b) {
+    switch(sortBy) {
+      case 'newest':
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      case 'oldest':
+        return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      case 'name':
+        return (a.full_name || '').localeCompare(b.full_name || '');
+      case 'lesson-high':
+        return (b.current_lesson || 0) - (a.current_lesson || 0);
+      case 'lesson-low':
+        return (a.current_lesson || 0) - (b.current_lesson || 0);
+      default:
+        return 0;
+    }
+  });
+  
+  document.getElementById('usersFilteredCount').textContent = '(' + filtered.length + ' / ' + allUsers.length + ')';
+  renderUsers(filtered);
+}
+
+function filterUsers() {
+  applyFilters();
+}
+
+function resetAllFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filter-lesson').value = 'all';
+  document.getElementById('filter-sort').value = 'newest';
+  userFilters = { status: 'all', custdev: 'all', lesson: 'all', sort: 'newest' };
+  
+  // Reset button styles
+  document.querySelectorAll('[id^="filter-status-"], [id^="filter-custdev-"]').forEach(function(btn) {
+    btn.classList.remove('filter-btn-active');
+  });
+  document.getElementById('filter-status-all').classList.add('filter-btn-active');
+  document.getElementById('filter-custdev-all').classList.add('filter-btn-active');
+  
+  applyFilters();
+}
+
+function showUser(tid) {
+  var u = allUsers.find(function(x) { return String(x.telegram_id) === String(tid); });
+  if (!u) return;
+  
+  var html = '';
+  
+  // Basic Info
+  html += '<div class="grid grid-cols-2 gap-4 text-sm mb-6">';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">👤 Ism</p><p class="font-semibold">' + (u.full_name || '-') + '</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">📱 Telefon</p><p class="font-semibold">' + (u.phone || '-') + '</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">📲 Username</p><p class="font-semibold">' + (u.username ? '@' + u.username : '-') + '</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">🆔 Telegram ID</p><p class="font-mono text-xs">' + u.telegram_id + '</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">📊 Status</p><p class="font-semibold">' + (u.is_paid ? '💎 Premium' : '🆓 Free') + '</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">📚 Joriy dars</p><p class="font-semibold">' + (u.current_lesson || 0) + '-dars</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">📅 Qo\'shilgan</p><p class="font-semibold">' + fmtDateTime(u.created_at) + '</p></div>';
+  html += '<div class="glass rounded-2xl p-4"><p class="text-xs text-gray-500 mb-1">🔄 Funnel Step</p><p class="font-semibold">' + (u.funnel_step || 0) + '</p></div>';
+  html += '</div>';
+  
+  // CustDev Info
+  html += '<h3 class="font-bold mb-4 text-lg">📝 CustDev Ma\'lumotlari</h3>';
+  
+  var hasCustdev = u.age_group || u.occupation || u.income_level || u.main_problem || u.goal || u.previous_courses || u.budget_range;
+  
+  if (hasCustdev) {
+    html += '<div class="space-y-3">';
+    
+    if (u.age_group) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">📊</span><p class="text-xs text-gray-500">Yosh guruhi</p></div><p class="font-medium">' + u.age_group + '</p></div>';
+    }
+    
+    if (u.occupation) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">💼</span><p class="text-xs text-gray-500">Kasb / Faoliyat</p></div><p class="font-medium">' + u.occupation + '</p></div>';
+    }
+    
+    if (u.income_level) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">💰</span><p class="text-xs text-gray-500">Daromad darajasi</p></div><p class="font-medium">' + u.income_level + '</p></div>';
+    }
+    
+    if (u.previous_courses) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">📚</span><p class="text-xs text-gray-500">Oldin kurs o\'qiganmi</p></div><p class="font-medium">' + u.previous_courses + '</p></div>';
+    }
+    
+    if (u.budget_range) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">💵</span><p class="text-xs text-gray-500">Byudjet</p></div><p class="font-medium">' + u.budget_range + '</p></div>';
+    }
+    
+    if (u.main_problem) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">😰</span><p class="text-xs text-gray-500">Asosiy muammo</p></div><p class="font-medium text-gray-700">' + u.main_problem + '</p></div>';
+    }
+    
+    if (u.goal) {
+      html += '<div class="glass rounded-2xl p-4"><div class="flex items-center gap-2 mb-1"><span class="text-lg">🎯</span><p class="text-xs text-gray-500">Maqsad</p></div><p class="font-medium text-gray-700">' + u.goal + '</p></div>';
+    }
+    
+    html += '</div>';
+  } else {
+    html += '<div class="glass rounded-2xl p-6 text-center text-gray-400"><span class="text-3xl mb-2 block">⏳</span>CustDev ma\'lumotlari hali yo\'q</div>';
+  }
+  
+  // Actions
+  html += '<div class="mt-6 pt-4 border-t border-gray-200 flex gap-3">';
+  html += '<a href="https://t.me/' + (u.username || '') + '" target="_blank" class="flex-1 py-3 rounded-xl glass-btn text-white text-center font-medium ' + (u.username ? '' : 'opacity-50 pointer-events-none') + '">💬 Telegram</a>';
+  html += '<button onclick="copyUserInfo(\'' + u.telegram_id + '\')" class="flex-1 py-3 rounded-xl glass text-gray-700 font-medium">📋 Nusxalash</button>';
+  html += '</div>';
+  
+  document.getElementById('userModalContent').innerHTML = html;
+  openModal('userModal');
+}
+
+function exportExcel() {
+  if (!allUsers.length) return alert('Ma\'lumot yo\'q');
+  var h = ['Ism', 'Telefon', 'Username', 'Telegram ID', 'Status', 'Dars', 'Yosh', 'Kasb', 'Daromad', 'Sana'];
+  var rows = allUsers.map(function(u) {
+    return [u.full_name || '', u.phone || '', u.username || '', u.telegram_id, u.is_paid ? 'Premium' : 'Free', u.current_lesson || 0, u.age_group || '', u.occupation || '', u.income_level || '', fmtDate(u.created_at)];
+  });
+  var csv = '\uFEFF' + h.join(',') + '\n';
+  rows.forEach(function(row) {
+    csv += row.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',') + '\n';
+  });
+  var b = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = 'users_' + fmtDate(new Date()) + '.csv';
+  a.click();
+}
+
+async function loadPayments() {
+  try {
+    allPayments = await (await fetch('/api/payments', {headers: {Authorization: auth}})).json();
+    var html = '';
+    var items = allPayments.slice(0, 20);
+    for (var i = 0; i < items.length; i++) {
+      var x = items[i];
+      var provider;
+      if (x.payment_method === 'payme') {
+        provider = '<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">💳 Payme</span>';
+      } else if (x.payment_method === 'click') {
+        provider = '<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs">💠 Click</span>';
+      } else {
+        provider = '<span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">❓ -</span>';
+      }
+      var status = x.state === 'performed' ? '✅' : (x.state === 'created' ? '⏳' : '🔘');
+      html += '<tr onclick="openBuyerModal(' + i + ')" class="hover:bg-white/30 transition cursor-pointer"><td class="px-6 py-4 text-gray-500">' + fmtDateTime(x.created_at) + '</td><td class="px-6 py-4 font-medium">' + (x.full_name || x.telegram_id) + '</td><td class="px-6 py-4 font-bold gradient-text-green">' + fmtMoney(x.amount || 0) + '</td><td class="px-6 py-4">' + provider + '</td><td class="px-6 py-4 text-xl">' + status + '</td></tr>';
+    }
+    document.getElementById('paymentsTable').innerHTML = html || '<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
+    
+    // Load buyer analytics
+    loadBuyerAnalytics();
+  } catch(e) { console.error(e); }
+}
+
+// ============ Buyer Modal Functions ============
+async function openBuyerModal(index) {
+  var payment = allPayments[index];
+  if (!payment) return;
+  
+  // Find user data
+  var user = allUsers.find(function(u) { return String(u.telegram_id) === String(payment.telegram_id); });
+  
+  // Basic info
+  document.getElementById('buyerName').textContent = payment.full_name || user?.full_name || '-';
+  document.getElementById('buyerPhone').textContent = user?.phone || '-';
+  document.getElementById('buyerUsername').textContent = user?.username ? '@' + user.username : '-';
+  document.getElementById('buyerTelegramId').textContent = payment.telegram_id || '-';
+  
+  // Payment info
+  document.getElementById('buyerAmount').textContent = fmtMoney(payment.amount || 0);
+  document.getElementById('buyerMethod').textContent = payment.payment_method === 'payme' ? '💳 Payme' : (payment.payment_method === 'click' ? '💠 Click' : '❓ Noma\'lum');
+  document.getElementById('buyerPaymentDate').textContent = fmtDateTime(payment.created_at);
+  document.getElementById('buyerStatus').textContent = payment.state === 'performed' ? '✅ To\'langan' : '⏳ Kutilmoqda';
+  
+  // Time analysis
+  var regDate = user?.created_at ? new Date(user.created_at) : null;
+  var payDate = payment.created_at ? new Date(payment.created_at) : null;
+  
+  document.getElementById('buyerRegistered').textContent = regDate ? fmtDateTime(regDate) : '-';
+  document.getElementById('buyerPurchased').textContent = payDate ? fmtDateTime(payDate) : '-';
+  
+  if (regDate && payDate) {
+    var diffMs = payDate - regDate;
+    document.getElementById('buyerTimeToPurchase').textContent = formatTimeDiff(diffMs);
+  } else {
+    document.getElementById('buyerTimeToPurchase').textContent = '-';
+  }
+  
+  // CustDev data
+  var custdevHtml = '';
+  if (user && (user.age_group || user.occupation || user.income_level || user.main_problem || user.goal)) {
+    custdevHtml += '<div class="grid grid-cols-2 gap-3">';
+    if (user.age_group) custdevHtml += '<div class="glass rounded-xl p-3"><p class="text-xs text-gray-400">👤 Yosh</p><p class="font-medium">' + user.age_group + '</p></div>';
+    if (user.occupation) custdevHtml += '<div class="glass rounded-xl p-3"><p class="text-xs text-gray-400">💼 Kasb</p><p class="font-medium">' + user.occupation + '</p></div>';
+    if (user.income_level) custdevHtml += '<div class="glass rounded-xl p-3"><p class="text-xs text-gray-400">💰 Daromad</p><p class="font-medium">' + user.income_level + '</p></div>';
+    if (user.main_problem) custdevHtml += '<div class="glass rounded-xl p-3 col-span-2"><p class="text-xs text-gray-400">😰 Muammo</p><p class="font-medium">' + user.main_problem + '</p></div>';
+    if (user.goal) custdevHtml += '<div class="glass rounded-xl p-3 col-span-2"><p class="text-xs text-gray-400">🎯 Maqsad</p><p class="font-medium">' + user.goal + '</p></div>';
+    custdevHtml += '</div>';
+  } else {
+    custdevHtml = '<p class="text-gray-400 text-center">CustDev ma\'lumotlari yo\'q</p>';
+  }
+  document.getElementById('buyerCustdevData').innerHTML = custdevHtml;
+  
+  // Telegram link
+  var tgLink = user?.username ? 'https://t.me/' + user.username : 'tg://user?id=' + payment.telegram_id;
+  document.getElementById('buyerTelegramLink').href = tgLink;
+  
+  openModal('buyerModal');
+}
+
+function formatTimeDiff(ms) {
+  if (ms < 0) return '-';
+  
+  var seconds = Math.floor(ms / 1000);
+  var minutes = Math.floor(seconds / 60);
+  var hours = Math.floor(minutes / 60);
+  var days = Math.floor(hours / 24);
+  
+  if (days > 0) {
+    return days + ' kun ' + (hours % 24) + ' soat';
+  } else if (hours > 0) {
+    return hours + ' soat ' + (minutes % 60) + ' daqiqa';
+  } else if (minutes > 0) {
+    return minutes + ' daqiqa';
+  } else {
+    return seconds + ' soniya';
+  }
+}
+
+async function loadBuyerAnalytics() {
+  try {
+    // Get buyer analytics from API
+    var analytics = await (await fetch('/api/payments/buyer-analytics', {headers: {Authorization: auth}})).json();
+    
+    // Time to purchase stats
+    if (analytics.avgTimeToPurchase !== undefined) {
+      document.getElementById('avgTimeToPurchase').textContent = formatTimeDiff(analytics.avgTimeToPurchase);
+    }
+    if (analytics.fastestPurchase !== undefined) {
+      document.getElementById('fastestPurchase').textContent = formatTimeDiff(analytics.fastestPurchase);
+    }
+    if (analytics.slowestPurchase !== undefined) {
+      document.getElementById('slowestPurchase').textContent = formatTimeDiff(analytics.slowestPurchase);
+    }
+    if (analytics.conversionRate !== undefined) {
+      document.getElementById('conversionRate').textContent = analytics.conversionRate.toFixed(1) + '%';
+    }
+    
+    // Age distribution
+    var ageHtml = '';
+    var ageData = analytics.buyersByAge || {};
+    Object.keys(ageData).forEach(function(age) {
+      ageHtml += '<div class="flex justify-between items-center text-sm"><span>' + age + '</span><span class="font-bold text-violet-600">' + ageData[age] + '</span></div>';
+    });
+    document.getElementById('buyerAgeStats').innerHTML = ageHtml || '<p class="text-gray-400 text-xs text-center">Ma\'lumot yo\'q</p>';
+    
+    // Occupation distribution
+    var occHtml = '';
+    var occData = analytics.buyersByOccupation || {};
+    Object.keys(occData).forEach(function(occ) {
+      occHtml += '<div class="flex justify-between items-center text-sm"><span class="truncate mr-2">' + occ + '</span><span class="font-bold text-violet-600">' + occData[occ] + '</span></div>';
+    });
+    document.getElementById('buyerOccupationStats').innerHTML = occHtml || '<p class="text-gray-400 text-xs text-center">Ma\'lumot yo\'q</p>';
+    
+    // Problem distribution
+    var probHtml = '';
+    var probData = analytics.buyersByProblem || {};
+    Object.keys(probData).forEach(function(prob) {
+      probHtml += '<div class="flex justify-between items-center text-sm"><span class="truncate mr-2">' + prob + '</span><span class="font-bold text-violet-600">' + probData[prob] + '</span></div>';
+    });
+    document.getElementById('buyerProblemStats').innerHTML = probHtml || '<p class="text-gray-400 text-xs text-center">Ma\'lumot yo\'q</p>';
+    
+  } catch(e) { 
+    console.error('Buyer analytics error:', e);
+  }
+}
+
+async function loadLessons() {
+  try {
+    allLessons = await (await fetch('/api/lessons', {headers: {Authorization: auth}})).json();
+    var el = document.getElementById('lessonsCountInfo'); if (el) el.textContent = allLessons.length;
+    var html = '';
+    for (var i = 0; i < allLessons.length; i++) {
+      var l = allLessons[i];
+      var h = l.delay_hours || 0;
+      var dt;
+      if (h === 0) dt = '🚀 Darhol';
+      else if (h >= 24 && h % 24 === 0) dt = '⏰ ' + (h / 24) + ' kun';
+      else dt = '⏰ ' + h + ' soat';
+      html += '<div class="p-5 flex justify-between items-center hover:bg-white/30 transition"><div><p class="font-bold text-gray-800">' + l.lesson_number + '-DARS: ' + l.title + '</p><div class="flex gap-3 mt-2 text-sm"><span class="px-3 py-1 rounded-full glass text-xs">' + dt + '</span><span class="text-lg">' + (l.video_file_id ? '📹' : '➖') + '</span><span class="text-lg">' + (l.show_watched_button !== false ? '🔘' : '➖') + '</span></div></div><div class="flex gap-2"><button onclick="editLesson(' + l.lesson_number + ')" class="w-10 h-10 rounded-xl glass-card flex items-center justify-center">✏️</button><button onclick="deleteLesson(' + l.lesson_number + ')" class="w-10 h-10 rounded-xl glass-card flex items-center justify-center text-red-500">🗑</button></div></div>';
+    }
+    document.getElementById('lessonsList').innerHTML = html || '<p class="p-6 text-gray-400 text-center">Darslar yo\'q</p>';
+  } catch(e) { console.error(e); }
+}
+
+function addLesson() {
+  document.getElementById('lessonModalTitle').textContent = '➕ Yangi dars';
+  document.getElementById('lessonId').value = '';
+  document.getElementById('lessonTitle').value = '';
+  document.getElementById('lessonContent').value = '';
+  document.getElementById('lessonVideo').value = '';
+  document.getElementById('lessonImage').value = '';
+  document.getElementById('lessonAudio').value = '';
+  document.getElementById('delayImmediate').checked = true;
+  document.getElementById('lessonDelayValue').value = '24';
+  document.getElementById('lessonDelayUnit').value = 'hours';
+  toggleDelayInput();
+  document.getElementById('lessonShowBtn').checked = true;
+  document.getElementById('lessonBtnText').value = 'Videoni ko\'rib bo\'ldim ✅';
+  openModal('lessonModal');
+}
+
+function editLesson(n) {
+  var l = allLessons.find(function(x) { return x.lesson_number === n; });
+  if (!l) return;
+  document.getElementById('lessonModalTitle').textContent = '✏️ ' + n + '-Dars';
+  document.getElementById('lessonId').value = n;
+  document.getElementById('lessonTitle').value = l.title || '';
+  document.getElementById('lessonContent').value = l.content || '';
+  document.getElementById('lessonVideo').value = l.video_file_id || '';
+  document.getElementById('lessonImage').value = l.image_file_id || '';
+  document.getElementById('lessonAudio').value = l.audio_file_id || '';
+  
+  var h = l.delay_hours || 0;
+  if (h === 0) {
+    document.getElementById('delayImmediate').checked = true;
+    document.getElementById('lessonDelayValue').value = '24';
+    document.getElementById('lessonDelayUnit').value = 'hours';
+  } else {
+    document.getElementById('delayTimed').checked = true;
+    if (h % 24 === 0 && h >= 24) {
+      document.getElementById('lessonDelayValue').value = h / 24;
+      document.getElementById('lessonDelayUnit').value = 'days';
+    } else {
+      document.getElementById('lessonDelayValue').value = h;
+      document.getElementById('lessonDelayUnit').value = 'hours';
+    }
+  }
+  toggleDelayInput();
+  
+  document.getElementById('lessonShowBtn').checked = l.show_watched_button !== false;
+  document.getElementById('lessonBtnText').value = l.watched_button_text || 'Videoni ko\'rib bo\'ldim ✅';
+  openModal('lessonModal');
+}
+
+function toggleDelayInput() {
+  var isImmediate = document.getElementById('delayImmediate').checked;
+  document.getElementById('delayInputDiv').classList.toggle('hidden', isImmediate);
+}
+
+function getDelayHours() {
+  if (document.getElementById('delayImmediate').checked) return 0;
+  var v = parseInt(document.getElementById('lessonDelayValue').value) || 1;
+  return document.getElementById('lessonDelayUnit').value === 'days' ? v * 24 : v;
+}
+
+async function saveLesson() {
+  var id = document.getElementById('lessonId').value;
+  var data = {
+    title: document.getElementById('lessonTitle').value,
+    content: document.getElementById('lessonContent').value,
+    video_file_id: document.getElementById('lessonVideo').value || null,
+    image_file_id: document.getElementById('lessonImage').value || null,
+    audio_file_id: document.getElementById('lessonAudio').value || null,
+    delay_hours: getDelayHours(),
+    show_watched_button: document.getElementById('lessonShowBtn').checked,
+    watched_button_text: document.getElementById('lessonBtnText').value
+  };
+  try {
+    var r;
+    if (id) {
+      r = await fetch('/api/lessons/' + id, {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    } else {
+      r = await fetch('/api/lessons', {method: 'POST', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    }
+    var res = await r.json();
+    if (!r.ok) throw new Error(res.error || 'Xatolik');
+    closeModal('lessonModal');
+    await loadLessons();
+    alert('✅ Saqlandi!');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+async function deleteLesson(n) {
+  if (!confirm(n + '-darsni o\'chirmoqchimisiz?')) return;
+  try { await fetch('/api/lessons/' + n, {method: 'DELETE', headers: {Authorization: auth}}); loadLessons(); }
+  catch(e) { alert('Xatolik'); }
+}
+
+async function loadCustDev() {
+  try {
+    allCustDev = await (await fetch('/api/custdev', {headers: {Authorization: auth}})).json();
+    var el = document.getElementById('custdevCountInfo'); if (el) el.textContent = allCustDev.length;
+    document.getElementById('custdevTotalQ').textContent = allCustDev.length;
+    
+    // Calculate answered users
+    var answered = 0;
+    var notAnswered = 0;
+    for (var i = 0; i < allUsers.length; i++) {
+      if (allUsers[i].age_group || allUsers[i].occupation || allUsers[i].income_level || allUsers[i].main_problem || allUsers[i].goal) {
+        answered++;
+      } else {
+        notAnswered++;
+      }
+    }
+    document.getElementById('custdevAnswered').textContent = answered;
+    document.getElementById('custdevNotAnswered').textContent = notAnswered;
+    var conversion = allUsers.length > 0 ? Math.round((answered / allUsers.length) * 100) : 0;
+    document.getElementById('custdevConversion').textContent = conversion + '%';
+    
+    if (!allCustDev.length) {
+      document.getElementById('custdevList').innerHTML = '<p class="p-6 text-gray-400 text-center">Savollar yo\'q</p>';
+      return;
+    }
+    
+    var g = {};
+    for (var i = 0; i < allCustDev.length; i++) {
+      var q = allCustDev[i];
+      var k = q.after_lesson || 1;
+      if (!g[k]) g[k] = [];
+      g[k].push(q);
+    }
+    
+    var html = '';
+    var keys = Object.keys(g).sort(function(a, b) { return Number(a) - Number(b); });
+    for (var j = 0; j < keys.length; j++) {
+      var key = keys[j];
+      html += '<div class="p-4"><p class="text-xs font-semibold text-violet-600 mb-3">📚 ' + key + '-darsdan keyin</p>';
+      for (var m = 0; m < g[key].length; m++) {
+        var qq = g[key][m];
+        var o = '';
+        if (qq.question_type === 'buttons' && qq.options) {
+          try {
+            var parsed = typeof qq.options === 'string' ? JSON.parse(qq.options) : qq.options;
+            o = 'Tugmalar: ' + parsed.join(', ');
+          } catch(e) { o = 'Tugmalar'; }
+        } else { o = 'Matn'; }
+        html += '<div class="p-4 glass rounded-2xl mb-2 flex justify-between items-start"><div class="flex-1"><p class="font-medium">' + (qq.question_text.length > 60 ? qq.question_text.slice(0, 60) + '...' : qq.question_text) + '</p><p class="text-xs text-gray-500 mt-1">' + o + (qq.field_name ? ' → ' + qq.field_name : '') + '</p></div><div class="flex gap-1 ml-3"><button onclick="editCustDev(' + qq.id + ')" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm">✏️</button><button onclick="deleteCustDev(' + qq.id + ')" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm text-red-500">🗑</button></div></div>';
+      }
+      html += '</div>';
+    }
+    document.getElementById('custdevList').innerHTML = html;
+    
+    var st = {};
+    var fields = ['age_group', 'occupation', 'income_level', 'main_problem', 'previous_courses', 'budget_range', 'goal'];
+    for (var f = 0; f < fields.length; f++) {
+      st[fields[f]] = {};
+      for (var u = 0; u < allUsers.length; u++) {
+        if (allUsers[u][fields[f]]) {
+          var val = allUsers[u][fields[f]];
+          st[fields[f]][val] = (st[fields[f]][val] || 0) + 1;
+        }
+      }
+    }
+    var fn = {
+      age_group: '📊 Yosh guruhi', 
+      occupation: '💼 Kasb/Faoliyat', 
+      income_level: '💰 Daromad darajasi',
+      main_problem: '😰 Asosiy muammo',
+      previous_courses: '📚 Oldin kurs o\'qiganmi',
+      budget_range: '💵 Byudjet',
+      goal: '🎯 Maqsad'
+    };
+    var statsHtml = '';
+    for (var ff = 0; ff < fields.length; ff++) {
+      var field = fields[ff];
+      var entries = Object.entries(st[field]).sort(function(a, b) { return b[1] - a[1]; });
+      if (!entries.length) continue;
+      
+      var total = entries.reduce(function(sum, e) { return sum + e[1]; }, 0);
+      statsHtml += '<div class="glass rounded-2xl p-5"><div class="flex justify-between items-center mb-4"><p class="font-semibold text-gray-700">' + (fn[field] || field) + '</p><span class="text-xs text-gray-400">' + total + ' ta javob</span></div><div class="max-h-48 overflow-y-auto scrollbar-thin pr-2">';
+      
+      for (var e = 0; e < entries.length; e++) {
+        var percent = Math.round((entries[e][1] / total) * 100);
+        var barColor = e === 0 ? 'from-violet-400 to-purple-500' : (e === 1 ? 'from-emerald-400 to-green-500' : 'from-blue-400 to-cyan-500');
+        var displayText = entries[e][0].length > 50 ? entries[e][0].slice(0, 50) + '...' : entries[e][0];
+        statsHtml += '<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span class="text-gray-600 truncate mr-2" title="' + entries[e][0].replace(/"/g, '&quot;') + '">' + displayText + '</span><span class="font-bold gradient-text whitespace-nowrap">' + entries[e][1] + ' <span class="text-gray-400 font-normal">(' + percent + '%)</span></span></div><div class="w-full bg-gray-100 rounded-full h-2"><div class="bg-gradient-to-r ' + barColor + ' h-2 rounded-full transition-all" style="width: ' + percent + '%"></div></div></div>';
+      }
+      statsHtml += '</div></div>';
+    }
+    if (!statsHtml) statsHtml = '<div class="col-span-full text-center text-gray-400 py-8">CustDev ma\'lumotlari yo\'q</div>';
+    document.getElementById('custdevStats').innerHTML = statsHtml;
+    
+    // Render CustDev Charts
+    renderCustDevCharts(st);
+  } catch(e) { console.error(e); }
+}
+
+function renderCustDevCharts(st) {
+  var chartColors = [
+    'rgba(139, 92, 246, 0.8)',
+    'rgba(16, 185, 129, 0.8)',
+    'rgba(59, 130, 246, 0.8)',
+    'rgba(245, 158, 11, 0.8)',
+    'rgba(239, 68, 68, 0.8)',
+    'rgba(168, 85, 247, 0.8)'
+  ];
+  
+  // Age Chart
+  if (ageChart) ageChart.destroy();
+  var ageCtx = document.getElementById('ageChart');
+  if (ageCtx && st.age_group) {
+    var ageData = Object.entries(st.age_group).sort(function(a,b) { return b[1] - a[1]; });
+    ageChart = new Chart(ageCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ageData.map(function(e) { return e[0]; }),
+        datasets: [{
+          data: ageData.map(function(e) { return e[1]; }),
+          backgroundColor: chartColors,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } } }
+      }
+    });
+  }
+  
+  // Occupation Chart
+  if (occupationChart) occupationChart.destroy();
+  var occCtx = document.getElementById('occupationChart');
+  if (occCtx && st.occupation) {
+    var occData = Object.entries(st.occupation).sort(function(a,b) { return b[1] - a[1]; }).slice(0, 5);
+    occupationChart = new Chart(occCtx, {
+      type: 'bar',
+      data: {
+        labels: occData.map(function(e) { return e[0].length > 12 ? e[0].slice(0, 12) + '...' : e[0]; }),
+        datasets: [{
+          data: occData.map(function(e) { return e[1]; }),
+          backgroundColor: 'rgba(16, 185, 129, 0.7)',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, y: { grid: { display: false } } }
+      }
+    });
+  }
+  
+  // Income Chart
+  if (incomeChart) incomeChart.destroy();
+  var incCtx = document.getElementById('incomeChart');
+  if (incCtx && st.income_level) {
+    var incData = Object.entries(st.income_level).sort(function(a,b) { return b[1] - a[1]; });
+    incomeChart = new Chart(incCtx, {
+      type: 'doughnut',
+      data: {
+        labels: incData.map(function(e) { return e[0]; }),
+        datasets: [{
+          data: incData.map(function(e) { return e[1]; }),
+          backgroundColor: chartColors.slice().reverse(),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } } }
+      }
+    });
+  }
+  
+  // Budget Chart
+  if (budgetChart) budgetChart.destroy();
+  var budCtx = document.getElementById('budgetChart');
+  if (budCtx && st.budget_range) {
+    var budData = Object.entries(st.budget_range).sort(function(a,b) { return b[1] - a[1]; });
+    budgetChart = new Chart(budCtx, {
+      type: 'pie',
+      data: {
+        labels: budData.map(function(e) { return e[0]; }),
+        datasets: [{
+          data: budData.map(function(e) { return e[1]; }),
+          backgroundColor: chartColors,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } } }
+      }
+    });
+  }
+}
+
+function toggleCustdevOptions() {
+  document.getElementById('custdevOptionsDiv').style.display = document.getElementById('custdevType').value === 'buttons' ? 'block' : 'none';
+}
+
+function addCustDev() {
+  document.getElementById('custdevModalTitle').textContent = '➕ Yangi savol';
+  document.getElementById('custdevId').value = '';
+  document.getElementById('custdevText').value = '';
+  document.getElementById('custdevLesson').value = '1';
+  document.getElementById('custdevType').value = 'buttons';
+  document.getElementById('custdevOptions').value = '';
+  document.getElementById('custdevField').value = '';
+  document.getElementById('custdevOptionsDiv').style.display = 'block';
+  openModal('custdevModal');
+}
+
+function editCustDev(id) {
+  var q = allCustDev.find(function(x) { return x.id === id; });
+  if (!q) return;
+  document.getElementById('custdevModalTitle').textContent = '✏️ Savol';
+  document.getElementById('custdevId').value = id;
+  document.getElementById('custdevText').value = q.question_text;
+  document.getElementById('custdevLesson').value = q.after_lesson || 1;
+  document.getElementById('custdevType').value = q.question_type || 'buttons';
+  var ot = '';
+  if (q.options) {
+    try {
+      var p = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+      ot = p.join('\n');
+    } catch(e) {}
+  }
+  document.getElementById('custdevOptions').value = ot;
+  document.getElementById('custdevField').value = q.field_name || '';
+  document.getElementById('custdevOptionsDiv').style.display = q.question_type === 'buttons' ? 'block' : 'none';
+  openModal('custdevModal');
+}
+
+async function saveCustDev() {
+  var id = document.getElementById('custdevId').value;
+  var opts = document.getElementById('custdevOptions').value.split('\n').map(function(x) { return x.trim(); }).filter(Boolean);
+  var data = {
+    question_text: document.getElementById('custdevText').value,
+    after_lesson: parseInt(document.getElementById('custdevLesson').value) || 1,
+    question_type: document.getElementById('custdevType').value,
+    options: document.getElementById('custdevType').value === 'buttons' ? opts : null,
+    field_name: document.getElementById('custdevField').value || null
+  };
+  try {
+    if (id) {
+      await fetch('/api/custdev/' + id, {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    } else {
+      await fetch('/api/custdev', {method: 'POST', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    }
+    closeModal('custdevModal');
+    loadCustDev();
+    alert('✅ Saqlandi!');
+  } catch(e) { alert('❌ Xatolik'); }
+}
+
+async function deleteCustDev(id) {
+  if (!confirm('O\'chirmoqchimisiz?')) return;
+  try { await fetch('/api/custdev/' + id, {method: 'DELETE', headers: {Authorization: auth}}); loadCustDev(); }
+  catch(e) { alert('Xatolik'); }
+}
+
+async function loadPitch() {
+  try {
+    pitchData = await (await fetch('/api/pitch', {headers: {Authorization: auth}})).json() || {};
+    document.getElementById('pitchPreview').innerHTML = '<p class="mb-3"><strong>Matn:</strong> ' + ((pitchData.text || '-').slice(0, 100) + (pitchData.text && pitchData.text.length > 100 ? '...' : '')) + '</p><div class="flex gap-3 text-lg"><span>' + (pitchData.video_file_id ? '📹 ✅' : '📹 ➖') + '</span><span>' + (pitchData.image_file_id ? '🖼 ✅' : '🖼 ➖') + '</span><span>' + (pitchData.audio_file_id ? '🎤 ✅' : '🎤 ➖') + '</span></div><p class="mt-3 text-gray-500">⏱ ' + (pitchData.delay_hours || 2) + ' soat</p>';
+  } catch(e) { console.error(e); }
+}
+
+// ============ Price Functions ============
+async function loadPrice() {
+  try {
+    var d = await (await fetch('/api/settings/price', {headers: {Authorization: auth}})).json();
+    subscriptionPrice = d.price || 9700000;
+    var priceInSum = subscriptionPrice / 100;
+    document.getElementById('subscriptionPrice').value = priceInSum;
+    document.getElementById('priceDisplay').textContent = formatPriceDisplay(priceInSum);
+  } catch(e) { console.error(e); }
+}
+
+function formatPriceDisplay(sum) {
+  return sum.toLocaleString('uz-UZ') + " so'm";
+}
+
+function setQuickPrice(sum) {
+  document.getElementById('subscriptionPrice').value = sum;
+  document.getElementById('priceDisplay').textContent = formatPriceDisplay(sum);
+}
+
+document.getElementById('subscriptionPrice').addEventListener('input', function() {
+  var sum = parseInt(this.value) || 0;
+  document.getElementById('priceDisplay').textContent = formatPriceDisplay(sum);
+});
+
+async function saveSubscriptionPrice() {
+  var sum = parseInt(document.getElementById('subscriptionPrice').value) || 97000;
+  var tiyin = sum * 100;
+  
+  try {
+    var r = await fetch('/api/settings/price', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({price: tiyin})
+    });
+    var d = await r.json();
+    if (d.success) {
+      subscriptionPrice = tiyin;
+      alert('✅ Narx saqlandi: ' + formatPriceDisplay(sum));
+    } else {
+      alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+    }
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+// ============ Channel Link Functions ============
+async function loadChannelLink() {
+  try {
+    var d = await (await fetch('/api/settings/channel', {headers: {Authorization: auth}})).json();
+    document.getElementById('premiumChannelLink').value = d.channel_link || '';
+    document.getElementById('premiumChannelId').value = d.channel_id || '';
+  } catch(e) { console.error(e); }
+}
+
+async function saveChannelLink() {
+  var link = document.getElementById('premiumChannelLink').value.trim();
+  
+  try {
+    var r = await fetch('/api/settings/channel', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({channel_link: link})
+    });
+    var d = await r.json();
+    if (d.success) {
+      alert('✅ Kanal havolasi saqlandi!');
+    } else {
+      alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+    }
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+// ============ Channel ID Functions ============
+async function loadChannelId() {
+  // Already loaded in loadChannelLink
+}
+
+async function saveChannelId() {
+  var channelId = document.getElementById('premiumChannelId').value.trim();
+  
+  try {
+    var r = await fetch('/api/settings/channel', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({channel_id: channelId})
+    });
+    var d = await r.json();
+    if (d.success) {
+      alert('✅ Kanal ID saqlandi! Endi bot avtomatik invite link yaratadi.\n\n⚠️ Render.com dagi PREMIUM_CHANNEL_ID o\'zgartirish SHART EMAS - dashboard sozlamasi ustunlik qiladi.');
+    } else {
+      alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+    }
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+// ============ Subscription Plans Functions ============
+var subscriptionPlans = [];
+
+async function loadSubscriptionPlans() {
+  try {
+    subscriptionPlans = await (await fetch('/api/subscription-plans', {headers: {Authorization: auth}})).json();
+    renderSubscriptionPlans();
+  } catch(e) { console.error(e); }
+}
+
+function renderSubscriptionPlans() {
+  var grid = document.getElementById('subscriptionPlansGrid');
+  
+  grid.innerHTML = subscriptionPlans.map(function(plan) {
+    var priceSum = plan.price / 100;
+    var discountBadge = plan.discount_percent > 0 
+      ? '<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">-' + plan.discount_percent + '%</span>'
+      : '';
+    var activeClass = plan.is_active ? 'border-green-400' : 'border-gray-300 opacity-60';
+    
+    return '<div class="glass rounded-2xl p-5 relative border-2 ' + activeClass + '">' +
+      discountBadge +
+      '<h4 class="font-bold text-lg mb-3">' + plan.name + '</h4>' +
+      '<div class="space-y-3">' +
+        '<div><label class="text-xs text-gray-500">Narx (so\'m)</label>' +
+        '<input type="number" id="price_' + plan.id + '" value="' + priceSum + '" class="w-full px-3 py-2 rounded-lg glass-input text-xl font-bold"></div>' +
+        '<div><label class="text-xs text-gray-500">Muddat (kun)</label>' +
+        '<input type="number" id="duration_' + plan.id + '" value="' + plan.duration_days + '" class="w-full px-3 py-2 rounded-lg glass-input"></div>' +
+        '<div><label class="text-xs text-gray-500">Chegirma (%)</label>' +
+        '<input type="number" id="discount_' + plan.id + '" value="' + plan.discount_percent + '" min="0" max="99" class="w-full px-3 py-2 rounded-lg glass-input"></div>' +
+        '<div class="flex items-center gap-2 mt-2">' +
+          '<input type="checkbox" id="active_' + plan.id + '" ' + (plan.is_active ? 'checked' : '') + ' class="w-4 h-4">' +
+          '<label for="active_' + plan.id + '" class="text-sm">Faol</label>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// Save all plans at once
+async function saveAllPlans() {
+  try {
+    for (var plan of subscriptionPlans) {
+      var priceEl = document.getElementById('price_' + plan.id);
+      var durationEl = document.getElementById('duration_' + plan.id);
+      var discountEl = document.getElementById('discount_' + plan.id);
+      var activeEl = document.getElementById('active_' + plan.id);
+      
+      if (priceEl) {
+        var data = {
+          name: plan.name,
+          price: parseInt(priceEl.value) * 100,
+          duration_days: parseInt(durationEl?.value) || plan.duration_days,
+          discount_percent: parseInt(discountEl?.value) || 0,
+          is_active: activeEl?.checked ?? plan.is_active
+        };
+        
+        await fetch('/api/subscription-plans/' + plan.id, {
+          method: 'PUT',
+          headers: {Authorization: auth, 'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+      }
+    }
+    alert('✅ Barcha narxlar saqlandi!');
+    loadSubscriptionPlans();
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+// Legacy functions (not used anymore but kept for compatibility)
+function updateBasePriceAndRecalculate() {}
+function updatePlanDiscountAndRecalculate() {}
+function toggleAutoCalculate() {}
+function recalculatePrices() {}
+async function savePlanSilent(planId, data) {
+  var plan = subscriptionPlans.find(function(p) { return p.id === planId; });
+  if (!plan) return;
+  
+  var updateData = {
+    name: plan.name,
+    price: data.price !== undefined ? data.price : plan.price,
+    duration_days: data.duration_days !== undefined ? data.duration_days : plan.duration_days,
+    discount_percent: data.discount_percent !== undefined ? data.discount_percent : plan.discount_percent,
+    is_active: data.is_active !== undefined ? data.is_active : plan.is_active
+  };
+  
+  try {
+    await fetch('/api/subscription-plans/' + planId, {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify(updateData)
+    });
+  } catch(e) { 
+    console.error('savePlanSilent error:', e);
+  }
+}
+
+async function updatePlanPrice(planId, sumValue) {
+  var tiyin = parseInt(sumValue) * 100;
+  await savePlan(planId, {price: tiyin});
+}
+
+async function updatePlanDuration(planId, days) {
+  await savePlan(planId, {duration_days: parseInt(days)});
+}
+
+async function togglePlanActive(planId, isActive) {
+  await savePlan(planId, {is_active: isActive});
+}
+
+async function savePlan(planId, data) {
+  var plan = subscriptionPlans.find(function(p) { return p.id === planId; });
+  if (!plan) return;
+  
+  var updateData = {
+    name: plan.name,
+    price: data.price !== undefined ? data.price : plan.price,
+    duration_days: data.duration_days !== undefined ? data.duration_days : plan.duration_days,
+    discount_percent: data.discount_percent !== undefined ? data.discount_percent : plan.discount_percent,
+    is_active: data.is_active !== undefined ? data.is_active : plan.is_active
+  };
+  
+  try {
+    await fetch('/api/subscription-plans/' + planId, {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify(updateData)
+    });
+    loadSubscriptionPlans();
+  } catch(e) { 
+    alert('❌ Xatolik: ' + e.message); 
+  }
+}
+
+// ============ Subscription Reminders Functions ============
+async function loadReminders() {
+  try {
+    var d = await (await fetch('/api/subscription-reminders', {headers: {Authorization: auth}})).json();
+    document.getElementById('reminder_5d').value = d.reminder_5d || '';
+    document.getElementById('reminder_3d').value = d.reminder_3d || '';
+    document.getElementById('reminder_1d').value = d.reminder_1d || '';
+    document.getElementById('reminder_expired').value = d.reminder_expired || '';
+  } catch(e) { console.error(e); }
+}
+
+async function saveReminders() {
+  var data = {
+    reminder_5d: document.getElementById('reminder_5d').value,
+    reminder_3d: document.getElementById('reminder_3d').value,
+    reminder_1d: document.getElementById('reminder_1d').value,
+    reminder_expired: document.getElementById('reminder_expired').value
+  };
+  
+  try {
+    var r = await fetch('/api/subscription-reminders', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    var d = await r.json();
+    if (d.success) {
+      alert('✅ Eslatmalar saqlandi!');
+    } else {
+      alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+    }
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+function openPitchModal() {
+  document.getElementById('pitchText').value = pitchData.text || '';
+  document.getElementById('pitchVideo').value = pitchData.video_file_id || '';
+  document.getElementById('pitchImage').value = pitchData.image_file_id || '';
+  document.getElementById('pitchAudio').value = pitchData.audio_file_id || '';
+  document.getElementById('pitchDelay').value = pitchData.delay_hours || 2;
+  openModal('pitchModal');
+}
+
+async function savePitch() {
+  var data = {
+    text: document.getElementById('pitchText').value,
+    video_file_id: document.getElementById('pitchVideo').value || null,
+    image_file_id: document.getElementById('pitchImage').value || null,
+    audio_file_id: document.getElementById('pitchAudio').value || null,
+    delay_hours: parseInt(document.getElementById('pitchDelay').value) || 2
+  };
+  try {
+    await fetch('/api/pitch', {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    closeModal('pitchModal');
+    loadPitch();
+    loadPostLessonFlow();
+    alert('✅ Saqlandi!');
+  } catch(e) { alert('❌ Xatolik'); }
+}
+
+// ============ Post-Lesson Flow ============
+var postLessonData = {};
+var botMessages = {};
+var subscriptionPrice = 9700000; // tiyin
+
+async function loadPostLessonFlow() {
+  try {
+    // Load bot messages
+    botMessages = await (await fetch('/api/bot-messages', {headers: {Authorization: auth}})).json() || {};
+    
+    // Update delay info display - use explicit checks for 0
+    var pitchDelay = (pitchData.delay_hours !== null && pitchData.delay_hours !== undefined) ? pitchData.delay_hours : 2;
+    var salesDelay = (botMessages.sales_delay !== null && botMessages.sales_delay !== undefined) ? botMessages.sales_delay : 1;
+    var softDelay = (botMessages.soft_attack_delay !== null && botMessages.soft_attack_delay !== undefined) ? botMessages.soft_attack_delay : 24;
+    
+    // Format delay text
+    var pitchText = pitchDelay === 0 ? '🚀 Darhol' : '+' + pitchDelay + ' soatdan keyin';
+    var salesText = salesDelay === 0 ? '🚀 Darhol (pitch bilan)' : '+' + salesDelay + ' soat (pitch dan keyin)';
+    var softText = softDelay < 0 || botMessages.soft_attack_disabled ? '❌ O\'chirilgan' : '+' + softDelay + ' soat (to\'lamagan bo\'lsa)';
+    
+    document.getElementById('pitchDelayInfo').textContent = pitchText;
+    document.getElementById('salesDelayInfo').textContent = salesText;
+    document.getElementById('softAttackDelayInfo').textContent = softText;
+    
+    // Update previews
+    var salesTextMsg = botMessages.sales_pitch || 'SMM PRO KURSGA TAKLIF!';
+    document.getElementById('salesPreview').innerHTML = '<p><strong>Matn:</strong> ' + (salesTextMsg.length > 100 ? salesTextMsg.slice(0, 100) + '...' : salesTextMsg) + '</p><p class="mt-2 text-gray-500">💳 Payme | 💠 Click tugmalari avtomatik qo\'shiladi</p>';
+    
+    var softTextMsg = botMessages.soft_attack || '🤔 Hali qaror qilmadingizmi?';
+    document.getElementById('softAttackPreview').innerHTML = '<p><strong>Matn:</strong> ' + (softTextMsg.length > 100 ? softTextMsg.slice(0, 100) + '...' : softTextMsg) + '</p><p class="mt-2 text-gray-500">⚠️ To\'lamagan foydalanuvchilarga yuboriladi</p>';
+    
+  } catch(e) { console.error(e); }
+}
+
+function openPostLessonModal() {
+  document.getElementById('plCongrats').value = botMessages.post_lesson_congrats || '🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!\n\nTez orada maxsus taklif yuboraman...';
+  
+  // Use explicit checks to handle 0 values correctly
+  var pitchDelay = (pitchData.delay_hours !== null && pitchData.delay_hours !== undefined) ? pitchData.delay_hours : 2;
+  var salesDelay = (botMessages.sales_delay !== null && botMessages.sales_delay !== undefined) ? botMessages.sales_delay : 1;
+  var softDelay = (botMessages.soft_attack_delay !== null && botMessages.soft_attack_delay !== undefined) ? botMessages.soft_attack_delay : 24;
+  
+  // Set input values (show default if 0)
+  document.getElementById('plPitchDelay').value = pitchDelay === 0 ? 2 : pitchDelay;
+  document.getElementById('plSalesDelay').value = salesDelay === 0 ? 1 : salesDelay;
+  document.getElementById('plSoftDelay').value = softDelay < 0 ? 24 : (softDelay === 0 ? 24 : softDelay);
+  
+  // Set radio buttons based on delay values
+  if (pitchDelay === 0) {
+    document.querySelector('input[name="plPitchType"][value="immediate"]').checked = true;
+    document.getElementById('plPitchDelayDiv').classList.add('hidden');
+  } else {
+    document.querySelector('input[name="plPitchType"][value="timed"]').checked = true;
+    document.getElementById('plPitchDelayDiv').classList.remove('hidden');
+  }
+  
+  if (salesDelay === 0) {
+    document.querySelector('input[name="plSalesType"][value="immediate"]').checked = true;
+    document.getElementById('plSalesDelayDiv').classList.add('hidden');
+  } else {
+    document.querySelector('input[name="plSalesType"][value="timed"]').checked = true;
+    document.getElementById('plSalesDelayDiv').classList.remove('hidden');
+  }
+  
+  if (softDelay < 0 || botMessages.soft_attack_disabled) {
+    document.querySelector('input[name="plSoftType"][value="disabled"]').checked = true;
+    document.getElementById('plSoftDelayDiv').classList.add('hidden');
+  } else {
+    document.querySelector('input[name="plSoftType"][value="timed"]').checked = true;
+    document.getElementById('plSoftDelayDiv').classList.remove('hidden');
+  }
+  
+  openModal('postLessonModal');
+}
+
+function togglePlPitchDelay() {
+  var isImmediate = document.querySelector('input[name="plPitchType"]:checked').value === 'immediate';
+  document.getElementById('plPitchDelayDiv').classList.toggle('hidden', isImmediate);
+}
+
+function togglePlSalesDelay() {
+  var isImmediate = document.querySelector('input[name="plSalesType"]:checked').value === 'immediate';
+  document.getElementById('plSalesDelayDiv').classList.toggle('hidden', isImmediate);
+}
+
+function togglePlSoftDelay() {
+  var isDisabled = document.querySelector('input[name="plSoftType"]:checked').value === 'disabled';
+  document.getElementById('plSoftDelayDiv').classList.toggle('hidden', isDisabled);
+}
+
+async function savePostLessonFlow() {
+  var pitchType = document.querySelector('input[name="plPitchType"]:checked').value;
+  var salesType = document.querySelector('input[name="plSalesType"]:checked').value;
+  var softType = document.querySelector('input[name="plSoftType"]:checked').value;
+  
+  var pitchDelay = pitchType === 'immediate' ? 0 : parseInt(document.getElementById('plPitchDelay').value) || 2;
+  var salesDelay = salesType === 'immediate' ? 0 : parseInt(document.getElementById('plSalesDelay').value) || 1;
+  var softDelay = softType === 'disabled' ? -1 : parseInt(document.getElementById('plSoftDelay').value) || 24;
+  
+  var data = {
+    post_lesson_congrats: document.getElementById('plCongrats').value,
+    sales_delay: salesDelay,
+    soft_attack_delay: softDelay,
+    soft_attack_disabled: softType === 'disabled'
+  };
+  
+  // Also update pitch delay
+  var pitchDelayData = {
+    text: pitchData.text || '',
+    video_file_id: pitchData.video_file_id || null,
+    image_file_id: pitchData.image_file_id || null,
+    audio_file_id: pitchData.audio_file_id || null,
+    delay_hours: pitchDelay
+  };
+  
+  try {
+    await fetch('/api/bot-messages', {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    await fetch('/api/pitch', {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(pitchDelayData)});
+    closeModal('postLessonModal');
+    loadPitch();
+    loadPostLessonFlow();
+    alert('✅ Saqlandi!');
+  } catch(e) { alert('❌ Xatolik'); }
+}
+
+function openSalesMessageModal() {
+  document.getElementById('salesText').value = botMessages.sales_pitch || 'SMM PRO KURSGA TAKLIF!\n\n✅ 50+ video darslar\n✅ Amaliy mashqlar\n✅ 24/7 qo\'llab-quvvatlash\n\nNarx: {{price}}\n\nTo\'lov usulini tanlang:';
+  openModal('salesMessageModal');
+}
+
+async function saveSalesMessage() {
+  var data = { sales_pitch: document.getElementById('salesText').value };
+  try {
+    await fetch('/api/bot-messages', {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    closeModal('salesMessageModal');
+    loadPostLessonFlow();
+    alert('✅ Saqlandi!');
+  } catch(e) { alert('❌ Xatolik'); }
+}
+
+function openSoftAttackModal() {
+  document.getElementById('softAttackText').value = botMessages.soft_attack || '🤔 Hali qaror qilmadingizmi?\n\nKurs haqida savollaringiz bo\'lsa yozing!\n\nYoki hoziroq ro\'yxatdan o\'ting:';
+  openModal('softAttackModal');
+}
+
+async function saveSoftAttack() {
+  var data = { soft_attack: document.getElementById('softAttackText').value };
+  try {
+    await fetch('/api/bot-messages', {method: 'PUT', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+    closeModal('softAttackModal');
+    loadPostLessonFlow();
+    alert('✅ Saqlandi!');
+  } catch(e) { alert('❌ Xatolik'); }
+}
+
+// ============ Test Functions ============
+async function testPitch() {
+  if (!confirm('Pitch xabarini o\'zingizga yuborishni xohlaysizmi?')) return;
+  try {
+    var r = await fetch('/api/test/pitch', {method: 'POST', headers: {Authorization: auth}});
+    var d = await r.json();
+    if (d.success) alert('✅ Pitch xabari yuborildi! Telegram ni tekshiring.');
+    else alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+  } catch(e) { alert('❌ Xatolik: ' + e.message); }
+}
+
+async function testSales() {
+  if (!confirm('To\'lov tugmalarini o\'zingizga yuborishni xohlaysizmi?')) return;
+  try {
+    var r = await fetch('/api/test/sales', {method: 'POST', headers: {Authorization: auth}});
+    var d = await r.json();
+    if (d.success) alert('✅ To\'lov tugmalari yuborildi! Telegram ni tekshiring.');
+    else alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+  } catch(e) { alert('❌ Xatolik: ' + e.message); }
+}
+
+async function testSoftAttack() {
+  if (!confirm('Eslatma xabarini o\'zingizga yuborishni xohlaysizmi?')) return;
+  try {
+    var r = await fetch('/api/test/soft-attack', {method: 'POST', headers: {Authorization: auth}});
+    var d = await r.json();
+    if (d.success) alert('✅ Eslatma xabari yuborildi! Telegram ni tekshiring.');
+    else alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+  } catch(e) { alert('❌ Xatolik: ' + e.message); }
+}
+
+async function testFullFlow() {
+  if (!confirm('To\'liq Progrev Flow ni o\'zingizga yuborishni xohlaysizmi?\n\n1. Tabriklov\n2. 3 sek → Pitch\n3. 3 sek → To\'lov\n4. 3 sek → Eslatma')) return;
+  try {
+    var r = await fetch('/api/test/full-flow', {method: 'POST', headers: {Authorization: auth}});
+    var d = await r.json();
+    if (d.success) alert('✅ To\'liq flow yuborildi! Telegram ni tekshiring.');
+    else alert('❌ Xatolik: ' + (d.error || 'Unknown'));
+  } catch(e) { alert('❌ Xatolik: ' + e.message); }
+}
+
+function openFlowSettingsModal() {
+  var html = '<div class="space-y-4">' +
+    '<div class="glass rounded-xl p-4">' +
+      '<label class="font-medium text-gray-700 mb-2 block">⏱️ Pitch yuborish vaqti (4-darsdan keyin)</label>' +
+      '<div class="flex gap-2">' +
+        '<input type="number" id="flowPitchDelayInput" class="flex-1 px-4 py-3 rounded-xl glass-input" value="1" min="0" max="48">' +
+        '<span class="px-4 py-3 text-gray-500">soat</span>' +
+      '</div>' +
+      '<p class="text-xs text-gray-400 mt-1">0 = darhol yuboriladi</p>' +
+    '</div>' +
+    '<div class="glass rounded-xl p-4">' +
+      '<label class="font-medium text-gray-700 mb-2 block">⏱️ To\'lov taklifi (Pitch dan keyin)</label>' +
+      '<div class="flex gap-2">' +
+        '<input type="number" id="flowSalesDelayInput" class="flex-1 px-4 py-3 rounded-xl glass-input" value="3" min="0" max="48">' +
+        '<span class="px-4 py-3 text-gray-500">soat</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="glass rounded-xl p-4">' +
+      '<label class="font-medium text-gray-700 mb-2 block">⏱️ Soft Eslatma (To\'lov dan keyin, agar to\'lamasa)</label>' +
+      '<div class="flex gap-2">' +
+        '<input type="number" id="flowSoftDelayInput" class="flex-1 px-4 py-3 rounded-xl glass-input" value="24" min="1" max="72">' +
+        '<span class="px-4 py-3 text-gray-500">soat</span>' +
+      '</div>' +
+    '</div>' +
+    '<button onclick="saveFlowSettings()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Saqlash</button>' +
+  '</div>';
+  
+  showCustomModal('⚙️ Progrev Flow vaqtlari', html);
+}
+
+async function saveFlowSettings() {
+  var pitchDelay = document.getElementById('flowPitchDelayInput').value;
+  var salesDelay = document.getElementById('flowSalesDelayInput').value;
+  var softDelay = document.getElementById('flowSoftDelayInput').value;
+  
+  try {
+    await fetch('/api/messages/pitch_delay_hours', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: pitchDelay})
+    });
+    await fetch('/api/messages/sales_delay', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: salesDelay})
+    });
+    await fetch('/api/messages/soft_attack_delay', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: softDelay})
+    });
+    
+    closeCustomModal();
+    alert('✅ Vaqtlar saqlandi!');
+    
+    // Update UI
+    document.getElementById('flowPitchDelay').textContent = pitchDelay + ' soat';
+    document.getElementById('flowPitchDelayBadge').textContent = '+' + pitchDelay + ' soat';
+    document.getElementById('flowSalesDelay').textContent = salesDelay + ' soat';
+    document.getElementById('flowSalesDelayBadge').textContent = '+' + salesDelay + ' soat';
+    document.getElementById('flowSoftDelayBadge').textContent = '+' + softDelay + ' soat';
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+function openCongratsModal() {
+  openModal('congratsModal');
+}
+
+var customModalEl = null;
+function showCustomModal(title, content) {
+  if (customModalEl) customModalEl.remove();
+  
+  customModalEl = document.createElement('div');
+  customModalEl.className = 'fixed inset-0 modal-overlay flex items-center justify-center z-50';
+  customModalEl.innerHTML = '<div class="glass-modal rounded-3xl p-6 max-w-md w-full mx-4">' +
+    '<div class="flex justify-between items-center mb-6">' +
+      '<h2 class="font-bold text-xl">' + title + '</h2>' +
+      '<button onclick="closeCustomModal()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>' +
+    '</div>' +
+    content +
+  '</div>';
+  document.body.appendChild(customModalEl);
+}
+
+function closeCustomModal() {
+  if (customModalEl) {
+    customModalEl.remove();
+    customModalEl = null;
+  }
+}
+
+// ============ Broadcast Functions ============
+var broadcastFilter = 'all';
+
+function setBroadcastQuickFilter(filter) {
+  broadcastFilter = filter;
+  
+  // Update button styles
+  document.querySelectorAll('[id^="bf-"]').forEach(function(btn) {
+    btn.classList.remove('bf-active', 'bg-violet-100', 'text-violet-700');
+  });
+  document.getElementById('bf-' + filter).classList.add('bf-active', 'bg-violet-100', 'text-violet-700');
+  
+  // Show/hide advanced filters
+  var advFilters = document.getElementById('broadcastAdvancedFilters');
+  if (filter === 'custom') {
+    advFilters.classList.remove('hidden');
+  } else {
+    advFilters.classList.add('hidden');
+  }
+  
+  // Update audience count
+  updateBroadcastAudienceCount();
+}
+
+function toggleAgeFilter(checkbox) {
+  if (checkbox.checked) {
+    document.querySelectorAll('.bfAge').forEach(function(cb) { cb.checked = false; });
+  }
+  updateBroadcastAudienceCount();
+}
+
+function toggleScheduleInput() {
+  var isScheduled = document.querySelector('input[name="broadcastSchedule"]:checked').value === 'scheduled';
+  document.getElementById('broadcastScheduleDiv').classList.toggle('hidden', !isScheduled);
+}
+
+function insertVar(varText) {
+  var textarea = document.getElementById('broadcastText');
+  var start = textarea.selectionStart;
+  var end = textarea.selectionEnd;
+  var text = textarea.value;
+  textarea.value = text.substring(0, start) + varText + text.substring(end);
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = start + varText.length;
+}
+
+function updateBroadcastAudienceCount() {
+  var count = getBroadcastFilteredUsers().length;
+  document.getElementById('broadcastAudienceCount').textContent = count + ' ta';
+}
+
+function getBroadcastFilteredUsers() {
+  var filtered = allUsers.slice();
+  
+  if (broadcastFilter === 'paid') {
+    filtered = filtered.filter(function(u) { return u.is_paid; });
+  } else if (broadcastFilter === 'free') {
+    filtered = filtered.filter(function(u) { return !u.is_paid; });
+  } else if (broadcastFilter === 'custom') {
+    // Status
+    var status = document.getElementById('bfStatus').value;
+    if (status === 'paid') filtered = filtered.filter(function(u) { return u.is_paid; });
+    else if (status === 'free') filtered = filtered.filter(function(u) { return !u.is_paid; });
+    
+    // Lesson
+    var lesson = document.getElementById('bfLesson').value;
+    if (lesson !== 'all') {
+      if (lesson === 'completed') {
+        var totalLessons = allLessons.length || 4;
+        filtered = filtered.filter(function(u) { return (u.current_lesson || 0) >= totalLessons; });
+      } else {
+        filtered = filtered.filter(function(u) { return (u.current_lesson || 0) === parseInt(lesson); });
+      }
+    }
+    
+    // CustDev
+    var custdev = document.getElementById('bfCustdev').value;
+    if (custdev === 'completed') {
+      filtered = filtered.filter(function(u) { return u.age_group || u.occupation || u.main_problem; });
+    } else if (custdev === 'not') {
+      filtered = filtered.filter(function(u) { return !u.age_group && !u.occupation && !u.main_problem; });
+    }
+    
+    // Date
+    var dateFilter = document.getElementById('bfDate').value;
+    if (dateFilter !== 'all') {
+      var now = new Date();
+      filtered = filtered.filter(function(u) {
+        var created = new Date(u.created_at);
+        if (dateFilter === 'today') return created.toDateString() === now.toDateString();
+        if (dateFilter === 'week') return (now - created) < 7 * 24 * 60 * 60 * 1000;
+        if (dateFilter === 'month') return (now - created) < 30 * 24 * 60 * 60 * 1000;
+        if (dateFilter === 'old') return (now - created) > 30 * 24 * 60 * 60 * 1000;
+        return true;
+      });
+    }
+    
+    // Age groups
+    var ageAll = document.getElementById('bfAge-all').checked;
+    if (!ageAll) {
+      var selectedAges = [];
+      document.querySelectorAll('.bfAge:checked').forEach(function(cb) { selectedAges.push(cb.value); });
+      if (selectedAges.length > 0) {
+        filtered = filtered.filter(function(u) { return selectedAges.includes(u.age_group); });
+      }
+    }
+  }
+  
+  return filtered;
+}
+
+function previewBroadcast() {
+  var text = document.getElementById('broadcastText').value;
+  if (!text.trim()) return alert('Xabar yozing!');
+  
+  var filtered = getBroadcastFilteredUsers();
+  var sample = filtered[0];
+  if (!sample) return alert('Tanlangan auditoriyada foydalanuvchi topilmadi!');
+  
+  // Replace variables
+  var previewText = text
+    .replace(/\{\{fio\}\}/gi, sample.full_name || "do'st")
+    .replace(/\{\{ism\}\}/gi, (sample.full_name || "do'st").split(' ')[0])
+    .replace(/\{\{telefon\}\}/gi, sample.phone || '')
+    .replace(/\{\{dars\}\}/gi, String(sample.current_lesson || 0));
+  
+  alert('👁 Ko\'rinishi (' + filtered.length + ' ta foydalanuvchiga yuboriladi):\n\n' + previewText);
+}
+
+async function sendBroadcast() {
+  var text = document.getElementById('broadcastText').value;
+  if (!text.trim()) return alert('Xabar yozing!');
+  
+  var filtered = getBroadcastFilteredUsers();
+  if (filtered.length === 0) return alert('Tanlangan auditoriyada foydalanuvchi topilmadi!');
+  
+  if (!confirm('📤 ' + filtered.length + ' ta foydalanuvchiga xabar yuboriladi. Davom etasizmi?')) return;
+  
+  var btn = document.getElementById('broadcastBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Yuborilmoqda...';
+  
+  var filters = {
+    filter: broadcastFilter,
+    status: document.getElementById('bfStatus')?.value || 'all',
+    lesson: document.getElementById('bfLesson')?.value || 'all',
+    custdev: document.getElementById('bfCustdev')?.value || 'all',
+    date: document.getElementById('bfDate')?.value || 'all'
+  };
+  
+  try {
+    var r = await fetch('/api/broadcast', {
+      method: 'POST',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        text: text,
+        filters: filters,
+        photo: document.getElementById('broadcastPhoto').value || null,
+        video: document.getElementById('broadcastVideo').value || null,
+        button_text: document.getElementById('broadcastBtnText').value || null,
+        button_url: document.getElementById('broadcastBtnUrl').value || null
+      })
+    });
+    var d = await r.json();
+    var res = document.getElementById('broadcastResult');
+    res.className = 'p-4 rounded-xl glass bg-green-50';
+    res.innerHTML = '✅ Yuborildi: <strong>' + d.sent + '</strong> ta | ❌ Xato: <strong>' + d.failed + '</strong> ta';
+    res.classList.remove('hidden');
+  } catch(e) {
+    var res = document.getElementById('broadcastResult');
+    res.className = 'p-4 rounded-xl glass bg-red-50 text-red-700';
+    res.textContent = '❌ Xatolik: ' + e.message;
+    res.classList.remove('hidden');
+  }
+  btn.disabled = false;
+  btn.textContent = '📤 Yuborish';
+}
+
+// Initialize broadcast audience count when modal opens
+function openBroadcastModal() {
+  broadcastFilter = 'all';
+  document.querySelectorAll('[id^="bf-"]').forEach(function(btn) {
+    btn.classList.remove('bf-active', 'bg-violet-100', 'text-violet-700');
+  });
+  document.getElementById('bf-all').classList.add('bf-active', 'bg-violet-100', 'text-violet-700');
+  document.getElementById('broadcastAdvancedFilters').classList.add('hidden');
+  document.getElementById('broadcastText').value = '';
+  document.getElementById('broadcastPhoto').value = '';
+  document.getElementById('broadcastVideo').value = '';
+  document.getElementById('broadcastBtnText').value = '';
+  document.getElementById('broadcastBtnUrl').value = '';
+  document.getElementById('broadcastResult').classList.add('hidden');
+  updateBroadcastAudienceCount();
+  openModal('broadcastModal');
+}
+
+// Close modals on background click
+document.querySelectorAll('[id$="Modal"]').forEach(function(m) {
+  m.onclick = function(e) { if (e.target === m) closeModal(m.id); };
+});
+
+// Auto refresh stats
+setInterval(function() {
+  if (!document.getElementById('dashboard').classList.contains('hidden')) loadStats();
+}, 60000);
+</script>
+</body>
+</html>
