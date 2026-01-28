@@ -1139,6 +1139,43 @@
             <input type="hidden" id="premiumChannelLink" value="">
           </div>
           
+          <!-- Free Channel Settings -->
+          <div class="glass-card rounded-3xl p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h3 class="font-bold text-xl">🆓 Bepul kanal (Majburiy obuna)</h3>
+                <p class="text-gray-500 text-sm mt-1">2-darsdan keyin obuna bo'lishi shart</p>
+              </div>
+            </div>
+            
+            <div class="glass rounded-2xl p-5 space-y-4">
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">🤖 Bepul kanal ID</label>
+                <input type="text" id="freeChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">🔗 Kanal havolasi</label>
+                <input type="text" id="freeChannelLink" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="https://t.me/your_channel">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">📚 Nechanchi darsdan oldin obuna talab qilinsin?</label>
+                <select id="requireSubBeforeLesson" class="w-full px-4 py-3 rounded-xl glass-input">
+                  <option value="2">2-darsdan oldin</option>
+                  <option value="3" selected>3-darsdan oldin</option>
+                  <option value="4">4-darsdan oldin</option>
+                </select>
+              </div>
+              <button onclick="saveFreeChannel()" class="w-full py-3 rounded-xl glass-btn-success text-white font-medium">💾 Saqlash</button>
+            </div>
+            
+            <div class="mt-4 p-4 bg-yellow-50 rounded-xl">
+              <p class="text-yellow-800 text-sm">
+                <b>⚠️ Muhim:</b> Bot kanalingizda <b>admin</b> bo'lishi kerak (faqat "foydalanuvchilarni qo'shish" huquqi yetarli). 
+                Aks holda obunani tekshira olmaydi.
+              </p>
+            </div>
+          </div>
+          
           <!-- Subscription Plans -->
           <div class="glass-card rounded-3xl p-6 mb-6">
             <div class="flex justify-between items-center mb-6">
@@ -1622,7 +1659,7 @@ function filterMediaPicker(t) { loadMediaPicker(t); }
 function selectMedia(f) { if (mediaPickerTarget) document.getElementById(mediaPickerTarget).value = f; closeModal('mediaPickerModal'); }
 
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadFeedback(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadSubscriptionPlans(), loadReminders()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadFeedback(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadFreeChannel(), loadSubscriptionPlans(), loadReminders()]);
   await loadPostLessonFlow();
 }
 
@@ -2830,6 +2867,53 @@ async function saveChannelId() {
     } else {
       alert('❌ Xatolik: ' + (d.error || 'Unknown'));
     }
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+// ============ Free Channel Functions ============
+async function loadFreeChannel() {
+  try {
+    var id = await (await fetch('/api/messages/free_channel_id', {headers: {Authorization: auth}})).json();
+    var link = await (await fetch('/api/messages/free_channel_link', {headers: {Authorization: auth}})).json();
+    var lesson = await (await fetch('/api/messages/require_subscription_before_lesson', {headers: {Authorization: auth}})).json();
+    
+    document.getElementById('freeChannelId').value = id.text || '';
+    document.getElementById('freeChannelLink').value = link.text || '';
+    document.getElementById('requireSubBeforeLesson').value = lesson.text || '3';
+  } catch(e) { console.error(e); }
+}
+
+async function saveFreeChannel() {
+  var channelId = document.getElementById('freeChannelId').value.trim();
+  var channelLink = document.getElementById('freeChannelLink').value.trim();
+  var beforeLesson = document.getElementById('requireSubBeforeLesson').value;
+  
+  if (!channelId || !channelLink) {
+    alert('⚠️ Kanal ID va havolasini kiriting!');
+    return;
+  }
+  
+  try {
+    // Save to settings
+    await fetch('/api/settings/key', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({key: 'free_channel_id', value: channelId})
+    });
+    await fetch('/api/settings/key', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({key: 'free_channel_link', value: channelLink})
+    });
+    await fetch('/api/messages/require_subscription_before_lesson', {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: beforeLesson})
+    });
+    
+    alert('✅ Bepul kanal sozlamalari saqlandi!\n\n' + beforeLesson + '-darsdan oldin obuna bo\'lish talab qilinadi.');
   } catch(e) {
     alert('❌ Xatolik: ' + e.message);
   }
