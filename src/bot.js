@@ -298,8 +298,8 @@ export async function sendLesson(telegramId, lessonNumber) {
 
   if (lesson.show_watched_button !== false) {
     await delay(1000);
-    const btnText = lesson.watched_button_text || 'Videoni korib boldim';
-    const msg = lesson.watched_message || 'Videoni korib bolganingizdan keyin tugmani bosing:';
+    const btnText = lesson.watched_button_text || '✅ Videoni ko\'rib bo\'ldim';
+    const msg = lesson.watched_message || 'Videoni ko\'rib bo\'lganingizdan keyin tugmani bosing:';
     await bot.telegram.sendMessage(telegramId, msg, {
       ...Markup.inlineKeyboard([[Markup.button.callback(btnText, 'watched_' + lessonNumber)]])
     });
@@ -316,11 +316,30 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
     const lessonNumber = parseInt(ctx.match[1]);
     const telegramId = ctx.from.id;
     const totalLessons = await db.getLessonsCount();
+    const user = await db.getUser(telegramId);
 
     await ctx.answerCbQuery('Ajoyib!');
     await ctx.editMessageReplyMarkup(undefined);
 
     if (lessonNumber < totalLessons) {
+      // Check if subscription required before next lesson
+      const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
+      const nextLesson = lessonNumber + 1;
+      
+      if (nextLesson === requireSubLesson && !user?.subscribed_free_channel) {
+        // Check if already subscribed
+        const isSubscribed = await checkFreeChannelSubscription(telegramId);
+        
+        if (!isSubscribed) {
+          // Ask for subscription FIRST
+          await askForSubscription(telegramId, nextLesson);
+          return;
+        } else {
+          // Already subscribed, mark it
+          await db.updateUser(telegramId, { subscribed_free_channel: true });
+        }
+      }
+      
       await delay(1000);
       await startCustDev(telegramId, lessonNumber);
     } else {
@@ -423,11 +442,11 @@ async function checkFreeChannelSubscription(telegramId) {
   }
 }
 
-async function askForSubscription(telegramId) {
+async function askForSubscription(telegramId, nextLesson = 3) {
   const channelLink = await db.getSetting('free_channel_link') || await db.getBotMessage('free_channel_link') || 'https://t.me/your_channel';
   
   const msg = await db.getBotMessage('subscribe_required') || 
-`🔒 <b>3-darsga o'tish uchun kanalimizga obuna bo'ling!</b>
+`🔒 <b>${nextLesson}-darsga o'tish uchun kanalimizga obuna bo'ling!</b>
 
 Kanalda siz uchun foydali:
 📚 Qo'shimcha materiallar
@@ -440,17 +459,21 @@ Obuna bo'lgandan keyin "✅ Obuna bo'ldim" tugmasini bosing.`;
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
       [Markup.button.url('📢 Kanalga o\'tish', channelLink)],
-      [Markup.button.callback('✅ Obuna bo\'ldim', 'check_subscription')]
+      [Markup.button.callback('✅ Obuna bo\'ldim', 'check_subscription_' + nextLesson)]
     ])
   });
   
   // Mark user as waiting for subscription
-  await db.updateUser(telegramId, { waiting_subscription: true });
+  await db.updateUser(telegramId, { waiting_subscription: true, pending_lesson: nextLesson });
 }
 
 // Check subscription button handler
-bot.action('check_subscription', async (ctx) => {
+bot.action(/^check_subscription_?(\d*)$/, async (ctx) => {
   const telegramId = ctx.from.id;
+  const user = await db.getUser(telegramId);
+  
+  // Get next lesson from callback or user data
+  let nextLesson = ctx.match[1] ? parseInt(ctx.match[1]) : (user?.pending_lesson || 3);
   
   const isSubscribed = await checkFreeChannelSubscription(telegramId);
   
@@ -459,15 +482,28 @@ bot.action('check_subscription', async (ctx) => {
     await ctx.editMessageReplyMarkup(undefined);
     
     // Update user and continue to next lesson
-    await db.updateUser(telegramId, { waiting_subscription: false, subscribed_free_channel: true });
+    await db.updateUser(telegramId, { 
+      waiting_subscription: false, 
+      subscribed_free_channel: true,
+      pending_lesson: null 
+    });
     
     await ctx.reply('🎉 Ajoyib! Endi davom etamiz...');
     await delay(1000);
     
-    // Send next lesson (lesson 3)
-    await sendLesson(telegramId, 3);
+    // Continue with CustDev or send lesson
+    const prevLesson = nextLesson - 1;
+    const questions = await db.getCustDevQuestionsForLesson(prevLesson);
+    
+    if (questions && questions.length > 0) {
+      // Has CustDev questions for previous lesson
+      await startCustDev(telegramId, prevLesson);
+    } else {
+      // No CustDev, send next lesson directly
+      await sendLesson(telegramId, nextLesson);
+    }
   } else {
-    await ctx.answerCbQuery('❌ Siz hali obuna bo\'lmagansiz!', { show_alert: true });
+    await ctx.answerCbQuery('❌ Siz hali obuna bo\'lmagansiz! Avval kanalga obuna bo\'ling.', { show_alert: true });
   }
 });
 
