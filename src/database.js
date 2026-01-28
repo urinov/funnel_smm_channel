@@ -208,6 +208,107 @@ export async function initDatabase() {
       )
     `);
 
+    // ============ MULTI-FUNNEL TABLES ============
+    
+    // Varonkalar jadvali
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS funnels (
+        id SERIAL PRIMARY KEY,
+        slug VARCHAR(50) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        require_subscription_before_lesson INTEGER DEFAULT 0,
+        free_channel_id VARCHAR(100),
+        free_channel_link VARCHAR(255),
+        premium_channel_id VARCHAR(100),
+        premium_channel_link VARCHAR(255),
+        pitch_after_lesson INTEGER DEFAULT 4,
+        pitch_text TEXT,
+        pitch_video_file_id VARCHAR(255),
+        pitch_image_file_id VARCHAR(255),
+        pitch_delay_hours INTEGER DEFAULT 2,
+        sales_pitch TEXT,
+        sales_delay_hours INTEGER DEFAULT 1,
+        soft_attack_text TEXT,
+        soft_attack_delay_hours INTEGER DEFAULT 24,
+        soft_attack_disabled BOOLEAN DEFAULT FALSE,
+        congrats_text TEXT DEFAULT '🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!',
+        is_default BOOLEAN DEFAULT FALSE,
+        is_active BOOLEAN DEFAULT TRUE,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Varonka darslari
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS funnel_lessons (
+        id SERIAL PRIMARY KEY,
+        funnel_id INTEGER REFERENCES funnels(id) ON DELETE CASCADE,
+        lesson_number INTEGER NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        video_file_id VARCHAR(255),
+        image_file_id VARCHAR(255),
+        audio_file_id VARCHAR(255),
+        delay_hours INTEGER DEFAULT 24,
+        show_watched_button BOOLEAN DEFAULT TRUE,
+        watched_button_text VARCHAR(255) DEFAULT 'Videoni ko''rib bo''ldim ✅',
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(funnel_id, lesson_number)
+      )
+    `);
+
+    // Varonka CustDev savollari
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS funnel_custdev (
+        id SERIAL PRIMARY KEY,
+        funnel_id INTEGER REFERENCES funnels(id) ON DELETE CASCADE,
+        step INTEGER NOT NULL,
+        after_lesson INTEGER DEFAULT 1,
+        question_text TEXT NOT NULL,
+        question_type VARCHAR(50) DEFAULT 'buttons',
+        options JSONB,
+        field_name VARCHAR(100),
+        is_active BOOLEAN DEFAULT TRUE,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Foydalanuvchi qaysi varonkada
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_funnels (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        funnel_id INTEGER REFERENCES funnels(id) ON DELETE CASCADE,
+        current_lesson INTEGER DEFAULT 0,
+        custdev_step INTEGER DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'active',
+        started_at TIMESTAMP DEFAULT NOW(),
+        completed_at TIMESTAMP,
+        paid_at TIMESTAMP,
+        UNIQUE(telegram_id, funnel_id)
+      )
+    `);
+
+    // Varonka to'lov rejalari
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS funnel_plans (
+        id SERIAL PRIMARY KEY,
+        funnel_id INTEGER REFERENCES funnels(id) ON DELETE CASCADE,
+        plan_id VARCHAR(20) NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        duration_days INTEGER NOT NULL,
+        price INTEGER NOT NULL,
+        discount_percent INTEGER DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        sort_order INTEGER DEFAULT 0,
+        UNIQUE(funnel_id, plan_id)
+      )
+    `);
+
     // ============ SETTINGS TABLE ============
     await client.query(`
       CREATE TABLE IF NOT EXISTS app_settings (
@@ -1226,3 +1327,385 @@ export async function getFeedbackStats() {
   `);
   return rows;
 }
+
+// ============ MULTI-FUNNEL FUNCTIONS ============
+
+// Get all funnels
+export async function getAllFunnels() {
+  const { rows } = await pool.query('SELECT * FROM funnels ORDER BY sort_order, created_at');
+  return rows;
+}
+
+// Get funnel by ID
+export async function getFunnelById(id) {
+  const { rows } = await pool.query('SELECT * FROM funnels WHERE id = $1', [id]);
+  return rows[0] || null;
+}
+
+// Get funnel by slug
+export async function getFunnelBySlug(slug) {
+  const { rows } = await pool.query('SELECT * FROM funnels WHERE slug = $1 AND is_active = true', [slug]);
+  return rows[0] || null;
+}
+
+// Get default funnel
+export async function getDefaultFunnel() {
+  const { rows } = await pool.query('SELECT * FROM funnels WHERE is_default = true AND is_active = true LIMIT 1');
+  if (rows[0]) return rows[0];
+  // Agar default yo'q bo'lsa, birinchi active funnelni qaytar
+  const { rows: fallback } = await pool.query('SELECT * FROM funnels WHERE is_active = true ORDER BY sort_order LIMIT 1');
+  return fallback[0] || null;
+}
+
+// Create funnel
+export async function createFunnel(data) {
+  const { rows } = await pool.query(`
+    INSERT INTO funnels (slug, name, description, is_default, is_active)
+    VALUES ($1, $2, $3, $4, true)
+    RETURNING *
+  `, [data.slug, data.name, data.description || '', data.is_default || false]);
+  return rows[0];
+}
+
+// Update funnel
+export async function updateFunnel(id, data) {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+  
+  const allowedFields = [
+    'slug', 'name', 'description', 'require_subscription_before_lesson',
+    'free_channel_id', 'free_channel_link', 'premium_channel_id', 'premium_channel_link',
+    'pitch_after_lesson', 'pitch_text', 'pitch_video_file_id', 'pitch_image_file_id',
+    'pitch_delay_hours', 'sales_pitch', 'sales_delay_hours', 'soft_attack_text',
+    'soft_attack_delay_hours', 'soft_attack_disabled', 'congrats_text',
+    'is_default', 'is_active', 'sort_order'
+  ];
+  
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      fields.push(`${field} = $${idx}`);
+      values.push(data[field]);
+      idx++;
+    }
+  }
+  
+  if (fields.length === 0) return null;
+  
+  values.push(id);
+  const { rows } = await pool.query(
+    `UPDATE funnels SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+    values
+  );
+  return rows[0];
+}
+
+// Delete funnel
+export async function deleteFunnel(id) {
+  await pool.query('DELETE FROM funnels WHERE id = $1', [id]);
+}
+
+// Set default funnel (only one can be default)
+export async function setDefaultFunnel(id) {
+  await pool.query('UPDATE funnels SET is_default = false');
+  await pool.query('UPDATE funnels SET is_default = true WHERE id = $1', [id]);
+}
+
+// ============ FUNNEL LESSONS ============
+
+// Get lessons for funnel
+export async function getFunnelLessons(funnelId) {
+  const { rows } = await pool.query(
+    'SELECT * FROM funnel_lessons WHERE funnel_id = $1 ORDER BY lesson_number',
+    [funnelId]
+  );
+  return rows;
+}
+
+// Get single lesson
+export async function getFunnelLesson(funnelId, lessonNumber) {
+  const { rows } = await pool.query(
+    'SELECT * FROM funnel_lessons WHERE funnel_id = $1 AND lesson_number = $2',
+    [funnelId, lessonNumber]
+  );
+  return rows[0] || null;
+}
+
+// Create/Update funnel lesson
+export async function upsertFunnelLesson(funnelId, lessonNumber, data) {
+  const { rows } = await pool.query(`
+    INSERT INTO funnel_lessons (funnel_id, lesson_number, title, content, video_file_id, image_file_id, audio_file_id, delay_hours, show_watched_button, watched_button_text)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    ON CONFLICT (funnel_id, lesson_number) DO UPDATE SET
+      title = EXCLUDED.title,
+      content = EXCLUDED.content,
+      video_file_id = EXCLUDED.video_file_id,
+      image_file_id = EXCLUDED.image_file_id,
+      audio_file_id = EXCLUDED.audio_file_id,
+      delay_hours = EXCLUDED.delay_hours,
+      show_watched_button = EXCLUDED.show_watched_button,
+      watched_button_text = EXCLUDED.watched_button_text
+    RETURNING *
+  `, [
+    funnelId, lessonNumber, data.title, data.content || '',
+    data.video_file_id || null, data.image_file_id || null, data.audio_file_id || null,
+    data.delay_hours || 24, data.show_watched_button !== false,
+    data.watched_button_text || 'Videoni ko\'rib bo\'ldim ✅'
+  ]);
+  return rows[0];
+}
+
+// Delete funnel lesson
+export async function deleteFunnelLesson(funnelId, lessonNumber) {
+  await pool.query(
+    'DELETE FROM funnel_lessons WHERE funnel_id = $1 AND lesson_number = $2',
+    [funnelId, lessonNumber]
+  );
+}
+
+// ============ FUNNEL CUSTDEV ============
+
+// Get custdev questions for funnel
+export async function getFunnelCustDev(funnelId) {
+  const { rows } = await pool.query(
+    'SELECT * FROM funnel_custdev WHERE funnel_id = $1 ORDER BY after_lesson, sort_order, step',
+    [funnelId]
+  );
+  return rows;
+}
+
+// Create funnel custdev question
+export async function createFunnelCustDev(funnelId, data) {
+  const { rows } = await pool.query(`
+    INSERT INTO funnel_custdev (funnel_id, step, after_lesson, question_text, question_type, options, field_name, sort_order)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING *
+  `, [
+    funnelId, data.step || 1, data.after_lesson || 1,
+    data.question_text, data.question_type || 'buttons',
+    data.options ? JSON.stringify(data.options) : null,
+    data.field_name || null, data.sort_order || 0
+  ]);
+  return rows[0];
+}
+
+// Delete funnel custdev
+export async function deleteFunnelCustDev(id) {
+  await pool.query('DELETE FROM funnel_custdev WHERE id = $1', [id]);
+}
+
+// ============ USER FUNNELS ============
+
+// Get user's active funnel
+export async function getUserActiveFunnel(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT uf.*, f.* 
+    FROM user_funnels uf
+    JOIN funnels f ON uf.funnel_id = f.id
+    WHERE uf.telegram_id = $1 AND uf.status = 'active'
+    ORDER BY uf.started_at DESC
+    LIMIT 1
+  `, [telegramId]);
+  return rows[0] || null;
+}
+
+// Start user in funnel
+export async function startUserInFunnel(telegramId, funnelId) {
+  const { rows } = await pool.query(`
+    INSERT INTO user_funnels (telegram_id, funnel_id, current_lesson, custdev_step, status)
+    VALUES ($1, $2, 0, 0, 'active')
+    ON CONFLICT (telegram_id, funnel_id) DO UPDATE SET
+      status = 'active',
+      started_at = NOW()
+    RETURNING *
+  `, [telegramId, funnelId]);
+  return rows[0];
+}
+
+// Update user funnel progress
+export async function updateUserFunnelProgress(telegramId, funnelId, lesson, custdevStep) {
+  await pool.query(`
+    UPDATE user_funnels 
+    SET current_lesson = $3, custdev_step = $4
+    WHERE telegram_id = $1 AND funnel_id = $2
+  `, [telegramId, funnelId, lesson, custdevStep]);
+}
+
+// Mark user funnel as paid
+export async function markUserFunnelPaid(telegramId, funnelId) {
+  await pool.query(`
+    UPDATE user_funnels 
+    SET status = 'paid', paid_at = NOW()
+    WHERE telegram_id = $1 AND funnel_id = $2
+  `, [telegramId, funnelId]);
+}
+
+// Get all user funnels
+export async function getUserFunnels(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT uf.*, f.name as funnel_name, f.slug as funnel_slug
+    FROM user_funnels uf
+    JOIN funnels f ON uf.funnel_id = f.id
+    WHERE uf.telegram_id = $1
+    ORDER BY uf.started_at DESC
+  `, [telegramId]);
+  return rows;
+}
+
+// ============ FUNNEL PLANS ============
+
+// Get plans for funnel
+export async function getFunnelPlans(funnelId) {
+  const { rows } = await pool.query(
+    'SELECT * FROM funnel_plans WHERE funnel_id = $1 AND is_active = true ORDER BY sort_order, price',
+    [funnelId]
+  );
+  return rows;
+}
+
+// Create/Update funnel plan
+export async function upsertFunnelPlan(funnelId, planId, data) {
+  const { rows } = await pool.query(`
+    INSERT INTO funnel_plans (funnel_id, plan_id, name, duration_days, price, discount_percent, sort_order)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (funnel_id, plan_id) DO UPDATE SET
+      name = EXCLUDED.name,
+      duration_days = EXCLUDED.duration_days,
+      price = EXCLUDED.price,
+      discount_percent = EXCLUDED.discount_percent,
+      sort_order = EXCLUDED.sort_order
+    RETURNING *
+  `, [funnelId, planId, data.name, data.duration_days, data.price, data.discount_percent || 0, data.sort_order || 0]);
+  return rows[0];
+}
+
+// ============ FUNNEL STATS ============
+
+// Get funnel statistics
+export async function getFunnelStats(funnelId) {
+  const { rows } = await pool.query(`
+    SELECT 
+      COUNT(*) as total_users,
+      COUNT(CASE WHEN status = 'active' THEN 1 END) as active_users,
+      COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_users,
+      COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_users
+    FROM user_funnels
+    WHERE funnel_id = $1
+  `, [funnelId]);
+  return rows[0];
+}
+
+// Get lesson completion stats for funnel
+export async function getFunnelLessonStats(funnelId) {
+  const { rows } = await pool.query(`
+    SELECT 
+      current_lesson,
+      COUNT(*) as user_count
+    FROM user_funnels
+    WHERE funnel_id = $1
+    GROUP BY current_lesson
+    ORDER BY current_lesson
+  `, [funnelId]);
+  return rows;
+}
+
+// ============ MIGRATION: Create default funnel from existing data ============
+
+export async function migrateToMultiFunnel() {
+  // Check if default funnel exists
+  const { rows: existing } = await pool.query("SELECT * FROM funnels WHERE slug = 'default'");
+  if (existing.length > 0) {
+    console.log('Default funnel already exists, skipping migration');
+    return existing[0];
+  }
+  
+  console.log('Creating default funnel from existing data...');
+  
+  // Get existing settings
+  const pitchData = await pool.query('SELECT * FROM pitch_media LIMIT 1');
+  const pitch = pitchData.rows[0] || {};
+  
+  const salesPitch = await getBotMessage('sales_pitch');
+  const softAttack = await getBotMessage('soft_attack');
+  const salesDelay = await getBotMessage('sales_delay');
+  const softDelay = await getBotMessage('soft_attack_delay');
+  const congrats = await getBotMessage('post_lesson_congrats');
+  
+  const freeChannelId = await getBotMessage('free_channel_id');
+  const freeChannelLink = await getBotMessage('free_channel_link');
+  const requireSub = await getBotMessage('require_subscription_before_lesson');
+  
+  const premiumChannelId = await getSetting('premium_channel_id');
+  const premiumChannelLink = await getSetting('premium_channel_link');
+  
+  // Create default funnel
+  const { rows } = await pool.query(`
+    INSERT INTO funnels (
+      slug, name, description, is_default, is_active,
+      require_subscription_before_lesson, free_channel_id, free_channel_link,
+      premium_channel_id, premium_channel_link,
+      pitch_after_lesson, pitch_text, pitch_video_file_id, pitch_image_file_id, pitch_delay_hours,
+      sales_pitch, sales_delay_hours, soft_attack_text, soft_attack_delay_hours, congrats_text
+    ) VALUES (
+      'default', 'Asosiy Varonka', 'Mavjud tizimdan ko''chirilgan', true, true,
+      $1, $2, $3, $4, $5,
+      4, $6, $7, $8, $9,
+      $10, $11, $12, $13, $14
+    ) RETURNING *
+  `, [
+    parseInt(requireSub) || 0, freeChannelId || '', freeChannelLink || '',
+    premiumChannelId || '', premiumChannelLink || '',
+    pitch.text || '', pitch.video_file_id || null, pitch.image_file_id || null, pitch.delay_hours || 2,
+    salesPitch || '', parseInt(salesDelay) || 1, softAttack || '', parseInt(softDelay) || 24,
+    congrats || '🎉 Tabriklayman!'
+  ]);
+  
+  const funnel = rows[0];
+  console.log('Created default funnel:', funnel.id);
+  
+  // Copy existing lessons
+  const lessons = await getAllLessons();
+  for (const lesson of lessons) {
+    await pool.query(`
+      INSERT INTO funnel_lessons (funnel_id, lesson_number, title, content, video_file_id, image_file_id, audio_file_id, delay_hours, show_watched_button, watched_button_text)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ON CONFLICT (funnel_id, lesson_number) DO NOTHING
+    `, [funnel.id, lesson.lesson_number, lesson.title, lesson.content, lesson.video_file_id, lesson.image_file_id, lesson.audio_file_id, lesson.delay_hours, lesson.show_watched_button, lesson.watched_button_text]);
+  }
+  console.log('Copied', lessons.length, 'lessons');
+  
+  // Copy existing custdev questions
+  const custdev = await getAllCustDevQuestions();
+  for (const q of custdev) {
+    await pool.query(`
+      INSERT INTO funnel_custdev (funnel_id, step, after_lesson, question_text, question_type, options, field_name, sort_order)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [funnel.id, q.step || 1, q.after_lesson || 1, q.question_text, q.question_type, q.options, q.field_name, q.sort_order || 0]);
+  }
+  console.log('Copied', custdev.length, 'custdev questions');
+  
+  // Copy existing subscription plans
+  const plans = await getSubscriptionPlans();
+  for (const plan of plans) {
+    await pool.query(`
+      INSERT INTO funnel_plans (funnel_id, plan_id, name, duration_days, price, discount_percent, sort_order)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (funnel_id, plan_id) DO NOTHING
+    `, [funnel.id, plan.id, plan.name, plan.duration_days, plan.price, plan.discount_percent || 0, plan.sort_order || 0]);
+  }
+  console.log('Copied', plans.length, 'subscription plans');
+  
+  // Assign existing users to default funnel
+  const { rowCount } = await pool.query(`
+    INSERT INTO user_funnels (telegram_id, funnel_id, current_lesson, custdev_step, status)
+    SELECT telegram_id, $1, current_lesson, custdev_step, 
+           CASE WHEN is_paid THEN 'paid' ELSE 'active' END
+    FROM users
+    ON CONFLICT (telegram_id, funnel_id) DO NOTHING
+  `, [funnel.id]);
+  console.log('Assigned', rowCount, 'users to default funnel');
+  
+  return funnel;
+}
+
+export { pool };
