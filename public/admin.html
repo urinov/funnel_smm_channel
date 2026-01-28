@@ -2875,14 +2875,19 @@ async function saveChannelId() {
 // ============ Free Channel Functions ============
 async function loadFreeChannel() {
   try {
-    var id = await (await fetch('/api/messages/free_channel_id', {headers: {Authorization: auth}})).json();
-    var link = await (await fetch('/api/messages/free_channel_link', {headers: {Authorization: auth}})).json();
-    var lesson = await (await fetch('/api/messages/require_subscription_before_lesson', {headers: {Authorization: auth}})).json();
+    // Load from settings table
+    var idRes = await fetch('/api/settings/free_channel_id', {headers: {Authorization: auth}});
+    var linkRes = await fetch('/api/settings/free_channel_link', {headers: {Authorization: auth}});
+    var lessonRes = await fetch('/api/messages/require_subscription_before_lesson', {headers: {Authorization: auth}});
     
-    document.getElementById('freeChannelId').value = id.text || '';
-    document.getElementById('freeChannelLink').value = link.text || '';
+    var id = await idRes.json();
+    var link = await linkRes.json();
+    var lesson = await lessonRes.json();
+    
+    document.getElementById('freeChannelId').value = id.value || '';
+    document.getElementById('freeChannelLink').value = link.value || '';
     document.getElementById('requireSubBeforeLesson').value = lesson.text || '3';
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error('loadFreeChannel error:', e); }
 }
 
 async function saveFreeChannel() {
