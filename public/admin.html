@@ -1025,14 +1025,14 @@
         <button type="button" onclick="closeMobileMenu()" class="w-8 h-8 rounded-lg glass-card flex items-center justify-center cursor-pointer">✕</button>
       </div>
       <nav class="space-y-2">
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="stats"><span>📊</span> Statistika</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="payments"><span>💰</span> To'lovlar</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="users"><span>👥</span> Foydalanuvchilar</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="lessons"><span>📚</span> Darslar</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="media"><span>📁</span> Media</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="custdev"><span>📝</span> CustDev</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="feedback"><span>💬</span> Feedbacklar</button>
-        <button type="button" class="mobile-menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="settings"><span>⚙️</span> Sozlamalar</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="stats"><span>📊</span> Statistika</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="payments"><span>💰</span> To'lovlar</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="users"><span>👥</span> Foydalanuvchilar</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="lessons"><span>📚</span> Darslar</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="media"><span>📁</span> Media</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="custdev"><span>📝</span> CustDev</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="feedback"><span>💬</span> Feedbacklar</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="settings"><span>⚙️</span> Sozlamalar</button>
         <hr class="my-4 border-white/30">
         <button type="button" onclick="openBroadcastModal(); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-btn-success text-white text-left cursor-pointer"><span>📨</span> Xabar yuborish</button>
         <button type="button" onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-red-500 text-left cursor-pointer"><span>🚪</span> Chiqish</button>
@@ -1048,7 +1048,7 @@
         </div>
         <div class="flex gap-2 md:gap-3">
           <button type="button" onclick="openBroadcastModal()" class="hidden md:flex px-6 py-3 rounded-2xl glass-btn-success text-white font-medium items-center gap-2 cursor-pointer"><span>📨</span> Xabar</button>
-          <button type="button" onclick="loadAll()" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl glass-card flex items-center justify-center text-lg md:text-xl cursor-pointer">🔄</button>
+          <button onclick="loadAll()" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl glass-card flex items-center justify-center text-lg md:text-xl">🔄</button>
         </div>
       </header>
 
@@ -1260,7 +1260,7 @@
         <div class="glass-card rounded-2xl md:rounded-3xl overflow-hidden">
           <div class="px-4 py-3 md:px-6 md:py-4 border-b border-white/30 flex justify-between items-center">
             <h2 class="font-bold text-base md:text-lg">📚 Darslar</h2>
-            <button type="button" onclick="addLesson()" class="px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl glass-btn text-white font-medium text-sm md:text-base cursor-pointer">+ Yangi dars</button>
+            <button onclick="addLesson()" class="px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl glass-btn text-white font-medium text-sm md:text-base">+ Yangi dars</button>
           </div>
           <div id="lessonsList" class="divide-y divide-white/20"></div>
         </div>
@@ -1917,12 +1917,12 @@ async function loadMedia(type) {
         '<div class="flex justify-between items-start mb-3">' +
           '<span class="text-3xl">' + getMediaIcon(m.file_type) + '</span>' +
           '<div class="flex gap-1">' +
-            '<button type="button" data-action="edit-media" data-id="' + m.id + '" class="w-9 h-9 rounded-lg glass flex items-center justify-center text-base cursor-pointer hover:bg-violet-100">✏️</button>' +
-            '<button type="button" data-action="delete-media" data-id="' + m.id + '" class="w-9 h-9 rounded-lg glass flex items-center justify-center text-base text-red-500 cursor-pointer hover:bg-red-100">🗑️</button>' +
+            '<button type="button" data-action="edit-media" data-id="' + m.id + '" class="action-btn w-9 h-9 rounded-lg glass flex items-center justify-center text-base hover:bg-violet-100">✏️</button>' +
+            '<button type="button" data-action="delete-media" data-id="' + m.id + '" class="action-btn w-9 h-9 rounded-lg glass flex items-center justify-center text-base text-red-500 hover:bg-red-100">🗑️</button>' +
           '</div>' +
         '</div>' +
         '<p class="font-medium text-sm truncate">' + (m.file_name || m.file_type) + '</p>' + caption +
-        '<button type="button" data-action="copy-file-id" data-id="' + m.file_id + '" class="mt-3 w-full py-2 rounded-xl glass text-xs font-medium cursor-pointer hover:bg-white/50">📋 Nusxalash</button>' +
+        '<button type="button" data-action="copy-file" data-id="' + m.file_id + '" class="action-btn mt-3 w-full py-2 rounded-xl glass text-xs font-medium hover:bg-white/50">📋 Nusxalash</button>' +
       '</div>';
     }
     document.getElementById('mediaList').innerHTML = html;
@@ -2581,8 +2581,8 @@ async function loadLessons() {
             '</div>' +
           '</div>' +
           '<div class="flex gap-2 flex-shrink-0">' +
-            '<button type="button" data-action="edit-lesson" data-id="' + l.lesson_number + '" class="btn-action w-12 h-12 rounded-xl glass-card flex items-center justify-center text-xl hover:bg-violet-100 active:bg-violet-200 cursor-pointer select-none" style="min-width:48px;min-height:48px;">✏️</button>' +
-            '<button type="button" data-action="delete-lesson" data-id="' + l.lesson_number + '" class="btn-action w-12 h-12 rounded-xl glass-card flex items-center justify-center text-xl text-red-500 hover:bg-red-100 active:bg-red-200 cursor-pointer select-none" style="min-width:48px;min-height:48px;">🗑️</button>' +
+            '<button type="button" data-action="edit-lesson" data-id="' + l.lesson_number + '" class="action-btn w-12 h-12 rounded-xl glass-card flex items-center justify-center text-xl hover:bg-violet-100 active:bg-violet-200">✏️</button>' +
+            '<button type="button" data-action="delete-lesson" data-id="' + l.lesson_number + '" class="action-btn w-12 h-12 rounded-xl glass-card flex items-center justify-center text-xl text-red-500 hover:bg-red-100 active:bg-red-200">🗑️</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -2733,7 +2733,7 @@ async function loadCustDev() {
             o = 'Tugmalar: ' + parsed.join(', ');
           } catch(e) { o = 'Tugmalar'; }
         } else { o = 'Matn'; }
-        html += '<div class="p-4 glass rounded-2xl mb-2 flex justify-between items-start"><div class="flex-1"><p class="font-medium">' + (qq.question_text.length > 60 ? qq.question_text.slice(0, 60) + '...' : qq.question_text) + '</p><p class="text-xs text-gray-500 mt-1">' + o + (qq.field_name ? ' → ' + qq.field_name : '') + '</p></div><div class="flex gap-2 ml-3"><button type="button" data-action="edit-custdev" data-id="' + qq.id + '" class="w-10 h-10 rounded-lg glass flex items-center justify-center text-base cursor-pointer hover:bg-violet-100">✏️</button><button type="button" data-action="delete-custdev" data-id="' + qq.id + '" class="w-10 h-10 rounded-lg glass flex items-center justify-center text-base text-red-500 cursor-pointer hover:bg-red-100">🗑️</button></div></div>';
+        html += '<div class="p-4 glass rounded-2xl mb-2 flex justify-between items-start"><div class="flex-1"><p class="font-medium">' + (qq.question_text.length > 60 ? qq.question_text.slice(0, 60) + '...' : qq.question_text) + '</p><p class="text-xs text-gray-500 mt-1">' + o + (qq.field_name ? ' → ' + qq.field_name : '') + '</p></div><div class="flex gap-2 ml-3"><button type="button" data-action="edit-custdev" data-id="' + qq.id + '" class="action-btn w-10 h-10 rounded-lg glass flex items-center justify-center text-base hover:bg-violet-100">✏️</button><button type="button" data-action="delete-custdev" data-id="' + qq.id + '" class="action-btn w-10 h-10 rounded-lg glass flex items-center justify-center text-base text-red-500 hover:bg-red-100">🗑️</button></div></div>';
       }
       html += '</div>';
     }
@@ -4067,11 +4067,11 @@ setInterval(function() {
 // ========== GLOBAL EVENT DELEGATION ==========
 // Bu barcha dinamik yaratilgan tugmalarni ishlashini ta'minlaydi
 document.addEventListener('click', function(e) {
-  // Mobile menu items
-  var menuItem = e.target.closest('.mobile-menu-item');
-  if (menuItem) {
+  // Mobile slide menu buttons
+  var mobileNavBtn = e.target.closest('.mobile-nav-btn');
+  if (mobileNavBtn) {
     e.preventDefault();
-    var tab = menuItem.getAttribute('data-tab');
+    var tab = mobileNavBtn.getAttribute('data-tab');
     if (tab) {
       showTab(tab);
       closeMobileMenu();
@@ -4089,30 +4089,34 @@ document.addEventListener('click', function(e) {
   var action = target.getAttribute('data-action');
   var id = target.getAttribute('data-id');
   
-  console.log('Action:', action, 'ID:', id); // Debug
+  console.log('Action clicked:', action, 'ID:', id);
   
   switch(action) {
+    // Lessons
     case 'edit-lesson':
       editLesson(parseInt(id));
       break;
     case 'delete-lesson':
       deleteLesson(parseInt(id));
       break;
+    // CustDev
     case 'edit-custdev':
       editCustDev(parseInt(id));
       break;
     case 'delete-custdev':
       deleteCustDev(parseInt(id));
       break;
+    // Media
     case 'edit-media':
       editMediaCaption(parseInt(id));
       break;
     case 'delete-media':
       deleteMediaItem(parseInt(id));
       break;
-    case 'copy-file-id':
+    case 'copy-file':
       copyFileId(id);
       break;
+    // Navigation
     case 'show-tab':
       showTab(id);
       break;
@@ -4123,9 +4127,9 @@ document.addEventListener('click', function(e) {
       closeModal(id);
       break;
   }
-}, true);
+});
 
-// Touch support for better mobile experience
+// Touch optimization
 document.addEventListener('touchstart', function(){}, {passive: true});
 </script>
 </body>
