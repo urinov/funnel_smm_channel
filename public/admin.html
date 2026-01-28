@@ -3685,7 +3685,7 @@ function openFlowSettingsModal() {
     '<div class="glass rounded-xl p-4">' +
       '<label class="font-medium text-gray-700 mb-3 block">🎬 Pitch yuborish vaqti (4-darsdan keyin)</label>' +
       '<div class="flex gap-2 items-center">' +
-        '<select id="flowPitchType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleDelayInput(\'pitch\')">' +
+        '<select id="flowPitchType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleFlowDelayInput(\'pitch\')">' +
           '<option value="instant">⚡ Darhol</option>' +
           '<option value="seconds">Sekund</option>' +
           '<option value="minutes" selected>Minut</option>' +
@@ -3699,7 +3699,7 @@ function openFlowSettingsModal() {
     '<div class="glass rounded-xl p-4">' +
       '<label class="font-medium text-gray-700 mb-3 block">💳 To\'lov taklifi (Pitch dan keyin)</label>' +
       '<div class="flex gap-2 items-center">' +
-        '<select id="flowSalesType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleDelayInput(\'sales\')">' +
+        '<select id="flowSalesType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleFlowDelayInput(\'sales\')">' +
           '<option value="instant">⚡ Darhol</option>' +
           '<option value="seconds">Sekund</option>' +
           '<option value="minutes" selected>Minut</option>' +
@@ -3713,7 +3713,7 @@ function openFlowSettingsModal() {
     '<div class="glass rounded-xl p-4">' +
       '<label class="font-medium text-gray-700 mb-3 block">🔔 Soft Eslatma (to\'lamasa)</label>' +
       '<div class="flex gap-2 items-center">' +
-        '<select id="flowSoftType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleDelayInput(\'soft\')">' +
+        '<select id="flowSoftType" class="px-3 py-2 rounded-xl glass-input" onchange="toggleFlowDelayInput(\'soft\')">' +
           '<option value="instant">⚡ Darhol</option>' +
           '<option value="seconds">Sekund</option>' +
           '<option value="minutes">Minut</option>' +
@@ -3733,7 +3733,7 @@ function openFlowSettingsModal() {
   showCustomModal('⚙️ Progrev Flow vaqtlari', html);
 }
 
-function toggleDelayInput(type) {
+function toggleFlowDelayInput(type) {
   var selectEl = document.getElementById('flow' + type.charAt(0).toUpperCase() + type.slice(1) + 'Type');
   var valueEl = document.getElementById('flow' + type.charAt(0).toUpperCase() + type.slice(1) + 'Value');
   var unitEl = document.getElementById('flow' + type.charAt(0).toUpperCase() + type.slice(1) + 'Unit');
