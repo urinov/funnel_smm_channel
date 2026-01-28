@@ -3124,7 +3124,10 @@ async function deleteCustDev(id) {
 async function loadPitch() {
   try {
     pitchData = await (await fetch('/api/pitch', {headers: {Authorization: auth}})).json() || {};
-    document.getElementById('pitchPreview').innerHTML = '<p class="mb-3"><strong>Matn:</strong> ' + ((pitchData.text || '-').slice(0, 100) + (pitchData.text && pitchData.text.length > 100 ? '...' : '')) + '</p><div class="flex gap-3 text-lg"><span>' + (pitchData.video_file_id ? '📹 ✅' : '📹 ➖') + '</span><span>' + (pitchData.image_file_id ? '🖼 ✅' : '🖼 ➖') + '</span><span>' + (pitchData.audio_file_id ? '🎤 ✅' : '🎤 ➖') + '</span></div><p class="mt-3 text-gray-500">⏱ ' + (pitchData.delay_hours || 2) + ' soat</p>';
+    var el = document.getElementById('pitchTextPreview');
+    if (el) {
+      el.innerHTML = '"' + ((pitchData.text || '').slice(0, 50) + (pitchData.text && pitchData.text.length > 50 ? '...' : '') || 'Maxsus video xabar!') + '"';
+    }
   } catch(e) { console.error(e); }
 }
 
@@ -3133,9 +3136,7 @@ async function loadPrice() {
   try {
     var d = await (await fetch('/api/settings/price', {headers: {Authorization: auth}})).json();
     subscriptionPrice = d.price || 9700000;
-    var priceInSum = subscriptionPrice / 100;
-    document.getElementById('subscriptionPrice').value = priceInSum;
-    document.getElementById('priceDisplay').textContent = formatPriceDisplay(priceInSum);
+    // Element yo'q bo'lsa xato chiqmasin
   } catch(e) { console.error(e); }
 }
 
@@ -3144,35 +3145,14 @@ function formatPriceDisplay(sum) {
 }
 
 function setQuickPrice(sum) {
-  document.getElementById('subscriptionPrice').value = sum;
-  document.getElementById('priceDisplay').textContent = formatPriceDisplay(sum);
+  // Element yo'q bo'lsa xato chiqmasin
 }
 
-document.getElementById('subscriptionPrice').addEventListener('input', function() {
-  var sum = parseInt(this.value) || 0;
-  document.getElementById('priceDisplay').textContent = formatPriceDisplay(sum);
-});
+// subscriptionPrice event listener o'chirildi - element yo'q
 
 async function saveSubscriptionPrice() {
-  var sum = parseInt(document.getElementById('subscriptionPrice').value) || 97000;
-  var tiyin = sum * 100;
-  
-  try {
-    var r = await fetch('/api/settings/price', {
-      method: 'PUT',
-      headers: {Authorization: auth, 'Content-Type': 'application/json'},
-      body: JSON.stringify({price: tiyin})
-    });
-    var d = await r.json();
-    if (d.success) {
-      subscriptionPrice = tiyin;
-      alert('✅ Narx saqlandi: ' + formatPriceDisplay(sum));
-    } else {
-      alert('❌ Xatolik: ' + (d.error || 'Unknown'));
-    }
-  } catch(e) {
-    alert('❌ Xatolik: ' + e.message);
-  }
+  // Bu funksiya endi ishlatilmaydi - subscription plans orqali boshqariladi
+  console.log('saveSubscriptionPrice is deprecated - use subscription plans');
 }
 
 // ============ Channel Link Functions ============
@@ -3516,16 +3496,23 @@ async function loadPostLessonFlow() {
     var salesText = salesDelay === 0 ? '🚀 Darhol (pitch bilan)' : '+' + salesDelay + ' soat (pitch dan keyin)';
     var softText = softDelay < 0 || botMessages.soft_attack_disabled ? '❌ O\'chirilgan' : '+' + softDelay + ' soat (to\'lamagan bo\'lsa)';
     
-    document.getElementById('pitchDelayInfo').textContent = pitchText;
-    document.getElementById('salesDelayInfo').textContent = salesText;
-    document.getElementById('softAttackDelayInfo').textContent = softText;
+    // Safely update elements - check if they exist first
+    var el1 = document.getElementById('pitchDelayInfo');
+    var el2 = document.getElementById('salesDelayInfo');
+    var el3 = document.getElementById('softAttackDelayInfo');
+    var el4 = document.getElementById('salesPreview');
+    var el5 = document.getElementById('softAttackPreview');
+    
+    if (el1) el1.textContent = pitchText;
+    if (el2) el2.textContent = salesText;
+    if (el3) el3.textContent = softText;
     
     // Update previews
     var salesTextMsg = botMessages.sales_pitch || 'SMM PRO KURSGA TAKLIF!';
-    document.getElementById('salesPreview').innerHTML = '<p><strong>Matn:</strong> ' + (salesTextMsg.length > 100 ? salesTextMsg.slice(0, 100) + '...' : salesTextMsg) + '</p><p class="mt-2 text-gray-500">💳 Payme | 💠 Click tugmalari avtomatik qo\'shiladi</p>';
+    if (el4) el4.innerHTML = '<p><strong>Matn:</strong> ' + (salesTextMsg.length > 100 ? salesTextMsg.slice(0, 100) + '...' : salesTextMsg) + '</p><p class="mt-2 text-gray-500">💳 Payme | 💠 Click tugmalari avtomatik qo\'shiladi</p>';
     
     var softTextMsg = botMessages.soft_attack || '🤔 Hali qaror qilmadingizmi?';
-    document.getElementById('softAttackPreview').innerHTML = '<p><strong>Matn:</strong> ' + (softTextMsg.length > 100 ? softTextMsg.slice(0, 100) + '...' : softTextMsg) + '</p><p class="mt-2 text-gray-500">⚠️ To\'lamagan foydalanuvchilarga yuboriladi</p>';
+    if (el5) el5.innerHTML = '<p><strong>Matn:</strong> ' + (softTextMsg.length > 100 ? softTextMsg.slice(0, 100) + '...' : softTextMsg) + '</p><p class="mt-2 text-gray-500">⚠️ To\'lamagan foydalanuvchilarga yuboriladi</p>';
     
   } catch(e) { console.error(e); }
 }
