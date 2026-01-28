@@ -932,12 +932,208 @@ app.put('/api/settings/:key', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ MULTI-FUNNEL API ============
+
+// Get all funnels
+app.get('/api/funnels', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnels = await db.getAllFunnels();
+    res.json(funnels);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get single funnel
+app.get('/api/funnels/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnel = await db.getFunnelById(parseInt(req.params.id));
+    if (!funnel) return res.status(404).json({ error: 'Funnel not found' });
+    res.json(funnel);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create funnel
+app.post('/api/funnels', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnel = await db.createFunnel(req.body);
+    res.json(funnel);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Update funnel
+app.put('/api/funnels/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnel = await db.updateFunnel(parseInt(req.params.id), req.body);
+    res.json(funnel);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete funnel
+app.delete('/api/funnels/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.deleteFunnel(parseInt(req.params.id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Set default funnel
+app.post('/api/funnels/:id/set-default', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.setDefaultFunnel(parseInt(req.params.id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get funnel lessons
+app.get('/api/funnels/:id/lessons', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const lessons = await db.getFunnelLessons(parseInt(req.params.id));
+    res.json(lessons);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create/Update funnel lesson
+app.put('/api/funnels/:id/lessons/:num', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const lesson = await db.upsertFunnelLesson(
+      parseInt(req.params.id),
+      parseInt(req.params.num),
+      req.body
+    );
+    res.json(lesson);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete funnel lesson
+app.delete('/api/funnels/:id/lessons/:num', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.deleteFunnelLesson(parseInt(req.params.id), parseInt(req.params.num));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get funnel custdev
+app.get('/api/funnels/:id/custdev', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const questions = await db.getFunnelCustDev(parseInt(req.params.id));
+    res.json(questions);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create funnel custdev question
+app.post('/api/funnels/:id/custdev', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const question = await db.createFunnelCustDev(parseInt(req.params.id), req.body);
+    res.json(question);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete funnel custdev
+app.delete('/api/funnels/:fid/custdev/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.deleteFunnelCustDev(parseInt(req.params.id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get funnel plans
+app.get('/api/funnels/:id/plans', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const plans = await db.getFunnelPlans(parseInt(req.params.id));
+    res.json(plans);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create/Update funnel plan
+app.put('/api/funnels/:id/plans/:planId', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const plan = await db.upsertFunnelPlan(
+      parseInt(req.params.id),
+      req.params.planId,
+      req.body
+    );
+    res.json(plan);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get funnel stats
+app.get('/api/funnels/:id/stats', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const stats = await db.getFunnelStats(parseInt(req.params.id));
+    const lessonStats = await db.getFunnelLessonStats(parseInt(req.params.id));
+    res.json({ ...stats, lessonStats });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Migrate existing data to multi-funnel
+app.post('/api/funnels/migrate', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnel = await db.migrateToMultiFunnel();
+    res.json({ success: true, funnel });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const port = process.env.PORT || 3000;
 
 async function start() {
   try {
     await initDatabase();
     console.log('Database initialized');
+    
+    // Auto-migrate to multi-funnel on first start
+    try {
+      const db = await import('./database.js');
+      await db.migrateToMultiFunnel();
+    } catch (e) {
+      console.log('Migration note:', e.message);
+    }
 
     startScheduler();
 
