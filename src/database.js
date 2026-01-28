@@ -1707,5 +1707,3 @@ export async function migrateToMultiFunnel() {
   
   return funnel;
 }
-
-export { pool };
