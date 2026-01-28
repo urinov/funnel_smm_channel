@@ -821,6 +821,29 @@ app.put('/api/settings/channel', authMiddleware, async (req, res) => {
   }
 });
 
+// Generic settings key endpoint
+app.put('/api/settings/key', authMiddleware, async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    const db = await import('./database.js');
+    await db.setSetting(key, value);
+    console.log('✅ Setting saved:', key, '=', value);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/settings/:key', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const value = await db.getSetting(req.params.key);
+    res.json({ key: req.params.key, value });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ INVITE LINKS API ============
 app.get('/api/invite-links', authMiddleware, async (req, res) => {
   try {
