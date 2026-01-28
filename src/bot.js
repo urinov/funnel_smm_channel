@@ -131,16 +131,57 @@ bot.start(async (ctx) => {
   try {
     const tgUser = ctx.from;
     const telegramId = tgUser.id;
+    
+    // Parse deep link - t.me/bot?start=SLUG
+    const startPayload = ctx.startPayload; // e.g., "test", "smm-pro"
+    
+    // Find funnel by slug or get default
+    let funnel = null;
+    if (startPayload && startPayload.length > 0) {
+      funnel = await db.getFunnelBySlug(startPayload);
+      console.log('🎯 Deep link funnel:', startPayload, funnel ? '✅ Found' : '❌ Not found');
+    }
+    
+    // If no funnel found by slug, get default
+    if (!funnel) {
+      funnel = await db.getDefaultFunnel();
+      console.log('🎯 Using default funnel:', funnel?.name);
+    }
+    
+    // If still no funnel, fallback to old behavior
+    if (!funnel) {
+      console.log('⚠️ No funnels configured, using legacy mode');
+      return handleLegacyStart(ctx, telegramId, tgUser);
+    }
+    
     let user = await db.getUser(telegramId);
 
     if (!user) {
       user = await db.createUser(telegramId, tgUser.username, null);
+      
+      // Start user in this funnel
+      await db.startUserInFunnel(telegramId, funnel.id);
+      console.log('👤 New user started in funnel:', funnel.name);
+      
       const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
       await ctx.reply(welcome, { parse_mode: 'HTML' });
       await delay(500);
       const askName = await db.getBotMessage('ask_name') || 'Ism-familiyangizni kiriting:';
       await ctx.reply(askName, { parse_mode: 'HTML' });
       await db.updateUser(telegramId, { custdev_step: -1, funnel_step: 0 });
+      return;
+    }
+
+    // Check if user clicked different funnel link
+    const userFunnel = await db.getUserActiveFunnel(telegramId);
+    if (!userFunnel || userFunnel.funnel_id !== funnel.id) {
+      // Start user in new funnel
+      await db.startUserInFunnel(telegramId, funnel.id);
+      console.log('🔄 User switched to funnel:', funnel.name);
+      
+      await ctx.reply(`🎯 Yangi kursga xush kelibsiz: ${funnel.name}\n\nDarslar tez orada boshlanadi!`, { parse_mode: 'HTML' });
+      await delay(1000);
+      await sendFunnelLesson(telegramId, funnel.id, 1);
       return;
     }
 
@@ -167,6 +208,98 @@ bot.start(async (ctx) => {
     await ctx.reply('Xatolik. /start bosing.');
   }
 });
+
+// Legacy start handler (for backward compatibility)
+async function handleLegacyStart(ctx, telegramId, tgUser) {
+  let user = await db.getUser(telegramId);
+
+  if (!user) {
+    user = await db.createUser(telegramId, tgUser.username, null);
+    const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
+    await ctx.reply(welcome, { parse_mode: 'HTML' });
+    await delay(500);
+    const askName = await db.getBotMessage('ask_name') || 'Ism-familiyangizni kiriting:';
+    await ctx.reply(askName, { parse_mode: 'HTML' });
+    await db.updateUser(telegramId, { custdev_step: -1, funnel_step: 0 });
+    return;
+  }
+
+  if (user.custdev_step === -1) {
+    const askName = await db.getBotMessage('ask_name') || 'Ism-familiyangizni kiriting:';
+    return ctx.reply(askName, { parse_mode: 'HTML' });
+  }
+
+  if (user.custdev_step === -2) {
+    const askPhone = await db.getBotMessage('ask_phone') || 'Telefon raqamingizni yuboring:';
+    return ctx.reply(askPhone, {
+      parse_mode: 'HTML',
+      ...Markup.keyboard([[Markup.button.contactRequest('Telefon yuborish')]]).resize().oneTime()
+    });
+  }
+
+  if (user.funnel_step > 0) {
+    return ctx.reply(`Qaytganingiz bilan, ${user.full_name || "do'st"}!\n\nSiz ${user.current_lesson || 0}-darsdasiz.\nDavom etish: /continue`);
+  }
+
+  await startLessons(telegramId);
+}
+
+// Send lesson from specific funnel
+async function sendFunnelLesson(telegramId, funnelId, lessonNumber) {
+  try {
+    const lesson = await db.getFunnelLesson(funnelId, lessonNumber);
+    if (!lesson) {
+      console.log('❌ Funnel lesson not found:', funnelId, lessonNumber);
+      // Fallback to regular lessons
+      return sendLesson(telegramId, lessonNumber);
+    }
+    
+    const user = await db.getUser(telegramId);
+    let content = await replaceVars(lesson.content || '', user || {});
+    
+    // Send video if exists
+    if (lesson.video_file_id) {
+      try {
+        await bot.telegram.sendVideo(telegramId, lesson.video_file_id, {
+          caption: `<b>📚 ${lesson.lesson_number}-dars: ${lesson.title}</b>\n\n${content}`.slice(0, 1024),
+          parse_mode: 'HTML'
+        });
+      } catch (e) {
+        await bot.telegram.sendMessage(telegramId, `<b>📚 ${lesson.lesson_number}-dars: ${lesson.title}</b>\n\n${content}`, { parse_mode: 'HTML' });
+      }
+    } else if (lesson.image_file_id) {
+      try {
+        await bot.telegram.sendPhoto(telegramId, lesson.image_file_id, {
+          caption: `<b>📚 ${lesson.lesson_number}-dars: ${lesson.title}</b>\n\n${content}`.slice(0, 1024),
+          parse_mode: 'HTML'
+        });
+      } catch (e) {
+        await bot.telegram.sendMessage(telegramId, `<b>📚 ${lesson.lesson_number}-dars: ${lesson.title}</b>\n\n${content}`, { parse_mode: 'HTML' });
+      }
+    } else {
+      await bot.telegram.sendMessage(telegramId, `<b>📚 ${lesson.lesson_number}-dars: ${lesson.title}</b>\n\n${content}`, { parse_mode: 'HTML' });
+    }
+    
+    // Update user progress
+    await db.updateUser(telegramId, { current_lesson: lessonNumber, funnel_step: lessonNumber });
+    await db.updateUserFunnelProgress(telegramId, funnelId, lessonNumber, 0);
+    
+    // Show watched button if enabled
+    if (lesson.show_watched_button !== false) {
+      const btnText = lesson.watched_button_text || 'Videoni ko\'rib bo\'ldim ✅';
+      await delay(1000);
+      await bot.telegram.sendMessage(telegramId, 'Videoni ko\'rib bo\'lgach, tugmani bosing:', {
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback(btnText, `watched_funnel_${funnelId}_${lessonNumber}`)]
+        ])
+      });
+    }
+    
+    console.log('✅ Sent funnel lesson:', funnelId, lessonNumber, 'to', telegramId);
+  } catch (e) {
+    console.error('sendFunnelLesson error:', e);
+  }
+}
 
 bot.on('contact', async (ctx) => {
   try {
@@ -353,6 +486,251 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
     console.error('Watched error:', e);
   }
 });
+
+// Funnel watched callback - watched_funnel_FUNNELID_LESSONNUM
+bot.action(/^watched_funnel_(\d+)_(\d+)$/, async (ctx) => {
+  try {
+    const funnelId = parseInt(ctx.match[1]);
+    const lessonNumber = parseInt(ctx.match[2]);
+    const telegramId = ctx.from.id;
+    
+    await ctx.answerCbQuery('Ajoyib!');
+    await ctx.editMessageReplyMarkup(undefined);
+    
+    // Get funnel info
+    const funnel = await db.getFunnelById(funnelId);
+    if (!funnel) {
+      console.log('❌ Funnel not found:', funnelId);
+      return;
+    }
+    
+    // Get funnel lessons count
+    const funnelLessons = await db.getFunnelLessons(funnelId);
+    const totalLessons = funnelLessons.length;
+    
+    console.log('👆 Funnel watched:', funnelId, 'lesson', lessonNumber, '/', totalLessons);
+    
+    if (lessonNumber < totalLessons) {
+      // Check if subscription required before next lesson (funnel specific)
+      const requireSubLesson = funnel.require_subscription_before_lesson || 0;
+      const nextLesson = lessonNumber + 1;
+      
+      if (requireSubLesson > 0 && nextLesson === requireSubLesson && funnel.free_channel_id) {
+        const isSubscribed = await checkFunnelChannelSubscription(telegramId, funnel);
+        
+        if (!isSubscribed) {
+          await askForFunnelSubscription(telegramId, funnel, nextLesson);
+          return;
+        }
+      }
+      
+      // Check for CustDev questions after this lesson
+      const custdevQuestions = await db.getFunnelCustDev(funnelId);
+      const questionsAfterThis = custdevQuestions.filter(q => q.after_lesson === lessonNumber);
+      
+      if (questionsAfterThis.length > 0) {
+        await startFunnelCustDev(telegramId, funnelId, lessonNumber, 0);
+      } else {
+        // Schedule next lesson
+        await scheduleFunnelNextLesson(telegramId, funnelId, nextLesson);
+      }
+    } else {
+      // Course completed - send pitch
+      await scheduleFunnelPitch(telegramId, funnelId);
+    }
+  } catch (e) {
+    console.error('Funnel watched error:', e);
+  }
+});
+
+// Check funnel specific channel subscription
+async function checkFunnelChannelSubscription(telegramId, funnel) {
+  if (!funnel.free_channel_id) return true;
+  
+  try {
+    const member = await bot.telegram.getChatMember(funnel.free_channel_id, telegramId);
+    return ['creator', 'administrator', 'member'].includes(member.status);
+  } catch (e) {
+    console.log('checkFunnelChannelSubscription error:', e.message);
+    return true; // Assume subscribed if can't check
+  }
+}
+
+// Ask for funnel subscription
+async function askForFunnelSubscription(telegramId, funnel, pendingLesson) {
+  const channelLink = funnel.free_channel_link || 'https://t.me/channel';
+  const msg = `📢 Davom etish uchun kanalimizga obuna bo'ling!\n\nObuna bo'lgach "Tekshirish" tugmasini bosing.`;
+  
+  await db.updateUser(telegramId, { pending_lesson: pendingLesson, waiting_subscription: true });
+  
+  await bot.telegram.sendMessage(telegramId, msg, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.url('📢 Kanalga o\'tish', channelLink)],
+      [Markup.button.callback('✅ Tekshirish', `check_funnel_sub_${funnel.id}_${pendingLesson}`)]
+    ])
+  });
+}
+
+// Check funnel subscription callback
+bot.action(/^check_funnel_sub_(\d+)_(\d+)$/, async (ctx) => {
+  try {
+    const funnelId = parseInt(ctx.match[1]);
+    const pendingLesson = parseInt(ctx.match[2]);
+    const telegramId = ctx.from.id;
+    
+    const funnel = await db.getFunnelById(funnelId);
+    if (!funnel) return;
+    
+    const isSubscribed = await checkFunnelChannelSubscription(telegramId, funnel);
+    
+    if (isSubscribed) {
+      await ctx.answerCbQuery('✅ Obuna tasdiqlandi!');
+      await ctx.editMessageReplyMarkup(undefined);
+      await ctx.reply('🎉 Rahmat! Davom etamiz...');
+      await db.updateUser(telegramId, { waiting_subscription: false, subscribed_free_channel: true });
+      await delay(1500);
+      await sendFunnelLesson(telegramId, funnelId, pendingLesson);
+    } else {
+      await ctx.answerCbQuery('❌ Obuna topilmadi. Kanalga obuna bo\'ling!', { show_alert: true });
+    }
+  } catch (e) {
+    console.error('check_funnel_sub error:', e);
+  }
+});
+
+// Start funnel CustDev
+async function startFunnelCustDev(telegramId, funnelId, afterLesson, questionIndex) {
+  const questions = await db.getFunnelCustDev(funnelId);
+  const relevantQuestions = questions.filter(q => q.after_lesson === afterLesson);
+  
+  if (questionIndex >= relevantQuestions.length) {
+    // All questions answered, proceed to next lesson
+    await scheduleFunnelNextLesson(telegramId, funnelId, afterLesson + 1);
+    return;
+  }
+  
+  const q = relevantQuestions[questionIndex];
+  
+  // Save current state
+  await db.updateUser(telegramId, { custdev_step: q.step || questionIndex });
+  
+  if (q.question_type === 'buttons' && q.options) {
+    const opts = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+    const buttons = opts.map(opt => [Markup.button.callback(opt, `fcd_${funnelId}_${afterLesson}_${questionIndex}_${opt}`)]);
+    await bot.telegram.sendMessage(telegramId, q.question_text, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
+  } else {
+    await bot.telegram.sendMessage(telegramId, q.question_text, { parse_mode: 'HTML' });
+    // Store state for text answer
+    await db.updateUser(telegramId, { custdev_step: `fcd_${funnelId}_${afterLesson}_${questionIndex}` });
+  }
+}
+
+// Funnel CustDev button callback
+bot.action(/^fcd_(\d+)_(\d+)_(\d+)_(.+)$/, async (ctx) => {
+  try {
+    const funnelId = parseInt(ctx.match[1]);
+    const afterLesson = parseInt(ctx.match[2]);
+    const questionIndex = parseInt(ctx.match[3]);
+    const answer = ctx.match[4];
+    const telegramId = ctx.from.id;
+    
+    await ctx.answerCbQuery();
+    await ctx.editMessageReplyMarkup(undefined);
+    
+    // Save answer (optional - can add to database)
+    console.log('📝 Funnel CustDev answer:', funnelId, afterLesson, questionIndex, answer);
+    
+    // Next question or proceed
+    await startFunnelCustDev(telegramId, funnelId, afterLesson, questionIndex + 1);
+  } catch (e) {
+    console.error('fcd callback error:', e);
+  }
+});
+
+// Schedule funnel next lesson
+async function scheduleFunnelNextLesson(telegramId, funnelId, lessonNumber) {
+  const lesson = await db.getFunnelLesson(funnelId, lessonNumber);
+  if (!lesson) {
+    console.log('No more funnel lessons, sending pitch');
+    await scheduleFunnelPitch(telegramId, funnelId);
+    return;
+  }
+  
+  const delayHours = lesson.delay_hours || 0;
+  
+  if (delayHours === 0) {
+    // Send immediately
+    await sendFunnelLesson(telegramId, funnelId, lessonNumber);
+  } else {
+    // Schedule for later
+    const scheduledAt = new Date(Date.now() + delayHours * 60 * 60 * 1000);
+    await db.scheduleMessage(telegramId, 'funnel_lesson', scheduledAt, { funnel_id: funnelId, lesson_number: lessonNumber });
+    
+    const msg = delayHours >= 24 
+      ? `⏰ Keyingi dars ${Math.floor(delayHours / 24)} kundan keyin yuboriladi!`
+      : `⏰ Keyingi dars ${delayHours} soatdan keyin yuboriladi!`;
+    await bot.telegram.sendMessage(telegramId, msg);
+  }
+}
+
+// Schedule funnel pitch (after last lesson)
+async function scheduleFunnelPitch(telegramId, funnelId) {
+  const funnel = await db.getFunnelById(funnelId);
+  if (!funnel) return;
+  
+  // Send congrats
+  const congratsText = funnel.congrats_text || '🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!';
+  await bot.telegram.sendMessage(telegramId, congratsText, { parse_mode: 'HTML' });
+  
+  // Schedule pitch
+  const pitchDelay = funnel.pitch_delay_hours || 2;
+  
+  if (pitchDelay === 0) {
+    await sendFunnelPitch(telegramId, funnelId);
+  } else {
+    const scheduledAt = new Date(Date.now() + pitchDelay * 60 * 60 * 1000);
+    await db.scheduleMessage(telegramId, 'funnel_pitch', scheduledAt, { funnel_id: funnelId });
+    console.log('📅 Scheduled funnel pitch for', telegramId, 'in', pitchDelay, 'hours');
+  }
+}
+
+// Send funnel pitch
+async function sendFunnelPitch(telegramId, funnelId) {
+  const funnel = await db.getFunnelById(funnelId);
+  if (!funnel) return;
+  
+  const pitchText = funnel.pitch_text || funnel.sales_pitch || 'To\'liq kursga qo\'shiling!';
+  
+  // Build payment buttons based on funnel settings
+  const buttons = [];
+  const baseUrl = process.env.BASE_URL || '';
+  
+  // Use funnel prices or defaults
+  const price = funnel.price_1m || await getSubscriptionPrice();
+  
+  if (funnel.payme_enabled !== false) {
+    buttons.push([Markup.button.url('💳 Payme orqali to\'lash', `${baseUrl}/pay/payme?tg=${telegramId}&funnel=${funnelId}`)]);
+  }
+  if (funnel.click_enabled !== false) {
+    buttons.push([Markup.button.url('💠 Click orqali to\'lash', `${baseUrl}/pay/click?tg=${telegramId}&funnel=${funnelId}`)]);
+  }
+  
+  if (funnel.pitch_video_file_id) {
+    await bot.telegram.sendVideo(telegramId, funnel.pitch_video_file_id, {
+      caption: pitchText.slice(0, 1024),
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard(buttons)
+    });
+  } else {
+    await bot.telegram.sendMessage(telegramId, pitchText, {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard(buttons)
+    });
+  }
+  
+  console.log('📣 Sent funnel pitch to', telegramId);
+}
 
 async function startCustDev(telegramId, afterLesson) {
   const questions = await db.getCustDevQuestionsForLesson(afterLesson);
