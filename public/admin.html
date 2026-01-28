@@ -2875,19 +2875,30 @@ async function saveChannelId() {
 // ============ Free Channel Functions ============
 async function loadFreeChannel() {
   try {
-    // Load from settings table
-    var idRes = await fetch('/api/settings/free_channel_id', {headers: {Authorization: auth}});
-    var linkRes = await fetch('/api/settings/free_channel_link', {headers: {Authorization: auth}});
+    // Load from app-settings
+    var idRes = await fetch('/api/app-settings/free_channel_id', {headers: {Authorization: auth}});
+    var linkRes = await fetch('/api/app-settings/free_channel_link', {headers: {Authorization: auth}});
     var lessonRes = await fetch('/api/messages/require_subscription_before_lesson', {headers: {Authorization: auth}});
     
-    var id = await idRes.json();
-    var link = await linkRes.json();
-    var lesson = await lessonRes.json();
+    if (idRes.ok) {
+      var id = await idRes.json();
+      document.getElementById('freeChannelId').value = id.value || '';
+    }
     
-    document.getElementById('freeChannelId').value = id.value || '';
-    document.getElementById('freeChannelLink').value = link.value || '';
-    document.getElementById('requireSubBeforeLesson').value = lesson.text || '3';
-  } catch(e) { console.error('loadFreeChannel error:', e); }
+    if (linkRes.ok) {
+      var link = await linkRes.json();
+      document.getElementById('freeChannelLink').value = link.value || '';
+    }
+    
+    if (lessonRes.ok) {
+      var lesson = await lessonRes.json();
+      document.getElementById('requireSubBeforeLesson').value = lesson.text || '3';
+    }
+    
+    console.log('✅ Free channel settings loaded');
+  } catch(e) { 
+    console.error('loadFreeChannel error:', e); 
+  }
 }
 
 async function saveFreeChannel() {
@@ -2901,24 +2912,30 @@ async function saveFreeChannel() {
   }
   
   try {
-    // Save to settings
-    await fetch('/api/settings/key', {
+    // Save to app-settings
+    var r1 = await fetch('/api/app-settings', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
       body: JSON.stringify({key: 'free_channel_id', value: channelId})
     });
-    await fetch('/api/settings/key', {
+    
+    var r2 = await fetch('/api/app-settings', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
       body: JSON.stringify({key: 'free_channel_link', value: channelLink})
     });
-    await fetch('/api/messages/require_subscription_before_lesson', {
+    
+    var r3 = await fetch('/api/messages/require_subscription_before_lesson', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
       body: JSON.stringify({text: beforeLesson})
     });
     
-    alert('✅ Bepul kanal sozlamalari saqlandi!\n\n' + beforeLesson + '-darsdan oldin obuna bo\'lish talab qilinadi.');
+    if (r1.ok && r2.ok && r3.ok) {
+      alert('✅ Bepul kanal sozlamalari saqlandi!\n\n' + beforeLesson + '-darsdan oldin obuna bo\'lish talab qilinadi.');
+    } else {
+      alert('❌ Saqlashda xatolik');
+    }
   } catch(e) {
     alert('❌ Xatolik: ' + e.message);
   }
