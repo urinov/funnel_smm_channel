@@ -112,11 +112,17 @@
     @media (max-width: 768px) {
       /* Hide desktop sidebar, show mobile navbar */
       .desktop-sidebar { display: none !important; }
-      .mobile-navbar { display: flex !important; }
-      .mobile-menu-overlay { display: none; }
-      .mobile-menu-overlay.active { display: block; }
-      .mobile-sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+      
+      /* Mobile sidebar - hidden by default */
+      .mobile-sidebar { 
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease;
+        z-index: 60 !important;
+      }
       .mobile-sidebar.active { transform: translateX(0); }
+      
+      /* Mobile overlay */
+      .mobile-menu-overlay { z-index: 55 !important; }
       
       /* Main content full width on mobile */
       .main-content { margin-left: 0 !important; padding: 1rem !important; padding-bottom: 90px !important; }
@@ -231,10 +237,20 @@
     }
     
     @media (min-width: 769px) {
-      .mobile-navbar { display: none !important; }
       .bottom-nav { display: none !important; }
       .desktop-sidebar { display: flex !important; }
+      .mobile-sidebar { display: none !important; }
+      .mobile-menu-overlay { display: none !important; }
       .hide-desktop { display: none !important; }
+    }
+    
+    /* Default state for mobile elements */
+    .mobile-sidebar { 
+      transform: translateX(-100%); 
+      transition: transform 0.3s ease;
+    }
+    .mobile-sidebar.active { 
+      transform: translateX(0) !important; 
     }
     
     /* Safe area for notch phones */
