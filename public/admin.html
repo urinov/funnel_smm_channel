@@ -2875,19 +2875,19 @@ async function saveChannelId() {
 // ============ Free Channel Functions ============
 async function loadFreeChannel() {
   try {
-    // Load from app-settings
-    var idRes = await fetch('/api/app-settings/free_channel_id', {headers: {Authorization: auth}});
-    var linkRes = await fetch('/api/app-settings/free_channel_link', {headers: {Authorization: auth}});
+    // Load from bot_messages (same as other settings)
+    var idRes = await fetch('/api/messages/free_channel_id', {headers: {Authorization: auth}});
+    var linkRes = await fetch('/api/messages/free_channel_link', {headers: {Authorization: auth}});
     var lessonRes = await fetch('/api/messages/require_subscription_before_lesson', {headers: {Authorization: auth}});
     
     if (idRes.ok) {
       var id = await idRes.json();
-      document.getElementById('freeChannelId').value = id.value || '';
+      document.getElementById('freeChannelId').value = id.text || '';
     }
     
     if (linkRes.ok) {
       var link = await linkRes.json();
-      document.getElementById('freeChannelLink').value = link.value || '';
+      document.getElementById('freeChannelLink').value = link.text || '';
     }
     
     if (lessonRes.ok) {
@@ -2912,17 +2912,17 @@ async function saveFreeChannel() {
   }
   
   try {
-    // Save to app-settings
-    var r1 = await fetch('/api/app-settings', {
+    // Save to bot_messages (same as other settings)
+    var r1 = await fetch('/api/messages/free_channel_id', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
-      body: JSON.stringify({key: 'free_channel_id', value: channelId})
+      body: JSON.stringify({text: channelId})
     });
     
-    var r2 = await fetch('/api/app-settings', {
+    var r2 = await fetch('/api/messages/free_channel_link', {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
-      body: JSON.stringify({key: 'free_channel_link', value: channelLink})
+      body: JSON.stringify({text: channelLink})
     });
     
     var r3 = await fetch('/api/messages/require_subscription_before_lesson', {
