@@ -821,8 +821,8 @@ app.put('/api/settings/channel', authMiddleware, async (req, res) => {
   }
 });
 
-// Generic settings key endpoint
-app.put('/api/settings/key', authMiddleware, async (req, res) => {
+// Generic settings key endpoint (for free channel, etc)
+app.put('/api/app-settings', authMiddleware, async (req, res) => {
   try {
     const { key, value } = req.body;
     const db = await import('./database.js');
@@ -834,11 +834,11 @@ app.put('/api/settings/key', authMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/settings/:key', authMiddleware, async (req, res) => {
+app.get('/api/app-settings/:key', authMiddleware, async (req, res) => {
   try {
     const db = await import('./database.js');
     const value = await db.getSetting(req.params.key);
-    res.json({ key: req.params.key, value });
+    res.json({ key: req.params.key, value: value || '' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
