@@ -427,8 +427,8 @@ bot.action(/^cd_(\d+)_(.+)$/, async (ctx) => {
 const FREE_CHANNEL_ID = process.env.FREE_CHANNEL_ID; // Bepul kanal ID
 
 async function checkFreeChannelSubscription(telegramId) {
-  // Get free channel ID from dashboard or env
-  const channelId = await db.getSetting('free_channel_id') || FREE_CHANNEL_ID;
+  // Get free channel ID from dashboard (bot_messages) or env
+  const channelId = await db.getBotMessage('free_channel_id') || FREE_CHANNEL_ID;
   
   if (!channelId) {
     console.log('⚠️ FREE_CHANNEL_ID not set, skipping subscription check');
@@ -438,7 +438,7 @@ async function checkFreeChannelSubscription(telegramId) {
   try {
     const member = await bot.telegram.getChatMember(channelId, telegramId);
     const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
-    console.log(`📢 Subscription check for ${telegramId}: ${isSubscribed ? '✅ Subscribed' : '❌ Not subscribed'}`);
+    console.log(`📢 Subscription check for ${telegramId} in ${channelId}: ${isSubscribed ? '✅ Subscribed' : '❌ Not subscribed'}`);
     return isSubscribed;
   } catch (e) {
     console.error('❌ Subscription check error:', e.message);
@@ -447,7 +447,7 @@ async function checkFreeChannelSubscription(telegramId) {
 }
 
 async function askForSubscription(telegramId, nextLesson = 3) {
-  const channelLink = await db.getSetting('free_channel_link') || await db.getBotMessage('free_channel_link') || 'https://t.me/your_channel';
+  const channelLink = await db.getBotMessage('free_channel_link') || 'https://t.me/your_channel';
   
   const msg = await db.getBotMessage('subscribe_required') || 
 `🔒 <b>${nextLesson}-darsga o'tish uchun kanalimizga obuna bo'ling!</b>
