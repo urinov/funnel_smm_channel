@@ -191,16 +191,17 @@
       transform: translateX(0);
     }
     
-    /* Desktop Sidebar */
+    /* Desktop Sidebar - HIDDEN on mobile */
     .desktop-sidebar {
-      display: none;
+      display: none !important;
     }
     
-    /* Main Content */
+    /* Main Content - full width on mobile */
     .main-content {
       padding: 16px;
       padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
       min-height: 100vh;
+      margin-left: 0 !important;
     }
     
     /* Cards responsive */
@@ -284,14 +285,24 @@
       font-size: 16px !important;
     }
     
+    /* Desktop sidebar - HIDDEN by default (mobile first) */
+    .desktop-sidebar {
+      display: none !important;
+    }
+    
+    /* Main content - no margin on mobile */
+    .main-content {
+      margin-left: 0 !important;
+    }
+    
     /* ========== TABLET & DESKTOP ========== */
     @media (min-width: 768px) {
-      .bottom-nav { display: none; }
+      .bottom-nav { display: none !important; }
       .mobile-sidebar { display: none !important; }
       .mobile-menu-overlay { display: none !important; }
       
       .desktop-sidebar {
-        display: flex;
+        display: flex !important;
         position: fixed;
         left: 16px;
         top: 16px;
@@ -305,7 +316,7 @@
       }
       
       .main-content {
-        margin-left: 112px;
+        margin-left: 112px !important;
         padding: 24px;
         padding-bottom: 24px;
       }
@@ -407,13 +418,13 @@
 </div>
 
 <!-- Lesson Modal -->
-<div id="lessonModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
-    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
-      <h2 class="font-bold text-xl text-gray-800" id="lessonModalTitle">📚 Dars</h2>
-      <button onclick="closeModal('lessonModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+<div id="lessonModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-[200] hidden p-2 sm:p-4">
+  <div class="glass-modal rounded-2xl sm:rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-4 sm:p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-2xl sm:rounded-t-3xl z-10">
+      <h2 class="font-bold text-lg sm:text-xl text-gray-800" id="lessonModalTitle">📚 Dars</h2>
+      <button onclick="closeModal('lessonModal')" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full glass-card flex items-center justify-center text-lg">✕</button>
     </div>
-    <div class="p-6 space-y-5">
+    <div class="p-4 sm:p-6 space-y-4 sm:space-y-5">
       <input type="hidden" id="lessonId">
       <div>
         <label class="text-sm font-medium text-gray-600 mb-2 block">Dars nomi</label>
@@ -423,42 +434,42 @@
         <label class="text-sm font-medium text-gray-600 mb-2 block">Matn</label>
         <textarea id="lessonContent" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none"></textarea>
       </div>
-      <div class="glass-card rounded-2xl p-5">
-        <div class="flex justify-between items-center mb-3">
+      <div class="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
           <label class="text-sm font-medium">📹 Video</label>
-          <button onclick="openMediaPicker('video', 'lessonVideo')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">📁 Kutubxonadan</button>
+          <button onclick="openMediaPicker('video', 'lessonVideo')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm w-full sm:w-auto">📁 Kutubxonadan</button>
         </div>
-        <input type="text" id="lessonVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs" placeholder="Video File ID">
+        <input type="text" id="lessonVideo" class="w-full px-3 py-2 sm:px-4 sm:py-3 rounded-xl glass-input font-mono text-xs" placeholder="Video File ID">
       </div>
-      <div class="glass-card rounded-2xl p-5">
-        <div class="flex justify-between items-center mb-3">
+      <div class="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
           <label class="text-sm font-medium">🖼 Rasm</label>
-          <button onclick="openMediaPicker('photo', 'lessonImage')" class="px-4 py-2 rounded-xl glass-btn-success text-white text-sm">📁 Kutubxonadan</button>
+          <button onclick="openMediaPicker('photo', 'lessonImage')" class="px-4 py-2 rounded-xl glass-btn-success text-white text-sm w-full sm:w-auto">📁 Kutubxonadan</button>
         </div>
-        <input type="text" id="lessonImage" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs" placeholder="Image File ID">
+        <input type="text" id="lessonImage" class="w-full px-3 py-2 sm:px-4 sm:py-3 rounded-xl glass-input font-mono text-xs" placeholder="Image File ID">
       </div>
-      <div class="glass-card rounded-2xl p-5">
-        <div class="flex justify-between items-center mb-3">
+      <div class="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
           <label class="text-sm font-medium">🎤 Audio</label>
-          <button onclick="openMediaPicker('audio', 'lessonAudio')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">📁 Kutubxonadan</button>
+          <button onclick="openMediaPicker('audio', 'lessonAudio')" class="px-4 py-2 rounded-xl glass-btn text-white text-sm w-full sm:w-auto">📁 Kutubxonadan</button>
         </div>
-        <input type="text" id="lessonAudio" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-xs" placeholder="Audio File ID">
+        <input type="text" id="lessonAudio" class="w-full px-3 py-2 sm:px-4 sm:py-3 rounded-xl glass-input font-mono text-xs" placeholder="Audio File ID">
       </div>
-      <div class="glass-card rounded-2xl p-5">
-        <label class="text-sm font-medium mb-4 block">⏱ Keyingi darsga o'tish vaqti</label>
-        <div class="space-y-3">
-          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+      <div class="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5">
+        <label class="text-sm font-medium mb-3 block">⏱ Keyingi darsga o'tish vaqti</label>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 cursor-pointer p-2 sm:p-3 rounded-xl hover:bg-white/30">
             <input type="radio" name="delayType" id="delayImmediate" value="immediate" checked onchange="toggleDelayInput()" class="w-5 h-5 accent-violet-500">
-            <span class="font-medium">🚀 Darhol yuborilsin</span>
+            <span class="font-medium text-sm sm:text-base">🚀 Darhol yuborilsin</span>
           </label>
-          <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl hover:bg-white/30">
+          <label class="flex items-center gap-3 cursor-pointer p-2 sm:p-3 rounded-xl hover:bg-white/30">
             <input type="radio" name="delayType" id="delayTimed" value="timed" onchange="toggleDelayInput()" class="w-5 h-5 accent-violet-500">
-            <span class="font-medium">⏰ Vaqt belgilash</span>
+            <span class="font-medium text-sm sm:text-base">⏰ Vaqt belgilash</span>
           </label>
-          <div id="delayInputDiv" class="hidden pl-8 pt-2">
-            <div class="flex gap-3">
-              <input type="number" id="lessonDelayValue" class="w-24 px-4 py-3 rounded-xl glass-input" value="24" min="1">
-              <select id="lessonDelayUnit" class="flex-1 px-4 py-3 rounded-xl glass-input">
+          <div id="delayInputDiv" class="hidden pl-4 sm:pl-8 pt-2">
+            <div class="flex gap-2 sm:gap-3">
+              <input type="number" id="lessonDelayValue" class="w-20 sm:w-24 px-3 py-2 sm:px-4 sm:py-3 rounded-xl glass-input" value="24" min="1">
+              <select id="lessonDelayUnit" class="flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded-xl glass-input">
                 <option value="hours" selected>Soat</option>
                 <option value="days">Kun</option>
               </select>
@@ -466,15 +477,15 @@
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-3 p-4 glass-card rounded-xl">
+      <div class="flex items-center gap-3 p-3 sm:p-4 glass-card rounded-xl">
         <input type="checkbox" id="lessonShowBtn" checked class="w-5 h-5 accent-violet-500">
-        <label class="font-medium">"Ko'rib bo'ldim" tugmasini ko'rsatish</label>
+        <label class="font-medium text-sm sm:text-base">"Ko'rib bo'ldim" tugmasini ko'rsatish</label>
       </div>
       <div>
         <label class="text-sm font-medium text-gray-600 mb-2 block">Tugma matni</label>
         <input type="text" id="lessonBtnText" class="w-full px-4 py-3 rounded-xl glass-input" value="Videoni ko'rib bo'ldim ✅">
       </div>
-      <button onclick="saveLesson()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+      <button onclick="saveLesson()" class="w-full py-3 sm:py-4 rounded-xl glass-btn text-white font-semibold text-base sm:text-lg">💾 Saqlash</button>
     </div>
   </div>
 </div>
@@ -1029,15 +1040,15 @@
     </div>
 
     <!-- Main Content -->
-    <main class="main-content ml-28 flex-1 p-6 min-h-screen">
-      <header class="mobile-header flex justify-between items-center mb-8">
+    <main class="main-content flex-1 min-h-screen">
+      <header class="flex justify-between items-center mb-4 md:mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p class="text-gray-500 mt-1" id="currentDate"></p>
+          <h1 class="text-xl md:text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p class="text-gray-500 text-xs md:text-base mt-1" id="currentDate"></p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-2 md:gap-3">
           <button onclick="openBroadcastModal()" class="hidden md:flex px-6 py-3 rounded-2xl glass-btn-success text-white font-medium items-center gap-2"><span>📨</span> Xabar</button>
-          <button onclick="loadAll()" class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center text-xl">🔄</button>
+          <button onclick="loadAll()" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl glass-card flex items-center justify-center text-lg md:text-xl">🔄</button>
         </div>
       </header>
 
@@ -1246,10 +1257,10 @@
 
       <!-- Lessons -->
       <div id="content-lessons" class="hidden">
-        <div class="glass-card rounded-3xl overflow-hidden">
-          <div class="px-6 py-4 border-b border-white/30 flex justify-between items-center">
-            <h2 class="font-bold text-lg">📚 Darslar</h2>
-            <button onclick="addLesson()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">+ Yangi dars</button>
+        <div class="glass-card rounded-2xl md:rounded-3xl overflow-hidden">
+          <div class="px-4 py-3 md:px-6 md:py-4 border-b border-white/30 flex justify-between items-center">
+            <h2 class="font-bold text-base md:text-lg">📚 Darslar</h2>
+            <button onclick="addLesson()" class="px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl glass-btn text-white font-medium text-sm md:text-base">+ Yangi dars</button>
           </div>
           <div id="lessonsList" class="divide-y divide-white/20"></div>
         </div>
@@ -2548,7 +2559,23 @@ async function loadLessons() {
       if (h === 0) dt = '🚀 Darhol';
       else if (h >= 24 && h % 24 === 0) dt = '⏰ ' + (h / 24) + ' kun';
       else dt = '⏰ ' + h + ' soat';
-      html += '<div class="p-5 flex justify-between items-center hover:bg-white/30 transition"><div><p class="font-bold text-gray-800">' + l.lesson_number + '-DARS: ' + l.title + '</p><div class="flex gap-3 mt-2 text-sm"><span class="px-3 py-1 rounded-full glass text-xs">' + dt + '</span><span class="text-lg">' + (l.video_file_id ? '📹' : '➖') + '</span><span class="text-lg">' + (l.show_watched_button !== false ? '🔘' : '➖') + '</span></div></div><div class="flex gap-2"><button onclick="editLesson(' + l.lesson_number + ')" class="w-10 h-10 rounded-xl glass-card flex items-center justify-center">✏️</button><button onclick="deleteLesson(' + l.lesson_number + ')" class="w-10 h-10 rounded-xl glass-card flex items-center justify-center text-red-500">🗑</button></div></div>';
+      html += '<div class="p-4 hover:bg-white/30 transition">' +
+        '<div class="flex justify-between items-start gap-3">' +
+          '<div class="flex-1 min-w-0">' +
+            '<p class="font-bold text-gray-800 text-sm md:text-base">' + l.lesson_number + '-DARS: ' + l.title + '</p>' +
+            '<div class="flex flex-wrap gap-2 mt-2">' +
+              '<span class="px-2 py-1 rounded-full glass text-xs">' + dt + '</span>' +
+              (l.video_file_id ? '<span class="text-sm">📹</span>' : '') +
+              (l.image_file_id ? '<span class="text-sm">🖼</span>' : '') +
+              (l.show_watched_button !== false ? '<span class="text-sm">🔘</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="flex gap-2 flex-shrink-0">' +
+            '<button onclick="editLesson(' + l.lesson_number + ')" class="w-11 h-11 md:w-12 md:h-12 rounded-xl glass-card flex items-center justify-center text-lg hover:bg-violet-100 active:scale-95 transition-all" style="min-width:44px;min-height:44px;">✏️</button>' +
+            '<button onclick="deleteLesson(' + l.lesson_number + ')" class="w-11 h-11 md:w-12 md:h-12 rounded-xl glass-card flex items-center justify-center text-red-500 text-lg hover:bg-red-100 active:scale-95 transition-all" style="min-width:44px;min-height:44px;">🗑</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
     document.getElementById('lessonsList').innerHTML = html || '<p class="p-6 text-gray-400 text-center">Darslar yo\'q</p>';
   } catch(e) { console.error(e); }
