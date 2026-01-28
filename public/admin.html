@@ -335,6 +335,114 @@
       display: none !important;
     }
     
+    @media (min-width: 768px) {
+      .desktop-sidebar {
+        display: flex !important;
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        bottom: 16px;
+        width: 200px;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+        z-index: 40;
+        overflow: hidden;
+      }
+      
+      .sidebar-logo {
+        padding: 24px 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .sidebar-logo span {
+        font-size: 32px;
+      }
+      
+      .sidebar-nav {
+        flex: 1;
+        padding: 12px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+        position: relative;
+      }
+      
+      .sidebar-item:hover {
+        background: rgba(139, 92, 246, 0.06);
+        color: #6d28d9;
+      }
+      
+      .sidebar-item.active {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0.06) 100%);
+        color: #7c3aed;
+      }
+      
+      .sidebar-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 20px;
+        background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+        border-radius: 0 4px 4px 0;
+      }
+      
+      .sidebar-icon {
+        font-size: 18px;
+        width: 24px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      
+      .sidebar-label {
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      
+      .sidebar-divider {
+        height: 1px;
+        background: rgba(0, 0, 0, 0.04);
+        margin: 8px 0;
+      }
+      
+      .sidebar-logout {
+        margin: 12px;
+        color: #ef4444 !important;
+      }
+      
+      .sidebar-logout:hover {
+        background: rgba(239, 68, 68, 0.08) !important;
+      }
+    }
+    
     /* ========== MAIN CONTENT ========== */
     .main-content {
       padding: 16px;
@@ -424,12 +532,8 @@
         display: none !important;
       }
       
-      .desktop-sidebar {
-        display: flex !important;
-      }
-      
       .main-content {
-        margin-left: 100px !important;
+        margin-left: 232px !important;
         padding: 24px 32px;
         padding-bottom: 32px;
       }
@@ -462,9 +566,6 @@
     @media (min-width: 1200px) {
       .main-content {
         max-width: 1400px;
-        margin-left: auto !important;
-        margin-right: auto;
-        padding-left: 140px;
       }
     }
     
@@ -1459,20 +1560,60 @@
 <div id="dashboard" class="hidden min-h-screen">
   <div class="flex">
     <!-- Desktop Sidebar -->
-    <aside class="desktop-sidebar fixed left-4 top-4 bottom-4 w-20 glass rounded-3xl flex flex-col items-center py-6 z-40">
-      <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center mb-8"><span class="text-2xl">🚀</span></div>
-      <nav class="flex-1 flex flex-col items-center gap-2">
-        <button type="button" data-action="show-tab" data-id="stats" id="tab-stats" class="sidebar-item active w-14 h-14 flex items-center justify-center cursor-pointer" title="Statistika"><span class="text-2xl">📊</span></button>
-        <button type="button" data-action="show-tab" data-id="funnels" id="tab-funnels" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Varonkalar"><span class="text-2xl">🎯</span></button>
-        <button type="button" data-action="show-tab" data-id="payments" id="tab-payments" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="To'lovlar"><span class="text-2xl">💰</span></button>
-        <button type="button" data-action="show-tab" data-id="users" id="tab-users" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Foydalanuvchilar"><span class="text-2xl">👥</span></button>
-        <button type="button" data-action="show-tab" data-id="lessons" id="tab-lessons" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Darslar"><span class="text-2xl">📚</span></button>
-        <button type="button" data-action="show-tab" data-id="media" id="tab-media" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Media"><span class="text-2xl">📁</span></button>
-        <button type="button" data-action="show-tab" data-id="custdev" id="tab-custdev" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="CustDev"><span class="text-2xl">📝</span></button>
-        <button type="button" data-action="show-tab" data-id="feedback" id="tab-feedback" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Feedbacklar"><span class="text-2xl">💬</span></button>
-        <button type="button" data-action="show-tab" data-id="settings" id="tab-settings" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Sozlamalar"><span class="text-2xl">⚙️</span></button>
+    <aside class="desktop-sidebar">
+      <div class="sidebar-logo">
+        <span>🚀</span>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button type="button" data-action="show-tab" data-id="stats" id="tab-stats" class="sidebar-item active" title="Statistika">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-label">Statistika</span>
+        </button>
+        <button type="button" data-action="show-tab" data-id="funnels" id="tab-funnels" class="sidebar-item" title="Varonkalar">
+          <span class="sidebar-icon">🎯</span>
+          <span class="sidebar-label">Varonkalar</span>
+        </button>
+        <button type="button" data-action="show-tab" data-id="payments" id="tab-payments" class="sidebar-item" title="To'lovlar">
+          <span class="sidebar-icon">💰</span>
+          <span class="sidebar-label">To'lovlar</span>
+        </button>
+        <button type="button" data-action="show-tab" data-id="users" id="tab-users" class="sidebar-item" title="Foydalanuvchilar">
+          <span class="sidebar-icon">👥</span>
+          <span class="sidebar-label">Userlar</span>
+        </button>
+        
+        <div class="sidebar-divider"></div>
+        
+        <button type="button" data-action="show-tab" data-id="lessons" id="tab-lessons" class="sidebar-item" title="Darslar">
+          <span class="sidebar-icon">📚</span>
+          <span class="sidebar-label">Darslar</span>
+        </button>
+        <button type="button" data-action="show-tab" data-id="media" id="tab-media" class="sidebar-item" title="Media">
+          <span class="sidebar-icon">📁</span>
+          <span class="sidebar-label">Media</span>
+        </button>
+        <button type="button" data-action="show-tab" data-id="custdev" id="tab-custdev" class="sidebar-item" title="CustDev">
+          <span class="sidebar-icon">📝</span>
+          <span class="sidebar-label">CustDev</span>
+        </button>
+        <button type="button" data-action="show-tab" data-id="feedback" id="tab-feedback" class="sidebar-item" title="Fikrlar">
+          <span class="sidebar-icon">💬</span>
+          <span class="sidebar-label">Fikrlar</span>
+        </button>
+        
+        <div class="sidebar-divider"></div>
+        
+        <button type="button" data-action="show-tab" data-id="settings" id="tab-settings" class="sidebar-item" title="Sozlamalar">
+          <span class="sidebar-icon">⚙️</span>
+          <span class="sidebar-label">Sozlamalar</span>
+        </button>
       </nav>
-      <button type="button" onclick="logout()" class="sidebar-item w-14 h-14 flex items-center justify-center text-red-500 cursor-pointer" title="Chiqish"><span class="text-2xl">🚪</span></button>
+      
+      <button type="button" onclick="logout()" class="sidebar-item sidebar-logout" title="Chiqish">
+        <span class="sidebar-icon">🚪</span>
+        <span class="sidebar-label">Chiqish</span>
+      </button>
     </aside>
 
     <!-- Mobile Bottom Navigation -->
