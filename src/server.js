@@ -451,6 +451,17 @@ app.get('/api/messages', authMiddleware, async (req, res) => {
   }
 });
 
+// GET individual message by key
+app.get('/api/messages/:key', authMiddleware, async (req, res) => {
+  try {
+    const { getBotMessage } = await import('./database.js');
+    const text = await getBotMessage(req.params.key);
+    res.json({ text: text || '' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.put('/api/messages/:key', authMiddleware, async (req, res) => {
   try {
     const { updateBotMessage } = await import('./database.js');
