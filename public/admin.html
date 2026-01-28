@@ -107,6 +107,145 @@
     .orb-1 { width: 500px; height: 500px; background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%); top: -150px; right: -150px; }
     .orb-2 { width: 400px; height: 400px; background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%); bottom: -100px; left: -100px; }
     .orb-3 { width: 300px; height: 300px; background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%); top: 40%; left: 20%; }
+    
+    /* ========== MOBILE RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      /* Hide desktop sidebar, show mobile navbar */
+      .desktop-sidebar { display: none !important; }
+      .mobile-navbar { display: flex !important; }
+      .mobile-menu-overlay { display: none; }
+      .mobile-menu-overlay.active { display: block; }
+      .mobile-sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+      .mobile-sidebar.active { transform: translateX(0); }
+      
+      /* Main content full width on mobile */
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-bottom: 90px !important; }
+      
+      /* Header adjustments */
+      .mobile-header { padding: 0 !important; margin-bottom: 1rem !important; }
+      .mobile-header h1 { font-size: 1.25rem !important; }
+      .mobile-header p { font-size: 0.75rem !important; }
+      
+      /* Cards grid */
+      .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+      .stats-grid .glass-card { padding: 0.75rem !important; border-radius: 1rem !important; }
+      .stats-grid .glass-card p.text-3xl, .stats-grid .glass-card p.text-2xl { font-size: 1.25rem !important; }
+      .stats-grid .glass-card p.text-xl { font-size: 1rem !important; }
+      .stats-grid .glass-card .w-14 { width: 2.25rem !important; height: 2.25rem !important; font-size: 1rem !important; }
+      .stats-grid .glass-card .text-sm { font-size: 0.65rem !important; }
+      .stats-grid .glass-card .gap-4 { gap: 0.5rem !important; }
+      
+      /* Glass cards general */
+      .glass-card { border-radius: 1rem !important; }
+      .glass-card.rounded-3xl { border-radius: 1rem !important; }
+      
+      /* Modals - almost full screen on mobile */
+      .modal-overlay .glass-modal { 
+        max-width: calc(100% - 2rem) !important; 
+        max-height: calc(100vh - 2rem) !important;
+        margin: 1rem !important;
+        border-radius: 1.5rem !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Custom modal */
+      #customModalContainer .glass-modal {
+        max-width: calc(100% - 1rem) !important;
+        max-height: calc(100vh - 2rem) !important;
+        margin: 0.5rem !important;
+      }
+      
+      /* Forms - prevent iOS zoom */
+      input, select, textarea { font-size: 16px !important; }
+      
+      /* Buttons smaller on mobile */
+      .glass-btn, .glass-btn-success { padding: 0.625rem 1rem !important; font-size: 0.875rem !important; }
+      
+      /* Bottom navigation bar */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.5);
+        padding: 0.35rem 0.25rem;
+        padding-bottom: calc(0.35rem + env(safe-area-inset-bottom));
+        z-index: 50;
+        display: flex !important;
+        justify-content: space-around;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .bottom-nav button {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.35rem 0.25rem;
+        border-radius: 10px;
+        font-size: 0.6rem;
+        color: #6b7280;
+        min-width: 0;
+      }
+      .bottom-nav button.active {
+        color: #7c3aed;
+        background: rgba(139, 92, 246, 0.1);
+      }
+      .bottom-nav button span.icon { font-size: 1.1rem; margin-bottom: 2px; }
+      
+      /* Settings tabs */
+      .settings-tabs { flex-direction: column !important; }
+      .settings-tabs button { width: 100% !important; }
+      
+      /* Grid adjustments */
+      .grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+      .md\\:grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+      .md\\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+      .lg\\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+      
+      /* Funnel stats */
+      #funnelStats { grid-template-columns: repeat(3, 1fr) !important; gap: 0.5rem !important; }
+      #funnelStats > div { padding: 0.5rem !important; }
+      #funnelStats p.text-2xl { font-size: 1rem !important; }
+      #funnelStats p.text-xs { font-size: 0.6rem !important; }
+      
+      /* Floating orbs smaller on mobile */
+      .floating-orb { opacity: 0.15; }
+      .orb-1 { width: 150px; height: 150px; }
+      .orb-2 { width: 100px; height: 100px; }
+      .orb-3 { width: 80px; height: 80px; }
+      
+      /* Hide some elements on mobile */
+      .hide-mobile { display: none !important; }
+      
+      /* Charts smaller */
+      canvas { max-height: 200px !important; }
+      
+      /* Text sizes */
+      .text-3xl { font-size: 1.5rem !important; }
+      .text-2xl { font-size: 1.25rem !important; }
+      h2.font-bold.text-xl { font-size: 1rem !important; }
+      h3.font-bold.text-xl { font-size: 1rem !important; }
+    }
+    
+    @media (min-width: 769px) {
+      .mobile-navbar { display: none !important; }
+      .bottom-nav { display: none !important; }
+      .desktop-sidebar { display: flex !important; }
+      .hide-desktop { display: none !important; }
+    }
+    
+    /* Safe area for notch phones */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .bottom-nav {
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+      }
+      .main-content {
+        padding-bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+      }
+    }
   </style>
 </head>
 <body class="overflow-x-hidden">
@@ -116,16 +255,16 @@
 <div class="floating-orb orb-3"></div>
 
 <!-- Login Modal -->
-<div id="loginModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-  <div class="glass-modal rounded-3xl p-8 max-w-md w-full mx-4">
-    <div class="text-center mb-8">
-      <div class="w-16 h-16 glass-card rounded-2xl flex items-center justify-center mx-auto mb-4"><span class="text-3xl">🚀</span></div>
-      <h2 class="text-2xl font-bold text-gray-800">Xush kelibsiz!</h2>
-      <p class="text-gray-500 mt-2">Admin panelga kirish</p>
+<div id="loginModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+  <div class="glass-modal rounded-3xl p-6 md:p-8 max-w-md w-full">
+    <div class="text-center mb-6 md:mb-8">
+      <div class="w-14 h-14 md:w-16 md:h-16 glass-card rounded-2xl flex items-center justify-center mx-auto mb-4"><span class="text-2xl md:text-3xl">🚀</span></div>
+      <h2 class="text-xl md:text-2xl font-bold text-gray-800">Xush kelibsiz!</h2>
+      <p class="text-gray-500 mt-2 text-sm md:text-base">Admin panelga kirish</p>
     </div>
     <form id="loginForm" class="space-y-4">
-      <input type="text" id="username" class="w-full px-4 py-3 rounded-xl glass-input text-gray-700" placeholder="Login" required>
-      <input type="password" id="password" class="w-full px-4 py-3 rounded-xl glass-input text-gray-700" placeholder="Parol" required>
+      <input type="text" id="username" class="w-full px-4 py-3 rounded-xl glass-input text-gray-700 text-base" placeholder="Login" required autocomplete="username">
+      <input type="password" id="password" class="w-full px-4 py-3 rounded-xl glass-input text-gray-700 text-base" placeholder="Parol" required autocomplete="current-password">
       <button class="w-full py-3 rounded-xl glass-btn text-white font-semibold">Kirish</button>
       <p id="loginError" class="text-red-500 text-center text-sm hidden">Noto'g'ri login yoki parol</p>
     </form>
@@ -718,8 +857,8 @@
 <!-- Dashboard -->
 <div id="dashboard" class="hidden min-h-screen">
   <div class="flex">
-    <!-- Sidebar -->
-    <aside class="fixed left-4 top-4 bottom-4 w-20 glass rounded-3xl flex flex-col items-center py-6 z-40">
+    <!-- Desktop Sidebar -->
+    <aside class="desktop-sidebar fixed left-4 top-4 bottom-4 w-20 glass rounded-3xl flex flex-col items-center py-6 z-40">
       <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center mb-8"><span class="text-2xl">🚀</span></div>
       <nav class="flex-1 flex flex-col items-center gap-2">
         <button onclick="showTab('stats')" id="tab-stats" class="sidebar-item active w-14 h-14 flex items-center justify-center" title="Statistika"><span class="text-2xl">📊</span></button>
@@ -734,22 +873,73 @@
       <button onclick="logout()" class="sidebar-item w-14 h-14 flex items-center justify-center text-red-500" title="Chiqish"><span class="text-2xl">🚪</span></button>
     </aside>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button onclick="showTab('stats')" id="mob-tab-stats" class="active">
+        <span class="icon">📊</span>
+        <span>Statistika</span>
+      </button>
+      <button onclick="showTab('payments')" id="mob-tab-payments">
+        <span class="icon">💰</span>
+        <span>To'lovlar</span>
+      </button>
+      <button onclick="showTab('users')" id="mob-tab-users">
+        <span class="icon">👥</span>
+        <span>Userlar</span>
+      </button>
+      <button onclick="showTab('settings')" id="mob-tab-settings">
+        <span class="icon">⚙️</span>
+        <span>Sozlamalar</span>
+      </button>
+      <button onclick="toggleMobileMenu()" id="mob-tab-more">
+        <span class="icon">☰</span>
+        <span>Ko'proq</span>
+      </button>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="mobile-menu-overlay fixed inset-0 bg-black/30 z-50 hidden" onclick="closeMobileMenu()"></div>
+    
+    <!-- Mobile Slide Menu -->
+    <div id="mobileSlideMenu" class="mobile-sidebar fixed left-0 top-0 bottom-0 w-64 glass z-50 p-4">
+      <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 glass-card rounded-xl flex items-center justify-center"><span class="text-xl">🚀</span></div>
+          <span class="font-bold text-gray-800">Menu</span>
+        </div>
+        <button onclick="closeMobileMenu()" class="w-8 h-8 rounded-lg glass-card flex items-center justify-center">✕</button>
+      </div>
+      <nav class="space-y-2">
+        <button onclick="showTab('stats'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>📊</span> Statistika</button>
+        <button onclick="showTab('payments'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>💰</span> To'lovlar</button>
+        <button onclick="showTab('users'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>👥</span> Foydalanuvchilar</button>
+        <button onclick="showTab('lessons'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>📚</span> Darslar</button>
+        <button onclick="showTab('media'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>📁</span> Media</button>
+        <button onclick="showTab('custdev'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>📝</span> CustDev</button>
+        <button onclick="showTab('feedback'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>💬</span> Feedbacklar</button>
+        <button onclick="showTab('settings'); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left"><span>⚙️</span> Sozlamalar</button>
+        <hr class="my-4 border-white/30">
+        <button onclick="openBroadcastModal(); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-btn-success text-white text-left"><span>📨</span> Xabar yuborish</button>
+        <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-red-500 text-left"><span>🚪</span> Chiqish</button>
+      </nav>
+    </div>
+
     <!-- Main Content -->
-    <main class="ml-28 flex-1 p-6 min-h-screen">
-      <header class="flex justify-between items-center mb-8">
+    <main class="main-content ml-28 flex-1 p-6 min-h-screen">
+      <header class="mobile-header flex justify-between items-center mb-8">
         <div>
           <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
           <p class="text-gray-500 mt-1" id="currentDate"></p>
         </div>
         <div class="flex gap-3">
-          <button onclick="openBroadcastModal()" class="px-6 py-3 rounded-2xl glass-btn-success text-white font-medium flex items-center gap-2"><span>📨</span> Xabar</button>
+          <button onclick="openBroadcastModal()" class="hidden md:flex px-6 py-3 rounded-2xl glass-btn-success text-white font-medium items-center gap-2"><span>📨</span> Xabar</button>
           <button onclick="loadAll()" class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center text-xl">🔄</button>
         </div>
       </header>
 
       <!-- Stats -->
       <div id="content-stats">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stats-grid grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div class="glass-card rounded-3xl p-6">
             <div class="flex items-center gap-4">
               <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-2xl">👥</div>
@@ -812,7 +1002,9 @@
         </div>
         <div class="glass-card rounded-3xl overflow-hidden">
           <div class="px-6 py-4 border-b border-white/30"><h2 class="font-bold text-lg">💳 Oxirgi to'lovlar</h2></div>
-          <table class="w-full text-sm"><thead class="bg-white/30"><tr><th class="px-6 py-4 text-left">Sana</th><th class="px-6 py-4 text-left">Foydalanuvchi</th><th class="px-6 py-4 text-left">Summa</th><th class="px-6 py-4 text-left">Manba</th><th class="px-6 py-4 text-left">Status</th></tr></thead><tbody id="paymentsTable" class="divide-y divide-white/20"></tbody></table>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[600px]"><thead class="bg-white/30"><tr><th class="px-4 py-3 text-left text-xs">Sana</th><th class="px-4 py-3 text-left text-xs">Foydalanuvchi</th><th class="px-4 py-3 text-left text-xs">Summa</th><th class="px-4 py-3 text-left text-xs">Manba</th><th class="px-4 py-3 text-left text-xs">Status</th></tr></thead><tbody id="paymentsTable" class="divide-y divide-white/20"></tbody></table>
+          </div>
         </div>
         
         <!-- Buyer Analytics Section -->
@@ -943,7 +1135,7 @@
             </div>
           </div>
           <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
-            <table class="w-full text-sm"><thead class="bg-white/30 sticky top-0"><tr><th class="px-6 py-4 text-left">Ism</th><th class="px-6 py-4 text-left">Telefon</th><th class="px-6 py-4 text-left">Dars</th><th class="px-6 py-4 text-left">Status</th><th class="px-6 py-4 text-left">CustDev</th><th class="px-6 py-4 text-left">Sana</th></tr></thead><tbody id="usersTable" class="divide-y divide-white/20"></tbody></table>
+            <table class="w-full text-sm min-w-[700px]"><thead class="bg-white/30 sticky top-0"><tr><th class="px-3 py-3 text-left text-xs">Ism</th><th class="px-3 py-3 text-left text-xs">Telefon</th><th class="px-3 py-3 text-left text-xs">Dars</th><th class="px-3 py-3 text-left text-xs">Status</th><th class="px-3 py-3 text-left text-xs">CustDev</th><th class="px-3 py-3 text-left text-xs">Sana</th></tr></thead><tbody id="usersTable" class="divide-y divide-white/20"></tbody></table>
           </div>
         </div>
       </div>
@@ -1536,9 +1728,33 @@ function logout() { localStorage.removeItem('adminAuth'); location.reload(); }
 function showTab(t) {
   document.querySelectorAll('[id^="content-"]').forEach(function(e) { e.classList.add('hidden'); });
   document.querySelectorAll('[id^="tab-"]').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelectorAll('[id^="mob-tab-"]').forEach(function(e) { e.classList.remove('active'); });
+  
   document.getElementById('content-' + t).classList.remove('hidden');
-  document.getElementById('tab-' + t).classList.add('active');
+  
+  // Desktop tab
+  var desktopTab = document.getElementById('tab-' + t);
+  if (desktopTab) desktopTab.classList.add('active');
+  
+  // Mobile tab
+  var mobileTab = document.getElementById('mob-tab-' + t);
+  if (mobileTab) mobileTab.classList.add('active');
+  
   if (t === 'media') loadMedia('all');
+  
+  // Scroll to top on mobile
+  window.scrollTo(0, 0);
+}
+
+// Mobile menu functions
+function toggleMobileMenu() {
+  document.getElementById('mobileMenuOverlay').classList.toggle('hidden');
+  document.getElementById('mobileSlideMenu').classList.toggle('active');
+}
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenuOverlay').classList.add('hidden');
+  document.getElementById('mobileSlideMenu').classList.remove('active');
 }
 
 // Settings sub-tabs
