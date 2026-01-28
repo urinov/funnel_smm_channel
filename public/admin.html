@@ -567,6 +567,164 @@
   </div>
 </div>
 
+<!-- Create/Edit Funnel Modal -->
+<div id="funnelModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl">
+      <h2 class="font-bold text-xl text-gray-800" id="funnelModalTitle">🎯 Yangi varonka</h2>
+      <button onclick="closeModal('funnelModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="funnelId">
+      
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Varonka nomi *</label>
+        <input type="text" id="funnelName" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="SMM Pro Kurs">
+      </div>
+      
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Slug (URL uchun) *</label>
+        <div class="flex items-center gap-2">
+          <span class="text-gray-400 text-sm">t.me/bot?start=</span>
+          <input type="text" id="funnelSlug" class="flex-1 px-4 py-3 rounded-xl glass-input font-mono" placeholder="smm-pro" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9-]/g, '')">
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Faqat kichik harflar, raqamlar va chiziqcha (-)</p>
+      </div>
+      
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-2 block">Tavsif</label>
+        <textarea id="funnelDescription" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="Bu varonka haqida qisqa ma'lumot"></textarea>
+      </div>
+      
+      <div class="flex items-center gap-3 p-4 glass rounded-xl">
+        <input type="checkbox" id="funnelIsDefault" class="w-5 h-5 accent-violet-500">
+        <div>
+          <label for="funnelIsDefault" class="font-medium cursor-pointer">Default varonka</label>
+          <p class="text-xs text-gray-500">/start bosilganda shu varonka ishga tushadi</p>
+        </div>
+      </div>
+      
+      <button onclick="saveFunnel()" class="w-full py-4 rounded-xl glass-btn text-white font-semibold text-lg">💾 Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Funnel Detail Modal -->
+<div id="funnelDetailModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="glass-modal rounded-3xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl z-10">
+      <div>
+        <h2 class="font-bold text-xl text-gray-800" id="funnelDetailTitle">🎯 Varonka</h2>
+        <p class="text-sm text-gray-500" id="funnelDetailSlug">t.me/bot?start=slug</p>
+      </div>
+      <button onclick="closeModal('funnelDetailModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
+    </div>
+    <div class="p-6">
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <button onclick="showFunnelTab('lessons')" id="funnel-tab-lessons" class="px-4 py-2 rounded-xl bg-violet-500 text-white font-medium whitespace-nowrap">📚 Darslar</button>
+        <button onclick="showFunnelTab('custdev')" id="funnel-tab-custdev" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📝 CustDev</button>
+        <button onclick="showFunnelTab('pitch')" id="funnel-tab-pitch" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">🎬 Pitch</button>
+        <button onclick="showFunnelTab('settings')" id="funnel-tab-settings" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">⚙️ Sozlamalar</button>
+        <button onclick="showFunnelTab('stats')" id="funnel-tab-stats" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📊 Statistika</button>
+      </div>
+      
+      <!-- Lessons Tab -->
+      <div id="funnel-content-lessons">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">📚 Darslar</h3>
+          <button onclick="addFunnelLesson()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">+ Dars qo'shish</button>
+        </div>
+        <div id="funnelLessonsList" class="space-y-2">
+          <p class="text-gray-400 text-center py-4">Darslar yuklanmoqda...</p>
+        </div>
+      </div>
+      
+      <!-- CustDev Tab -->
+      <div id="funnel-content-custdev" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">📝 CustDev savollari</h3>
+          <button onclick="addFunnelCustDev()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">+ Savol qo'shish</button>
+        </div>
+        <div id="funnelCustDevList" class="space-y-2">
+          <p class="text-gray-400 text-center py-4">Savollar yuklanmoqda...</p>
+        </div>
+      </div>
+      
+      <!-- Pitch Tab -->
+      <div id="funnel-content-pitch" class="hidden">
+        <h3 class="font-bold text-lg mb-4">🎬 Pitch sozlamalari</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Qaysi darsdan keyin pitch yuborilsin?</label>
+            <input type="number" id="funnelPitchAfterLesson" class="w-full px-4 py-3 rounded-xl glass-input" value="4" min="1">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch matni</label>
+            <textarea id="funnelPitchText" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="Maxsus taklif!"></textarea>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch video (file_id)</label>
+            <input type="text" id="funnelPitchVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-sm" placeholder="Video file_id">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch delay (soat)</label>
+            <input type="number" id="funnelPitchDelay" class="w-full px-4 py-3 rounded-xl glass-input" value="2" min="0">
+          </div>
+          <button onclick="saveFunnelPitch()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Pitch saqlash</button>
+        </div>
+      </div>
+      
+      <!-- Settings Tab -->
+      <div id="funnel-content-settings" class="hidden">
+        <h3 class="font-bold text-lg mb-4">⚙️ Varonka sozlamalari</h3>
+        <div class="space-y-4">
+          <div class="glass rounded-2xl p-4">
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Premium kanal ID</label>
+            <input type="text" id="funnelPremiumChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
+          </div>
+          <div class="glass rounded-2xl p-4">
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Bepul kanal ID (majburiy obuna)</label>
+            <input type="text" id="funnelFreeChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
+            <label class="text-sm font-medium text-gray-600 mb-2 mt-3 block">Bepul kanal linki</label>
+            <input type="text" id="funnelFreeChannelLink" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="https://t.me/channel">
+            <label class="text-sm font-medium text-gray-600 mb-2 mt-3 block">Obuna nechanchi darsdan oldin talab qilinsin?</label>
+            <input type="number" id="funnelRequireSubBefore" class="w-full px-4 py-3 rounded-xl glass-input" value="0" min="0">
+            <p class="text-xs text-gray-400 mt-1">0 = talab qilinmaydi</p>
+          </div>
+          <button onclick="saveFunnelSettings()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Sozlamalarni saqlash</button>
+        </div>
+      </div>
+      
+      <!-- Stats Tab -->
+      <div id="funnel-content-stats" class="hidden">
+        <h3 class="font-bold text-lg mb-4">📊 Statistika</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="glass rounded-2xl p-4 text-center">
+            <p class="text-2xl font-bold text-violet-600" id="funnelStatTotal">0</p>
+            <p class="text-xs text-gray-500">Jami userlar</p>
+          </div>
+          <div class="glass rounded-2xl p-4 text-center">
+            <p class="text-2xl font-bold text-blue-600" id="funnelStatActive">0</p>
+            <p class="text-xs text-gray-500">Aktiv</p>
+          </div>
+          <div class="glass rounded-2xl p-4 text-center">
+            <p class="text-2xl font-bold text-green-600" id="funnelStatPaid">0</p>
+            <p class="text-xs text-gray-500">To'lagan</p>
+          </div>
+          <div class="glass rounded-2xl p-4 text-center">
+            <p class="text-2xl font-bold text-orange-600" id="funnelStatConversion">0%</p>
+            <p class="text-xs text-gray-500">Konversiya</p>
+          </div>
+        </div>
+        <div id="funnelLessonStats" class="glass rounded-2xl p-4">
+          <p class="text-gray-400 text-center">Darslar bo'yicha statistika</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Broadcast Modal -->
 <div id="broadcastModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
   <div class="glass-modal rounded-3xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
@@ -977,6 +1135,7 @@
       <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center mb-8"><span class="text-2xl">🚀</span></div>
       <nav class="flex-1 flex flex-col items-center gap-2">
         <button type="button" data-action="show-tab" data-id="stats" id="tab-stats" class="sidebar-item active w-14 h-14 flex items-center justify-center cursor-pointer" title="Statistika"><span class="text-2xl">📊</span></button>
+        <button type="button" data-action="show-tab" data-id="funnels" id="tab-funnels" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Varonkalar"><span class="text-2xl">🎯</span></button>
         <button type="button" data-action="show-tab" data-id="payments" id="tab-payments" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="To'lovlar"><span class="text-2xl">💰</span></button>
         <button type="button" data-action="show-tab" data-id="users" id="tab-users" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Foydalanuvchilar"><span class="text-2xl">👥</span></button>
         <button type="button" data-action="show-tab" data-id="lessons" id="tab-lessons" class="sidebar-item w-14 h-14 flex items-center justify-center cursor-pointer" title="Darslar"><span class="text-2xl">📚</span></button>
@@ -1026,6 +1185,7 @@
       </div>
       <nav class="space-y-2">
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="stats"><span>📊</span> Statistika</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="funnels"><span>🎯</span> Varonkalar</button>
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="payments"><span>💰</span> To'lovlar</button>
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="users"><span>👥</span> Foydalanuvchilar</button>
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="lessons"><span>📚</span> Darslar</button>
@@ -1087,6 +1247,49 @@
         <div class="grid lg:grid-cols-2 gap-6">
           <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">📈 Obunachi</h2><canvas id="subscribersChart"></canvas></div>
           <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">💰 Daromad</h2><canvas id="revenueChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Funnels / Varonkalar -->
+      <div id="content-funnels" class="hidden">
+        <div class="glass-card rounded-3xl p-6 mb-6">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="font-bold text-2xl text-gray-800">🎯 Varonkalar</h2>
+              <p class="text-gray-500 text-sm mt-1">Ko'p varonkali sotish tizimi</p>
+            </div>
+            <button onclick="openCreateFunnelModal()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">+ Yangi varonka</button>
+          </div>
+          
+          <!-- Funnels list -->
+          <div id="funnelsList" class="space-y-4">
+            <div class="text-center py-12 text-gray-400">
+              <span class="text-5xl mb-4 block">🎯</span>
+              <p>Varonkalar yuklanmoqda...</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- How it works -->
+        <div class="glass-card rounded-3xl p-6">
+          <h3 class="font-bold text-lg mb-4">💡 Qanday ishlaydi?</h3>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="glass rounded-2xl p-4">
+              <div class="text-3xl mb-2">1️⃣</div>
+              <p class="font-medium">Varonka yarating</p>
+              <p class="text-sm text-gray-500 mt-1">Nom, slug (URL uchun), va asosiy sozlamalarni kiriting</p>
+            </div>
+            <div class="glass rounded-2xl p-4">
+              <div class="text-3xl mb-2">2️⃣</div>
+              <p class="font-medium">Darslar qo'shing</p>
+              <p class="text-sm text-gray-500 mt-1">Har bir varonkaga o'z darslarini, CustDev savollarini qo'shing</p>
+            </div>
+            <div class="glass rounded-2xl p-4">
+              <div class="text-3xl mb-2">3️⃣</div>
+              <p class="font-medium">Link ulashing</p>
+              <p class="text-sm text-gray-500 mt-1">t.me/bot?start=slug - har bir varonkaning o'z linki</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2000,7 +2203,7 @@ function filterMediaPicker(t) { loadMediaPicker(t); }
 function selectMedia(f) { if (mediaPickerTarget) document.getElementById(mediaPickerTarget).value = f; closeModal('mediaPickerModal'); }
 
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadFeedback(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadFreeChannel(), loadSubscriptionPlans(), loadReminders()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadFeedback(), loadPitch(), loadMedia('all'), loadPrice(), loadChannelLink(), loadChannelId(), loadFreeChannel(), loadSubscriptionPlans(), loadReminders(), loadFunnels()]);
   await loadPostLessonFlow();
 }
 
@@ -4051,6 +4254,380 @@ setInterval(function() {
   if (!document.getElementById('dashboard').classList.contains('hidden')) loadStats();
 }, 60000);
 
+// ============ MULTI-FUNNEL FUNCTIONS ============
+var allFunnels = [];
+var currentFunnelId = null;
+var currentFunnelData = null;
+
+async function loadFunnels() {
+  try {
+    allFunnels = await (await fetch('/api/funnels', {headers: {Authorization: auth}})).json();
+    renderFunnelsList();
+  } catch(e) {
+    console.error('loadFunnels error:', e);
+    document.getElementById('funnelsList').innerHTML = '<p class="text-red-500 text-center py-4">Xatolik: ' + e.message + '</p>';
+  }
+}
+
+function renderFunnelsList() {
+  if (!allFunnels.length) {
+    document.getElementById('funnelsList').innerHTML = `
+      <div class="text-center py-12">
+        <span class="text-5xl mb-4 block">🎯</span>
+        <p class="text-gray-500 mb-4">Hali varonkalar yo'q</p>
+        <button onclick="openCreateFunnelModal()" class="px-6 py-3 rounded-xl glass-btn text-white">+ Birinchi varonka yaratish</button>
+      </div>
+    `;
+    return;
+  }
+  
+  var html = '';
+  for (var i = 0; i < allFunnels.length; i++) {
+    var f = allFunnels[i];
+    var defaultBadge = f.is_default ? '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs ml-2">Default</span>' : '';
+    var activeBadge = f.is_active ? '' : '<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs ml-2">O\'chirilgan</span>';
+    
+    html += '<div class="glass-card rounded-2xl p-4 flex justify-between items-center">' +
+      '<div class="flex-1">' +
+        '<div class="flex items-center">' +
+          '<h3 class="font-bold text-lg">' + f.name + '</h3>' + defaultBadge + activeBadge +
+        '</div>' +
+        '<p class="text-sm text-gray-500 mt-1">🔗 t.me/bot?start=' + f.slug + '</p>' +
+        (f.description ? '<p class="text-xs text-gray-400 mt-1">' + f.description + '</p>' : '') +
+      '</div>' +
+      '<div class="flex gap-2">' +
+        '<button type="button" data-action="open-funnel" data-id="' + f.id + '" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-violet-100">👁️</button>' +
+        '<button type="button" data-action="edit-funnel" data-id="' + f.id + '" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-blue-100">✏️</button>' +
+        '<button type="button" data-action="delete-funnel" data-id="' + f.id + '" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-red-100 text-red-500">🗑️</button>' +
+      '</div>' +
+    '</div>';
+  }
+  document.getElementById('funnelsList').innerHTML = html;
+}
+
+function openCreateFunnelModal() {
+  document.getElementById('funnelModalTitle').textContent = '🎯 Yangi varonka';
+  document.getElementById('funnelId').value = '';
+  document.getElementById('funnelName').value = '';
+  document.getElementById('funnelSlug').value = '';
+  document.getElementById('funnelDescription').value = '';
+  document.getElementById('funnelIsDefault').checked = false;
+  openModal('funnelModal');
+}
+
+function editFunnel(id) {
+  var f = allFunnels.find(function(x) { return x.id === id; });
+  if (!f) return;
+  
+  document.getElementById('funnelModalTitle').textContent = '✏️ Varonkani tahrirlash';
+  document.getElementById('funnelId').value = f.id;
+  document.getElementById('funnelName').value = f.name || '';
+  document.getElementById('funnelSlug').value = f.slug || '';
+  document.getElementById('funnelDescription').value = f.description || '';
+  document.getElementById('funnelIsDefault').checked = f.is_default;
+  openModal('funnelModal');
+}
+
+async function saveFunnel() {
+  var id = document.getElementById('funnelId').value;
+  var data = {
+    name: document.getElementById('funnelName').value.trim(),
+    slug: document.getElementById('funnelSlug').value.trim(),
+    description: document.getElementById('funnelDescription').value.trim(),
+    is_default: document.getElementById('funnelIsDefault').checked
+  };
+  
+  if (!data.name || !data.slug) {
+    alert('⚠️ Nom va slug majburiy!');
+    return;
+  }
+  
+  try {
+    var url = id ? '/api/funnels/' + id : '/api/funnels';
+    var method = id ? 'PUT' : 'POST';
+    
+    var r = await fetch(url, {
+      method: method,
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    
+    if (r.ok) {
+      closeModal('funnelModal');
+      loadFunnels();
+      alert('✅ Varonka saqlandi!');
+    } else {
+      var err = await r.json();
+      alert('❌ Xatolik: ' + (err.error || 'Unknown'));
+    }
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+async function deleteFunnel(id) {
+  if (!confirm('🗑️ Bu varonkani o\'chirmoqchimisiz? Barcha darslar va savollar ham o\'chadi!')) return;
+  
+  try {
+    await fetch('/api/funnels/' + id, {method: 'DELETE', headers: {Authorization: auth}});
+    loadFunnels();
+  } catch(e) {
+    alert('❌ Xatolik: ' + e.message);
+  }
+}
+
+async function openFunnel(id) {
+  currentFunnelId = id;
+  currentFunnelData = allFunnels.find(function(x) { return x.id === id; });
+  
+  if (!currentFunnelData) return;
+  
+  document.getElementById('funnelDetailTitle').textContent = '🎯 ' + currentFunnelData.name;
+  document.getElementById('funnelDetailSlug').textContent = 't.me/bot?start=' + currentFunnelData.slug;
+  
+  openModal('funnelDetailModal');
+  showFunnelTab('lessons');
+  loadFunnelLessons();
+}
+
+function showFunnelTab(tab) {
+  // Hide all tabs
+  document.querySelectorAll('[id^="funnel-content-"]').forEach(function(e) { e.classList.add('hidden'); });
+  document.querySelectorAll('[id^="funnel-tab-"]').forEach(function(e) { 
+    e.classList.remove('bg-violet-500', 'text-white');
+    e.classList.add('glass-card');
+  });
+  
+  // Show selected tab
+  document.getElementById('funnel-content-' + tab).classList.remove('hidden');
+  document.getElementById('funnel-tab-' + tab).classList.remove('glass-card');
+  document.getElementById('funnel-tab-' + tab).classList.add('bg-violet-500', 'text-white');
+  
+  // Load content
+  if (tab === 'lessons') loadFunnelLessons();
+  if (tab === 'custdev') loadFunnelCustDev();
+  if (tab === 'pitch') loadFunnelPitch();
+  if (tab === 'settings') loadFunnelSettings();
+  if (tab === 'stats') loadFunnelStats();
+}
+
+async function loadFunnelLessons() {
+  if (!currentFunnelId) return;
+  
+  try {
+    var lessons = await (await fetch('/api/funnels/' + currentFunnelId + '/lessons', {headers: {Authorization: auth}})).json();
+    
+    if (!lessons.length) {
+      document.getElementById('funnelLessonsList').innerHTML = '<p class="text-gray-400 text-center py-4">Darslar yo\'q</p>';
+      return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < lessons.length; i++) {
+      var l = lessons[i];
+      html += '<div class="glass rounded-xl p-3 flex justify-between items-center">' +
+        '<div>' +
+          '<p class="font-medium">' + l.lesson_number + '-dars: ' + l.title + '</p>' +
+          '<p class="text-xs text-gray-500">' + (l.delay_hours === 0 ? 'Darhol' : l.delay_hours + ' soat') + '</p>' +
+        '</div>' +
+        '<div class="flex gap-1">' +
+          '<button type="button" data-action="edit-funnel-lesson" data-funnel="' + currentFunnelId + '" data-lesson="' + l.lesson_number + '" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm">✏️</button>' +
+          '<button type="button" data-action="delete-funnel-lesson" data-funnel="' + currentFunnelId + '" data-lesson="' + l.lesson_number + '" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm text-red-500">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }
+    document.getElementById('funnelLessonsList').innerHTML = html;
+  } catch(e) {
+    document.getElementById('funnelLessonsList').innerHTML = '<p class="text-red-500 text-center py-4">Xatolik</p>';
+  }
+}
+
+function addFunnelLesson() {
+  // For now, just show alert - can be expanded to full lesson editor
+  var lessonNum = prompt('Dars raqami:');
+  if (!lessonNum) return;
+  
+  var title = prompt('Dars sarlavhasi:');
+  if (!title) return;
+  
+  saveFunnelLessonQuick(parseInt(lessonNum), title);
+}
+
+async function saveFunnelLessonQuick(num, title) {
+  try {
+    await fetch('/api/funnels/' + currentFunnelId + '/lessons/' + num, {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({title: title, delay_hours: 24})
+    });
+    loadFunnelLessons();
+  } catch(e) {
+    alert('❌ Xatolik');
+  }
+}
+
+async function deleteFunnelLesson(funnelId, lessonNum) {
+  if (!confirm('Bu darsni o\'chirmoqchimisiz?')) return;
+  
+  try {
+    await fetch('/api/funnels/' + funnelId + '/lessons/' + lessonNum, {
+      method: 'DELETE', 
+      headers: {Authorization: auth}
+    });
+    loadFunnelLessons();
+  } catch(e) {
+    alert('❌ Xatolik');
+  }
+}
+
+async function loadFunnelCustDev() {
+  if (!currentFunnelId) return;
+  
+  try {
+    var questions = await (await fetch('/api/funnels/' + currentFunnelId + '/custdev', {headers: {Authorization: auth}})).json();
+    
+    if (!questions.length) {
+      document.getElementById('funnelCustDevList').innerHTML = '<p class="text-gray-400 text-center py-4">Savollar yo\'q</p>';
+      return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < questions.length; i++) {
+      var q = questions[i];
+      html += '<div class="glass rounded-xl p-3 flex justify-between items-center">' +
+        '<div>' +
+          '<p class="font-medium">' + (q.question_text.length > 50 ? q.question_text.slice(0, 50) + '...' : q.question_text) + '</p>' +
+          '<p class="text-xs text-gray-500">' + q.after_lesson + '-darsdan keyin | ' + q.question_type + '</p>' +
+        '</div>' +
+        '<button type="button" data-action="delete-funnel-custdev" data-id="' + q.id + '" class="w-8 h-8 rounded-lg glass flex items-center justify-center text-sm text-red-500">🗑️</button>' +
+      '</div>';
+    }
+    document.getElementById('funnelCustDevList').innerHTML = html;
+  } catch(e) {
+    document.getElementById('funnelCustDevList').innerHTML = '<p class="text-red-500 text-center py-4">Xatolik</p>';
+  }
+}
+
+function addFunnelCustDev() {
+  var question = prompt('Savol matni:');
+  if (!question) return;
+  
+  var afterLesson = prompt('Qaysi darsdan keyin so\'ralsin?', '1');
+  
+  saveFunnelCustDevQuick(question, parseInt(afterLesson) || 1);
+}
+
+async function saveFunnelCustDevQuick(question, afterLesson) {
+  try {
+    await fetch('/api/funnels/' + currentFunnelId + '/custdev', {
+      method: 'POST',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({question_text: question, after_lesson: afterLesson, question_type: 'text'})
+    });
+    loadFunnelCustDev();
+  } catch(e) {
+    alert('❌ Xatolik');
+  }
+}
+
+async function deleteFunnelCustDev(id) {
+  if (!confirm('Bu savolni o\'chirmoqchimisiz?')) return;
+  
+  try {
+    await fetch('/api/funnels/' + currentFunnelId + '/custdev/' + id, {
+      method: 'DELETE',
+      headers: {Authorization: auth}
+    });
+    loadFunnelCustDev();
+  } catch(e) {
+    alert('❌ Xatolik');
+  }
+}
+
+function loadFunnelPitch() {
+  if (!currentFunnelData) return;
+  
+  document.getElementById('funnelPitchAfterLesson').value = currentFunnelData.pitch_after_lesson || 4;
+  document.getElementById('funnelPitchText').value = currentFunnelData.pitch_text || '';
+  document.getElementById('funnelPitchVideo').value = currentFunnelData.pitch_video_file_id || '';
+  document.getElementById('funnelPitchDelay').value = currentFunnelData.pitch_delay_hours || 2;
+}
+
+async function saveFunnelPitch() {
+  try {
+    await fetch('/api/funnels/' + currentFunnelId, {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        pitch_after_lesson: parseInt(document.getElementById('funnelPitchAfterLesson').value) || 4,
+        pitch_text: document.getElementById('funnelPitchText').value,
+        pitch_video_file_id: document.getElementById('funnelPitchVideo').value || null,
+        pitch_delay_hours: parseInt(document.getElementById('funnelPitchDelay').value) || 2
+      })
+    });
+    alert('✅ Pitch saqlandi!');
+    loadFunnels(); // Refresh main list
+  } catch(e) {
+    alert('❌ Xatolik');
+  }
+}
+
+function loadFunnelSettings() {
+  if (!currentFunnelData) return;
+  
+  document.getElementById('funnelPremiumChannelId').value = currentFunnelData.premium_channel_id || '';
+  document.getElementById('funnelFreeChannelId').value = currentFunnelData.free_channel_id || '';
+  document.getElementById('funnelFreeChannelLink').value = currentFunnelData.free_channel_link || '';
+  document.getElementById('funnelRequireSubBefore').value = currentFunnelData.require_subscription_before_lesson || 0;
+}
+
+async function saveFunnelSettings() {
+  try {
+    await fetch('/api/funnels/' + currentFunnelId, {
+      method: 'PUT',
+      headers: {Authorization: auth, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        premium_channel_id: document.getElementById('funnelPremiumChannelId').value || null,
+        free_channel_id: document.getElementById('funnelFreeChannelId').value || null,
+        free_channel_link: document.getElementById('funnelFreeChannelLink').value || null,
+        require_subscription_before_lesson: parseInt(document.getElementById('funnelRequireSubBefore').value) || 0
+      })
+    });
+    alert('✅ Sozlamalar saqlandi!');
+    loadFunnels();
+  } catch(e) {
+    alert('❌ Xatolik');
+  }
+}
+
+async function loadFunnelStats() {
+  if (!currentFunnelId) return;
+  
+  try {
+    var stats = await (await fetch('/api/funnels/' + currentFunnelId + '/stats', {headers: {Authorization: auth}})).json();
+    
+    document.getElementById('funnelStatTotal').textContent = stats.total_users || 0;
+    document.getElementById('funnelStatActive').textContent = stats.active_users || 0;
+    document.getElementById('funnelStatPaid').textContent = stats.paid_users || 0;
+    
+    var conversion = stats.total_users > 0 ? Math.round((stats.paid_users / stats.total_users) * 100) : 0;
+    document.getElementById('funnelStatConversion').textContent = conversion + '%';
+    
+    // Lesson stats
+    if (stats.lessonStats && stats.lessonStats.length) {
+      var html = '<h4 class="font-medium mb-2">Darslar bo\'yicha</h4><div class="space-y-1">';
+      for (var i = 0; i < stats.lessonStats.length; i++) {
+        var ls = stats.lessonStats[i];
+        html += '<div class="flex justify-between text-sm"><span>' + ls.current_lesson + '-dars</span><span class="font-medium">' + ls.user_count + ' user</span></div>';
+      }
+      html += '</div>';
+      document.getElementById('funnelLessonStats').innerHTML = html;
+    }
+  } catch(e) {
+    console.error('loadFunnelStats error:', e);
+  }
+}
+
 // ========== GLOBAL EVENT DELEGATION ==========
 // Bu barcha dinamik yaratilgan tugmalarni ishlashini ta'minlaydi
 document.addEventListener('click', function(e) {
@@ -4103,9 +4680,33 @@ document.addEventListener('click', function(e) {
     case 'copy-file':
       copyFileId(id);
       break;
+    // Funnels
+    case 'open-funnel':
+      openFunnel(parseInt(id));
+      break;
+    case 'edit-funnel':
+      editFunnel(parseInt(id));
+      break;
+    case 'delete-funnel':
+      deleteFunnel(parseInt(id));
+      break;
+    case 'edit-funnel-lesson':
+      var funnelId = parseInt(target.getAttribute('data-funnel'));
+      var lessonNum = parseInt(target.getAttribute('data-lesson'));
+      alert('Dars tahrirlash: Funnel ' + funnelId + ', Dars ' + lessonNum);
+      break;
+    case 'delete-funnel-lesson':
+      var funnelId2 = parseInt(target.getAttribute('data-funnel'));
+      var lessonNum2 = parseInt(target.getAttribute('data-lesson'));
+      deleteFunnelLesson(funnelId2, lessonNum2);
+      break;
+    case 'delete-funnel-custdev':
+      deleteFunnelCustDev(parseInt(id));
+      break;
     // Navigation
     case 'show-tab':
       showTab(id);
+      if (id === 'funnels') loadFunnels();
       break;
     case 'open-modal':
       openModal(id);
