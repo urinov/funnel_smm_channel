@@ -400,6 +400,77 @@ bot.action(/^cd_(\d+)_(.+)$/, async (ctx) => {
   }
 });
 
+// ============ MANDATORY SUBSCRIPTION CHECK ============
+const FREE_CHANNEL_ID = process.env.FREE_CHANNEL_ID; // Bepul kanal ID
+
+async function checkFreeChannelSubscription(telegramId) {
+  // Get free channel ID from dashboard or env
+  const channelId = await db.getSetting('free_channel_id') || FREE_CHANNEL_ID;
+  
+  if (!channelId) {
+    console.log('⚠️ FREE_CHANNEL_ID not set, skipping subscription check');
+    return true; // Agar kanal ID yo'q bo'lsa, tekshirmasdan o'tkazib yuboramiz
+  }
+  
+  try {
+    const member = await bot.telegram.getChatMember(channelId, telegramId);
+    const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
+    console.log(`📢 Subscription check for ${telegramId}: ${isSubscribed ? '✅ Subscribed' : '❌ Not subscribed'}`);
+    return isSubscribed;
+  } catch (e) {
+    console.error('❌ Subscription check error:', e.message);
+    return false;
+  }
+}
+
+async function askForSubscription(telegramId) {
+  const channelLink = await db.getSetting('free_channel_link') || await db.getBotMessage('free_channel_link') || 'https://t.me/your_channel';
+  
+  const msg = await db.getBotMessage('subscribe_required') || 
+`🔒 <b>3-darsga o'tish uchun kanalimizga obuna bo'ling!</b>
+
+Kanalda siz uchun foydali:
+📚 Qo'shimcha materiallar
+💡 Maslahatlar va lifehacklar
+🎁 Maxsus bonuslar
+
+Obuna bo'lgandan keyin "✅ Obuna bo'ldim" tugmasini bosing.`;
+
+  await bot.telegram.sendMessage(telegramId, msg, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      [Markup.button.url('📢 Kanalga o\'tish', channelLink)],
+      [Markup.button.callback('✅ Obuna bo\'ldim', 'check_subscription')]
+    ])
+  });
+  
+  // Mark user as waiting for subscription
+  await db.updateUser(telegramId, { waiting_subscription: true });
+}
+
+// Check subscription button handler
+bot.action('check_subscription', async (ctx) => {
+  const telegramId = ctx.from.id;
+  
+  const isSubscribed = await checkFreeChannelSubscription(telegramId);
+  
+  if (isSubscribed) {
+    await ctx.answerCbQuery('✅ Rahmat! Obuna tasdiqlandi!');
+    await ctx.editMessageReplyMarkup(undefined);
+    
+    // Update user and continue to next lesson
+    await db.updateUser(telegramId, { waiting_subscription: false, subscribed_free_channel: true });
+    
+    await ctx.reply('🎉 Ajoyib! Endi davom etamiz...');
+    await delay(1000);
+    
+    // Send next lesson (lesson 3)
+    await sendLesson(telegramId, 3);
+  } else {
+    await ctx.answerCbQuery('❌ Siz hali obuna bo\'lmagansiz!', { show_alert: true });
+  }
+});
+
 async function scheduleNextLesson(telegramId) {
   const user = await db.getUser(telegramId);
   const next = (user.current_lesson || 0) + 1;
@@ -408,6 +479,23 @@ async function scheduleNextLesson(telegramId) {
   if (next > total) {
     await schedulePostLesson(telegramId);
     return;
+  }
+
+  // ============ CHECK SUBSCRIPTION BEFORE LESSON 3 ============
+  const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
+  
+  if (next === requireSubLesson && !user.subscribed_free_channel) {
+    // Check if already subscribed
+    const isSubscribed = await checkFreeChannelSubscription(telegramId);
+    
+    if (!isSubscribed) {
+      // Ask for subscription
+      await askForSubscription(telegramId);
+      return; // Don't continue until subscribed
+    } else {
+      // Already subscribed, mark it
+      await db.updateUser(telegramId, { subscribed_free_channel: true });
+    }
   }
 
   const lesson = await db.getLesson(next);
