@@ -326,17 +326,21 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
       const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
       const nextLesson = lessonNumber + 1;
       
-      if (nextLesson === requireSubLesson && !user?.subscribed_free_channel) {
-        // Check if already subscribed
+      if (nextLesson === requireSubLesson) {
+        // Check subscription status
         const isSubscribed = await checkFreeChannelSubscription(telegramId);
         
-        if (!isSubscribed) {
-          // Ask for subscription FIRST
+        if (isSubscribed) {
+          // Already subscribed - say thank you!
+          if (!user?.subscribed_free_channel) {
+            await db.updateUser(telegramId, { subscribed_free_channel: true });
+            await ctx.reply('🎉 Rahmat kanalimizga obuna bo\'lganingiz uchun! Siz bilan davom etamiz...');
+            await delay(1500);
+          }
+        } else {
+          // Not subscribed - ask for subscription
           await askForSubscription(telegramId, nextLesson);
           return;
-        } else {
-          // Already subscribed, mark it
-          await db.updateUser(telegramId, { subscribed_free_channel: true });
         }
       }
       
