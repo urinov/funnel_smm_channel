@@ -383,6 +383,22 @@ export async function initDatabase() {
       } catch (e) {}
     }
     
+    // Funnel table migrations - to'lov va narx maydonlari
+    const funnelMigrations = [
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS payme_enabled BOOLEAN DEFAULT TRUE`,
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS click_enabled BOOLEAN DEFAULT TRUE`,
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_1m INTEGER`,
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_3m INTEGER`,
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_6m INTEGER`,
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_12m INTEGER`
+    ];
+    
+    for (const sql of funnelMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+    
     console.log('Migrations completed');
     
     // Add delay_minutes to pitch_media
@@ -1379,7 +1395,8 @@ export async function updateFunnel(id, data) {
     'pitch_after_lesson', 'pitch_text', 'pitch_video_file_id', 'pitch_image_file_id',
     'pitch_delay_hours', 'sales_pitch', 'sales_delay_hours', 'soft_attack_text',
     'soft_attack_delay_hours', 'soft_attack_disabled', 'congrats_text',
-    'is_default', 'is_active', 'sort_order'
+    'is_default', 'is_active', 'sort_order',
+    'payme_enabled', 'click_enabled', 'price_1m', 'price_3m', 'price_6m', 'price_12m'
   ];
   
   for (const field of allowedFields) {
