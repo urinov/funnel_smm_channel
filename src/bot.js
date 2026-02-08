@@ -807,19 +807,22 @@ const FREE_CHANNEL_ID = process.env.FREE_CHANNEL_ID; // Bepul kanal ID
 async function checkFreeChannelSubscription(telegramId) {
   // Get free channel ID from dashboard (bot_messages) or env
   const channelId = await db.getBotMessage('free_channel_id') || FREE_CHANNEL_ID;
-  
+
+  console.log(`🔍 Checking subscription: user=${telegramId}, channel=${channelId}`);
+
   if (!channelId) {
     console.log('⚠️ FREE_CHANNEL_ID not set, skipping subscription check');
     return true; // Agar kanal ID yo'q bo'lsa, tekshirmasdan o'tkazib yuboramiz
   }
-  
+
   try {
     const member = await bot.telegram.getChatMember(channelId, telegramId);
     const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
-    console.log(`📢 Subscription check for ${telegramId} in ${channelId}: ${isSubscribed ? '✅ Subscribed' : '❌ Not subscribed'}`);
+    console.log(`📢 Subscription check for ${telegramId} in ${channelId}: ${isSubscribed ? '✅ Subscribed' : '❌ Not subscribed'} (status: ${member.status})`);
     return isSubscribed;
   } catch (e) {
-    console.error('❌ Subscription check error:', e.message);
+    console.error(`❌ Subscription check error for user ${telegramId} in channel ${channelId}:`, e.message);
+    console.error('💡 Possible causes: 1) Bot is not admin in channel, 2) Wrong channel ID, 3) Channel is private');
     return false;
   }
 }
