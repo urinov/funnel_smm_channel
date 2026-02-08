@@ -390,7 +390,8 @@ export async function initDatabase() {
       `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_1m INTEGER`,
       `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_3m INTEGER`,
       `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_6m INTEGER`,
-      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_12m INTEGER`
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS price_12m INTEGER`,
+      `ALTER TABLE funnels ADD COLUMN IF NOT EXISTS pitch_delay_minutes REAL DEFAULT 120`
     ];
     
     for (const sql of funnelMigrations) {
@@ -1393,7 +1394,7 @@ export async function updateFunnel(id, data) {
     'slug', 'name', 'description', 'require_subscription_before_lesson',
     'free_channel_id', 'free_channel_link', 'premium_channel_id', 'premium_channel_link',
     'pitch_after_lesson', 'pitch_text', 'pitch_video_file_id', 'pitch_image_file_id',
-    'pitch_delay_hours', 'sales_pitch', 'sales_delay_hours', 'soft_attack_text',
+    'pitch_delay_hours', 'pitch_delay_minutes', 'sales_pitch', 'sales_delay_hours', 'soft_attack_text',
     'soft_attack_delay_hours', 'soft_attack_disabled', 'congrats_text',
     'is_default', 'is_active', 'sort_order',
     'payme_enabled', 'click_enabled', 'price_1m', 'price_3m', 'price_6m', 'price_12m'

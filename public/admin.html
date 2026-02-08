@@ -1045,10 +1045,61 @@
             <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch video (file_id)</label>
             <input type="text" id="funnelPitchVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-sm" placeholder="Video file_id">
           </div>
-          <div>
-            <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch delay (soat)</label>
-            <input type="number" id="funnelPitchDelay" class="w-full px-4 py-3 rounded-xl glass-input" value="2" min="0">
+          <!-- Pitch Delay - Flexible Time Control -->
+          <div class="glass rounded-2xl p-4">
+            <label class="text-sm font-medium text-gray-600 mb-3 block">⏱️ Pitch qachon yuborilsin?</label>
+
+            <!-- Quick select buttons -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button type="button" onclick="setPitchDelay(0)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="0">
+                ⚡ Darhol
+              </button>
+              <button type="button" onclick="setPitchDelay(0.5)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="0.5">
+                30 sek
+              </button>
+              <button type="button" onclick="setPitchDelay(1)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="1">
+                1 min
+              </button>
+              <button type="button" onclick="setPitchDelay(5)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="5">
+                5 min
+              </button>
+              <button type="button" onclick="setPitchDelay(30)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="30">
+                30 min
+              </button>
+              <button type="button" onclick="setPitchDelay(60)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="60">
+                1 soat
+              </button>
+              <button type="button" onclick="setPitchDelay(120)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="120">
+                2 soat
+              </button>
+              <button type="button" onclick="setPitchDelay('custom')" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="custom">
+                ⚙️ Boshqa
+              </button>
+            </div>
+
+            <!-- Custom time input -->
+            <div id="pitchDelayCustom" class="hidden">
+              <div class="flex gap-3 items-center">
+                <input type="number" id="funnelPitchDelayValue" class="w-24 px-4 py-3 rounded-xl glass-input text-center" value="1" min="0" oninput="updatePitchDelayFromCustom()">
+                <select id="funnelPitchDelayUnit" class="flex-1 px-4 py-3 rounded-xl glass-input" onchange="updatePitchDelayFromCustom()">
+                  <option value="seconds">Sekund</option>
+                  <option value="minutes" selected>Minut</option>
+                  <option value="hours">Soat</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Hidden field for storing minutes -->
+            <input type="hidden" id="funnelPitchDelay" value="120">
+
+            <!-- Current value display -->
+            <div class="mt-3 p-3 rounded-xl bg-violet-50 flex items-center gap-2">
+              <span class="text-violet-600">⏱️</span>
+              <span class="text-sm text-gray-600">Tanlangan vaqt:</span>
+              <span id="pitchDelayDisplay" class="font-bold text-violet-700">2 soat</span>
+            </div>
           </div>
+
           <button onclick="saveFunnelPitch()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Pitch saqlash</button>
         </div>
       </div>
@@ -5210,15 +5261,132 @@ async function deleteFunnelCustDev(id) {
 
 function loadFunnelPitch() {
   if (!currentFunnelData) return;
-  
+
   document.getElementById('funnelPitchAfterLesson').value = currentFunnelData.pitch_after_lesson || 4;
   document.getElementById('funnelPitchText').value = currentFunnelData.pitch_text || '';
   document.getElementById('funnelPitchVideo').value = currentFunnelData.pitch_video_file_id || '';
-  document.getElementById('funnelPitchDelay').value = currentFunnelData.pitch_delay_hours || 2;
+
+  // Load pitch delay - convert from hours to minutes for backwards compatibility
+  var delayMinutes = 0;
+  if (currentFunnelData.pitch_delay_minutes !== undefined) {
+    delayMinutes = currentFunnelData.pitch_delay_minutes;
+  } else if (currentFunnelData.pitch_delay_hours !== undefined) {
+    delayMinutes = currentFunnelData.pitch_delay_hours * 60;
+  } else {
+    delayMinutes = 120; // default 2 hours
+  }
+
+  setPitchDelay(delayMinutes, true);
+}
+
+// Set pitch delay and update UI
+function setPitchDelay(value, noHighlight) {
+  var minutes = 0;
+  var displayText = '';
+
+  if (value === 'custom') {
+    // Show custom input
+    document.getElementById('pitchDelayCustom').classList.remove('hidden');
+    updatePitchDelayFromCustom();
+
+    // Highlight custom button
+    document.querySelectorAll('.pitch-delay-btn').forEach(function(btn) {
+      btn.classList.remove('bg-violet-500', 'text-white');
+    });
+    document.querySelector('.pitch-delay-btn[data-value="custom"]').classList.add('bg-violet-500', 'text-white');
+    return;
+  }
+
+  // Hide custom input
+  document.getElementById('pitchDelayCustom').classList.add('hidden');
+
+  minutes = parseFloat(value);
+
+  // Update display text
+  if (minutes === 0) {
+    displayText = 'Darhol (0)';
+  } else if (minutes < 1) {
+    displayText = Math.round(minutes * 60) + ' sekund';
+  } else if (minutes < 60) {
+    displayText = minutes + ' minut';
+  } else {
+    var hours = minutes / 60;
+    displayText = hours + ' soat';
+  }
+
+  document.getElementById('funnelPitchDelay').value = minutes;
+  document.getElementById('pitchDelayDisplay').textContent = displayText;
+
+  // Highlight selected button
+  if (!noHighlight) {
+    document.querySelectorAll('.pitch-delay-btn').forEach(function(btn) {
+      btn.classList.remove('bg-violet-500', 'text-white');
+      if (btn.getAttribute('data-value') == value) {
+        btn.classList.add('bg-violet-500', 'text-white');
+      }
+    });
+  } else {
+    // Find closest matching button for loaded value
+    var found = false;
+    document.querySelectorAll('.pitch-delay-btn').forEach(function(btn) {
+      btn.classList.remove('bg-violet-500', 'text-white');
+      if (parseFloat(btn.getAttribute('data-value')) === minutes) {
+        btn.classList.add('bg-violet-500', 'text-white');
+        found = true;
+      }
+    });
+
+    // If no exact match, show custom input
+    if (!found && minutes > 0) {
+      document.getElementById('pitchDelayCustom').classList.remove('hidden');
+      document.querySelector('.pitch-delay-btn[data-value="custom"]').classList.add('bg-violet-500', 'text-white');
+
+      // Fill custom inputs
+      if (minutes >= 60 && minutes % 60 === 0) {
+        document.getElementById('funnelPitchDelayValue').value = minutes / 60;
+        document.getElementById('funnelPitchDelayUnit').value = 'hours';
+      } else if (minutes >= 1) {
+        document.getElementById('funnelPitchDelayValue').value = minutes;
+        document.getElementById('funnelPitchDelayUnit').value = 'minutes';
+      } else {
+        document.getElementById('funnelPitchDelayValue').value = minutes * 60;
+        document.getElementById('funnelPitchDelayUnit').value = 'seconds';
+      }
+    }
+  }
+}
+
+// Update pitch delay from custom inputs
+function updatePitchDelayFromCustom() {
+  var value = parseFloat(document.getElementById('funnelPitchDelayValue').value) || 0;
+  var unit = document.getElementById('funnelPitchDelayUnit').value;
+
+  var minutes = 0;
+  var displayText = '';
+
+  switch(unit) {
+    case 'seconds':
+      minutes = value / 60;
+      displayText = value + ' sekund';
+      break;
+    case 'minutes':
+      minutes = value;
+      displayText = value + ' minut';
+      break;
+    case 'hours':
+      minutes = value * 60;
+      displayText = value + ' soat';
+      break;
+  }
+
+  document.getElementById('funnelPitchDelay').value = minutes;
+  document.getElementById('pitchDelayDisplay').textContent = displayText;
 }
 
 async function saveFunnelPitch() {
   try {
+    var delayMinutes = parseFloat(document.getElementById('funnelPitchDelay').value) || 0;
+
     await fetch('/api/funnels/' + currentFunnelId, {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
@@ -5226,10 +5394,11 @@ async function saveFunnelPitch() {
         pitch_after_lesson: parseInt(document.getElementById('funnelPitchAfterLesson').value) || 4,
         pitch_text: document.getElementById('funnelPitchText').value,
         pitch_video_file_id: document.getElementById('funnelPitchVideo').value || null,
-        pitch_delay_hours: parseInt(document.getElementById('funnelPitchDelay').value) || 2
+        pitch_delay_hours: delayMinutes / 60, // Convert to hours for backwards compatibility
+        pitch_delay_minutes: delayMinutes // Also save in minutes
       })
     });
-    alert('✅ Pitch saqlandi!');
+    showToast('✅ Pitch saqlandi!');
     loadFunnels(); // Refresh main list
   } catch(e) {
     alert('❌ Xatolik');
