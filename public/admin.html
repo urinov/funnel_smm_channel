@@ -9,68 +9,76 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
-    body { background: #f5f6fa; min-height: 100vh; }
+    body { background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); min-height: 100vh; }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #ccc; }
+    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
 
     /* Sidebar */
-    .sidebar { width: 70px; background: #fff; border-right: 1px solid #eee; }
-    .sidebar-item { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #9ca3af; transition: all 0.2s; cursor: pointer; font-size: 20px; }
-    .sidebar-item:hover { background: #f3f4f6; color: #6366f1; }
-    .sidebar-item.active { background: #eef2ff; color: #6366f1; }
+    .sidebar { width: 70px; background: linear-gradient(180deg, #fff 0%, #fafaff 100%); border-right: 1px solid #e5e7eb; box-shadow: 2px 0 8px rgba(99,102,241,0.05); }
+    .sidebar-item { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #9ca3af; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; font-size: 20px; }
+    .sidebar-item:hover { background: #f3f4f6; color: #6366f1; transform: scale(1.05); }
+    .sidebar-item.active { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
 
     /* Cards */
-    .card { background: #fff; border-radius: 16px; border: 1px solid #f0f0f0; }
-    .card-hover:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.05); transform: translateY(-2px); transition: all 0.2s; }
+    .card { background: #fff; border-radius: 16px; border: 1px solid rgba(99,102,241,0.08); box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.25s ease; }
+    .card-hover:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.12); transform: translateY(-3px); border-color: rgba(99,102,241,0.15); }
 
     /* Stat card with icon */
-    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .stat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
     /* Table */
-    .table-row { border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .table-row { border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: all 0.15s ease; }
     .table-row:last-child { border-bottom: none; }
-    .table-row:hover { background: #fafafa; }
+    .table-row:hover { background: linear-gradient(90deg, #f8faff 0%, #fff 100%); }
 
     /* Badge */
-    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-    .badge-green { background: #dcfce7; color: #16a34a; }
-    .badge-blue { background: #dbeafe; color: #2563eb; }
-    .badge-orange { background: #ffedd5; color: #ea580c; }
-    .badge-yellow { background: #fef3c7; color: #d97706; }
-    .badge-red { background: #fee2e2; color: #dc2626; }
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+    .badge-green { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #15803d; }
+    .badge-blue { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1d4ed8; }
+    .badge-orange { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #c2410c; }
+    .badge-yellow { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #b45309; }
+    .badge-red { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #b91c1c; }
     .badge-gray { background: #f3f4f6; color: #6b7280; }
 
     /* Button */
-    .btn { padding: 10px 20px; border-radius: 10px; font-weight: 500; transition: all 0.2s; cursor: pointer; }
-    .btn-primary { background: #6366f1; color: #fff; }
-    .btn-primary:hover { background: #4f46e5; }
-    .btn-secondary { background: #f3f4f6; color: #374151; }
-    .btn-secondary:hover { background: #e5e7eb; }
+    .btn { padding: 10px 20px; border-radius: 10px; font-weight: 600; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.35); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.45); }
+    .btn-secondary { background: #fff; color: #374151; border: 1px solid #e5e7eb; }
+    .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; transform: translateY(-1px); }
     .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
+    .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239,68,68,0.45); }
 
     /* Input */
-    .input { width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
-    .input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    .input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; transition: all 0.2s; background: #fafafa; }
+    .input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); background: #fff; }
+    .input::placeholder { color: #9ca3af; }
 
     /* Modal */
-    .modal-overlay { background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
-    .modal-content { background: #fff; border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-overlay { background: rgba(17,24,39,0.4); backdrop-filter: blur(8px); }
+    .modal-content { background: #fff; border-radius: 24px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
     .modal-lg { max-width: 800px; }
 
     /* Activity item */
-    .activity-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .activity-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
 
     /* Tab */
-    .tab { padding: 8px 16px; border-radius: 8px; font-weight: 500; color: #6b7280; cursor: pointer; transition: all 0.2s; }
-    .tab:hover { background: #f3f4f6; }
-    .tab.active { background: #6366f1; color: #fff; }
+    .tab { padding: 10px 18px; border-radius: 10px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.25s ease; }
+    .tab:hover { background: #f3f4f6; color: #4b5563; }
+    .tab.active { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
 
     /* Chart container */
     .chart-container { position: relative; height: 200px; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 40px 20px; color: #9ca3af; }
+    .empty-state-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state-text { font-size: 14px; }
 
     /* Hide scrollbar for mobile nav */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -89,6 +97,28 @@
 
     /* File ID Input */
     .file-id-input { font-family: monospace; font-size: 12px; background: #f9fafb; }
+
+    /* Funnel Visualization */
+    .funnel-container { position: relative; }
+    .funnel-step {
+      position: relative;
+      margin: 0 auto;
+      padding: 8px 12px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .funnel-step:hover { transform: scale(1.02); }
+    .funnel-step::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 0; bottom: 0;
+      border-radius: 4px;
+      z-index: -1;
+    }
+    .funnel-label { font-size: 11px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .funnel-count { font-size: 14px; font-weight: 700; color: #fff; }
+    .funnel-pct { font-size: 10px; color: rgba(255,255,255,0.8); }
   </style>
 </head>
 <body>
@@ -163,38 +193,42 @@
 
       <!-- Quick Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="card p-5 card-hover">
-          <div class="flex items-center gap-4">
-            <div class="stat-icon bg-indigo-100">👥</div>
+        <div class="card p-5 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-indigo-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div class="flex items-center gap-4 relative">
+            <div class="stat-icon bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">👥</div>
             <div>
-              <p class="text-gray-500 text-sm">Jami userlar</p>
+              <p class="text-gray-400 text-xs uppercase tracking-wide font-medium">Jami userlar</p>
               <p class="text-2xl font-bold text-gray-800" id="statTotalUsers">0</p>
             </div>
           </div>
         </div>
-        <div class="card p-5 card-hover">
-          <div class="flex items-center gap-4">
-            <div class="stat-icon bg-green-100">💎</div>
+        <div class="card p-5 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div class="flex items-center gap-4 relative">
+            <div class="stat-icon bg-gradient-to-br from-green-100 to-emerald-100 text-green-600">💎</div>
             <div>
-              <p class="text-gray-500 text-sm">To'lagan</p>
+              <p class="text-gray-400 text-xs uppercase tracking-wide font-medium">To'lagan</p>
               <p class="text-2xl font-bold text-green-600" id="statPaidUsers">0</p>
             </div>
           </div>
         </div>
-        <div class="card p-5 card-hover">
-          <div class="flex items-center gap-4">
-            <div class="stat-icon bg-blue-100">💰</div>
+        <div class="card p-5 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div class="flex items-center gap-4 relative">
+            <div class="stat-icon bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-600">💰</div>
             <div>
-              <p class="text-gray-500 text-sm">Daromad</p>
+              <p class="text-gray-400 text-xs uppercase tracking-wide font-medium">Daromad</p>
               <p class="text-2xl font-bold text-blue-600" id="statRevenue">0</p>
             </div>
           </div>
         </div>
-        <div class="card p-5 card-hover">
-          <div class="flex items-center gap-4">
-            <div class="stat-icon bg-orange-100">📈</div>
+        <div class="card p-5 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-orange-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div class="flex items-center gap-4 relative">
+            <div class="stat-icon bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600">📈</div>
             <div>
-              <p class="text-gray-500 text-sm">Konversiya</p>
+              <p class="text-gray-400 text-xs uppercase tracking-wide font-medium">Konversiya</p>
               <p class="text-2xl font-bold text-orange-600" id="statConversion">0%</p>
             </div>
           </div>
@@ -646,30 +680,38 @@
   </main>
 
   <!-- Right Panel (Desktop only) -->
-  <aside class="right-panel hidden lg:block w-80 p-6 border-l border-gray-200 bg-white">
+  <aside class="right-panel hidden lg:block w-80 p-6 border-l border-gray-100 bg-gradient-to-b from-white to-gray-50/50">
 
     <!-- Stats Card -->
-    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white mb-6">
-      <p class="text-indigo-200 text-sm mb-1">Umumiy daromad</p>
-      <p class="text-3xl font-bold mb-4" id="rightPanelRevenue">0 so'm</p>
-      <div class="flex justify-between text-sm">
-        <span class="text-indigo-200">Bu oy</span>
-        <span class="font-medium" id="rightPanelMonthRevenue">0</span>
+    <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-5 text-white mb-6 shadow-lg shadow-indigo-500/25 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+      <p class="text-indigo-200 text-sm mb-1 relative">💰 Umumiy daromad</p>
+      <p class="text-3xl font-bold mb-4 relative" id="rightPanelRevenue">0 so'm</p>
+      <div class="flex justify-between text-sm relative">
+        <span class="text-indigo-200">📅 Bu oy</span>
+        <span class="font-semibold bg-white/20 px-2 py-0.5 rounded-full" id="rightPanelMonthRevenue">0</span>
       </div>
     </div>
 
     <!-- Recent Activity -->
     <div class="mb-6">
-      <h3 class="font-semibold text-gray-800 mb-4">So'nggi faoliyat</h3>
-      <div id="recentActivity" class="space-y-3">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-gray-800">⚡ So'nggi faoliyat</h3>
+        <span class="text-xs text-indigo-500 font-medium">Live</span>
+      </div>
+      <div id="recentActivity" class="space-y-2 max-h-64 overflow-y-auto">
         <div class="text-center text-gray-400 py-4 text-sm">Yuklanmoqda...</div>
       </div>
     </div>
 
-    <!-- Lesson Progress -->
-    <div>
-      <h3 class="font-semibold text-gray-800 mb-4">Darslar progress</h3>
-      <div id="lessonProgressPanel" class="space-y-3">
+    <!-- Lesson Funnel -->
+    <div class="bg-gradient-to-br from-gray-50 to-indigo-50/30 rounded-xl p-4 -mx-2">
+      <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-sm">📊</span>
+        Darslar funneli
+      </h3>
+      <div id="lessonProgressPanel" class="funnel-container">
         <div class="text-center text-gray-400 py-4 text-sm">Yuklanmoqda...</div>
       </div>
     </div>
@@ -1367,11 +1409,13 @@ function renderLessonProgress() {
   });
 
   const maxUsers = Math.max(...Object.values(lessonCounts), 1);
+  const totalUsers = allUsers.length || 1;
 
   const statsContainer = document.getElementById('lessonProgressStats');
   const panelContainer = document.getElementById('lessonProgressPanel');
 
-  const html = allLessons.slice(0, 10).map(l => {
+  // Standard bar chart for stats section
+  const statsHtml = allLessons.slice(0, 10).map(l => {
     const count = lessonCounts[l.lesson_number] || 0;
     const pct = Math.round((count / maxUsers) * 100);
     return `
@@ -1385,8 +1429,59 @@ function renderLessonProgress() {
     `;
   }).join('');
 
-  statsContainer.innerHTML = html || '<p class="text-gray-400 text-center">Ma\'lumot yo\'q</p>';
-  panelContainer.innerHTML = html || '<p class="text-gray-400 text-center text-sm">Ma\'lumot yo\'q</p>';
+  statsContainer.innerHTML = statsHtml || '<p class="text-gray-400 text-center">Ma\'lumot yo\'q</p>';
+
+  // Visual funnel for right panel
+  const funnelColors = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff', '#eef2ff', '#f5f3ff'];
+  const lessons = allLessons.slice(0, 7);
+
+  if (!lessons.length) {
+    panelContainer.innerHTML = '<p class="text-gray-400 text-center text-sm">Ma\'lumot yo\'q</p>';
+    return;
+  }
+
+  // Calculate cumulative users (users at lesson N or higher)
+  const cumulativeCounts = lessons.map((l, idx) => {
+    let count = 0;
+    lessons.slice(idx).forEach(lesson => {
+      count += lessonCounts[lesson.lesson_number] || 0;
+    });
+    return { lesson: l, count };
+  });
+
+  const funnelHtml = cumulativeCounts.map((item, idx) => {
+    const count = item.count;
+    const lesson = item.lesson;
+    const widthPct = Math.max(30, 100 - (idx * 12));
+    const pct = Math.round((count / totalUsers) * 100);
+    const bgColor = funnelColors[idx % funnelColors.length];
+    const textColor = idx < 3 ? '#fff' : '#4338ca';
+
+    return `
+      <div class="funnel-step" style="width: ${widthPct}%; background: ${bgColor}; margin-bottom: 2px;">
+        <div class="flex justify-between items-center">
+          <span style="font-size: 11px; font-weight: 500; color: ${textColor}">${lesson.lesson_number}-dars</span>
+          <span style="font-size: 12px; font-weight: 700; color: ${textColor}">${count}</span>
+        </div>
+        <div style="font-size: 10px; color: ${idx < 3 ? 'rgba(255,255,255,0.7)' : '#6366f1'}">${pct}% foydalanuvchi</div>
+      </div>
+    `;
+  }).join('');
+
+  // Add drop-off stats
+  let dropOffHtml = '';
+  if (cumulativeCounts.length > 1) {
+    const dropOff = cumulativeCounts[0].count - cumulativeCounts[cumulativeCounts.length - 1].count;
+    const conversionRate = Math.round((cumulativeCounts[cumulativeCounts.length - 1].count / Math.max(cumulativeCounts[0].count, 1)) * 100);
+    dropOffHtml = `
+      <div class="mt-3 p-2 bg-gray-50 rounded-lg text-center">
+        <div class="text-xs text-gray-500">Konversiya</div>
+        <div class="text-lg font-bold text-indigo-600">${conversionRate}%</div>
+      </div>
+    `;
+  }
+
+  panelContainer.innerHTML = funnelHtml + dropOffHtml;
 }
 
 function renderCustDev() {
@@ -1445,30 +1540,42 @@ function renderRecentActivity() {
   ].sort((a, b) => b.date - a.date).slice(0, 5);
 
   if (!activities.length) {
-    container.innerHTML = '<div class="text-center text-gray-400 py-4 text-sm">Faoliyat yo\'q</div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Faoliyat yo\'q</div></div>';
     return;
   }
 
+  const timeAgo = (date) => {
+    const mins = Math.floor((Date.now() - date) / 60000);
+    if (mins < 1) return 'hozirgina';
+    if (mins < 60) return mins + ' min oldin';
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return hours + ' soat oldin';
+    return Math.floor(hours / 24) + ' kun oldin';
+  };
+
   container.innerHTML = activities.map(a => {
     const getName = (d) => d.full_name || d.username || 'Foydalanuvchi';
+    const time = timeAgo(a.date);
     if (a.type === 'user') {
       return `
-        <div class="flex items-center gap-3">
-          <div class="activity-icon bg-blue-100 text-blue-600">👤</div>
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/80 transition-colors cursor-pointer">
+          <div class="activity-icon bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600">👤</div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-800 truncate">${getName(a.data)}</p>
-            <p class="text-xs text-gray-400">Qo'shildi</p>
+            <p class="text-xs text-gray-400">Yangi foydalanuvchi • ${time}</p>
           </div>
+          <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
         </div>
       `;
     } else {
       return `
-        <div class="flex items-center gap-3">
-          <div class="activity-icon bg-green-100 text-green-600">💰</div>
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/80 transition-colors cursor-pointer">
+          <div class="activity-icon bg-gradient-to-br from-green-100 to-emerald-100 text-green-600">💰</div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-800 truncate">${getName(a.data)}</p>
-            <p class="text-xs text-gray-400">${fmtMoney(a.data.amount)}</p>
+            <p class="text-xs text-green-600 font-medium">${fmtMoney(a.data.amount)} • ${time}</p>
           </div>
+          <span class="w-2 h-2 bg-green-400 rounded-full"></span>
         </div>
       `;
     }
@@ -1555,16 +1662,26 @@ function renderUserTypeChart() {
 function renderCustDevCharts() {
   const colors = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-  // Group answers by field_name
+  // Map various field_name values to chart keys
+  const fieldNameMap = {
+    // English variations
+    'age': 'age', 'age_group': 'age', 'yosh': 'age',
+    'occupation': 'occupation', 'kasb': 'occupation', 'job': 'occupation',
+    'income': 'income', 'income_level': 'income', 'daromad': 'income',
+    'budget': 'budget', 'budget_range': 'budget', 'byudjet': 'budget'
+  };
+
+  // Group answers by mapped field_name
   const fieldData = {};
   allCustDev.forEach(q => {
     if (q.field_name && custdevAnswers[q.id]) {
       const answers = custdevAnswers[q.id];
-      if (!fieldData[q.field_name]) fieldData[q.field_name] = {};
+      const mappedField = fieldNameMap[q.field_name.toLowerCase()] || q.field_name;
+      if (!fieldData[mappedField]) fieldData[mappedField] = {};
 
       answers.forEach(a => {
         const value = a.answer_text || 'Boshqa';
-        fieldData[q.field_name][value] = (fieldData[q.field_name][value] || 0) + 1;
+        fieldData[mappedField][value] = (fieldData[mappedField][value] || 0) + 1;
       });
     }
   });
