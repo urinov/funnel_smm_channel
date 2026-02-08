@@ -1938,5 +1938,3 @@ export async function getAllDashboardSettings() {
   return result;
 }
 
-// Export pool for direct queries if needed
-export { pool };
