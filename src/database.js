@@ -818,11 +818,18 @@ export async function updatePayment(orderId, data) {
 
 export async function getAllPayments() {
   const { rows } = await pool.query(`
-    SELECT p.*, u.full_name, u.username
+    SELECT p.*, u.full_name, u.first_name, u.last_name, u.username,
+      CASE
+        WHEN p.state = 'performed' THEN 'completed'
+        WHEN p.state = 'created' THEN 'pending'
+        WHEN p.state = 'cancelled' THEN 'cancelled'
+        ELSE p.state
+      END as status,
+      COALESCE(p.payment_method, 'unknown') as payment_system
     FROM payments p
     LEFT JOIN users u ON p.telegram_id = u.telegram_id
     ORDER BY p.created_at DESC
-    LIMIT 100
+    LIMIT 500
   `);
   return rows;
 }
@@ -909,6 +916,8 @@ export async function getFullStats() {
     SELECT
       COUNT(*) as total_users,
       COUNT(*) FILTER (WHERE is_paid = TRUE) as paid_users,
+      COUNT(*) FILTER (WHERE is_paid = FALSE) as active_users,
+      COUNT(*) FILTER (WHERE current_lesson >= (SELECT COUNT(*) FROM lessons)) as completed_users,
       COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) as today_users
     FROM users WHERE is_blocked = FALSE
   `);
@@ -927,9 +936,16 @@ export async function getFullStats() {
     GROUP BY funnel_step ORDER BY funnel_step
   `);
 
+  // Return camelCase field names for frontend compatibility
   return {
-    ...userStats[0],
-    ...paymentStats[0],
+    totalUsers: parseInt(userStats[0].total_users) || 0,
+    paidUsers: parseInt(userStats[0].paid_users) || 0,
+    activeUsers: parseInt(userStats[0].active_users) || 0,
+    completedUsers: parseInt(userStats[0].completed_users) || 0,
+    todayUsers: parseInt(userStats[0].today_users) || 0,
+    totalPayments: parseInt(paymentStats[0].total_payments) || 0,
+    totalRevenue: parseInt(paymentStats[0].total_revenue) || 0,
+    monthRevenue: parseInt(paymentStats[0].monthly_revenue) || 0,
     funnel_distribution: funnelStats
   };
 }
