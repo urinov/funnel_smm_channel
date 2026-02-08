@@ -819,6 +819,7 @@ export async function updatePayment(orderId, data) {
 export async function getAllPayments() {
   const { rows } = await pool.query(`
     SELECT p.*, u.full_name, u.username,
+      p.plan_id as plan,
       CASE
         WHEN p.state = 'performed' THEN 'completed'
         WHEN p.state = 'created' THEN 'pending'
