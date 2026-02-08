@@ -278,6 +278,31 @@
         </div>
       </div>
 
+      <!-- Subscriber Growth Chart -->
+      <div class="card p-5 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <p class="text-gray-500 text-sm">Yangi obunachilar</p>
+            <p class="text-2xl font-bold text-gray-800" id="subscriberGrowthTitle">Haftalik o'sish</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div id="growthIndicator" class="flex items-center gap-1 text-green-600 font-semibold">
+              <span id="growthArrow">↑</span>
+              <span id="growthPercent">0%</span>
+            </div>
+            <div class="flex gap-2">
+              <button class="tab active" data-growth-period="day">Kun</button>
+              <button class="tab" data-growth-period="week">Hafta</button>
+              <button class="tab" data-growth-period="month">Oy</button>
+              <button class="tab" data-growth-period="year">Yil</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-container h-[250px]">
+          <canvas id="subscriberGrowthChart"></canvas>
+        </div>
+      </div>
+
       <!-- Bottom Row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Users -->
@@ -1083,7 +1108,7 @@ let selectedBroadcastUsers = new Set();
 let custdevAnswers = {};
 
 // Charts
-let revenueChart, userTypeChart;
+let revenueChart, userTypeChart, subscriberGrowthChart;
 let ageChart, occupationChart, incomeChart, budgetChart;
 let questionStatsChart;
 
@@ -1121,6 +1146,28 @@ function logout() {
 document.querySelectorAll('.sidebar-item[data-tab], .mobile-nav-item[data-tab]').forEach(item => {
   item.addEventListener('click', function() {
     showTab(this.dataset.tab);
+  });
+});
+
+// ========== REVENUE PERIOD TABS ==========
+let currentRevenuePeriod = 'week';
+document.querySelectorAll('button[data-period]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('button[data-period]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentRevenuePeriod = this.dataset.period;
+    renderRevenueChart(currentRevenuePeriod);
+  });
+});
+
+// ========== SUBSCRIBER GROWTH PERIOD TABS ==========
+let currentGrowthPeriod = 'day';
+document.querySelectorAll('button[data-growth-period]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('button[data-growth-period]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentGrowthPeriod = this.dataset.growthPeriod;
+    renderSubscriberGrowthChart(currentGrowthPeriod);
   });
 });
 
@@ -1681,26 +1728,98 @@ function renderRecentActivity() {
 
 // ========== CHARTS ==========
 function renderCharts() {
-  renderRevenueChart();
+  renderRevenueChart(currentRevenuePeriod);
   renderUserTypeChart();
   renderCustDevCharts();
+  renderSubscriberGrowthChart(currentGrowthPeriod);
 }
 
-function renderRevenueChart() {
+function renderRevenueChart(period = 'week') {
   const ctx = document.getElementById('revenueChart')?.getContext('2d');
   if (!ctx) return;
 
-  const monthlyData = {};
-  const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+  const now = new Date();
+  const completedPayments = allPayments.filter(p => p.status === 'completed');
 
-  allPayments.filter(p => p.status === 'completed').forEach(p => {
-    const date = new Date(p.created_at);
-    const key = months[date.getMonth()];
-    monthlyData[key] = (monthlyData[key] || 0) + (p.amount || 0);
-  });
+  let labels = [];
+  let data = [];
+  let periodTotal = 0;
 
-  const labels = months.slice(0, new Date().getMonth() + 1);
-  const data = labels.map(m => (monthlyData[m] || 0) / 100);
+  if (period === 'week') {
+    // Last 7 days
+    const days = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'];
+    const dailyData = {};
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      const dayName = days[d.getDay()];
+      dailyData[key] = { label: dayName, amount: 0 };
+    }
+
+    completedPayments.forEach(p => {
+      const date = new Date(p.created_at);
+      const key = date.toISOString().split('T')[0];
+      if (dailyData[key]) {
+        dailyData[key].amount += (p.amount || 0);
+      }
+    });
+
+    Object.values(dailyData).forEach(d => {
+      labels.push(d.label);
+      data.push(d.amount / 100);
+      periodTotal += d.amount;
+    });
+
+  } else if (period === 'month') {
+    // Current month by days (1-31)
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const dailyData = {};
+
+    for (let i = 1; i <= Math.min(now.getDate(), daysInMonth); i++) {
+      dailyData[i] = 0;
+    }
+
+    completedPayments.forEach(p => {
+      const date = new Date(p.created_at);
+      if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+        const day = date.getDate();
+        dailyData[day] = (dailyData[day] || 0) + (p.amount || 0);
+      }
+    });
+
+    Object.entries(dailyData).forEach(([day, amount]) => {
+      labels.push(day);
+      data.push(amount / 100);
+      periodTotal += amount;
+    });
+
+  } else if (period === 'year') {
+    // Months of current year
+    const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+    const monthlyData = {};
+
+    for (let i = 0; i <= now.getMonth(); i++) {
+      monthlyData[i] = 0;
+    }
+
+    completedPayments.forEach(p => {
+      const date = new Date(p.created_at);
+      if (date.getFullYear() === now.getFullYear()) {
+        monthlyData[date.getMonth()] = (monthlyData[date.getMonth()] || 0) + (p.amount || 0);
+      }
+    });
+
+    Object.entries(monthlyData).forEach(([month, amount]) => {
+      labels.push(months[parseInt(month)]);
+      data.push(amount / 100);
+      periodTotal += amount;
+    });
+  }
+
+  // Update display
+  document.getElementById('totalRevenueDisplay').textContent = fmtMoney(periodTotal);
 
   if (revenueChart) revenueChart.destroy();
 
@@ -1722,6 +1841,172 @@ function renderRevenueChart() {
       scales: {
         x: { grid: { display: false } },
         y: { grid: { color: '#f3f4f6' }, ticks: { callback: v => v >= 1000 ? (v/1000) + 'K' : v } }
+      }
+    }
+  });
+}
+
+function renderSubscriberGrowthChart(period = 'day') {
+  const ctx = document.getElementById('subscriberGrowthChart')?.getContext('2d');
+  if (!ctx) return;
+
+  const now = new Date();
+  let labels = [];
+  let data = [];
+  let periodLabels = { day: 'Kunlik', week: 'Haftalik', month: 'Oylik', year: 'Yillik' };
+
+  document.getElementById('subscriberGrowthTitle').textContent = periodLabels[period] + ' o\'sish';
+
+  if (period === 'day') {
+    // Last 24 hours by hour
+    const hourlyData = {};
+    for (let i = 23; i >= 0; i--) {
+      const h = new Date(now);
+      h.setHours(h.getHours() - i, 0, 0, 0);
+      const key = h.getHours();
+      hourlyData[23 - i] = { hour: key, count: 0 };
+    }
+
+    allUsers.forEach(u => {
+      const date = new Date(u.created_at);
+      const diffHours = (now - date) / (1000 * 60 * 60);
+      if (diffHours <= 24) {
+        const hourIndex = Math.floor(23 - diffHours);
+        if (hourIndex >= 0 && hourlyData[hourIndex]) {
+          hourlyData[hourIndex].count++;
+        }
+      }
+    });
+
+    Object.values(hourlyData).forEach(d => {
+      labels.push(d.hour + ':00');
+      data.push(d.count);
+    });
+
+  } else if (period === 'week') {
+    // Last 7 days
+    const days = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'];
+    const dailyData = {};
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      dailyData[key] = { label: days[d.getDay()], count: 0 };
+    }
+
+    allUsers.forEach(u => {
+      const date = new Date(u.created_at);
+      const key = date.toISOString().split('T')[0];
+      if (dailyData[key]) {
+        dailyData[key].count++;
+      }
+    });
+
+    Object.values(dailyData).forEach(d => {
+      labels.push(d.label);
+      data.push(d.count);
+    });
+
+  } else if (period === 'month') {
+    // Current month by days
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const dailyData = {};
+
+    for (let i = 1; i <= Math.min(now.getDate(), daysInMonth); i++) {
+      dailyData[i] = 0;
+    }
+
+    allUsers.forEach(u => {
+      const date = new Date(u.created_at);
+      if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+        const day = date.getDate();
+        dailyData[day] = (dailyData[day] || 0) + 1;
+      }
+    });
+
+    Object.entries(dailyData).forEach(([day, count]) => {
+      labels.push(day);
+      data.push(count);
+    });
+
+  } else if (period === 'year') {
+    // Months of current year
+    const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+    const monthlyData = {};
+
+    for (let i = 0; i <= now.getMonth(); i++) {
+      monthlyData[i] = 0;
+    }
+
+    allUsers.forEach(u => {
+      const date = new Date(u.created_at);
+      if (date.getFullYear() === now.getFullYear()) {
+        monthlyData[date.getMonth()] = (monthlyData[date.getMonth()] || 0) + 1;
+      }
+    });
+
+    Object.entries(monthlyData).forEach(([month, count]) => {
+      labels.push(months[parseInt(month)]);
+      data.push(count);
+    });
+  }
+
+  // Calculate growth percentage
+  const total = data.reduce((a, b) => a + b, 0);
+  const prevTotal = data.slice(0, Math.floor(data.length / 2)).reduce((a, b) => a + b, 0);
+  const currTotal = data.slice(Math.floor(data.length / 2)).reduce((a, b) => a + b, 0);
+
+  let growthPercent = 0;
+  if (prevTotal > 0) {
+    growthPercent = Math.round(((currTotal - prevTotal) / prevTotal) * 100);
+  } else if (currTotal > 0) {
+    growthPercent = 100;
+  }
+
+  const indicator = document.getElementById('growthIndicator');
+  const arrow = document.getElementById('growthArrow');
+  const percent = document.getElementById('growthPercent');
+
+  if (growthPercent >= 0) {
+    indicator.className = 'flex items-center gap-1 text-green-600 font-semibold';
+    arrow.textContent = '↑';
+    percent.textContent = '+' + growthPercent + '%';
+  } else {
+    indicator.className = 'flex items-center gap-1 text-red-600 font-semibold';
+    arrow.textContent = '↓';
+    percent.textContent = growthPercent + '%';
+  }
+
+  if (subscriberGrowthChart) subscriberGrowthChart.destroy();
+
+  subscriberGrowthChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#6366f1',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          grid: { color: '#f3f4f6' },
+          beginAtZero: true,
+          ticks: { stepSize: 1 }
+        }
       }
     }
   });
