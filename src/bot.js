@@ -1263,27 +1263,44 @@ bot.action(/^plan_(.+)$/, async (ctx) => {
   await ctx.answerCbQuery();
   const planId = ctx.match[1];
   const telegramId = ctx.from.id;
-  
+
   const plan = await db.getSubscriptionPlan(planId);
   if (!plan) {
     return ctx.reply('❌ Bunday obuna turi topilmadi');
   }
-  
+
   const orderId = ('ORD' + Date.now() + telegramId).slice(0, 20);
   await db.createPayment(orderId, telegramId, plan.price, planId);
-  
+
   const paymeUrl = BASE_URL + '/payme/api/checkout-url?order_id=' + orderId + '&amount=' + plan.price + '&plan=' + planId + '&redirect=1';
   const clickUrl = BASE_URL + '/click/api/checkout-url?order_id=' + orderId + '&amount=' + plan.price + '&plan=' + planId + '&redirect=1';
-  
+
+  // Check which payment systems are enabled
+  const paymeEnabledStr = await db.getSetting('payme_enabled') || await db.getBotMessage('payme_enabled');
+  const clickEnabledStr = await db.getSetting('click_enabled') || await db.getBotMessage('click_enabled');
+
+  const paymeEnabled = paymeEnabledStr !== 'false' && paymeEnabledStr !== false;
+  const clickEnabled = clickEnabledStr !== 'false' && clickEnabledStr !== false;
+
+  // Build payment buttons based on settings
+  const paymentButtons = [];
+  if (paymeEnabled) paymentButtons.push(Markup.button.url('💳 Payme', paymeUrl));
+  if (clickEnabled) paymentButtons.push(Markup.button.url('💠 Click', clickUrl));
+
+  // If no payment systems enabled, show error
+  if (paymentButtons.length === 0) {
+    return ctx.reply('❌ Hozircha to\'lov tizimlari mavjud emas. Keyinroq urinib ko\'ring.');
+  }
+
   const text = `✅ <b>${plan.name} obuna tanlandi</b>\n\n` +
     `💰 Narx: <b>${formatMoney(plan.price)}</b>\n` +
     `📅 Muddat: <b>${plan.duration_days} kun</b>\n\n` +
     `To'lov usulini tanlang:`;
-  
+
   await ctx.editMessageText(text, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
-      [Markup.button.url('💳 Payme', paymeUrl), Markup.button.url('💠 Click', clickUrl)],
+      paymentButtons,
       [Markup.button.callback('⬅️ Orqaga', 'back_to_plans')]
     ])
   });
@@ -1301,28 +1318,44 @@ bot.action(/^extend_(.+)$/, async (ctx) => {
   await ctx.answerCbQuery();
   const planId = ctx.match[1];
   const telegramId = ctx.from.id;
-  
+
   const plan = await db.getSubscriptionPlan(planId);
   if (!plan) {
     return ctx.reply('❌ Bunday obuna turi topilmadi');
   }
-  
+
   const orderId = ('EXT' + Date.now() + telegramId).slice(0, 20);
   await db.createPayment(orderId, telegramId, plan.price, planId);
-  
+
   const paymeUrl = BASE_URL + '/payme/api/checkout-url?order_id=' + orderId + '&amount=' + plan.price + '&plan=' + planId + '&extend=1&redirect=1';
   const clickUrl = BASE_URL + '/click/api/checkout-url?order_id=' + orderId + '&amount=' + plan.price + '&plan=' + planId + '&extend=1&redirect=1';
-  
+
+  // Check which payment systems are enabled
+  const paymeEnabledStr = await db.getSetting('payme_enabled') || await db.getBotMessage('payme_enabled');
+  const clickEnabledStr = await db.getSetting('click_enabled') || await db.getBotMessage('click_enabled');
+
+  const paymeEnabled = paymeEnabledStr !== 'false' && paymeEnabledStr !== false;
+  const clickEnabled = clickEnabledStr !== 'false' && clickEnabledStr !== false;
+
+  // Build payment buttons based on settings
+  const paymentButtons = [];
+  if (paymeEnabled) paymentButtons.push(Markup.button.url('💳 Payme', paymeUrl));
+  if (clickEnabled) paymentButtons.push(Markup.button.url('💠 Click', clickUrl));
+
+  if (paymentButtons.length === 0) {
+    return ctx.reply('❌ Hozircha to\'lov tizimlari mavjud emas. Keyinroq urinib ko\'ring.');
+  }
+
   const text = `🔄 <b>Obunani uzaytirish</b>\n\n` +
     `📦 Reja: <b>${plan.name}</b>\n` +
     `💰 Narx: <b>${formatMoney(plan.price)}</b>\n` +
     `📅 Qo'shiladigan muddat: <b>${plan.duration_days} kun</b>\n\n` +
     `To'lov usulini tanlang:`;
-  
+
   await ctx.editMessageText(text, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
-      [Markup.button.url('💳 Payme', paymeUrl), Markup.button.url('💠 Click', clickUrl)],
+      paymentButtons,
       [Markup.button.callback('❌ Bekor qilish', 'cancel_extend')]
     ])
   });
