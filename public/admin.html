@@ -869,6 +869,46 @@ Biz doimo yaxshilanib boramiz. Shunday bo'lsa ham, to'liq kursda bunday muammola
           <div class="p-8 text-center text-gray-400">Yuklanmoqda...</div>
         </div>
       </div>
+
+      <!-- User Feedback Section -->
+      <div class="card mt-6">
+        <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h3 class="font-semibold text-gray-800 text-lg">💬 Foydalanuvchi feedbacklari</h3>
+            <p class="text-sm text-gray-400">Bepul darslar haqida fikrlar</p>
+          </div>
+          <div class="flex gap-2">
+            <select id="feedbackFilter" class="input py-2 px-3 w-auto text-sm" onchange="filterFeedback()">
+              <option value="all">Barchasi</option>
+              <option value="liked">👍 Yoqdi</option>
+              <option value="not_liked">👎 Yoqmadi</option>
+              <option value="disliked_reason">📝 Sabablar</option>
+            </select>
+            <button onclick="loadFeedback()" class="btn btn-secondary text-sm">🔄 Yangilash</button>
+          </div>
+        </div>
+
+        <!-- Feedback Stats -->
+        <div class="grid grid-cols-3 gap-4 p-5 border-b border-gray-100 bg-gray-50">
+          <div class="text-center">
+            <p class="text-2xl font-bold text-green-600" id="feedbackLikedCount">0</p>
+            <p class="text-xs text-gray-500">👍 Yoqdi</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-red-600" id="feedbackDislikedCount">0</p>
+            <p class="text-xs text-gray-500">👎 Yoqmadi</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-indigo-600" id="feedbackTotalCount">0</p>
+            <p class="text-xs text-gray-500">Jami</p>
+          </div>
+        </div>
+
+        <!-- Feedback List -->
+        <div id="feedbackList" class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+          <div class="p-8 text-center text-gray-400">Yuklanmoqda...</div>
+        </div>
+      </div>
     </div>
 
     <!-- Settings Tab -->
@@ -1269,6 +1309,7 @@ let allUsers = [];
 let allPayments = [];
 let allLessons = [];
 let allCustDev = [];
+let allFeedback = [];
 let currentPage = 1;
 const perPage = 20;
 let paymentFilter = 'completed';
@@ -1356,11 +1397,12 @@ function showTab(tab) {
 
   // Load tab-specific data
   if (tab === 'progrev') loadProgrevSettings();
+  if (tab === 'custdev') loadFeedback();
 }
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback()]);
   renderCharts();
 }
 
@@ -1430,6 +1472,89 @@ async function loadCustdevAnswers() {
     custdevAnswers = data;
     renderCustDevStats();
   } catch(e) { console.error('loadCustdevAnswers error:', e); }
+}
+
+async function loadFeedback() {
+  try {
+    const data = await (await fetch('/api/feedback', { headers: { Authorization: auth } })).json();
+    allFeedback = data || [];
+    renderFeedback();
+  } catch(e) { console.error('loadFeedback error:', e); }
+}
+
+function renderFeedback() {
+  const container = document.getElementById('feedbackList');
+  const filter = document.getElementById('feedbackFilter')?.value || 'all';
+
+  // Filter feedbacks
+  let filteredFeedback = allFeedback;
+  if (filter !== 'all') {
+    filteredFeedback = allFeedback.filter(f => f.feedback_type === filter);
+  }
+
+  // Update stats
+  const liked = allFeedback.filter(f => f.feedback_type === 'liked').length;
+  const notLiked = allFeedback.filter(f => f.feedback_type === 'not_liked' || f.feedback_type === 'disliked_reason').length;
+
+  document.getElementById('feedbackLikedCount').textContent = liked;
+  document.getElementById('feedbackDislikedCount').textContent = notLiked;
+  document.getElementById('feedbackTotalCount').textContent = allFeedback.length;
+
+  if (!filteredFeedback.length) {
+    container.innerHTML = '<div class="p-8 text-center text-gray-400">Feedback yo\'q</div>';
+    return;
+  }
+
+  container.innerHTML = filteredFeedback.map(f => {
+    const time = timeAgo(f.created_at);
+    const name = f.full_name || f.username || 'Noma\'lum';
+
+    let typeIcon = '💬';
+    let typeBadge = 'badge-gray';
+    let typeText = 'Feedback';
+
+    if (f.feedback_type === 'liked') {
+      typeIcon = '👍';
+      typeBadge = 'badge-green';
+      typeText = 'Yoqdi';
+    } else if (f.feedback_type === 'not_liked') {
+      typeIcon = '👎';
+      typeBadge = 'badge-red';
+      typeText = 'Yoqmadi';
+    } else if (f.feedback_type === 'disliked_reason') {
+      typeIcon = '📝';
+      typeBadge = 'badge-orange';
+      typeText = 'Sabab';
+    }
+
+    return `
+      <div class="p-4 hover:bg-gray-50 transition-colors">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-lg flex-shrink-0">
+            ${typeIcon}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <span class="font-medium text-gray-800">${name}</span>
+              <span class="badge ${typeBadge}">${typeText}</span>
+              <span class="text-xs text-gray-400">${time}</span>
+            </div>
+            ${f.feedback_text ? `
+              <p class="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 mt-2">${f.feedback_text}</p>
+            ` : ''}
+            <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+              ${f.phone ? `<span>📱 ${f.phone}</span>` : ''}
+              <span>ID: ${f.telegram_id}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterFeedback() {
+  renderFeedback();
 }
 
 async function loadProgrevSettings() {
