@@ -525,6 +525,90 @@
 
       </div>
 
+      <!-- Feedback Flow Section -->
+      <div class="card p-5 mt-6">
+        <h3 class="font-semibold text-gray-800 mb-4">💬 Feedback Flow (Fikr olish va sotuvga o'tish)</h3>
+        <p class="text-sm text-gray-500 mb-4">4-darsdan keyin darhol foydalanuvchi fikrini oling va javobga qarab sotuvga o'ting</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Feedback Question -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
+              <input type="checkbox" id="feedbackEnabled" class="w-5 h-5 accent-indigo-600" checked>
+              <label class="text-sm font-medium text-indigo-800">Feedback flow yoqilgan (darsdan keyin darhol so'raydi)</label>
+            </div>
+
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Feedback savoli</label>
+              <textarea id="feedbackQuestion" class="input h-24 resize-none" placeholder="Bepul darslar yoqdimi? 🤔"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-sm text-gray-600 mb-1 block">👍 Ha tugmasi</label>
+                <input type="text" id="feedbackYesBtn" class="input" value="👍 Ha, juda yoqdi!">
+              </div>
+              <div>
+                <label class="text-sm text-gray-600 mb-1 block">👎 Yo'q tugmasi</label>
+                <input type="text" id="feedbackNoBtn" class="input" value="😐 Unchalik emas">
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback Responses -->
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">✅ Ijobiy javobdan keyin (darhol sotuvga o'tadi)</label>
+              <textarea id="feedbackYesResponse" class="input h-20 resize-none" placeholder="🎉 Ajoyib! Unda to'liq kursga taklif qilaman..."></textarea>
+            </div>
+
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">❌ Salbiy javobdan keyin (sabab so'raydi)</label>
+              <textarea id="feedbackNoResponse" class="input h-20 resize-none" placeholder="😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing..."></textarea>
+            </div>
+
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">🔄 Salbiy feedbackdan keyin qancha vaqtda sotuvga o'tadi (daqiqa)</label>
+              <input type="number" id="feedbackNoSalesDelay" class="input" value="30" min="0">
+              <p class="text-xs text-gray-400 mt-1">0 = darhol sabab yozganidan keyin</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Negative Feedback Follow-up -->
+      <div class="card p-5 mt-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🔄 Salbiy feedback follow-up</h3>
+        <p class="text-sm text-gray-500 mb-4">Foydalanuvchi salbiy fikr bildirganidan keyin yuboriladi</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Follow-up xabar (sabab yozganidan keyin)</label>
+              <textarea id="feedbackFollowup" class="input h-28 resize-none" placeholder="Rahmat fikringiz uchun! 🙏
+
+Biz doimo yaxshilanib boramiz. Shunday bo'lsa ham, to'liq kursda bunday muammolar yo'q - professional darajada tayyorlangan..."></textarea>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="feedbackFollowupShowPrices" class="w-5 h-5 accent-indigo-600" checked>
+              <label class="text-sm text-gray-600">Follow-up bilan birga narxlarni ko'rsatish</label>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Maxsus chegirma taklifi (salbiy feedback uchun)</label>
+              <textarea id="feedbackSpecialOffer" class="input h-20 resize-none" placeholder="🎁 Sizga maxsus 20% chegirma! Faqat bugun amal qiladi..."></textarea>
+            </div>
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="feedbackSpecialOfferEnabled" class="w-5 h-5 accent-orange-600">
+              <label class="text-sm text-gray-600">Maxsus chegirma taklifini yoqish</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <button onclick="saveProgrevSettings()" class="btn btn-primary mt-6">💾 Progrev sozlamalarini saqlash</button>
     </div>
 
@@ -1132,12 +1216,12 @@ async function loadProgrevSettings() {
     const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
 
     document.getElementById('pitchAfterLesson').value = data.pitch_after_lesson || 4;
-    document.getElementById('pitchDelayMinutes').value = data.pitch_delay_minutes || 120;
+    document.getElementById('pitchDelayMinutes').value = data.pitch_delay_minutes || 0;
     document.getElementById('pitchText').value = data.pitch_text || '';
     document.getElementById('pitchVideoFileId').value = data.pitch_video_file_id || '';
     document.getElementById('pitchImageFileId').value = data.pitch_image_file_id || '';
 
-    document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 60;
+    document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 0;
     document.getElementById('salesPitchText').value = data.sales_pitch || '';
 
     document.getElementById('softAttackDisabled').checked = data.soft_attack_disabled || false;
@@ -1145,6 +1229,19 @@ async function loadProgrevSettings() {
     document.getElementById('softAttackText').value = data.soft_attack_text || '';
 
     document.getElementById('congratsText').value = data.congrats_text || '';
+
+    // Feedback flow settings
+    document.getElementById('feedbackEnabled').checked = data.feedback_enabled !== false;
+    document.getElementById('feedbackQuestion').value = data.feedback_question || 'Bepul darslar yoqdimi? 🤔';
+    document.getElementById('feedbackYesBtn').value = data.feedback_yes_btn || '👍 Ha, juda yoqdi!';
+    document.getElementById('feedbackNoBtn').value = data.feedback_no_btn || '😐 Unchalik emas';
+    document.getElementById('feedbackYesResponse').value = data.feedback_yes_response || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
+    document.getElementById('feedbackNoResponse').value = data.feedback_no_response || '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing...';
+    document.getElementById('feedbackNoSalesDelay').value = data.feedback_no_sales_delay || 30;
+    document.getElementById('feedbackFollowup').value = data.feedback_followup || '';
+    document.getElementById('feedbackFollowupShowPrices').checked = data.feedback_followup_show_prices !== false;
+    document.getElementById('feedbackSpecialOffer').value = data.feedback_special_offer || '';
+    document.getElementById('feedbackSpecialOfferEnabled').checked = data.feedback_special_offer_enabled || false;
   } catch(e) { console.error('loadProgrevSettings error:', e); }
 }
 
@@ -2130,16 +2227,28 @@ async function saveProgrevSettings() {
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         pitch_after_lesson: parseInt(document.getElementById('pitchAfterLesson').value) || 4,
-        pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 120,
+        pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 0,
         pitch_text: document.getElementById('pitchText').value,
         pitch_video_file_id: document.getElementById('pitchVideoFileId').value || null,
         pitch_image_file_id: document.getElementById('pitchImageFileId').value || null,
-        sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 60,
+        sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 0,
         sales_pitch: document.getElementById('salesPitchText').value,
         soft_attack_disabled: document.getElementById('softAttackDisabled').checked,
         soft_attack_delay_minutes: parseInt(document.getElementById('softAttackDelayMinutes').value) || 1440,
         soft_attack_text: document.getElementById('softAttackText').value,
-        congrats_text: document.getElementById('congratsText').value
+        congrats_text: document.getElementById('congratsText').value,
+        // Feedback flow settings
+        feedback_enabled: document.getElementById('feedbackEnabled').checked,
+        feedback_question: document.getElementById('feedbackQuestion').value,
+        feedback_yes_btn: document.getElementById('feedbackYesBtn').value,
+        feedback_no_btn: document.getElementById('feedbackNoBtn').value,
+        feedback_yes_response: document.getElementById('feedbackYesResponse').value,
+        feedback_no_response: document.getElementById('feedbackNoResponse').value,
+        feedback_no_sales_delay: parseInt(document.getElementById('feedbackNoSalesDelay').value) || 30,
+        feedback_followup: document.getElementById('feedbackFollowup').value,
+        feedback_followup_show_prices: document.getElementById('feedbackFollowupShowPrices').checked,
+        feedback_special_offer: document.getElementById('feedbackSpecialOffer').value,
+        feedback_special_offer_enabled: document.getElementById('feedbackSpecialOfferEnabled').checked
       })
     });
 

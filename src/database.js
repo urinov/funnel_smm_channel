@@ -1918,10 +1918,13 @@ export async function getAllDashboardSettings() {
   // Get from bot_messages
   const { rows: botMessages } = await pool.query('SELECT key, text as value FROM bot_messages');
 
-  // Get from settings
+  // Get from settings (legacy)
   const { rows: settings } = await pool.query('SELECT key, value FROM settings');
 
-  // Combine
+  // Get from app_settings (new)
+  const { rows: appSettings } = await pool.query('SELECT key, value FROM app_settings');
+
+  // Combine (app_settings has highest priority)
   const result = {};
 
   for (const row of botMessages) {
@@ -1932,11 +1935,16 @@ export async function getAllDashboardSettings() {
     result[row.key] = row.value;
   }
 
+  for (const row of appSettings) {
+    result[row.key] = row.value;
+  }
+
   // Parse boolean and number fields
-  const booleanFields = ['payme_enabled', 'click_enabled', 'soft_attack_disabled'];
+  const booleanFields = ['payme_enabled', 'click_enabled', 'soft_attack_disabled',
+                         'feedback_enabled', 'feedback_followup_show_prices', 'feedback_special_offer_enabled'];
   const numberFields = ['pitch_after_lesson', 'pitch_delay_minutes', 'sales_delay_minutes',
                         'soft_attack_delay_minutes', 'require_subscription_before_lesson',
-                        'price_1m', 'price_3m', 'price_6m', 'price_12m'];
+                        'price_1m', 'price_3m', 'price_6m', 'price_12m', 'feedback_no_sales_delay'];
 
   for (const field of booleanFields) {
     if (result[field] !== undefined) {

@@ -1218,6 +1218,19 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 
     if (data.congrats_text !== undefined) await db.updateBotMessage('congrats_text', data.congrats_text);
 
+    // Feedback flow settings
+    if (data.feedback_enabled !== undefined) await db.setSetting('feedback_enabled', String(data.feedback_enabled));
+    if (data.feedback_question !== undefined) await db.setSetting('feedback_question', data.feedback_question);
+    if (data.feedback_yes_btn !== undefined) await db.setSetting('feedback_yes_btn', data.feedback_yes_btn);
+    if (data.feedback_no_btn !== undefined) await db.setSetting('feedback_no_btn', data.feedback_no_btn);
+    if (data.feedback_yes_response !== undefined) await db.setSetting('feedback_yes_response', data.feedback_yes_response);
+    if (data.feedback_no_response !== undefined) await db.setSetting('feedback_no_response', data.feedback_no_response);
+    if (data.feedback_no_sales_delay !== undefined) await db.setSetting('feedback_no_sales_delay', String(data.feedback_no_sales_delay));
+    if (data.feedback_followup !== undefined) await db.setSetting('feedback_followup', data.feedback_followup);
+    if (data.feedback_followup_show_prices !== undefined) await db.setSetting('feedback_followup_show_prices', String(data.feedback_followup_show_prices));
+    if (data.feedback_special_offer !== undefined) await db.setSetting('feedback_special_offer', data.feedback_special_offer);
+    if (data.feedback_special_offer_enabled !== undefined) await db.setSetting('feedback_special_offer_enabled', String(data.feedback_special_offer_enabled));
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

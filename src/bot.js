@@ -332,20 +332,45 @@ bot.on('text', async (ctx) => {
 
     // Check if waiting for feedback
     if (user.waiting_feedback) {
-      // Save feedback
-      await db.saveFeedback(telegramId, 'disliked', text);
-      await db.updateUser(telegramId, { waiting_feedback: false });
-      
-      await ctx.reply(
-`✅ Rahmat fikringiz uchun!
+      // Save feedback with the reason
+      await db.saveFeedback(telegramId, 'disliked_reason', text);
+      await db.updateUser(telegramId, { waiting_feedback: false, feedback_type: null });
 
-Biz sizning fikringizni inobatga olamiz va yaxshilanishga harakat qilamiz.
+      // Get configurable follow-up message
+      let followupMsg = await db.getSetting('feedback_followup') ||
+        '✅ Rahmat fikringiz uchun! 🙏\n\nBiz doimo yaxshilanib boramiz. Shunday bo\'lsa ham, to\'liq kursda professional darajada tayyorlangan materiallar mavjud...';
 
-Agar keyinchalik fikringiz o'zgarsa, kurslarimizga qaytishingiz mumkin! 🙌`,
-        { parse_mode: 'HTML' }
-      );
-      
-      console.log(`📝 Feedback saved from ${telegramId}: ${text}`);
+      const personalizedFollowup = await replaceVars(followupMsg, user);
+      await ctx.reply(personalizedFollowup, { parse_mode: 'HTML' });
+
+      console.log(`📝 Negative feedback reason saved from ${telegramId}: ${text}`);
+
+      // Check if should show prices after follow-up
+      const showPricesStr = await db.getSetting('feedback_followup_show_prices');
+      const showPrices = showPricesStr !== 'false' && showPricesStr !== false;
+
+      if (showPrices) {
+        await delay(2000);
+
+        // Check for special offer
+        const specialOfferEnabled = await db.getSetting('feedback_special_offer_enabled');
+        if (specialOfferEnabled === 'true' || specialOfferEnabled === true) {
+          const specialOffer = await db.getSetting('feedback_special_offer') ||
+            '🎁 Sizga maxsus taklif! Chegirma bilan kursga qo\'shiling...';
+          const personalizedOffer = await replaceVars(specialOffer, user);
+          await ctx.reply(personalizedOffer, { parse_mode: 'HTML' });
+          await delay(1500);
+        }
+
+        await sendSalesPitch(telegramId);
+        console.log(`✅ Sales pitch sent after negative feedback from ${telegramId}`);
+
+        // Cancel any scheduled sales pitch since we already sent it
+        try {
+          await db.cancelPendingMessages(telegramId, 'sales_pitch');
+        } catch (e) {}
+      }
+
       return;
     }
 
@@ -944,72 +969,132 @@ async function scheduleNextLesson(telegramId) {
 
 async function schedulePostLesson(telegramId) {
   const user = await db.getUser(telegramId);
-  
+
+  // Check if feedback flow is enabled
+  const feedbackEnabledStr = await db.getSetting('feedback_enabled');
+  const feedbackEnabled = feedbackEnabledStr !== 'false';
+
   // Get pitch delay from dashboard settings (stored in minutes)
-  const pitchDelayStr = await db.getBotMessage('pitch_delay_minutes');
+  const pitchDelayStr = await db.getSetting('pitch_delay_minutes') || await db.getBotMessage('pitch_delay_minutes');
   let pitchDelayMinutes = parseFloat(pitchDelayStr) || 0;
-  
+
   // Get sales delay from dashboard settings (stored in minutes)
-  const salesDelayStr = await db.getBotMessage('sales_delay_minutes');
-  let salesDelayMinutes = parseFloat(salesDelayStr) || 3;
-  
+  const salesDelayStr = await db.getSetting('sales_delay_minutes') || await db.getBotMessage('sales_delay_minutes');
+  let salesDelayMinutes = parseFloat(salesDelayStr) || 0;
+
   // Get soft attack delay from dashboard settings (stored in minutes)
-  const softDelayStr = await db.getBotMessage('soft_attack_delay_minutes');
+  const softDelayStr = await db.getSetting('soft_attack_delay_minutes') || await db.getBotMessage('soft_attack_delay_minutes');
   let softAttackDelayMinutes = parseFloat(softDelayStr) || 1440; // default 24 hours
-  
+
   // Check if soft attack is disabled
-  const softDisabledStr = await db.getBotMessage('soft_attack_disabled');
-  const softAttackDisabled = softDisabledStr === 'true';
+  const softDisabledStr = await db.getSetting('soft_attack_disabled') || await db.getBotMessage('soft_attack_disabled');
+  const softAttackDisabled = softDisabledStr === 'true' || softDisabledStr === true;
 
   console.log(`📊 Progrev settings for ${telegramId}:`);
+  console.log(`   Feedback enabled: ${feedbackEnabled}`);
   console.log(`   Pitch delay: ${pitchDelayMinutes} min`);
   console.log(`   Sales delay: ${salesDelayMinutes} min`);
   console.log(`   Soft attack delay: ${softAttackDelayMinutes} min (disabled: ${softAttackDisabled})`);
 
   // ============ STEP 1: CONGRATULATIONS ============
-  const congratsMsg = await db.getBotMessage('post_lesson_congrats') || 
-    '🎉 <b>Tabriklayman, {{ism}}!</b>\n\nBarcha bepul darslarni tugatdingiz!\n\n⏳ Tez orada siz uchun maxsus taklif tayyorlayman...';
+  const congratsMsg = await db.getSetting('congrats_text') || await db.getBotMessage('post_lesson_congrats') ||
+    '🎉 <b>Tabriklayman, {{ism}}!</b>\n\nBarcha bepul darslarni tugatdingiz!';
   const personalizedCongrats = await replaceVars(congratsMsg, user);
-  
+
   await bot.telegram.sendMessage(telegramId, personalizedCongrats, { parse_mode: 'HTML' });
   await db.updateUser(telegramId, { funnel_step: 8 });
-  
+
   console.log(`✅ Step 1: Congrats sent to ${telegramId}`);
 
-  // ============ STEP 2: VIDEO PITCH ============
-  if (pitchDelayMinutes <= 0) {
-    // Send immediately with small delay for better UX
-    await delay(3000); // 3 seconds
-    await sendVideoPitch(telegramId);
-    console.log(`✅ Step 2: Video pitch sent immediately to ${telegramId}`);
-  } else {
-    const pitchTime = new Date(Date.now() + pitchDelayMinutes * 60 * 1000);
-    await db.scheduleMessage(telegramId, 'video_pitch', pitchTime, {});
-    console.log(`📅 Step 2: Video pitch scheduled for ${pitchTime.toISOString()}`);
-  }
+  // ============ STEP 2: FEEDBACK / VIDEO PITCH ============
+  // Send immediately with small delay for better UX
+  await delay(2000);
 
-  // ============ STEP 3: SALES PITCH ============
-  // Note: Sales pitch may be triggered by feedback_yes button click now
-  // But we also schedule it as backup
-  const totalSalesDelay = pitchDelayMinutes + salesDelayMinutes;
-  
-  if (totalSalesDelay <= 0) {
-    // Send immediately after pitch
-    await delay(5000); // 5 seconds after pitch
-    await sendSalesPitch(telegramId);
-    console.log(`✅ Step 3: Sales pitch sent immediately to ${telegramId}`);
+  if (feedbackEnabled) {
+    // Send feedback question immediately
+    await sendFeedbackQuestion(telegramId);
+    console.log(`✅ Step 2: Feedback question sent immediately to ${telegramId}`);
+    // Sales pitch will be triggered by feedback response
   } else {
-    const salesTime = new Date(Date.now() + totalSalesDelay * 60 * 1000);
-    await db.scheduleMessage(telegramId, 'sales_pitch', salesTime, {});
-    console.log(`📅 Step 3: Sales pitch scheduled for ${salesTime.toISOString()}`);
+    // Old flow - send video pitch
+    if (pitchDelayMinutes <= 0) {
+      await sendVideoPitch(telegramId);
+      console.log(`✅ Step 2: Video pitch sent immediately to ${telegramId}`);
+    } else {
+      const pitchTime = new Date(Date.now() + pitchDelayMinutes * 60 * 1000);
+      await db.scheduleMessage(telegramId, 'video_pitch', pitchTime, {});
+      console.log(`📅 Step 2: Video pitch scheduled for ${pitchTime.toISOString()}`);
+    }
+
+    // ============ STEP 3: SALES PITCH (only if feedback disabled) ============
+    const totalSalesDelay = pitchDelayMinutes + salesDelayMinutes;
+
+    if (totalSalesDelay <= 0) {
+      await delay(3000);
+      await sendSalesPitch(telegramId);
+      console.log(`✅ Step 3: Sales pitch sent immediately to ${telegramId}`);
+    } else {
+      const salesTime = new Date(Date.now() + totalSalesDelay * 60 * 1000);
+      await db.scheduleMessage(telegramId, 'sales_pitch', salesTime, {});
+      console.log(`📅 Step 3: Sales pitch scheduled for ${salesTime.toISOString()}`);
+    }
   }
 
   // ============ STEP 4: SOFT ATTACK (Follow-up) ============
   if (!softAttackDisabled && softAttackDelayMinutes > 0) {
-    const totalSoftDelay = totalSalesDelay + softAttackDelayMinutes;
-    const softAttackTime = new Date(Date.now() + totalSoftDelay * 60 * 1000);
+    const softAttackTime = new Date(Date.now() + softAttackDelayMinutes * 60 * 1000);
     await db.scheduleMessage(telegramId, 'soft_attack', softAttackTime, {});
     console.log(`📅 Step 4: Soft attack scheduled for ${softAttackTime.toISOString()}`);
+  }
+}
+
+// ============ FEEDBACK QUESTION ============
+async function sendFeedbackQuestion(telegramId) {
+  const user = await db.getUser(telegramId);
+
+  // Get configurable texts
+  const feedbackQuestion = await db.getSetting('feedback_question') || 'Bepul darslar yoqdimi? 🤔';
+  const yesBtn = await db.getSetting('feedback_yes_btn') || '👍 Ha, juda yoqdi!';
+  const noBtn = await db.getSetting('feedback_no_btn') || '😐 Unchalik emas';
+
+  const pitch = await db.getPitchMedia();
+  let text = await replaceVars(pitch?.text || feedbackQuestion, user);
+
+  const feedbackButtons = Markup.inlineKeyboard([
+    [
+      Markup.button.callback(yesBtn, 'feedback_yes'),
+      Markup.button.callback(noBtn, 'feedback_no')
+    ]
+  ]);
+
+  try {
+    if (pitch?.video_file_id) {
+      await bot.telegram.sendVideo(telegramId, pitch.video_file_id, {
+        caption: text,
+        parse_mode: 'HTML',
+        ...feedbackButtons
+      });
+    } else if (pitch?.audio_file_id) {
+      await bot.telegram.sendVoice(telegramId, pitch.audio_file_id, {
+        caption: text,
+        parse_mode: 'HTML',
+        ...feedbackButtons
+      });
+    } else if (pitch?.image_file_id) {
+      await bot.telegram.sendPhoto(telegramId, pitch.image_file_id, {
+        caption: text,
+        parse_mode: 'HTML',
+        ...feedbackButtons
+      });
+    } else {
+      await bot.telegram.sendMessage(telegramId, text, {
+        parse_mode: 'HTML',
+        ...feedbackButtons
+      });
+    }
+    console.log(`📤 Feedback question sent to ${telegramId}`);
+  } catch (e) {
+    console.error(`❌ Error sending feedback to ${telegramId}:`, e.message);
   }
 }
 
@@ -1079,44 +1164,58 @@ Bepul darslar yoqdimi? 👇`;
 // Ha - yoqdi → to'g'ridan-to'g'ri narxlar
 bot.action('feedback_yes', async (ctx) => {
   await ctx.answerCbQuery('Ajoyib! 🎉');
-  
+
   // Save feedback
   await db.saveFeedback(ctx.from.id, 'liked', 'Bepul darslar yoqdi');
-  
+
   // Edit message to remove buttons
   try {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   } catch (e) {}
-  
-  // Send short message then prices
-  await ctx.reply('🎉 Ajoyib! Unda davom etamiz...');
-  await delay(1000);
-  
-  // Show prices directly
+
+  // Get configurable response
+  const yesResponse = await db.getSetting('feedback_yes_response') || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
+  const user = await db.getUser(ctx.from.id);
+  const personalizedResponse = await replaceVars(yesResponse, user);
+
+  await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
+  await delay(1500);
+
+  // Show prices directly - IMMEDIATE CONVERSION
   await sendSalesPitch(ctx.from.id);
+  console.log(`✅ Positive feedback from ${ctx.from.id} → Sales pitch sent`);
 });
 
 // Yo'q - yoqmadi → sabab so'rash
 bot.action('feedback_no', async (ctx) => {
   await ctx.answerCbQuery();
-  
+
+  // Save feedback
+  await db.saveFeedback(ctx.from.id, 'not_liked', 'Bepul darslar yoqmadi');
+
   // Edit message to remove buttons
   try {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   } catch (e) {}
-  
-  // Ask for reason
-  await ctx.reply(
-`😔 Afsuski yoqmabdi...
 
-Iltimos, sababini yozing - bu bizga yaxshilanishga yordam beradi!
+  // Get configurable response
+  const noResponse = await db.getSetting('feedback_no_response') ||
+    '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing - bu bizga yaxshilanishga yordam beradi!\n\n<i>(Oddiy xabar yozing)</i>';
+  const user = await db.getUser(ctx.from.id);
+  const personalizedResponse = await replaceVars(noResponse, user);
 
-<i>(Oddiy xabar yozing)</i>`, 
-    { parse_mode: 'HTML' }
-  );
-  
+  await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
+
   // Set user state to waiting for feedback
-  await db.updateUser(ctx.from.id, { waiting_feedback: true });
+  await db.updateUser(ctx.from.id, { waiting_feedback: true, feedback_type: 'negative' });
+
+  // Schedule sales pitch anyway after delay (backup)
+  const salesDelay = parseInt(await db.getSetting('feedback_no_sales_delay')) || 30;
+  if (salesDelay > 0) {
+    const salesTime = new Date(Date.now() + salesDelay * 60 * 1000);
+    await db.scheduleMessage(ctx.from.id, 'sales_pitch', salesTime, { from_negative_feedback: true });
+    console.log(`📅 Negative feedback from ${ctx.from.id} → Sales pitch scheduled in ${salesDelay} min`);
+  }
 });
 
 // Show prices button (agar kerak bo'lsa)
