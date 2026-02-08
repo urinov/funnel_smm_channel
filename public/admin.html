@@ -1450,7 +1450,7 @@ function renderRecentActivity() {
   }
 
   container.innerHTML = activities.map(a => {
-    const getName = (d) => d.full_name || d.first_name || d.username || 'Foydalanuvchi';
+    const getName = (d) => d.full_name || d.username || 'Foydalanuvchi';
     if (a.type === 'user') {
       return `
         <div class="flex items-center gap-3">

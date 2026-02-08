@@ -818,7 +818,7 @@ export async function updatePayment(orderId, data) {
 
 export async function getAllPayments() {
   const { rows } = await pool.query(`
-    SELECT p.*, u.full_name, u.first_name, u.last_name, u.username,
+    SELECT p.*, u.full_name, u.username,
       CASE
         WHEN p.state = 'performed' THEN 'completed'
         WHEN p.state = 'created' THEN 'pending'
@@ -1705,7 +1705,7 @@ export async function getFunnelRevenue(funnelId) {
     SELECT COALESCE(SUM(p.amount), 0) as total
     FROM payments p
     JOIN user_funnels uf ON uf.telegram_id = p.telegram_id
-    WHERE uf.funnel_id = $1 AND p.status = 'completed'
+    WHERE uf.funnel_id = $1 AND p.state = 'performed'
   `, [funnelId]);
   return rows[0] || { total: 0 };
 }
@@ -1724,8 +1724,7 @@ export async function getFunnelUsers(funnelId, { page = 1, limit = 20, status = 
   const { rows: users } = await pool.query(`
     SELECT
       u.telegram_id,
-      u.first_name,
-      u.last_name,
+      u.full_name,
       u.phone,
       uf.current_lesson,
       uf.status,
@@ -1754,12 +1753,11 @@ export async function getFunnelPayments(funnelId) {
   const { rows } = await pool.query(`
     SELECT
       p.*,
-      u.first_name,
-      u.last_name
+      u.full_name
     FROM payments p
     JOIN users u ON u.telegram_id = p.telegram_id
     JOIN user_funnels uf ON uf.telegram_id = p.telegram_id AND uf.funnel_id = $1
-    WHERE p.status = 'completed'
+    WHERE p.state = 'performed'
     ORDER BY p.created_at DESC
     LIMIT 100
   `, [funnelId]);

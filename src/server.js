@@ -1259,8 +1259,8 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
     for (const user of users) {
       try {
         const personalizedText = (text || '')
-          .replace(/\{\{fio\}\}/gi, user.full_name || user.first_name || "do'st")
-          .replace(/\{\{ism\}\}/gi, (user.first_name || "do'st").split(' ')[0])
+          .replace(/\{\{fio\}\}/gi, user.full_name || "do'st")
+          .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
           .replace(/\{\{telefon\}\}/gi, user.phone || '')
           .replace(/\{\{dars\}\}/gi, String(user.current_lesson || 0));
 
