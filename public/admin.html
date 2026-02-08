@@ -1765,76 +1765,60 @@
 <!-- Dashboard -->
 <div id="dashboard" class="hidden min-h-screen">
   <div class="flex">
-    <!-- Desktop Sidebar -->
+    <!-- Desktop Sidebar - Simplified -->
     <aside class="desktop-sidebar">
       <div class="sidebar-logo">
         <span>🚀</span>
       </div>
-      
+
       <nav class="sidebar-nav">
-        <button type="button" data-action="show-tab" data-id="stats" id="tab-stats" class="sidebar-item active" title="Statistika">
+        <button type="button" data-action="show-tab" data-id="stats" id="tab-stats" class="sidebar-item active" title="Umumiy ko'rinish">
           <span class="sidebar-icon">📊</span>
-          <span class="sidebar-label">Statistika</span>
+          <span class="sidebar-label">Umumiy</span>
         </button>
         <button type="button" data-action="show-tab" data-id="funnels" id="tab-funnels" class="sidebar-item" title="Varonkalar">
           <span class="sidebar-icon">🎯</span>
           <span class="sidebar-label">Varonkalar</span>
         </button>
-        <button type="button" data-action="show-tab" data-id="payments" id="tab-payments" class="sidebar-item" title="To'lovlar">
-          <span class="sidebar-icon">💰</span>
-          <span class="sidebar-label">To'lovlar</span>
-        </button>
-        <button type="button" data-action="show-tab" data-id="users" id="tab-users" class="sidebar-item" title="Foydalanuvchilar">
-          <span class="sidebar-icon">👥</span>
-          <span class="sidebar-label">Userlar</span>
-        </button>
-        
+
         <div class="sidebar-divider"></div>
-        
-        <button type="button" data-action="show-tab" data-id="lessons" id="tab-lessons" class="sidebar-item" title="Darslar">
-          <span class="sidebar-icon">📚</span>
-          <span class="sidebar-label">Darslar</span>
-        </button>
-        <button type="button" data-action="show-tab" data-id="media" id="tab-media" class="sidebar-item" title="Media">
+
+        <button type="button" data-action="show-tab" data-id="media" id="tab-media" class="sidebar-item" title="Media kutubxonasi">
           <span class="sidebar-icon">📁</span>
           <span class="sidebar-label">Media</span>
-        </button>
-        <button type="button" data-action="show-tab" data-id="custdev" id="tab-custdev" class="sidebar-item" title="CustDev">
-          <span class="sidebar-icon">📝</span>
-          <span class="sidebar-label">CustDev</span>
         </button>
         <button type="button" data-action="show-tab" data-id="feedback" id="tab-feedback" class="sidebar-item" title="Fikrlar">
           <span class="sidebar-icon">💬</span>
           <span class="sidebar-label">Fikrlar</span>
         </button>
-        
+
         <div class="sidebar-divider"></div>
-        
+
         <button type="button" data-action="show-tab" data-id="settings" id="tab-settings" class="sidebar-item" title="Sozlamalar">
           <span class="sidebar-icon">⚙️</span>
           <span class="sidebar-label">Sozlamalar</span>
         </button>
       </nav>
-      
+
       <button type="button" onclick="logout()" class="sidebar-item sidebar-logout" title="Chiqish">
         <span class="sidebar-icon">🚪</span>
         <span class="sidebar-label">Chiqish</span>
       </button>
     </aside>
 
-    <!-- Mobile Bottom Navigation -->
+    <!-- Mobile Bottom Navigation - Simplified -->
     <nav class="bottom-nav">
       <button type="button" data-action="show-tab" data-id="stats" id="mob-tab-stats" class="active">
         <span class="icon">📊</span>
-        <span>Statistika</span>
+        <span>Umumiy</span>
       </button>
-      <button type="button" data-action="show-tab" data-id="payments" id="mob-tab-payments">
-        <span class="icon">💰</span>
-        <span>To'lovlar</span>
+      <button type="button" data-action="show-tab" data-id="funnels" id="mob-tab-funnels">
+        <span class="icon">🎯</span>
+        <span>Varonkalar</span>
       </button>
-      <button type="button" data-action="show-tab" data-id="users" id="mob-tab-users">
-        <span class="icon">👥</span>
-        <span>Userlar</span>
+      <button type="button" data-action="show-tab" data-id="media" id="mob-tab-media">
+        <span class="icon">📁</span>
+        <span>Media</span>
       </button>
       <button type="button" data-action="show-tab" data-id="settings" id="mob-tab-settings">
         <span class="icon">⚙️</span>
@@ -1859,14 +1843,12 @@
         <button type="button" onclick="closeMobileMenu()" class="w-8 h-8 rounded-lg glass-card flex items-center justify-center cursor-pointer">✕</button>
       </div>
       <nav class="space-y-2">
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="stats"><span>📊</span> Statistika</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="stats"><span>📊</span> Umumiy ko'rinish</button>
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="funnels"><span>🎯</span> Varonkalar</button>
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="payments"><span>💰</span> To'lovlar</button>
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="users"><span>👥</span> Foydalanuvchilar</button>
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="lessons"><span>📚</span> Darslar</button>
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="media"><span>📁</span> Media</button>
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="custdev"><span>📝</span> CustDev</button>
-        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="feedback"><span>💬</span> Feedbacklar</button>
+        <hr class="my-3 border-white/30">
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="media"><span>📁</span> Media kutubxonasi</button>
+        <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="feedback"><span>💬</span> Foydalanuvchi fikrlari</button>
+        <hr class="my-3 border-white/30">
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="settings"><span>⚙️</span> Sozlamalar</button>
         <hr class="my-4 border-white/30">
         <button type="button" onclick="openBroadcastModal(); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-btn-success text-white text-left cursor-pointer"><span>📨</span> Xabar yuborish</button>
@@ -1887,40 +1869,55 @@
         </div>
       </header>
 
-      <!-- Stats -->
+      <!-- Stats - Overview Dashboard -->
       <div id="content-stats">
-        <div class="stats-grid grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="glass-card rounded-3xl p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-2xl">👥</div>
-              <div><p class="text-gray-500 text-sm">Jami</p><p id="totalUsers" class="text-3xl font-bold gradient-text">0</p></div>
+        <!-- Welcome & Quick Stats -->
+        <div class="glass-card rounded-3xl p-6 mb-6 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-pink-500/10">
+          <h2 class="font-bold text-2xl text-gray-800 mb-2">👋 Xush kelibsiz!</h2>
+          <p class="text-gray-500 mb-6">Barcha varonkalarning umumiy ko'rinishi</p>
+
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white text-xl">👥</div>
+                <div><p class="text-gray-500 text-xs">Jami userlar</p><p id="totalUsers" class="text-2xl font-bold gradient-text">0</p></div>
+              </div>
             </div>
-          </div>
-          <div class="glass-card rounded-3xl p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white text-2xl">💎</div>
-              <div><p class="text-gray-500 text-sm">Premium</p><p id="paidUsers" class="text-3xl font-bold gradient-text-green">0</p></div>
+            <div class="glass rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white text-xl">💎</div>
+                <div><p class="text-gray-500 text-xs">To'lagan</p><p id="paidUsers" class="text-2xl font-bold gradient-text-green">0</p></div>
+              </div>
             </div>
-          </div>
-          <div class="glass-card rounded-3xl p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-2xl">💵</div>
-              <div><p class="text-gray-500 text-sm">Oylik</p><p id="monthlyRevenue" class="text-xl font-bold gradient-text-blue">0</p></div>
+            <div class="glass rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-xl">💵</div>
+                <div><p class="text-gray-500 text-xs">Oylik daromad</p><p id="monthlyRevenue" class="text-xl font-bold gradient-text-blue">0</p></div>
+              </div>
             </div>
-          </div>
-          <div class="glass-card rounded-3xl p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl">📈</div>
-              <div><p class="text-gray-500 text-sm">Bugun</p><p id="todayUsers" class="text-3xl font-bold text-orange-500">+0</p></div>
+            <div class="glass rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xl">📈</div>
+                <div><p class="text-gray-500 text-xs">Bugun</p><p id="todayUsers" class="text-2xl font-bold text-orange-500">+0</p></div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="glass-card rounded-3xl p-6 mb-8">
-          <h2 class="font-bold text-xl text-gray-800 mb-6">📊 Funnel</h2>
-          <div id="funnelStats" class="grid grid-cols-3 md:grid-cols-6 gap-3"></div>
+
+        <!-- Funnels Quick Access -->
+        <div class="glass-card rounded-3xl p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-xl text-gray-800">🎯 Varonkalar</h2>
+            <button onclick="showTab('funnels')" class="text-violet-600 font-medium text-sm hover:underline">Barchasini ko'rish →</button>
+          </div>
+          <div id="funnelsQuickList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="text-center py-8 text-gray-400">Yuklanmoqda...</div>
+          </div>
         </div>
+
+        <!-- Charts -->
         <div class="grid lg:grid-cols-2 gap-6">
-          <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">📈 Obunachi</h2><canvas id="subscribersChart"></canvas></div>
+          <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">📈 Obunachi o'sishi</h2><canvas id="subscribersChart"></canvas></div>
           <div class="glass-card rounded-3xl p-6"><h2 class="font-bold text-lg text-gray-800 mb-4">💰 Daromad</h2><canvas id="revenueChart"></canvas></div>
         </div>
       </div>
@@ -2925,14 +2922,8 @@ async function loadStats() {
     document.getElementById('monthlyRevenue').textContent = fmtMoney(d.monthly_revenue || 0);
     document.getElementById('todayUsers').textContent = '+' + (d.today_users || 0);
     var el = document.getElementById('usersCountInfo'); if (el) el.textContent = d.total_users || 0;
-    
-    var fn = {0: 'Yangi', 1: 'Start', 2: '1-Dars', 3: 'CustDev', 4: '2-Dars', 5: 'CustDev', 6: '3-Dars', 7: 'CustDev', 8: '4-Dars', 9: 'Pitch', 10: 'Sotish', 11: 'Premium'};
-    var funnelHtml = '';
-    var fd = d.funnel_distribution || [];
-    for (var i = 0; i < fd.length; i++) {
-      funnelHtml += '<div class="glass-card rounded-2xl p-4 text-center"><p class="text-xs text-gray-500 mb-1">' + (fn[fd[i].funnel_step] || fd[i].funnel_step) + '</p><p class="text-2xl font-bold gradient-text">' + fd[i].count + '</p></div>';
-    }
-    document.getElementById('funnelStats').innerHTML = funnelHtml;
+
+    // Funnels Quick List - will be populated after loadFunnels
     
     var pa = await (await fetch('/api/payments/analytics', {headers: {Authorization: auth}})).json();
     document.getElementById('payToday').textContent = fmtMoney(pa.today && pa.today.amount || 0);
@@ -4985,9 +4976,55 @@ function updateFunnelStats() {
   var active = allFunnels.filter(function(f) { return f.is_active; }).length;
   var defaultFunnel = allFunnels.find(function(f) { return f.is_default; });
 
-  document.getElementById('funnelCountStat').textContent = total;
-  document.getElementById('activeFunnelsStat').textContent = active;
-  document.getElementById('defaultFunnelStat').textContent = defaultFunnel ? defaultFunnel.name.substring(0, 15) : '-';
+  var el1 = document.getElementById('funnelCountStat');
+  var el2 = document.getElementById('activeFunnelsStat');
+  var el3 = document.getElementById('defaultFunnelStat');
+  if (el1) el1.textContent = total;
+  if (el2) el2.textContent = active;
+  if (el3) el3.textContent = defaultFunnel ? defaultFunnel.name.substring(0, 15) : '-';
+
+  // Update funnels quick list on Stats page
+  renderFunnelsQuickList();
+}
+
+function renderFunnelsQuickList() {
+  var container = document.getElementById('funnelsQuickList');
+  if (!container) return;
+
+  if (!allFunnels || !allFunnels.length) {
+    container.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-400 mb-4">Hali varonkalar yo\'q</p><button onclick="showTab(\'funnels\')" class="px-6 py-3 rounded-xl glass-btn text-white">🎯 Birinchi varonka yaratish</button></div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < Math.min(allFunnels.length, 6); i++) {
+    var f = allFunnels[i];
+    var statusClass = f.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500';
+    var statusText = f.is_active ? 'Faol' : 'O\'chiq';
+
+    html += '<div onclick="openFunnel(' + f.id + ')" class="glass rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all">' +
+      '<div class="flex items-center justify-between mb-3">' +
+        '<div class="flex items-center gap-3">' +
+          '<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white">🎯</div>' +
+          '<div>' +
+            '<p class="font-semibold text-gray-800">' + f.name + '</p>' +
+            '<p class="text-xs text-gray-400">' + f.slug + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<span class="px-2 py-1 rounded-full text-xs ' + statusClass + '">' + statusText + '</span>' +
+      '</div>' +
+      '<div class="flex justify-between text-sm text-gray-500">' +
+        '<span>👥 Userlar</span>' +
+        '<span>📚 Darslar</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  if (allFunnels.length > 6) {
+    html += '<div onclick="showTab(\'funnels\')" class="glass rounded-2xl p-4 cursor-pointer hover:shadow-lg transition-all flex items-center justify-center text-violet-600 font-medium">+' + (allFunnels.length - 6) + ' ta ko\'proq →</div>';
+  }
+
+  container.innerHTML = html;
 }
 
 function renderFunnelsList() {
