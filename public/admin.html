@@ -17,11 +17,17 @@
     ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
 
-    /* Sidebar */
-    .sidebar { width: 70px; background: linear-gradient(180deg, #fff 0%, #fafaff 100%); border-right: 1px solid #e5e7eb; box-shadow: 2px 0 8px rgba(99,102,241,0.05); }
-    .sidebar-item { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #9ca3af; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; font-size: 20px; }
-    .sidebar-item:hover { background: #f3f4f6; color: #6366f1; transform: scale(1.05); }
+    /* Sidebar - Collapsible */
+    .sidebar { width: 70px; background: linear-gradient(180deg, #fff 0%, #fafaff 100%); border-right: 1px solid #e5e7eb; box-shadow: 2px 0 8px rgba(99,102,241,0.05); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+    .sidebar.expanded { width: 200px; }
+    .sidebar-item { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #9ca3af; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; font-size: 20px; gap: 12px; white-space: nowrap; }
+    .sidebar.expanded .sidebar-item { width: 100%; justify-content: flex-start; padding: 0 16px; }
+    .sidebar-item:hover { background: #f3f4f6; color: #6366f1; transform: scale(1.02); }
     .sidebar-item.active { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+    .sidebar-label { display: none; font-size: 13px; font-weight: 500; }
+    .sidebar.expanded .sidebar-label { display: block; }
+    .sidebar-toggle { width: 24px; height: 24px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+    .sidebar-toggle:hover { background: #e5e7eb; }
 
     /* Cards */
     .card { background: #fff; border-radius: 16px; border: 1px solid rgba(99,102,241,0.08); box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.25s ease; }
@@ -220,21 +226,29 @@
 <div id="dashboard" class="hidden flex min-h-screen">
 
   <!-- Left Sidebar -->
-  <aside class="sidebar fixed left-0 top-0 bottom-0 flex flex-col items-center py-6 z-40">
-    <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg font-bold mb-8">F</div>
+  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 flex flex-col items-center py-6 z-40">
+    <div class="flex items-center gap-3 mb-6 px-3">
+      <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0">F</div>
+      <span class="sidebar-label text-lg font-bold text-gray-800">Funnel</span>
+    </div>
 
-    <nav class="flex flex-col gap-2 flex-1">
-      <div class="sidebar-item active" data-tab="overview" title="Umumiy">📊</div>
-      <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar">👥</div>
-      <div class="sidebar-item" data-tab="payments" title="To'lovlar">💳</div>
-      <div class="sidebar-item" data-tab="lessons" title="Darslar">📚</div>
-      <div class="sidebar-item" data-tab="library" title="Kutubxona">📖</div>
-      <div class="sidebar-item" data-tab="progrev" title="Progrevlar">🔥</div>
-      <div class="sidebar-item" data-tab="custdev" title="CustDev">📝</div>
-      <div class="sidebar-item" data-tab="settings" title="Sozlamalar">⚙️</div>
+    <nav class="flex flex-col gap-2 flex-1 w-full px-3">
+      <div class="sidebar-item active" data-tab="overview" title="Umumiy"><span>📊</span><span class="sidebar-label">Umumiy</span></div>
+      <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar"><span>👥</span><span class="sidebar-label">Foydalanuvchilar</span></div>
+      <div class="sidebar-item" data-tab="payments" title="To'lovlar"><span>💳</span><span class="sidebar-label">To'lovlar</span></div>
+      <div class="sidebar-item" data-tab="lessons" title="Darslar"><span>📚</span><span class="sidebar-label">Darslar</span></div>
+      <div class="sidebar-item" data-tab="library" title="Kutubxona"><span>📖</span><span class="sidebar-label">Kutubxona</span></div>
+      <div class="sidebar-item" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
+      <div class="sidebar-item" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
+      <div class="sidebar-item" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
     </nav>
 
-    <div class="sidebar-item text-red-400" onclick="logout()" title="Chiqish">🚪</div>
+    <div class="px-3 w-full space-y-2">
+      <div class="sidebar-toggle mx-auto" onclick="toggleSidebar()" title="Menyuni kengaytirish">
+        <span id="sidebarToggleIcon">→</span>
+      </div>
+      <div class="sidebar-item text-red-400" onclick="logout()" title="Chiqish"><span>🚪</span><span class="sidebar-label">Chiqish</span></div>
+    </div>
   </aside>
 
   <!-- Mobile Bottom Nav -->
@@ -444,16 +458,92 @@
     <!-- Users Tab -->
     <div id="tab-users" class="hidden">
       <div class="card">
-        <div class="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-4">
-          <h3 class="font-semibold text-gray-800 text-lg">👥 Foydalanuvchilar</h3>
-          <div class="flex gap-2">
-            <select id="userStatusFilter" class="input py-2 px-3 w-auto" onchange="loadUsers()">
-              <option value="all">Barchasi</option>
-              <option value="active">Aktiv</option>
-              <option value="paid">To'lagan</option>
-              <option value="completed">Tugatgan</option>
-            </select>
-            <input type="text" id="userSearch" class="input py-2 px-3 w-48" placeholder="🔍 Qidirish..." oninput="searchUsers()">
+        <div class="p-5 border-b border-gray-100">
+          <div class="flex flex-col lg:flex-row justify-between gap-4 mb-4">
+            <h3 class="font-semibold text-gray-800 text-lg">👥 Foydalanuvchilar <span class="text-gray-400 font-normal" id="filteredUsersCount"></span></h3>
+            <div class="flex gap-2 items-center flex-wrap">
+              <input type="text" id="userSearch" class="input py-2 px-3 w-48" placeholder="🔍 Ism, telefon..." oninput="applyUserFilters()">
+              <button onclick="toggleAdvancedFilters()" class="btn btn-secondary btn-sm flex items-center gap-1">
+                <span>🎛️</span> <span id="advFilterLabel">Filtrlar</span>
+              </button>
+              <button onclick="exportUsers()" class="btn btn-secondary btn-sm" title="Eksport">📥</button>
+            </div>
+          </div>
+
+          <!-- Advanced Filters Panel -->
+          <div id="advancedFiltersPanel" class="hidden bg-gray-50 rounded-xl p-4 space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <!-- Status Filter -->
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Status</label>
+                <select id="userStatusFilter" class="input py-2 text-sm" onchange="applyUserFilters()">
+                  <option value="all">Barchasi</option>
+                  <option value="free">Free</option>
+                  <option value="paid">Premium</option>
+                </select>
+              </div>
+
+              <!-- Lesson Range -->
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Dars (dan)</label>
+                <input type="number" id="filterLessonFrom" class="input py-2 text-sm" min="0" placeholder="0" onchange="applyUserFilters()">
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Dars (gacha)</label>
+                <input type="number" id="filterLessonTo" class="input py-2 text-sm" min="0" placeholder="10" onchange="applyUserFilters()">
+              </div>
+
+              <!-- Registration Date -->
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Ro'yxatdan o'tish</label>
+                <select id="filterRegDate" class="input py-2 text-sm" onchange="applyUserFilters()">
+                  <option value="all">Barchasi</option>
+                  <option value="today">Bugun</option>
+                  <option value="week">Bu hafta</option>
+                  <option value="month">Bu oy</option>
+                  <option value="custom">Tanlash...</option>
+                </select>
+              </div>
+
+              <!-- Phone Filter -->
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Telefon</label>
+                <select id="filterPhone" class="input py-2 text-sm" onchange="applyUserFilters()">
+                  <option value="all">Barchasi</option>
+                  <option value="has">Bor</option>
+                  <option value="no">Yo'q</option>
+                </select>
+              </div>
+
+              <!-- Funnel Step -->
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Funnel bosqich</label>
+                <select id="filterFunnelStep" class="input py-2 text-sm" onchange="applyUserFilters()">
+                  <option value="all">Barchasi</option>
+                  <option value="0">0 - Yangi</option>
+                  <option value="1">1-4 - CustDev</option>
+                  <option value="5">5 - Darsda</option>
+                  <option value="8">8+ - Tugagan</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom Date Range (hidden by default) -->
+            <div id="customDateRange" class="hidden grid grid-cols-2 gap-3 max-w-sm">
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Boshlanish</label>
+                <input type="date" id="filterDateFrom" class="input py-2 text-sm" onchange="applyUserFilters()">
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 mb-1 block">Tugash</label>
+                <input type="date" id="filterDateTo" class="input py-2 text-sm" onchange="applyUserFilters()">
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button onclick="resetUserFilters()" class="btn btn-secondary btn-sm">🔄 Tozalash</button>
+              <span class="text-sm text-gray-500 flex items-center" id="activeFiltersInfo"></span>
+            </div>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -1039,74 +1129,151 @@ Biz doimo yaxshilanib boramiz. Shunday bo'lsa ham, to'liq kursda bunday muammola
 
 <!-- Broadcast Modal (Advanced) -->
 <div id="broadcastModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-  <div class="modal-content modal-lg mx-4 p-6">
+  <div class="modal-content modal-lg mx-4 p-6 max-h-[95vh] overflow-y-auto">
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-xl font-bold text-gray-800">📨 Xabar yuborish</h3>
-      <button onclick="closeModal('broadcastModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✕</button>
+      <button onclick="closeModal('broadcastModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">✕</button>
     </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Target Selection -->
+      <!-- Left Column: Target & Variables -->
       <div class="space-y-4">
-        <div>
-          <label class="text-sm text-gray-600 mb-1 block">Kimga yuborish</label>
-          <select id="broadcastTarget" class="input" onchange="toggleUserSelect()">
+        <!-- Target Selection -->
+        <div class="bg-gray-50 rounded-xl p-4">
+          <label class="text-sm font-medium text-gray-700 mb-2 block">📍 Kimga yuborish</label>
+          <select id="broadcastTarget" class="input" onchange="toggleUserSelect(); updateRecipientCount()">
             <option value="all">Hammaga</option>
-            <option value="paid">To'laganlarga</option>
-            <option value="free">To'lamaganlarga</option>
+            <option value="paid">To'laganlarga (Premium)</option>
+            <option value="free">To'lamaganlarga (Free)</option>
+            <option value="active">Aktiv foydalanuvchilarga</option>
+            <option value="lesson">Muayyan darsda bo'lganlarga</option>
             <option value="specific">Tanlangan foydalanuvchilarga</option>
           </select>
+
+          <!-- Lesson Range (for lesson target) -->
+          <div id="lessonRangeDiv" class="hidden mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-gray-500">Dars (dan)</label>
+              <input type="number" id="broadcastLessonFrom" class="input py-2" min="0" value="1" onchange="updateRecipientCount()">
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Dars (gacha)</label>
+              <input type="number" id="broadcastLessonTo" class="input py-2" min="0" value="4" onchange="updateRecipientCount()">
+            </div>
+          </div>
+
+          <!-- User Search (for specific) -->
+          <div id="userSelectDiv" class="hidden mt-3">
+            <input type="text" id="broadcastUserSearch" class="input mb-2" placeholder="🔍 Ism yoki telefon..." oninput="searchBroadcastUsers()">
+            <div id="broadcastUsersList" class="max-h-32 overflow-y-auto border rounded-lg p-2 space-y-1 bg-white"></div>
+            <div class="mt-2">
+              <p class="text-xs text-gray-500">Tanlangan: <span id="selectedUsersCount" class="font-medium text-indigo-600">0</span> ta</p>
+              <div id="selectedUsersList" class="flex flex-wrap gap-1 mt-1"></div>
+            </div>
+          </div>
+
+          <!-- Recipient Count -->
+          <div class="mt-3 p-3 bg-indigo-50 rounded-lg">
+            <p class="text-sm text-indigo-700">
+              <span class="font-semibold" id="recipientCount">0</span> ta foydalanuvchiga yuboriladi
+            </p>
+          </div>
         </div>
 
-        <!-- User Search (for specific) -->
-        <div id="userSelectDiv" class="hidden">
-          <label class="text-sm text-gray-600 mb-1 block">Foydalanuvchi qidirish</label>
-          <input type="text" id="broadcastUserSearch" class="input mb-2" placeholder="Ism yoki telefon..." oninput="searchBroadcastUsers()">
-          <div id="broadcastUsersList" class="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1"></div>
-          <div class="mt-2">
-            <p class="text-xs text-gray-500">Tanlangan: <span id="selectedUsersCount">0</span> ta</p>
-            <div id="selectedUsersList" class="flex flex-wrap gap-1 mt-1"></div>
+        <!-- Variables Help -->
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
+          <label class="text-sm font-medium text-amber-800 mb-2 block">🔤 O'zgaruvchilar (bosib qo'shing)</label>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="insertVariable('{{ism}}')" class="px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">{{ism}}</button>
+            <button type="button" onclick="insertVariable('{{fio}}')" class="px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">{{fio}}</button>
+            <button type="button" onclick="insertVariable('{{telefon}}')" class="px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">{{telefon}}</button>
+            <button type="button" onclick="insertVariable('{{dars}}')" class="px-3 py-1.5 bg-white rounded-lg text-xs font-medium text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">{{dars}}</button>
+          </div>
+          <div class="mt-3 text-xs text-amber-600 space-y-1">
+            <p><code class="bg-white px-1 rounded">{{ism}}</code> - Foydalanuvchi ismi</p>
+            <p><code class="bg-white px-1 rounded">{{fio}}</code> - To'liq ism</p>
+            <p><code class="bg-white px-1 rounded">{{telefon}}</code> - Telefon raqami</p>
+            <p><code class="bg-white px-1 rounded">{{dars}}</code> - Hozirgi dars raqami</p>
           </div>
         </div>
       </div>
 
-      <!-- Message Content -->
+      <!-- Right Column: Message Content -->
       <div class="space-y-4">
+        <!-- Message Type -->
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Xabar turi</label>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">📎 Xabar turi</label>
           <select id="broadcastType" class="input" onchange="toggleBroadcastMedia()">
-            <option value="text">Matn</option>
-            <option value="photo">Rasm + Matn</option>
-            <option value="video">Video + Matn</option>
-            <option value="video_note">Video xabar (dumaloq)</option>
-            <option value="audio">Audio</option>
-            <option value="document">Fayl</option>
+            <option value="text">📝 Faqat matn</option>
+            <option value="photo">🖼️ Rasm + Matn</option>
+            <option value="video">🎬 Video + Matn</option>
+            <option value="video_note">🔵 Video xabar (dumaloq)</option>
+            <option value="voice">🎤 Ovozli xabar</option>
+            <option value="audio">🎵 Audio fayl</option>
+            <option value="document">📄 Hujjat</option>
           </select>
         </div>
 
+        <!-- Media File ID -->
         <div id="broadcastMediaDiv" class="hidden">
-          <label class="text-sm text-gray-600 mb-1 block">Media File ID</label>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">🔗 Media File ID</label>
           <input type="text" id="broadcastMediaId" class="input file-id-input" placeholder="File ID ni kiriting...">
-          <p class="text-xs text-gray-400 mt-1">Botga media yuboring - ID oling</p>
+          <p class="text-xs text-gray-400 mt-1">💡 Botga media yuboring - avtomatik ID olasiz</p>
         </div>
 
+        <!-- Message Text -->
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Xabar matni</label>
-          <textarea id="broadcastText" class="input h-32 resize-none" placeholder="Xabar yozing..."></textarea>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">✏️ Xabar matni</label>
+          <textarea id="broadcastText" class="input h-36 resize-none" placeholder="Salom, {{ism}}! 👋&#10;&#10;Xabaringizni yozing..." oninput="updatePreview()"></textarea>
+          <div class="flex justify-between mt-1">
+            <p class="text-xs text-gray-400">HTML teglar qo'llab-quvvatlanadi: &lt;b&gt;, &lt;i&gt;, &lt;a&gt;</p>
+            <p class="text-xs text-gray-400"><span id="charCount">0</span> belgi</p>
+          </div>
         </div>
 
+        <!-- Button -->
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Tugma (ixtiyoriy)</label>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">🔘 Tugma (ixtiyoriy)</label>
           <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="broadcastBtnText" class="input" placeholder="Tugma matni">
-            <input type="text" id="broadcastBtnUrl" class="input" placeholder="https://...">
+            <input type="text" id="broadcastBtnText" class="input" placeholder="Tugma matni" oninput="updatePreview()">
+            <input type="text" id="broadcastBtnUrl" class="input" placeholder="https://..." oninput="updatePreview()">
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="bg-gray-900 rounded-xl p-4">
+          <label class="text-xs font-medium text-gray-400 mb-2 block">👁 Oldindan ko'rish</label>
+          <div id="broadcastPreview" class="bg-indigo-600/20 rounded-lg p-3 text-white text-sm">
+            <p class="text-gray-300 italic">Xabar matni bu yerda ko'rinadi...</p>
+          </div>
+          <div id="previewButton" class="hidden mt-2">
+            <div class="inline-block bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <span id="previewBtnText">Tugma</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="mt-6 flex gap-3">
-      <button onclick="sendBroadcast()" class="btn btn-primary flex-1">📤 Yuborish</button>
+    <!-- Footer -->
+    <div class="mt-6 flex flex-col sm:flex-row gap-3">
+      <button onclick="sendBroadcast()" class="btn btn-primary flex-1 flex items-center justify-center gap-2">
+        <span>📤</span> Yuborish
+      </button>
+      <button onclick="previewBroadcast()" class="btn btn-secondary flex items-center justify-center gap-2">
+        <span>👁</span> Test (o'zimga)
+      </button>
       <button onclick="closeModal('broadcastModal')" class="btn btn-secondary">Bekor qilish</button>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div id="broadcastProgress" class="hidden mt-4">
+      <div class="bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div id="broadcastProgressBar" class="bg-indigo-600 h-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <p class="text-sm text-gray-500 mt-2 text-center">
+        <span id="broadcastSent">0</span> / <span id="broadcastTotal">0</span> yuborildi
+      </p>
     </div>
   </div>
 </div>
@@ -1354,6 +1521,336 @@ function logout() {
 function toggleMobileMenu() {
   const modal = document.getElementById('mobileMenuModal');
   modal.classList.toggle('hidden');
+}
+
+// ========== SIDEBAR TOGGLE ==========
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.querySelector('.main-content');
+  const icon = document.getElementById('sidebarToggleIcon');
+
+  sidebar.classList.toggle('expanded');
+  const isExpanded = sidebar.classList.contains('expanded');
+
+  icon.textContent = isExpanded ? '←' : '→';
+  mainContent.style.marginLeft = isExpanded ? '200px' : '70px';
+
+  localStorage.setItem('sidebarExpanded', isExpanded);
+}
+
+// Initialize sidebar state from localStorage
+(function initSidebar() {
+  const isExpanded = localStorage.getItem('sidebarExpanded') === 'true';
+  if (isExpanded) {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const icon = document.getElementById('sidebarToggleIcon');
+    if (sidebar && mainContent && icon) {
+      sidebar.classList.add('expanded');
+      icon.textContent = '←';
+      mainContent.style.marginLeft = '200px';
+    }
+  }
+})();
+
+// ========== ADVANCED USER FILTERS ==========
+let advancedFiltersVisible = false;
+
+function toggleAdvancedFilters() {
+  advancedFiltersVisible = !advancedFiltersVisible;
+  const panel = document.getElementById('advancedFiltersPanel');
+  const label = document.getElementById('advFilterLabel');
+  panel.classList.toggle('hidden', !advancedFiltersVisible);
+  label.textContent = advancedFiltersVisible ? 'Yopish' : 'Filtrlar';
+}
+
+function applyUserFilters() {
+  const search = document.getElementById('userSearch').value.toLowerCase();
+  const status = document.getElementById('userStatusFilter').value;
+  const lessonFrom = parseInt(document.getElementById('filterLessonFrom')?.value) || 0;
+  const lessonTo = parseInt(document.getElementById('filterLessonTo')?.value) || 999;
+  const regDate = document.getElementById('filterRegDate')?.value || 'all';
+  const phone = document.getElementById('filterPhone')?.value || 'all';
+  const funnelStep = document.getElementById('filterFunnelStep')?.value || 'all';
+
+  // Show/hide custom date range
+  const customDateDiv = document.getElementById('customDateRange');
+  if (customDateDiv) {
+    customDateDiv.classList.toggle('hidden', regDate !== 'custom');
+  }
+
+  let filtered = allUsers.filter(u => {
+    // Search filter
+    if (search) {
+      const searchMatch = (u.full_name || '').toLowerCase().includes(search) ||
+                         (u.username || '').toLowerCase().includes(search) ||
+                         (u.phone || '').includes(search) ||
+                         String(u.telegram_id).includes(search);
+      if (!searchMatch) return false;
+    }
+
+    // Status filter
+    if (status === 'paid' && !u.is_paid) return false;
+    if (status === 'free' && u.is_paid) return false;
+
+    // Lesson range filter
+    const lesson = u.current_lesson || 0;
+    if (lesson < lessonFrom || lesson > lessonTo) return false;
+
+    // Phone filter
+    if (phone === 'has' && !u.phone) return false;
+    if (phone === 'no' && u.phone) return false;
+
+    // Funnel step filter
+    if (funnelStep !== 'all') {
+      const step = parseInt(funnelStep);
+      if (step === 1 && (u.funnel_step < 1 || u.funnel_step > 4)) return false;
+      if (step === 5 && (u.funnel_step < 5 || u.funnel_step > 7)) return false;
+      if (step === 8 && u.funnel_step < 8) return false;
+      if (step === 0 && u.funnel_step !== 0) return false;
+    }
+
+    // Date filter
+    if (regDate !== 'all' && regDate !== 'custom') {
+      const created = new Date(u.created_at);
+      const now = new Date();
+      if (regDate === 'today') {
+        if (created.toDateString() !== now.toDateString()) return false;
+      } else if (regDate === 'week') {
+        const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        if (created < weekAgo) return false;
+      } else if (regDate === 'month') {
+        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        if (created < monthAgo) return false;
+      }
+    } else if (regDate === 'custom') {
+      const fromDate = document.getElementById('filterDateFrom')?.value;
+      const toDate = document.getElementById('filterDateTo')?.value;
+      const created = new Date(u.created_at);
+      if (fromDate && created < new Date(fromDate)) return false;
+      if (toDate && created > new Date(toDate + 'T23:59:59')) return false;
+    }
+
+    return true;
+  });
+
+  // Update filtered count
+  document.getElementById('filteredUsersCount').textContent = `(${filtered.length} ta)`;
+
+  // Update active filters info
+  let activeCount = 0;
+  if (search) activeCount++;
+  if (status !== 'all') activeCount++;
+  if (lessonFrom > 0 || lessonTo < 999) activeCount++;
+  if (regDate !== 'all') activeCount++;
+  if (phone !== 'all') activeCount++;
+  if (funnelStep !== 'all') activeCount++;
+
+  const infoEl = document.getElementById('activeFiltersInfo');
+  if (infoEl) {
+    infoEl.textContent = activeCount > 0 ? `${activeCount} ta filtr faol` : '';
+  }
+
+  // Render filtered results
+  renderFilteredUsers(filtered);
+}
+
+function renderFilteredUsers(filtered) {
+  const start = (currentPage - 1) * perPage;
+  const paginated = filtered.slice(start, start + perPage);
+
+  const tbody = document.getElementById('usersTableBody');
+  if (!paginated.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = paginated.map(u => `
+    <tr class="table-row" onclick="openUserDetail(${u.telegram_id})">
+      <td class="px-5 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+            ${(u.full_name || u.username || 'U').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p class="font-medium text-gray-800">${u.full_name || u.username || 'Foydalanuvchi'}</p>
+            <p class="text-xs text-gray-400">@${u.username || 'no_username'}</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-5 py-4 text-gray-600">${u.phone || '-'}</td>
+      <td class="px-5 py-4"><span class="badge badge-blue">${u.current_lesson || 0}-dars</span></td>
+      <td class="px-5 py-4">
+        ${u.is_paid ? '<span class="badge badge-green">Premium</span>' : '<span class="badge badge-gray">Free</span>'}
+      </td>
+      <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
+      <td class="px-5 py-4">
+        <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm">👁</button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const pagination = document.getElementById('usersPagination');
+  if (totalPages <= 1) {
+    pagination.innerHTML = '';
+    return;
+  }
+
+  let paginationHTML = '';
+  for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+    paginationHTML += `<button onclick="currentPage=${i}; applyUserFilters()" class="btn ${i === currentPage ? 'btn-primary' : 'btn-secondary'} btn-sm">${i}</button>`;
+  }
+  pagination.innerHTML = paginationHTML;
+}
+
+function resetUserFilters() {
+  document.getElementById('userSearch').value = '';
+  document.getElementById('userStatusFilter').value = 'all';
+  if (document.getElementById('filterLessonFrom')) document.getElementById('filterLessonFrom').value = '';
+  if (document.getElementById('filterLessonTo')) document.getElementById('filterLessonTo').value = '';
+  if (document.getElementById('filterRegDate')) document.getElementById('filterRegDate').value = 'all';
+  if (document.getElementById('filterPhone')) document.getElementById('filterPhone').value = 'all';
+  if (document.getElementById('filterFunnelStep')) document.getElementById('filterFunnelStep').value = 'all';
+  if (document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
+  if (document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
+  currentPage = 1;
+  applyUserFilters();
+}
+
+function exportUsers() {
+  // Export filtered users to CSV
+  const search = document.getElementById('userSearch').value.toLowerCase();
+  let filtered = allUsers;
+  if (search) {
+    filtered = allUsers.filter(u =>
+      (u.full_name || '').toLowerCase().includes(search) ||
+      (u.phone || '').includes(search)
+    );
+  }
+
+  const csv = [
+    ['ID', 'Ism', 'Username', 'Telefon', 'Dars', 'Status', 'Sana'].join(','),
+    ...filtered.map(u => [
+      u.telegram_id,
+      `"${u.full_name || ''}"`,
+      `"${u.username || ''}"`,
+      u.phone || '',
+      u.current_lesson || 0,
+      u.is_paid ? 'Premium' : 'Free',
+      u.created_at?.split('T')[0] || ''
+    ].join(','))
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'users_' + new Date().toISOString().split('T')[0] + '.csv';
+  link.click();
+}
+
+// ========== BROADCAST ENHANCEMENTS ==========
+function insertVariable(variable) {
+  const textarea = document.getElementById('broadcastText');
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  textarea.value = text.substring(0, start) + variable + text.substring(end);
+  textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+  textarea.focus();
+  updatePreview();
+}
+
+function updatePreview() {
+  const text = document.getElementById('broadcastText').value || '';
+  const btnText = document.getElementById('broadcastBtnText').value;
+  const btnUrl = document.getElementById('broadcastBtnUrl').value;
+
+  // Update char count
+  document.getElementById('charCount').textContent = text.length;
+
+  // Preview with sample data
+  let preview = text
+    .replace(/\{\{ism\}\}/gi, 'Ali')
+    .replace(/\{\{fio\}\}/gi, 'Ali Valiyev')
+    .replace(/\{\{telefon\}\}/gi, '+998901234567')
+    .replace(/\{\{dars\}\}/gi, '3')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/&lt;b&gt;/g, '<b>')
+    .replace(/&lt;\/b&gt;/g, '</b>')
+    .replace(/&lt;i&gt;/g, '<i>')
+    .replace(/&lt;\/i&gt;/g, '</i>')
+    .replace(/\n/g, '<br>');
+
+  document.getElementById('broadcastPreview').innerHTML = preview || '<p class="text-gray-300 italic">Xabar matni bu yerda ko\'rinadi...</p>';
+
+  // Preview button
+  const previewBtn = document.getElementById('previewButton');
+  if (btnText && btnUrl) {
+    document.getElementById('previewBtnText').textContent = btnText;
+    previewBtn.classList.remove('hidden');
+  } else {
+    previewBtn.classList.add('hidden');
+  }
+}
+
+function updateRecipientCount() {
+  const target = document.getElementById('broadcastTarget').value;
+  let count = 0;
+
+  // Show/hide lesson range div
+  const lessonDiv = document.getElementById('lessonRangeDiv');
+  if (lessonDiv) {
+    lessonDiv.classList.toggle('hidden', target !== 'lesson');
+  }
+
+  if (target === 'all') {
+    count = allUsers.length;
+  } else if (target === 'paid') {
+    count = allUsers.filter(u => u.is_paid).length;
+  } else if (target === 'free') {
+    count = allUsers.filter(u => !u.is_paid).length;
+  } else if (target === 'active') {
+    count = allUsers.filter(u => u.current_lesson > 0 && !u.is_paid).length;
+  } else if (target === 'lesson') {
+    const from = parseInt(document.getElementById('broadcastLessonFrom')?.value) || 0;
+    const to = parseInt(document.getElementById('broadcastLessonTo')?.value) || 999;
+    count = allUsers.filter(u => u.current_lesson >= from && u.current_lesson <= to).length;
+  } else if (target === 'specific') {
+    count = selectedBroadcastUsers.length;
+  }
+
+  document.getElementById('recipientCount').textContent = count;
+}
+
+async function previewBroadcast() {
+  // Send test message to admin
+  const text = document.getElementById('broadcastText').value;
+  if (!text) {
+    alert('Xabar matnini kiriting');
+    return;
+  }
+
+  try {
+    await fetch('/api/broadcast/test', {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: text,
+        type: document.getElementById('broadcastType').value,
+        media_id: document.getElementById('broadcastMediaId').value,
+        button: {
+          text: document.getElementById('broadcastBtnText').value,
+          url: document.getElementById('broadcastBtnUrl').value
+        }
+      })
+    });
+    alert('✅ Test xabar yuborildi (o\'zingizga)');
+  } catch (e) {
+    alert('Xatolik: ' + e.message);
+  }
 }
 
 // ========== TAB NAVIGATION ==========
@@ -1627,68 +2124,21 @@ async function loadProgrevSettings() {
 
 // ========== RENDER FUNCTIONS ==========
 function renderUsers() {
-  const filter = document.getElementById('userStatusFilter').value;
-  let filtered = allUsers;
-
-  if (filter === 'active') filtered = allUsers.filter(u => !u.is_paid && u.current_lesson > 0);
-  else if (filter === 'paid') filtered = allUsers.filter(u => u.is_paid);
-  else if (filter === 'completed') filtered = allUsers.filter(u => u.lessons_completed);
-
-  const start = (currentPage - 1) * perPage;
-  const paginated = filtered.slice(start, start + perPage);
-
-  const tbody = document.getElementById('usersTableBody');
-  if (!paginated.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = paginated.map(u => `
-    <tr class="table-row" onclick="openUserDetail(${u.telegram_id})">
-      <td class="px-5 py-4">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
-            ${(u.full_name || u.username || 'U').charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <p class="font-medium text-gray-800">${u.full_name || u.username || 'Foydalanuvchi'}</p>
-            <p class="text-xs text-gray-400">@${u.username || 'no_username'}</p>
-          </div>
-        </div>
-      </td>
-      <td class="px-5 py-4 text-gray-600">${u.phone || '-'}</td>
-      <td class="px-5 py-4"><span class="badge badge-blue">${u.current_lesson || 0}-dars</span></td>
-      <td class="px-5 py-4">
-        ${u.is_paid ? '<span class="badge badge-green">Premium</span>' : '<span class="badge badge-gray">Free</span>'}
-      </td>
-      <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
-      <td class="px-5 py-4">
-        <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm">👁</button>
-      </td>
-    </tr>
-  `).join('');
-
-  // Pagination
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const pagination = document.getElementById('usersPagination');
-  if (totalPages <= 1) {
-    pagination.innerHTML = '';
-    return;
-  }
-
-  let paginationHtml = '';
-  for (let i = 1; i <= Math.min(totalPages, 10); i++) {
-    paginationHtml += `<button onclick="goToPage(${i})" class="w-10 h-10 rounded-lg ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'}">${i}</button>`;
-  }
-  pagination.innerHTML = paginationHtml;
+  // Use new advanced filter system
+  applyUserFilters();
 }
 
 function goToPage(page) {
   currentPage = page;
-  renderUsers();
+  applyUserFilters();
 }
 
 function searchUsers() {
+  // Deprecated - use applyUserFilters instead
+  applyUserFilters();
+}
+
+function searchUsersOld() {
   const query = document.getElementById('userSearch').value.toLowerCase();
   if (!query) { renderUsers(); return; }
 
@@ -2685,14 +3135,22 @@ function openBroadcastModal() {
   document.getElementById('broadcastMediaId').value = '';
   document.getElementById('broadcastBtnText').value = '';
   document.getElementById('broadcastBtnUrl').value = '';
+  document.getElementById('broadcastProgress')?.classList.add('hidden');
+  document.getElementById('charCount').textContent = '0';
   toggleUserSelect();
   toggleBroadcastMedia();
+  updateRecipientCount();
+  updatePreview();
   openModal('broadcastModal');
 }
 
 function toggleUserSelect() {
   const target = document.getElementById('broadcastTarget').value;
   document.getElementById('userSelectDiv').classList.toggle('hidden', target !== 'specific');
+  const lessonDiv = document.getElementById('lessonRangeDiv');
+  if (lessonDiv) {
+    lessonDiv.classList.toggle('hidden', target !== 'lesson');
+  }
 }
 
 function toggleBroadcastMedia() {
@@ -2763,7 +3221,7 @@ async function sendBroadcast() {
     return;
   }
 
-  if (type !== 'text' && !mediaId.trim()) {
+  if (type !== 'text' && type !== 'video_note' && !mediaId.trim()) {
     alert('Media File ID kiriting');
     return;
   }
@@ -2773,6 +3231,29 @@ async function sendBroadcast() {
     return;
   }
 
+  // Get recipient count
+  const recipientCount = parseInt(document.getElementById('recipientCount').textContent) || 0;
+  if (recipientCount === 0) {
+    alert('Yuborish uchun foydalanuvchi yo\'q');
+    return;
+  }
+
+  // Confirm before sending
+  if (!confirm(`${recipientCount} ta foydalanuvchiga xabar yuboriladi. Davom etasizmi?`)) {
+    return;
+  }
+
+  // Show progress
+  const progressDiv = document.getElementById('broadcastProgress');
+  const progressBar = document.getElementById('broadcastProgressBar');
+  const sentSpan = document.getElementById('broadcastSent');
+  const totalSpan = document.getElementById('broadcastTotal');
+
+  progressDiv.classList.remove('hidden');
+  totalSpan.textContent = recipientCount;
+  sentSpan.textContent = '0';
+  progressBar.style.width = '0%';
+
   try {
     const body = {
       target,
@@ -2780,7 +3261,9 @@ async function sendBroadcast() {
       text,
       media_id: mediaId || null,
       button: btnText && btnUrl ? { text: btnText, url: btnUrl } : null,
-      user_ids: target === 'specific' ? Array.from(selectedBroadcastUsers) : null
+      user_ids: target === 'specific' ? Array.from(selectedBroadcastUsers) : null,
+      lesson_from: target === 'lesson' ? parseInt(document.getElementById('broadcastLessonFrom')?.value) || 0 : null,
+      lesson_to: target === 'lesson' ? parseInt(document.getElementById('broadcastLessonTo')?.value) || 999 : null
     };
 
     const res = await fetch('/api/broadcast/advanced', {
@@ -2791,13 +3274,30 @@ async function sendBroadcast() {
 
     const result = await res.json();
 
+    // Complete progress
+    progressBar.style.width = '100%';
+    sentSpan.textContent = result.sent || 0;
+
     if (res.ok) {
-      alert(`✅ Xabar yuborildi! ${result.sent || 0} ta muvaffaqiyatli, ${result.failed || 0} ta xato`);
-      closeModal('broadcastModal');
+      setTimeout(() => {
+        progressDiv.classList.add('hidden');
+        alert(`✅ Xabar yuborildi!\n\n📤 ${result.sent || 0} ta muvaffaqiyatli\n❌ ${result.failed || 0} ta xato`);
+        closeModal('broadcastModal');
+
+        // Reset form
+        document.getElementById('broadcastText').value = '';
+        document.getElementById('broadcastMediaId').value = '';
+        document.getElementById('broadcastBtnText').value = '';
+        document.getElementById('broadcastBtnUrl').value = '';
+        selectedBroadcastUsers.clear();
+        updateRecipientCount();
+      }, 500);
     } else {
+      progressDiv.classList.add('hidden');
       alert('Xatolik: ' + (result.error || 'Noma\'lum xato'));
     }
   } catch(e) {
+    progressDiv.classList.add('hidden');
     alert('Xatolik: ' + e.message);
   }
 }

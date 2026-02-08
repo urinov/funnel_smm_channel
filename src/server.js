@@ -1240,24 +1240,28 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 // ============ NEW: Enhanced Broadcast API ============
 app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
   try {
-    const { target, type, text, media_id, button, user_ids } = req.body;
+    const { target, type, text, media_id, button, user_ids, lesson_from, lesson_to } = req.body;
     const { getAllActiveUsers } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     let users = [];
+    const allUsers = await getAllActiveUsers();
 
     if (target === 'specific' && user_ids && user_ids.length > 0) {
       // Send to specific users
-      const allUsers = await getAllActiveUsers();
       users = allUsers.filter(u => user_ids.includes(u.telegram_id));
     } else if (target === 'paid') {
-      const allUsers = await getAllActiveUsers();
       users = allUsers.filter(u => u.is_paid);
     } else if (target === 'free') {
-      const allUsers = await getAllActiveUsers();
       users = allUsers.filter(u => !u.is_paid);
+    } else if (target === 'active') {
+      users = allUsers.filter(u => u.current_lesson > 0 && !u.is_paid);
+    } else if (target === 'lesson') {
+      const from = lesson_from || 0;
+      const to = lesson_to || 999;
+      users = allUsers.filter(u => u.current_lesson >= from && u.current_lesson <= to);
     } else {
-      users = await getAllActiveUsers();
+      users = allUsers;
     }
 
     let sent = 0;
@@ -1304,6 +1308,43 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
     }
 
     res.json({ success: true, sent, failed, total: users.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Test broadcast (send to admin)
+app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
+  try {
+    const { type, text, media_id, button } = req.body;
+    const { Markup } = await import('telegraf');
+
+    const adminId = process.env.ADMIN_IDS.split(',')[0].trim();
+
+    const personalizedText = (text || '')
+      .replace(/\{\{fio\}\}/gi, 'Test Foydalanuvchi')
+      .replace(/\{\{ism\}\}/gi, 'Test')
+      .replace(/\{\{telefon\}\}/gi, '+998901234567')
+      .replace(/\{\{dars\}\}/gi, '3');
+
+    let keyboard = null;
+    if (button && button.text && button.url) {
+      keyboard = Markup.inlineKeyboard([[Markup.button.url(button.text, button.url)]]);
+    }
+
+    const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
+
+    if (type === 'video' && media_id) {
+      await bot.telegram.sendVideo(adminId, media_id, { caption: personalizedText, ...opts });
+    } else if (type === 'photo' && media_id) {
+      await bot.telegram.sendPhoto(adminId, media_id, { caption: personalizedText, ...opts });
+    } else if (type === 'voice' && media_id) {
+      await bot.telegram.sendVoice(adminId, media_id, { caption: personalizedText, ...opts });
+    } else {
+      await bot.telegram.sendMessage(adminId, personalizedText, opts);
+    }
+
+    res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
