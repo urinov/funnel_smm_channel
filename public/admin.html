@@ -966,12 +966,12 @@ Biz doimo yaxshilanib boramiz. Shunday bo'lsa ham, to'liq kursda bunday muammola
           <h3 class="font-semibold text-gray-800 mb-4">💳 To'lov tizimlari</h3>
           <div class="space-y-4">
             <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-              <input type="checkbox" id="settingPayme" class="w-5 h-5 accent-blue-600" checked>
+              <input type="checkbox" id="settingPayme" class="w-5 h-5 accent-blue-600">
               <span class="text-lg">💳</span>
               <span class="font-medium">Payme</span>
             </label>
             <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-              <input type="checkbox" id="settingClick" class="w-5 h-5 accent-green-600" checked>
+              <input type="checkbox" id="settingClick" class="w-5 h-5 accent-green-600">
               <span class="text-lg">💠</span>
               <span class="font-medium">Click</span>
             </label>
@@ -1398,11 +1398,35 @@ function showTab(tab) {
   // Load tab-specific data
   if (tab === 'progrev') loadProgrevSettings();
   if (tab === 'custdev') loadFeedback();
+  if (tab === 'settings') loadSettingsForm();
+}
+
+async function loadSettingsForm() {
+  try {
+    const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
+
+    // Channel settings
+    document.getElementById('settingPremiumChannel').value = data.premium_channel_id || '';
+    document.getElementById('settingFreeChannel').value = data.free_channel_id || '';
+    document.getElementById('settingFreeChannelLink').value = data.free_channel_link || '';
+    document.getElementById('settingRequireSub').value = data.require_subscription_before_lesson || 0;
+
+    // Payment settings - FIXED: load saved values
+    document.getElementById('settingPayme').checked = data.payme_enabled !== false;
+    document.getElementById('settingClick').checked = data.click_enabled !== false;
+
+    // Price settings
+    if (data.price_1m) document.getElementById('settingPrice1m').value = Math.round(data.price_1m / 100);
+    if (data.price_3m) document.getElementById('settingPrice3m').value = Math.round(data.price_3m / 100);
+    if (data.price_6m) document.getElementById('settingPrice6m').value = Math.round(data.price_6m / 100);
+    if (data.price_12m) document.getElementById('settingPrice12m').value = Math.round(data.price_12m / 100);
+
+  } catch(e) { console.error('loadSettingsForm error:', e); }
 }
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadSettingsForm()]);
   renderCharts();
 }
 
@@ -1476,10 +1500,20 @@ async function loadCustdevAnswers() {
 
 async function loadFeedback() {
   try {
-    const data = await (await fetch('/api/feedback', { headers: { Authorization: auth } })).json();
-    allFeedback = data || [];
+    const response = await fetch('/api/feedback', { headers: { Authorization: auth } });
+    if (!response.ok) {
+      throw new Error('API error: ' + response.status);
+    }
+    const data = await response.json();
+    allFeedback = Array.isArray(data) ? data : [];
     renderFeedback();
-  } catch(e) { console.error('loadFeedback error:', e); }
+  } catch(e) {
+    console.error('loadFeedback error:', e);
+    const container = document.getElementById('feedbackList');
+    if (container) {
+      container.innerHTML = '<div class="p-8 text-center text-red-500">Xatolik: ' + e.message + '</div>';
+    }
+  }
 }
 
 function renderFeedback() {
@@ -1501,7 +1535,7 @@ function renderFeedback() {
   document.getElementById('feedbackTotalCount').textContent = allFeedback.length;
 
   if (!filteredFeedback.length) {
-    container.innerHTML = '<div class="p-8 text-center text-gray-400">Feedback yo\'q</div>';
+    container.innerHTML = '<div class="p-8 text-center text-gray-400">Feedback yo\'q<br><span class="text-xs">Bu yerda 4-darsdan keyin "Yoqdi/Yoqmadi" bosgan foydalanuvchilar ko\'rinadi</span></div>';
     return;
   }
 
