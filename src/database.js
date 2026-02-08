@@ -927,7 +927,10 @@ export async function getFullStats() {
     SELECT
       COUNT(*) as total_payments,
       COALESCE(SUM(amount), 0) as total_revenue,
-      COALESCE(SUM(amount) FILTER (WHERE created_at > NOW() - INTERVAL '30 days'), 0) as monthly_revenue
+      COALESCE(SUM(amount) FILTER (WHERE
+        EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE) AND
+        EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+      ), 0) as monthly_revenue
     FROM payments WHERE state = 'performed'
   `);
 
