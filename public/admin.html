@@ -194,6 +194,118 @@
       border-color: rgba(139, 92, 246, 0.3) !important;
     }
     
+    /* ========== DARK MODE ========== */
+    :root {
+      --bg-primary: #f8f9fc;
+      --bg-secondary: rgba(255, 255, 255, 0.65);
+      --bg-card: rgba(255, 255, 255, 0.75);
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --border-color: rgba(255, 255, 255, 0.8);
+      --shadow-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .dark {
+      --bg-primary: #0f172a;
+      --bg-secondary: rgba(30, 41, 59, 0.85);
+      --bg-card: rgba(30, 41, 59, 0.9);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(51, 65, 85, 0.8);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .dark body {
+      background: linear-gradient(150deg, #0f172a 0%, #1e293b 40%, #0f172a 100%);
+    }
+
+    .dark .glass {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+    }
+
+    .dark .glass-card {
+      background: var(--bg-card);
+      border-color: var(--border-color);
+    }
+
+    .dark .glass-modal {
+      background: rgba(30, 41, 59, 0.98);
+      border-color: var(--border-color);
+    }
+
+    .dark .glass-input {
+      background: rgba(51, 65, 85, 0.7);
+      border-color: rgba(71, 85, 105, 0.5);
+      color: var(--text-primary);
+    }
+
+    .dark .glass-input:focus {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: #8b5cf6;
+    }
+
+    .dark .text-gray-800, .dark .text-gray-700 { color: var(--text-primary); }
+    .dark .text-gray-600, .dark .text-gray-500 { color: var(--text-secondary); }
+    .dark .text-gray-400 { color: var(--text-muted); }
+    .dark .bg-gray-100 { background: rgba(51, 65, 85, 0.5); }
+    .dark .bg-white\/30 { background: rgba(51, 65, 85, 0.3); }
+    .dark .border-white\/30 { border-color: rgba(71, 85, 105, 0.3); }
+    .dark .border-gray-100, .dark .border-gray-200 { border-color: rgba(71, 85, 105, 0.3); }
+    .dark .divide-white\/20 > * + * { border-color: rgba(71, 85, 105, 0.2); }
+
+    .dark .sidebar-item:hover { background: rgba(139, 92, 246, 0.15); }
+    .dark .sidebar-item.active { background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%); }
+
+    .dark .modal-overlay { background: rgba(0, 0, 0, 0.5); }
+
+    .dark .bottom-nav {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: rgba(71, 85, 105, 0.3);
+    }
+
+    .dark .floating-orb { opacity: 0.1; }
+
+    /* Dark mode toggle switch */
+    .dark-toggle {
+      width: 48px;
+      height: 26px;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-radius: 13px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .dark-toggle::after {
+      content: '☀️';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .dark .dark-toggle {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    }
+
+    .dark .dark-toggle::after {
+      content: '🌙';
+      left: 25px;
+      background: #1e1b4b;
+    }
+
     /* ========== FLOATING DECORATIONS ========== */
     .floating-orb {
       position: fixed;
@@ -987,379 +1099,6 @@
   </div>
 </div>
 
-<!-- Funnel Detail Modal -->
-<div id="funnelDetailModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-  <div class="glass-modal rounded-3xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
-    <div class="p-6 border-b border-white/30 flex justify-between items-center sticky top-0 glass-modal rounded-t-3xl z-10">
-      <div>
-        <h2 class="font-bold text-xl text-gray-800" id="funnelDetailTitle">🎯 Varonka</h2>
-        <p class="text-sm text-gray-500" id="funnelDetailSlug">t.me/bot?start=slug</p>
-      </div>
-      <button onclick="closeModal('funnelDetailModal')" class="w-10 h-10 rounded-full glass-card flex items-center justify-center">✕</button>
-    </div>
-    <div class="p-6">
-      <!-- Tabs -->
-      <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <button onclick="showFunnelTab('stats')" id="funnel-tab-stats" class="px-4 py-2 rounded-xl bg-violet-500 text-white font-medium whitespace-nowrap">📊 Statistika</button>
-        <button onclick="showFunnelTab('users')" id="funnel-tab-users" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">👥 Userlar</button>
-        <button onclick="showFunnelTab('payments')" id="funnel-tab-payments" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">💰 To'lovlar</button>
-        <button onclick="showFunnelTab('lessons')" id="funnel-tab-lessons" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📚 Darslar</button>
-        <button onclick="showFunnelTab('custdev')" id="funnel-tab-custdev" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📝 CustDev</button>
-        <button onclick="showFunnelTab('pitch')" id="funnel-tab-pitch" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">🎬 Pitch</button>
-        <button onclick="showFunnelTab('settings')" id="funnel-tab-settings" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">⚙️ Sozlamalar</button>
-      </div>
-      
-      <!-- Lessons Tab -->
-      <div id="funnel-content-lessons">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">📚 Darslar</h3>
-          <button onclick="addFunnelLesson()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">+ Dars qo'shish</button>
-        </div>
-        <div id="funnelLessonsList" class="space-y-2">
-          <p class="text-gray-400 text-center py-4">Darslar yuklanmoqda...</p>
-        </div>
-      </div>
-      
-      <!-- CustDev Tab -->
-      <div id="funnel-content-custdev" class="hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">📝 CustDev savollari</h3>
-          <button onclick="addFunnelCustDev()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">+ Savol qo'shish</button>
-        </div>
-        <div id="funnelCustDevList" class="space-y-2">
-          <p class="text-gray-400 text-center py-4">Savollar yuklanmoqda...</p>
-        </div>
-      </div>
-      
-      <!-- Pitch Tab -->
-      <div id="funnel-content-pitch" class="hidden">
-        <h3 class="font-bold text-lg mb-4">🎬 Pitch sozlamalari</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="text-sm font-medium text-gray-600 mb-2 block">Qaysi darsdan keyin pitch yuborilsin?</label>
-            <input type="number" id="funnelPitchAfterLesson" class="w-full px-4 py-3 rounded-xl glass-input" value="4" min="1">
-          </div>
-          <div>
-            <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch matni</label>
-            <textarea id="funnelPitchText" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="Maxsus taklif!"></textarea>
-          </div>
-          <div>
-            <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch video (file_id)</label>
-            <input type="text" id="funnelPitchVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-sm" placeholder="Video file_id">
-          </div>
-          <!-- Pitch Delay - Flexible Time Control -->
-          <div class="glass rounded-2xl p-4">
-            <label class="text-sm font-medium text-gray-600 mb-3 block">⏱️ Pitch qachon yuborilsin?</label>
-
-            <!-- Quick select buttons -->
-            <div class="flex flex-wrap gap-2 mb-4">
-              <button type="button" onclick="setPitchDelay(0)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="0">
-                ⚡ Darhol
-              </button>
-              <button type="button" onclick="setPitchDelay(0.5)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="0.5">
-                30 sek
-              </button>
-              <button type="button" onclick="setPitchDelay(1)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="1">
-                1 min
-              </button>
-              <button type="button" onclick="setPitchDelay(5)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="5">
-                5 min
-              </button>
-              <button type="button" onclick="setPitchDelay(30)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="30">
-                30 min
-              </button>
-              <button type="button" onclick="setPitchDelay(60)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="60">
-                1 soat
-              </button>
-              <button type="button" onclick="setPitchDelay(120)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="120">
-                2 soat
-              </button>
-              <button type="button" onclick="setPitchDelay('custom')" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="custom">
-                ⚙️ Boshqa
-              </button>
-            </div>
-
-            <!-- Custom time input -->
-            <div id="pitchDelayCustom" class="hidden">
-              <div class="flex gap-3 items-center">
-                <input type="number" id="funnelPitchDelayValue" class="w-24 px-4 py-3 rounded-xl glass-input text-center" value="1" min="0" oninput="updatePitchDelayFromCustom()">
-                <select id="funnelPitchDelayUnit" class="flex-1 px-4 py-3 rounded-xl glass-input" onchange="updatePitchDelayFromCustom()">
-                  <option value="seconds">Sekund</option>
-                  <option value="minutes" selected>Minut</option>
-                  <option value="hours">Soat</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Hidden field for storing minutes -->
-            <input type="hidden" id="funnelPitchDelay" value="120">
-
-            <!-- Current value display -->
-            <div class="mt-3 p-3 rounded-xl bg-violet-50 flex items-center gap-2">
-              <span class="text-violet-600">⏱️</span>
-              <span class="text-sm text-gray-600">Tanlangan vaqt:</span>
-              <span id="pitchDelayDisplay" class="font-bold text-violet-700">2 soat</span>
-            </div>
-          </div>
-
-          <button onclick="saveFunnelPitch()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Pitch saqlash</button>
-        </div>
-      </div>
-      
-      <!-- Settings Tab -->
-      <div id="funnel-content-settings" class="hidden">
-        <h3 class="font-bold text-lg mb-4">⚙️ Varonka sozlamalari</h3>
-        <div class="space-y-4">
-          <!-- Kanal sozlamalari -->
-          <div class="glass rounded-2xl p-4">
-            <h4 class="font-medium mb-3">📢 Kanal sozlamalari</h4>
-            <div class="space-y-3">
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">Premium kanal ID</label>
-                <input type="text" id="funnelPremiumChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
-              </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">Bepul kanal ID (majburiy obuna)</label>
-                <input type="text" id="funnelFreeChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
-              </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">Bepul kanal linki</label>
-                <input type="text" id="funnelFreeChannelLink" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="https://t.me/channel">
-              </div>
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">Obuna nechanchi darsdan oldin talab qilinsin?</label>
-                <input type="number" id="funnelRequireSubBefore" class="w-full px-4 py-3 rounded-xl glass-input" value="0" min="0">
-                <p class="text-xs text-gray-400 mt-1">0 = talab qilinmaydi</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- To'lov tizimlari -->
-          <div class="glass rounded-2xl p-4">
-            <h4 class="font-medium mb-3">💳 To'lov tizimlari</h4>
-            <div class="space-y-3">
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="funnelPaymeEnabled" class="w-5 h-5 accent-blue-500">
-                <label for="funnelPaymeEnabled" class="font-medium cursor-pointer">💳 Payme</label>
-              </div>
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="funnelClickEnabled" class="w-5 h-5 accent-green-500">
-                <label for="funnelClickEnabled" class="font-medium cursor-pointer">💠 Click</label>
-              </div>
-              <p class="text-xs text-gray-400">Tanlangan to'lov tizimlari tugmalari foydalanuvchiga ko'rsatiladi</p>
-            </div>
-          </div>
-          
-          <!-- Narxlar -->
-          <div class="glass rounded-2xl p-4">
-            <h4 class="font-medium mb-3">💰 Narxlar (so'm)</h4>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="text-xs text-gray-500">1 oylik</label>
-                <input type="number" id="funnelPrice1m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="97000">
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">3 oylik</label>
-                <input type="number" id="funnelPrice3m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="247000">
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">6 oylik</label>
-                <input type="number" id="funnelPrice6m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="447000">
-              </div>
-              <div>
-                <label class="text-xs text-gray-500">12 oylik</label>
-                <input type="number" id="funnelPrice12m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="797000">
-              </div>
-            </div>
-            <p class="text-xs text-gray-400 mt-2">Bo'sh qoldirilsa, umumiy narxlar ishlatiladi</p>
-          </div>
-
-          <!-- Progrev Flow vaqtlari -->
-          <div class="glass rounded-2xl p-4">
-            <h4 class="font-medium mb-3">⏱️ Progrev Flow vaqtlari</h4>
-            <div class="space-y-4">
-              <!-- Sales delay -->
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">💰 To'lov xabari (pitch dan keyin)</label>
-                <div class="flex flex-wrap gap-2 mb-2">
-                  <button type="button" onclick="setFunnelSalesDelay(0)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="0">⚡ Darhol</button>
-                  <button type="button" onclick="setFunnelSalesDelay(30)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="30">30 daq</button>
-                  <button type="button" onclick="setFunnelSalesDelay(60)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="60">1 soat</button>
-                  <button type="button" onclick="setFunnelSalesDelay(180)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="180">3 soat</button>
-                  <button type="button" onclick="setFunnelSalesDelay(-1)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="-1">⚙️ Boshqa</button>
-                </div>
-                <div id="funnelSalesDelayCustomDiv" class="hidden flex gap-2 items-center">
-                  <input type="number" id="funnelSalesDelayValue" class="w-20 px-3 py-2 rounded-xl glass-input" value="1" min="0" onchange="updateFunnelSalesDelayFromCustom()">
-                  <select id="funnelSalesDelayUnit" class="px-3 py-2 rounded-xl glass-input" onchange="updateFunnelSalesDelayFromCustom()">
-                    <option value="1">daqiqa</option>
-                    <option value="60" selected>soat</option>
-                    <option value="1440">kun</option>
-                  </select>
-                </div>
-                <input type="hidden" id="funnelSalesDelayMinutes" value="60">
-              </div>
-
-              <!-- Soft attack delay -->
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">🔔 Eslatma (to'lamagan bo'lsa)</label>
-                <div class="flex flex-wrap gap-2 mb-2">
-                  <button type="button" onclick="setFunnelSoftDelay(-1, true)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="disabled">❌ O'chirish</button>
-                  <button type="button" onclick="setFunnelSoftDelay(720)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="720">12 soat</button>
-                  <button type="button" onclick="setFunnelSoftDelay(1440)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="1440">1 kun</button>
-                  <button type="button" onclick="setFunnelSoftDelay(4320)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="4320">3 kun</button>
-                  <button type="button" onclick="setFunnelSoftDelay(-2)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="-2">⚙️ Boshqa</button>
-                </div>
-                <div id="funnelSoftDelayCustomDiv" class="hidden flex gap-2 items-center">
-                  <input type="number" id="funnelSoftDelayValue" class="w-20 px-3 py-2 rounded-xl glass-input" value="24" min="0" onchange="updateFunnelSoftDelayFromCustom()">
-                  <select id="funnelSoftDelayUnit" class="px-3 py-2 rounded-xl glass-input" onchange="updateFunnelSoftDelayFromCustom()">
-                    <option value="60" selected>soat</option>
-                    <option value="1440">kun</option>
-                  </select>
-                </div>
-                <input type="hidden" id="funnelSoftDelayMinutes" value="1440">
-                <input type="hidden" id="funnelSoftDisabled" value="false">
-              </div>
-
-              <!-- Soft attack text -->
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">📝 Eslatma matni</label>
-                <textarea id="funnelSoftAttackText" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🤔 Hali qaror qilmadingizmi?"></textarea>
-              </div>
-
-              <!-- Congrats text -->
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-2 block">🎉 Tabriknoma matni (darslar tugaganda)</label>
-                <textarea id="funnelCongratsText" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <button onclick="saveFunnelSettings()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Sozlamalarni saqlash</button>
-        </div>
-      </div>
-      
-      <!-- Stats Tab -->
-      <div id="funnel-content-stats">
-        <h3 class="font-bold text-lg mb-4">📊 Varonka statistikasi</h3>
-        <!-- Main stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="glass rounded-2xl p-4 text-center">
-            <p class="text-2xl font-bold text-violet-600" id="funnelStatTotal">0</p>
-            <p class="text-xs text-gray-500">Jami userlar</p>
-          </div>
-          <div class="glass rounded-2xl p-4 text-center">
-            <p class="text-2xl font-bold text-blue-600" id="funnelStatActive">0</p>
-            <p class="text-xs text-gray-500">Aktiv</p>
-          </div>
-          <div class="glass rounded-2xl p-4 text-center">
-            <p class="text-2xl font-bold text-green-600" id="funnelStatPaid">0</p>
-            <p class="text-xs text-gray-500">To'lagan</p>
-          </div>
-          <div class="glass rounded-2xl p-4 text-center">
-            <p class="text-2xl font-bold text-orange-600" id="funnelStatConversion">0%</p>
-            <p class="text-xs text-gray-500">Konversiya</p>
-          </div>
-        </div>
-
-        <!-- Revenue stats -->
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <div class="glass rounded-2xl p-4 text-center bg-gradient-to-br from-green-400/20 to-emerald-500/20">
-            <p class="text-2xl font-bold text-green-600" id="funnelStatRevenue">0</p>
-            <p class="text-xs text-gray-500">Jami daromad (so'm)</p>
-          </div>
-          <div class="glass rounded-2xl p-4 text-center">
-            <p class="text-2xl font-bold text-blue-600" id="funnelStatCustdevAnswered">0</p>
-            <p class="text-xs text-gray-500">CustDev javoblar</p>
-          </div>
-          <div class="glass rounded-2xl p-4 text-center">
-            <p class="text-2xl font-bold text-purple-600" id="funnelStatAvgLesson">0</p>
-            <p class="text-xs text-gray-500">O'rtacha dars</p>
-          </div>
-        </div>
-
-        <!-- Lesson progress -->
-        <div id="funnelLessonStats" class="glass rounded-2xl p-4 mb-4">
-          <h4 class="font-medium mb-3">📚 Darslar bo'yicha progress</h4>
-          <div id="funnelLessonBars" class="space-y-2">
-            <p class="text-gray-400 text-center text-sm">Yuklanmoqda...</p>
-          </div>
-        </div>
-
-        <!-- CustDev stats -->
-        <div id="funnelCustdevStats" class="glass rounded-2xl p-4">
-          <h4 class="font-medium mb-3">📝 CustDev javoblari</h4>
-          <div id="funnelCustdevBars" class="space-y-2">
-            <p class="text-gray-400 text-center text-sm">Yuklanmoqda...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Users Tab -->
-      <div id="funnel-content-users" class="hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">👥 Bu varonkadagi userlar</h3>
-          <div class="flex gap-2">
-            <select id="funnelUserFilter" class="px-3 py-2 rounded-xl glass-input text-sm" onchange="loadFunnelUsers()">
-              <option value="all">Barchasi</option>
-              <option value="active">Aktiv</option>
-              <option value="paid">To'lagan</option>
-              <option value="completed">Tugatgan</option>
-            </select>
-          </div>
-        </div>
-        <div class="glass rounded-2xl overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-white/30">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs">Ism</th>
-                  <th class="px-4 py-3 text-left text-xs">Telefon</th>
-                  <th class="px-4 py-3 text-left text-xs">Dars</th>
-                  <th class="px-4 py-3 text-left text-xs">Status</th>
-                  <th class="px-4 py-3 text-left text-xs">Sana</th>
-                </tr>
-              </thead>
-              <tbody id="funnelUsersTable" class="divide-y divide-white/20">
-                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="flex justify-center mt-4 gap-2" id="funnelUsersPagination"></div>
-      </div>
-
-      <!-- Payments Tab -->
-      <div id="funnel-content-payments" class="hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">💰 Bu varonkadan to'lovlar</h3>
-          <div class="text-right">
-            <p class="text-sm text-gray-500">Jami:</p>
-            <p class="text-xl font-bold text-green-600" id="funnelPaymentsTotal">0 so'm</p>
-          </div>
-        </div>
-        <div class="glass rounded-2xl overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-white/30">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs">Foydalanuvchi</th>
-                  <th class="px-4 py-3 text-left text-xs">Summa</th>
-                  <th class="px-4 py-3 text-left text-xs">Reja</th>
-                  <th class="px-4 py-3 text-left text-xs">Tizim</th>
-                  <th class="px-4 py-3 text-left text-xs">Sana</th>
-                </tr>
-              </thead>
-              <tbody id="funnelPaymentsTable" class="divide-y divide-white/20">
-                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Broadcast Modal -->
 <div id="broadcastModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
   <div class="glass-modal rounded-3xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
@@ -1800,6 +1539,11 @@
         </button>
       </nav>
 
+      <!-- Dark Mode Toggle -->
+      <div class="px-3 mb-4">
+        <div onclick="toggleDarkMode()" class="dark-toggle" title="Dark/Light rejim"></div>
+      </div>
+
       <button type="button" onclick="logout()" class="sidebar-item sidebar-logout" title="Chiqish">
         <span class="sidebar-icon">🚪</span>
         <span class="sidebar-label">Chiqish</span>
@@ -1852,6 +1596,10 @@
         <button type="button" class="mobile-nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-left cursor-pointer" data-tab="settings"><span>⚙️</span> Sozlamalar</button>
         <hr class="my-4 border-white/30">
         <button type="button" onclick="openBroadcastModal(); closeMobileMenu()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-btn-success text-white text-left cursor-pointer"><span>📨</span> Xabar yuborish</button>
+        <div class="flex items-center justify-between px-4 py-3 rounded-xl glass-card">
+          <span class="flex items-center gap-3"><span>🌙</span> Dark rejim</span>
+          <div onclick="toggleDarkMode()" class="dark-toggle"></div>
+        </div>
         <button type="button" onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl glass-card text-red-500 text-left cursor-pointer"><span>🚪</span> Chiqish</button>
       </nav>
     </div>
@@ -1984,6 +1732,387 @@
               <div class="text-3xl mb-2">3️⃣</div>
               <p class="font-medium">Link ulashing</p>
               <p class="text-sm text-gray-500 mt-1">t.me/bot?start=slug - har bir varonkaning o'z linki</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funnel Detail (Full Page View) -->
+      <div id="content-funnel-detail" class="hidden">
+        <!-- Header with back button -->
+        <div class="mb-6">
+          <button onclick="closeFunnelDetail()" class="flex items-center gap-2 text-gray-600 hover:text-violet-600 transition-colors mb-4">
+            <span class="text-xl">←</span>
+            <span class="font-medium">Varonkalarga qaytish</span>
+          </button>
+
+          <div class="glass-card rounded-3xl p-6 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-pink-500/10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-3xl shadow-lg">🎯</div>
+                <div>
+                  <h1 class="text-2xl md:text-3xl font-bold text-gray-800" id="funnelPageTitle">Varonka nomi</h1>
+                  <p class="text-gray-500 flex items-center gap-2 mt-1">
+                    <span id="funnelPageSlug">t.me/bot?start=slug</span>
+                    <button onclick="copyFunnelLink(currentFunnelData?.slug)" class="text-violet-600 hover:text-violet-800">📋</button>
+                  </p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="editFunnel(currentFunnelId)" class="px-4 py-2 rounded-xl glass-card hover:bg-white/50 transition-all">✏️ Tahrirlash</button>
+                <button onclick="showFunnelTab('settings')" class="px-4 py-2 rounded-xl glass-card hover:bg-white/50 transition-all">⚙️ Sozlamalar</button>
+              </div>
+            </div>
+
+            <!-- Quick stats row -->
+            <div class="grid grid-cols-4 gap-4 mt-6" id="funnelQuickStats">
+              <div class="glass rounded-xl p-3 text-center">
+                <p class="text-2xl font-bold text-violet-600" id="funnelPageUsers">0</p>
+                <p class="text-xs text-gray-500">Userlar</p>
+              </div>
+              <div class="glass rounded-xl p-3 text-center">
+                <p class="text-2xl font-bold text-green-600" id="funnelPagePaid">0</p>
+                <p class="text-xs text-gray-500">To'lagan</p>
+              </div>
+              <div class="glass rounded-xl p-3 text-center">
+                <p class="text-2xl font-bold text-blue-600" id="funnelPageRevenue">0</p>
+                <p class="text-xs text-gray-500">Daromad</p>
+              </div>
+              <div class="glass rounded-xl p-3 text-center">
+                <p class="text-2xl font-bold text-orange-600" id="funnelPageConversion">0%</p>
+                <p class="text-xs text-gray-500">Konversiya</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="glass-card rounded-3xl p-6">
+          <div class="flex gap-2 mb-6 overflow-x-auto pb-2 border-b border-gray-200">
+            <button onclick="showFunnelTab('stats')" id="funnel-tab-stats" class="px-5 py-3 rounded-xl bg-violet-500 text-white font-medium whitespace-nowrap transition-all">📊 Statistika</button>
+            <button onclick="showFunnelTab('users')" id="funnel-tab-users" class="px-5 py-3 rounded-xl glass hover:bg-white/50 font-medium whitespace-nowrap transition-all">👥 Userlar</button>
+            <button onclick="showFunnelTab('payments')" id="funnel-tab-payments" class="px-5 py-3 rounded-xl glass hover:bg-white/50 font-medium whitespace-nowrap transition-all">💰 To'lovlar</button>
+            <button onclick="showFunnelTab('lessons')" id="funnel-tab-lessons" class="px-5 py-3 rounded-xl glass hover:bg-white/50 font-medium whitespace-nowrap transition-all">📚 Darslar</button>
+            <button onclick="showFunnelTab('custdev')" id="funnel-tab-custdev" class="px-5 py-3 rounded-xl glass hover:bg-white/50 font-medium whitespace-nowrap transition-all">📝 CustDev</button>
+            <button onclick="showFunnelTab('pitch')" id="funnel-tab-pitch" class="px-5 py-3 rounded-xl glass hover:bg-white/50 font-medium whitespace-nowrap transition-all">🎬 Pitch</button>
+            <button onclick="showFunnelTab('settings')" id="funnel-tab-settings" class="px-5 py-3 rounded-xl glass hover:bg-white/50 font-medium whitespace-nowrap transition-all">⚙️ Sozlamalar</button>
+          </div>
+
+          <!-- Tab Contents -->
+          <div id="funnel-tabs-content">
+            <!-- Stats Tab -->
+            <div id="funnel-content-stats">
+              <h3 class="font-bold text-lg mb-4">📊 Varonka statistikasi</h3>
+              <!-- Main stats -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="glass rounded-2xl p-4 text-center">
+                  <p class="text-2xl font-bold text-violet-600" id="funnelStatTotal">0</p>
+                  <p class="text-xs text-gray-500">Jami userlar</p>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                  <p class="text-2xl font-bold text-blue-600" id="funnelStatActive">0</p>
+                  <p class="text-xs text-gray-500">Aktiv</p>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                  <p class="text-2xl font-bold text-green-600" id="funnelStatPaid">0</p>
+                  <p class="text-xs text-gray-500">To'lagan</p>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                  <p class="text-2xl font-bold text-orange-600" id="funnelStatConversion">0%</p>
+                  <p class="text-xs text-gray-500">Konversiya</p>
+                </div>
+              </div>
+
+              <!-- Revenue stats -->
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div class="glass rounded-2xl p-4 text-center bg-gradient-to-br from-green-400/20 to-emerald-500/20">
+                  <p class="text-2xl font-bold text-green-600" id="funnelStatRevenue">0</p>
+                  <p class="text-xs text-gray-500">Jami daromad (so'm)</p>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                  <p class="text-2xl font-bold text-blue-600" id="funnelStatCustdevAnswered">0</p>
+                  <p class="text-xs text-gray-500">CustDev javoblar</p>
+                </div>
+                <div class="glass rounded-2xl p-4 text-center">
+                  <p class="text-2xl font-bold text-purple-600" id="funnelStatAvgLesson">0</p>
+                  <p class="text-xs text-gray-500">O'rtacha dars</p>
+                </div>
+              </div>
+
+              <!-- Lesson progress -->
+              <div id="funnelLessonStats" class="glass rounded-2xl p-4 mb-4">
+                <h4 class="font-medium mb-3">📚 Darslar bo'yicha progress</h4>
+                <div id="funnelLessonBars" class="space-y-2">
+                  <p class="text-gray-400 text-center text-sm">Yuklanmoqda...</p>
+                </div>
+              </div>
+
+              <!-- CustDev stats -->
+              <div id="funnelCustdevStats" class="glass rounded-2xl p-4">
+                <h4 class="font-medium mb-3">📝 CustDev javoblari</h4>
+                <div id="funnelCustdevBars" class="space-y-2">
+                  <p class="text-gray-400 text-center text-sm">Yuklanmoqda...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="funnel-content-users" class="hidden">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">👥 Bu varonkadagi userlar</h3>
+                <div class="flex gap-2">
+                  <select id="funnelUserFilter" class="px-3 py-2 rounded-xl glass-input text-sm" onchange="loadFunnelUsers()">
+                    <option value="all">Barchasi</option>
+                    <option value="active">Aktiv</option>
+                    <option value="paid">To'lagan</option>
+                    <option value="completed">Tugatgan</option>
+                  </select>
+                </div>
+              </div>
+              <div class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-white/30">
+                      <tr>
+                        <th class="px-4 py-3 text-left text-xs">Ism</th>
+                        <th class="px-4 py-3 text-left text-xs">Telefon</th>
+                        <th class="px-4 py-3 text-left text-xs">Dars</th>
+                        <th class="px-4 py-3 text-left text-xs">Status</th>
+                        <th class="px-4 py-3 text-left text-xs">Sana</th>
+                      </tr>
+                    </thead>
+                    <tbody id="funnelUsersTable" class="divide-y divide-white/20">
+                      <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="flex justify-center mt-4 gap-2" id="funnelUsersPagination"></div>
+            </div>
+
+            <!-- Payments Tab -->
+            <div id="funnel-content-payments" class="hidden">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">💰 Bu varonkadan to'lovlar</h3>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500">Jami:</p>
+                  <p class="text-xl font-bold text-green-600" id="funnelPaymentsTotal">0 so'm</p>
+                </div>
+              </div>
+              <div class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-white/30">
+                      <tr>
+                        <th class="px-4 py-3 text-left text-xs">Foydalanuvchi</th>
+                        <th class="px-4 py-3 text-left text-xs">Summa</th>
+                        <th class="px-4 py-3 text-left text-xs">Reja</th>
+                        <th class="px-4 py-3 text-left text-xs">Tizim</th>
+                        <th class="px-4 py-3 text-left text-xs">Sana</th>
+                      </tr>
+                    </thead>
+                    <tbody id="funnelPaymentsTable" class="divide-y divide-white/20">
+                      <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lessons Tab -->
+            <div id="funnel-content-lessons" class="hidden">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">📚 Darslar</h3>
+                <button onclick="addFunnelLesson()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">+ Dars qo'shish</button>
+              </div>
+              <div id="funnelLessonsList" class="space-y-2">
+                <p class="text-gray-400 text-center py-4">Darslar yuklanmoqda...</p>
+              </div>
+            </div>
+
+            <!-- CustDev Tab -->
+            <div id="funnel-content-custdev" class="hidden">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">📝 CustDev savollari</h3>
+                <button onclick="addFunnelCustDev()" class="px-4 py-2 rounded-xl glass-btn text-white text-sm">+ Savol qo'shish</button>
+              </div>
+              <div id="funnelCustDevList" class="space-y-2">
+                <p class="text-gray-400 text-center py-4">Savollar yuklanmoqda...</p>
+              </div>
+            </div>
+
+            <!-- Pitch Tab -->
+            <div id="funnel-content-pitch" class="hidden">
+              <h3 class="font-bold text-lg mb-4">🎬 Pitch sozlamalari</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="text-sm font-medium text-gray-600 mb-2 block">Qaysi darsdan keyin pitch yuborilsin?</label>
+                  <input type="number" id="funnelPitchAfterLesson" class="w-full px-4 py-3 rounded-xl glass-input" value="4" min="1">
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch matni</label>
+                  <textarea id="funnelPitchText" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="Maxsus taklif!"></textarea>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-gray-600 mb-2 block">Pitch video (file_id)</label>
+                  <input type="text" id="funnelPitchVideo" class="w-full px-4 py-3 rounded-xl glass-input font-mono text-sm" placeholder="Video file_id">
+                </div>
+                <!-- Pitch Delay - Flexible Time Control -->
+                <div class="glass rounded-2xl p-4">
+                  <label class="text-sm font-medium text-gray-600 mb-3 block">⏱️ Pitch qachon yuborilsin?</label>
+
+                  <!-- Quick select buttons -->
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <button type="button" onclick="setPitchDelay(0)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="0">⚡ Darhol</button>
+                    <button type="button" onclick="setPitchDelay(0.5)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="0.5">30 sek</button>
+                    <button type="button" onclick="setPitchDelay(1)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="1">1 min</button>
+                    <button type="button" onclick="setPitchDelay(5)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="5">5 min</button>
+                    <button type="button" onclick="setPitchDelay(30)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="30">30 min</button>
+                    <button type="button" onclick="setPitchDelay(60)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="60">1 soat</button>
+                    <button type="button" onclick="setPitchDelay(120)" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="120">2 soat</button>
+                    <button type="button" onclick="setPitchDelay('custom')" class="pitch-delay-btn px-4 py-2 rounded-xl glass text-sm font-medium hover:bg-violet-100 transition-all" data-value="custom">⚙️ Boshqa</button>
+                  </div>
+
+                  <!-- Custom time input -->
+                  <div id="pitchDelayCustom" class="hidden">
+                    <div class="flex gap-3 items-center">
+                      <input type="number" id="funnelPitchDelayValue" class="w-24 px-4 py-3 rounded-xl glass-input text-center" value="1" min="0" oninput="updatePitchDelayFromCustom()">
+                      <select id="funnelPitchDelayUnit" class="flex-1 px-4 py-3 rounded-xl glass-input" onchange="updatePitchDelayFromCustom()">
+                        <option value="seconds">Sekund</option>
+                        <option value="minutes" selected>Minut</option>
+                        <option value="hours">Soat</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Current value display -->
+                  <p class="text-sm text-gray-500 mt-2">
+                    Tanlangan: <span id="pitchDelayDisplay" class="font-medium text-violet-600">Darhol</span>
+                  </p>
+                  <input type="hidden" id="funnelPitchDelay" value="0">
+                </div>
+
+                <!-- Pitch Buttons -->
+                <div>
+                  <label class="text-sm font-medium text-gray-600 mb-2 block">Tugmalar (har qator: Matn | URL yoki callback)</label>
+                  <textarea id="funnelPitchButtons" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none font-mono text-sm" placeholder="💎 Sotib olish | https://payme.uz/link&#10;📞 Bog'lanish | contact_me"></textarea>
+                  <p class="text-xs text-gray-400 mt-1">URL = inline link, boshqasi = callback button</p>
+                </div>
+
+                <button onclick="saveFunnelPitch()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Pitch saqlash</button>
+              </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="funnel-content-settings" class="hidden">
+              <h3 class="font-bold text-lg mb-4">⚙️ Varonka sozlamalari</h3>
+              <div class="space-y-4">
+                <!-- Basic info -->
+                <div class="glass rounded-2xl p-4">
+                  <h4 class="font-medium mb-3">📝 Asosiy ma'lumotlar</h4>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">Varonka nomi</label>
+                      <input type="text" id="funnelSettingsName" class="w-full px-4 py-3 rounded-xl glass-input">
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">Tavsif</label>
+                      <textarea id="funnelSettingsDesc" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Channel settings -->
+                <div class="glass rounded-2xl p-4">
+                  <h4 class="font-medium mb-3">📢 Kanal sozlamalari</h4>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">Premium kanal ID</label>
+                      <input type="text" id="funnelPremiumChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">Bepul kanal ID (majburiy obuna)</label>
+                      <input type="text" id="funnelFreeChannelId" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="-1001234567890">
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">Bepul kanal linki</label>
+                      <input type="text" id="funnelFreeChannelLink" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="https://t.me/channel">
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">Obuna nechanchi darsdan oldin talab qilinsin?</label>
+                      <input type="number" id="funnelRequireSubBefore" class="w-full px-4 py-3 rounded-xl glass-input" value="0" min="0">
+                      <p class="text-xs text-gray-400 mt-1">0 = talab qilinmaydi</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Payment systems -->
+                <div class="glass rounded-2xl p-4">
+                  <h4 class="font-medium mb-3">💳 To'lov tizimlari</h4>
+                  <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                      <input type="checkbox" id="funnelPaymeEnabled" class="w-5 h-5 accent-blue-500">
+                      <label for="funnelPaymeEnabled" class="font-medium cursor-pointer">💳 Payme</label>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <input type="checkbox" id="funnelClickEnabled" class="w-5 h-5 accent-green-500">
+                      <label for="funnelClickEnabled" class="font-medium cursor-pointer">💠 Click</label>
+                    </div>
+                    <p class="text-xs text-gray-400">Tanlangan to'lov tizimlari tugmalari foydalanuvchiga ko'rsatiladi</p>
+                  </div>
+                </div>
+
+                <!-- Prices -->
+                <div class="glass rounded-2xl p-4">
+                  <h4 class="font-medium mb-3">💰 Narxlar (so'm)</h4>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-xs text-gray-500">1 oylik</label>
+                      <input type="number" id="funnelPrice1m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="97000">
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-500">3 oylik</label>
+                      <input type="number" id="funnelPrice3m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="247000">
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-500">6 oylik</label>
+                      <input type="number" id="funnelPrice6m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="447000">
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-500">12 oylik</label>
+                      <input type="number" id="funnelPrice12m" class="w-full px-3 py-2 rounded-xl glass-input" placeholder="797000">
+                    </div>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-2">Bo'sh qoldirilsa, umumiy narxlar ishlatiladi</p>
+                </div>
+
+                <!-- Progrev Flow Settings -->
+                <div class="glass rounded-2xl p-4">
+                  <h4 class="font-medium mb-4">🔥 Progrev Flow sozlamalari</h4>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">💰 Sotish delay (daqiqa)</label>
+                      <input type="number" id="funnelSalesDelay" class="w-full px-4 py-3 rounded-xl glass-input" value="60" min="0">
+                      <p class="text-xs text-gray-400 mt-1">Pitch dan keyin sotish xabari qancha vaqtdan so'ng yuborilsin</p>
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">💬 Soft attack delay (daqiqa)</label>
+                      <input type="number" id="funnelSoftAttackDelay" class="w-full px-4 py-3 rounded-xl glass-input" value="1440" min="0">
+                      <p class="text-xs text-gray-400 mt-1">Sotish dan keyin yumshoq eslatma qancha vaqtdan so'ng</p>
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">📝 Eslatma matni</label>
+                      <textarea id="funnelSoftAttackText" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🤔 Hali qaror qilmadingizmi?"></textarea>
+                    </div>
+                    <div>
+                      <label class="text-sm font-medium text-gray-600 mb-2 block">🎉 Tabriknoma matni (darslar tugaganda)</label>
+                      <textarea id="funnelCongratsText" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <button onclick="saveFunnelSettings()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Sozlamalarni saqlash</button>
+              </div>
             </div>
           </div>
         </div>
@@ -2711,6 +2840,134 @@
   </div>
 </div>
 
+<!-- Onboarding Wizard Modal -->
+<div id="onboardingModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-[100] hidden">
+  <div class="glass-modal rounded-3xl max-w-lg w-full mx-4 overflow-hidden">
+    <!-- Progress bar -->
+    <div class="h-1.5 bg-gray-200">
+      <div id="onboardingProgress" class="h-full bg-gradient-to-r from-violet-500 to-purple-600 transition-all duration-500" style="width: 25%"></div>
+    </div>
+
+    <div class="p-8">
+      <!-- Step 1: Welcome -->
+      <div id="onboarding-step-1" class="onboarding-step">
+        <div class="text-center mb-8">
+          <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+            <span class="text-5xl">🚀</span>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">Xush kelibsiz!</h2>
+          <p class="text-gray-500">Avtomatik sotish varonkalarini yaratishga tayyormisiz?</p>
+        </div>
+
+        <div class="space-y-4 mb-8">
+          <div class="glass rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center text-2xl">🎯</div>
+            <div>
+              <p class="font-medium text-gray-800">Varonkalar yarating</p>
+              <p class="text-sm text-gray-500">Har bir mahsulot uchun alohida varonka</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-2xl">📚</div>
+            <div>
+              <p class="font-medium text-gray-800">Darslarni qo'shing</p>
+              <p class="text-sm text-gray-500">Bepul darslar orqali ishonch hosil qiling</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">💰</div>
+            <div>
+              <p class="font-medium text-gray-800">Sotishni boshlang</p>
+              <p class="text-sm text-gray-500">Avtomatik pitch va to'lov</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="skipOnboarding()" class="flex-1 py-4 rounded-2xl glass-card font-medium text-gray-600">O'tkazib yuborish</button>
+          <button onclick="nextOnboardingStep()" class="flex-1 py-4 rounded-2xl glass-btn text-white font-medium">Boshlash →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Create First Funnel -->
+      <div id="onboarding-step-2" class="onboarding-step hidden">
+        <div class="text-center mb-6">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+            <span class="text-4xl">🎯</span>
+          </div>
+          <h2 class="text-xl font-bold text-gray-800 mb-2">Birinchi varonkani yarating</h2>
+          <p class="text-gray-500 text-sm">Mahsulotingiz uchun nom va slug kiriting</p>
+        </div>
+
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Varonka nomi</label>
+            <input type="text" id="onboardingFunnelName" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="Masalan: SMM kursi">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Slug (link uchun)</label>
+            <input type="text" id="onboardingFunnelSlug" class="w-full px-4 py-3 rounded-xl glass-input font-mono" placeholder="smm">
+            <p class="text-xs text-gray-400 mt-1">t.me/bot?start=<span id="onboardingSlugPreview">smm</span></p>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="prevOnboardingStep()" class="py-4 px-6 rounded-2xl glass-card font-medium text-gray-600">← Orqaga</button>
+          <button onclick="createOnboardingFunnel()" class="flex-1 py-4 rounded-2xl glass-btn text-white font-medium">Yaratish →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Add First Lesson -->
+      <div id="onboarding-step-3" class="onboarding-step hidden">
+        <div class="text-center mb-6">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+            <span class="text-4xl">📚</span>
+          </div>
+          <h2 class="text-xl font-bold text-gray-800 mb-2">Birinchi darsni qo'shing</h2>
+          <p class="text-gray-500 text-sm">Foydalanuvchilarga bepul qiymat bering</p>
+        </div>
+
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Dars sarlavhasi</label>
+            <input type="text" id="onboardingLessonTitle" class="w-full px-4 py-3 rounded-xl glass-input" placeholder="Kirish darsi">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-2 block">Dars matni</label>
+            <textarea id="onboardingLessonText" rows="3" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="Salom! Bu birinchi dars..."></textarea>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="skipOnboarding()" class="py-4 px-6 rounded-2xl glass-card font-medium text-gray-600">Keyinroq</button>
+          <button onclick="createOnboardingLesson()" class="flex-1 py-4 rounded-2xl glass-btn text-white font-medium">Qo'shish →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Complete -->
+      <div id="onboarding-step-4" class="onboarding-step hidden">
+        <div class="text-center">
+          <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+            <span class="text-5xl">🎉</span>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">Ajoyib!</h2>
+          <p class="text-gray-500 mb-6">Birinchi varonkangiz tayyor. Endi ko'proq darslar qo'shib, pitch sozlang!</p>
+
+          <div class="glass rounded-2xl p-4 mb-6">
+            <p class="text-sm text-gray-600 mb-2">Varonka linki:</p>
+            <div class="flex items-center justify-center gap-2">
+              <code id="onboardingFinalLink" class="px-3 py-2 rounded-lg bg-violet-50 text-violet-700 font-mono text-sm">t.me/bot?start=smm</code>
+              <button onclick="copyOnboardingLink()" class="w-10 h-10 rounded-lg glass-card flex items-center justify-center">📋</button>
+            </div>
+          </div>
+
+          <button onclick="finishOnboarding()" class="w-full py-4 rounded-2xl glass-btn text-white font-semibold text-lg">Dashboard ga o'tish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 let auth = '';
 let allUsers = [];
@@ -2728,6 +2985,146 @@ let mediaPickerType = null;
 let userFilters = { status: 'all', custdev: 'all', lesson: 'all', sort: 'newest' };
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+
+// ========== DARK MODE ==========
+function initDarkMode() {
+  var savedMode = localStorage.getItem('darkMode');
+  if (savedMode === 'true' || (!savedMode && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  }
+}
+
+function toggleDarkMode() {
+  var html = document.documentElement;
+  html.classList.toggle('dark');
+  var isDark = html.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark);
+}
+
+// Initialize dark mode on page load
+initDarkMode();
+
+// ========== ONBOARDING WIZARD ==========
+var onboardingStep = 1;
+var onboardingFunnelId = null;
+
+function checkShowOnboarding() {
+  // Show onboarding if no funnels and not dismissed
+  if (allFunnels.length === 0 && !localStorage.getItem('onboardingDismissed')) {
+    openModal('onboardingModal');
+  }
+}
+
+function showOnboardingStep(step) {
+  onboardingStep = step;
+  // Hide all steps
+  document.querySelectorAll('.onboarding-step').forEach(function(el) {
+    el.classList.add('hidden');
+  });
+  // Show current step
+  document.getElementById('onboarding-step-' + step).classList.remove('hidden');
+  // Update progress bar
+  document.getElementById('onboardingProgress').style.width = (step * 25) + '%';
+}
+
+function nextOnboardingStep() {
+  showOnboardingStep(onboardingStep + 1);
+}
+
+function prevOnboardingStep() {
+  showOnboardingStep(onboardingStep - 1);
+}
+
+function skipOnboarding() {
+  localStorage.setItem('onboardingDismissed', 'true');
+  closeModal('onboardingModal');
+}
+
+function finishOnboarding() {
+  localStorage.setItem('onboardingDismissed', 'true');
+  closeModal('onboardingModal');
+  loadFunnels();
+  if (onboardingFunnelId) {
+    openFunnel(onboardingFunnelId);
+  }
+}
+
+async function createOnboardingFunnel() {
+  var name = document.getElementById('onboardingFunnelName').value.trim();
+  var slug = document.getElementById('onboardingFunnelSlug').value.trim();
+
+  if (!name || !slug) {
+    alert('Iltimos, nom va slug kiriting');
+    return;
+  }
+
+  try {
+    var res = await fetch('/api/funnels', {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, slug: slug, is_active: true })
+    });
+
+    if (!res.ok) {
+      var err = await res.json();
+      alert('Xatolik: ' + (err.error || 'Noma\'lum'));
+      return;
+    }
+
+    var funnel = await res.json();
+    onboardingFunnelId = funnel.id;
+    allFunnels.push(funnel);
+
+    document.getElementById('onboardingFinalLink').textContent = 't.me/bot?start=' + slug;
+    nextOnboardingStep();
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
+}
+
+async function createOnboardingLesson() {
+  var title = document.getElementById('onboardingLessonTitle').value.trim();
+  var text = document.getElementById('onboardingLessonText').value.trim();
+
+  if (!title || !text) {
+    alert('Iltimos, sarlavha va matn kiriting');
+    return;
+  }
+
+  try {
+    await fetch('/api/funnels/' + onboardingFunnelId + '/lessons', {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lesson_number: 1,
+        title: title,
+        text: text,
+        delay_hours: 0
+      })
+    });
+
+    nextOnboardingStep();
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
+}
+
+function copyOnboardingLink() {
+  var link = document.getElementById('onboardingFinalLink').textContent;
+  navigator.clipboard.writeText('https://' + link).then(function() {
+    showToast('✅ Link nusxalandi!');
+  });
+}
+
+// Update slug preview on input
+document.addEventListener('DOMContentLoaded', function() {
+  var slugInput = document.getElementById('onboardingFunnelSlug');
+  if (slugInput) {
+    slugInput.addEventListener('input', function() {
+      document.getElementById('onboardingSlugPreview').textContent = this.value || 'smm';
+    });
+  }
+});
 
 const saved = localStorage.getItem('adminAuth');
 if (saved) { auth = saved; showDashboard(); }
@@ -4965,6 +5362,8 @@ async function loadFunnels() {
     allFunnels = await (await fetch('/api/funnels', {headers: {Authorization: auth}})).json();
     renderFunnelsList();
     updateFunnelStats();
+    // Check if onboarding should be shown
+    checkShowOnboarding();
   } catch(e) {
     console.error('loadFunnels error:', e);
     document.getElementById('funnelsList').innerHTML = '<p class="text-red-500 text-center py-4">Xatolik: ' + e.message + '</p>';
@@ -5013,9 +5412,10 @@ function renderFunnelsQuickList() {
         '</div>' +
         '<span class="px-2 py-1 rounded-full text-xs ' + statusClass + '">' + statusText + '</span>' +
       '</div>' +
-      '<div class="flex justify-between text-sm text-gray-500">' +
-        '<span>👥 Userlar</span>' +
-        '<span>📚 Darslar</span>' +
+      '<div class="grid grid-cols-3 gap-2 text-center border-t border-gray-100 pt-3">' +
+        '<div><p class="font-bold text-violet-600" id="fql-users-' + f.id + '">-</p><p class="text-xs text-gray-400">👥</p></div>' +
+        '<div><p class="font-bold text-green-600" id="fql-paid-' + f.id + '">-</p><p class="text-xs text-gray-400">💎</p></div>' +
+        '<div><p class="font-bold text-orange-600" id="fql-conv-' + f.id + '">-</p><p class="text-xs text-gray-400">📈</p></div>' +
       '</div>' +
     '</div>';
   }
@@ -5025,6 +5425,35 @@ function renderFunnelsQuickList() {
   }
 
   container.innerHTML = html;
+
+  // Load live stats for quick list
+  loadFunnelsQuickListStats();
+}
+
+// Load stats for funnels quick list on Stats page
+async function loadFunnelsQuickListStats() {
+  for (var i = 0; i < Math.min(allFunnels.length, 6); i++) {
+    var f = allFunnels[i];
+    loadQuickListFunnelStats(f.id);
+  }
+}
+
+async function loadQuickListFunnelStats(funnelId) {
+  try {
+    var stats = await (await fetch('/api/funnels/' + funnelId + '/stats', {headers: {Authorization: auth}})).json();
+
+    var usersEl = document.getElementById('fql-users-' + funnelId);
+    var paidEl = document.getElementById('fql-paid-' + funnelId);
+    var convEl = document.getElementById('fql-conv-' + funnelId);
+
+    if (usersEl) usersEl.textContent = stats.total_users || 0;
+    if (paidEl) paidEl.textContent = stats.paid_users || 0;
+
+    var conversion = stats.total_users > 0 ? Math.round((stats.paid_users / stats.total_users) * 100) : 0;
+    if (convEl) convEl.textContent = conversion + '%';
+  } catch(e) {
+    console.error('loadQuickListFunnelStats error:', e);
+  }
 }
 
 function renderFunnelsList() {
@@ -5074,7 +5503,7 @@ function renderFunnelsList() {
     else if (f.slug && f.slug.includes('test')) emoji = '🧪';
 
     html += `
-      <div class="group glass-card rounded-2xl p-5 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-violet-200">
+      <div class="group glass-card rounded-2xl p-5 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-violet-200" data-funnel-card="${f.id}">
         <div class="flex items-start gap-4">
           <!-- Icon -->
           <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-2xl shadow-lg flex-shrink-0">
@@ -5097,7 +5526,25 @@ function renderFunnelsList() {
               </button>
             </div>
 
-            ${f.description ? '<p class="text-sm text-gray-500 line-clamp-1">' + f.description + '</p>' : ''}
+            <!-- Live Stats Row -->
+            <div class="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-gray-100" id="funnel-card-stats-${f.id}">
+              <div class="text-center">
+                <p class="text-lg font-bold text-violet-600" id="fcs-users-${f.id}">-</p>
+                <p class="text-xs text-gray-400">👥 Userlar</p>
+              </div>
+              <div class="text-center">
+                <p class="text-lg font-bold text-green-600" id="fcs-paid-${f.id}">-</p>
+                <p class="text-xs text-gray-400">💎 To'lagan</p>
+              </div>
+              <div class="text-center">
+                <p class="text-lg font-bold text-blue-600" id="fcs-revenue-${f.id}">-</p>
+                <p class="text-xs text-gray-400">💰 Daromad</p>
+              </div>
+              <div class="text-center">
+                <p class="text-lg font-bold text-orange-600" id="fcs-conv-${f.id}">-</p>
+                <p class="text-xs text-gray-400">📈 Konv.</p>
+              </div>
+            </div>
           </div>
 
           <!-- Actions -->
@@ -5124,6 +5571,49 @@ function renderFunnelsList() {
   }
   html += '</div>';
   document.getElementById('funnelsList').innerHTML = html;
+
+  // Load live stats for each card
+  loadFunnelCardsStats();
+}
+
+// Load live stats for all funnel cards
+async function loadFunnelCardsStats() {
+  for (var i = 0; i < allFunnels.length; i++) {
+    var f = allFunnels[i];
+    loadSingleFunnelCardStats(f.id);
+  }
+}
+
+// Load stats for a single funnel card
+async function loadSingleFunnelCardStats(funnelId) {
+  try {
+    var stats = await (await fetch('/api/funnels/' + funnelId + '/stats', {headers: {Authorization: auth}})).json();
+
+    var usersEl = document.getElementById('fcs-users-' + funnelId);
+    var paidEl = document.getElementById('fcs-paid-' + funnelId);
+    var revenueEl = document.getElementById('fcs-revenue-' + funnelId);
+    var convEl = document.getElementById('fcs-conv-' + funnelId);
+
+    if (usersEl) usersEl.textContent = stats.total_users || 0;
+    if (paidEl) paidEl.textContent = stats.paid_users || 0;
+    if (revenueEl) revenueEl.textContent = fmtMoneyShort(stats.total_revenue || 0);
+
+    var conversion = stats.total_users > 0 ? Math.round((stats.paid_users / stats.total_users) * 100) : 0;
+    if (convEl) convEl.textContent = conversion + '%';
+  } catch(e) {
+    console.error('loadSingleFunnelCardStats error for ' + funnelId + ':', e);
+  }
+}
+
+// Format money in short form (1.2M, 500K, etc.)
+function fmtMoneyShort(tiyin) {
+  var som = tiyin / 100;
+  if (som >= 1000000) {
+    return (som / 1000000).toFixed(1) + 'M';
+  } else if (som >= 1000) {
+    return (som / 1000).toFixed(0) + 'K';
+  }
+  return som.toLocaleString();
 }
 
 // Copy funnel link to clipboard
@@ -5229,11 +5719,40 @@ async function openFunnel(id) {
 
   if (!currentFunnelData) return;
 
-  document.getElementById('funnelDetailTitle').textContent = '🎯 ' + currentFunnelData.name;
-  document.getElementById('funnelDetailSlug').textContent = 't.me/bot?start=' + currentFunnelData.slug;
+  // Update full-page header
+  document.getElementById('funnelPageTitle').textContent = currentFunnelData.name;
+  document.getElementById('funnelPageSlug').textContent = 't.me/bot?start=' + currentFunnelData.slug;
 
-  openModal('funnelDetailModal');
-  showFunnelTab('stats'); // Default to stats tab
+  // Also update modal header (for compatibility)
+  var modalTitle = document.getElementById('funnelDetailTitle');
+  var modalSlug = document.getElementById('funnelDetailSlug');
+  if (modalTitle) modalTitle.textContent = '🎯 ' + currentFunnelData.name;
+  if (modalSlug) modalSlug.textContent = 't.me/bot?start=' + currentFunnelData.slug;
+
+  // Show full-page view instead of modal
+  showTab('funnel-detail');
+  showFunnelTab('stats');
+
+  // Load quick stats for header
+  loadFunnelQuickStats();
+}
+
+function closeFunnelDetail() {
+  showTab('funnels');
+}
+
+async function loadFunnelQuickStats() {
+  if (!currentFunnelId) return;
+  try {
+    var stats = await (await fetch('/api/funnels/' + currentFunnelId + '/stats', {headers: {Authorization: auth}})).json();
+    document.getElementById('funnelPageUsers').textContent = stats.total_users || 0;
+    document.getElementById('funnelPagePaid').textContent = stats.paid_users || 0;
+    document.getElementById('funnelPageRevenue').textContent = fmtMoney(stats.total_revenue || 0);
+    var conversion = stats.total_users > 0 ? Math.round((stats.paid_users / stats.total_users) * 100) : 0;
+    document.getElementById('funnelPageConversion').textContent = conversion + '%';
+  } catch(e) {
+    console.error('loadFunnelQuickStats error:', e);
+  }
 }
 
 function showFunnelTab(tab) {
@@ -5241,13 +5760,17 @@ function showFunnelTab(tab) {
   document.querySelectorAll('[id^="funnel-content-"]').forEach(function(e) { e.classList.add('hidden'); });
   document.querySelectorAll('[id^="funnel-tab-"]').forEach(function(e) {
     e.classList.remove('bg-violet-500', 'text-white');
-    e.classList.add('glass-card');
+    e.classList.add('glass');
   });
 
   // Show selected tab
-  document.getElementById('funnel-content-' + tab).classList.remove('hidden');
-  document.getElementById('funnel-tab-' + tab).classList.remove('glass-card');
-  document.getElementById('funnel-tab-' + tab).classList.add('bg-violet-500', 'text-white');
+  var contentEl = document.getElementById('funnel-content-' + tab);
+  var tabEl = document.getElementById('funnel-tab-' + tab);
+  if (contentEl) contentEl.classList.remove('hidden');
+  if (tabEl) {
+    tabEl.classList.remove('glass');
+    tabEl.classList.add('bg-violet-500', 'text-white');
+  }
 
   // Load content
   if (tab === 'stats') loadFunnelStats();
@@ -5612,6 +6135,11 @@ async function saveFunnelPitch() {
 function loadFunnelSettings() {
   if (!currentFunnelData) return;
 
+  // Basic info
+  document.getElementById('funnelSettingsName').value = currentFunnelData.name || '';
+  document.getElementById('funnelSettingsDesc').value = currentFunnelData.description || '';
+
+  // Channel settings
   document.getElementById('funnelPremiumChannelId').value = currentFunnelData.premium_channel_id || '';
   document.getElementById('funnelFreeChannelId').value = currentFunnelData.free_channel_id || '';
   document.getElementById('funnelFreeChannelLink').value = currentFunnelData.free_channel_link || '';
@@ -5627,18 +6155,12 @@ function loadFunnelSettings() {
   document.getElementById('funnelPrice6m').value = currentFunnelData.price_6m ? currentFunnelData.price_6m / 100 : '';
   document.getElementById('funnelPrice12m').value = currentFunnelData.price_12m ? currentFunnelData.price_12m / 100 : '';
 
-  // Progrev Flow settings
-  var salesMinutes = currentFunnelData.sales_delay_minutes || (currentFunnelData.sales_delay_hours ? currentFunnelData.sales_delay_hours * 60 : 60);
-  setFunnelSalesDelay(salesMinutes, true);
+  // Progrev Flow settings (simple inputs)
+  var salesMinutes = currentFunnelData.sales_delay_minutes || 60;
+  var softMinutes = currentFunnelData.soft_attack_delay_minutes || 1440;
 
-  var softDisabled = currentFunnelData.soft_attack_disabled === true;
-  var softMinutes = currentFunnelData.soft_attack_delay_minutes || (currentFunnelData.soft_attack_delay_hours ? currentFunnelData.soft_attack_delay_hours * 60 : 1440);
-  if (softDisabled) {
-    setFunnelSoftDelay(-1, true, true);
-  } else {
-    setFunnelSoftDelay(softMinutes, false, true);
-  }
-
+  document.getElementById('funnelSalesDelay').value = salesMinutes;
+  document.getElementById('funnelSoftAttackDelay').value = softMinutes;
   document.getElementById('funnelSoftAttackText').value = currentFunnelData.soft_attack_text || '';
   document.getElementById('funnelCongratsText').value = currentFunnelData.congrats_text || '🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!';
 }
@@ -5746,22 +6268,19 @@ function updateFunnelSoftDelayFromCustom() {
 }
 
 async function saveFunnelSettings() {
-  // Update custom delays first
-  updateFunnelSalesDelayFromCustom();
-  updateFunnelSoftDelayFromCustom();
-
   try {
     var data = {
+      name: document.getElementById('funnelSettingsName').value || currentFunnelData.name,
+      description: document.getElementById('funnelSettingsDesc').value || null,
       premium_channel_id: document.getElementById('funnelPremiumChannelId').value || null,
       free_channel_id: document.getElementById('funnelFreeChannelId').value || null,
       free_channel_link: document.getElementById('funnelFreeChannelLink').value || null,
       require_subscription_before_lesson: parseInt(document.getElementById('funnelRequireSubBefore').value) || 0,
       payme_enabled: document.getElementById('funnelPaymeEnabled').checked,
       click_enabled: document.getElementById('funnelClickEnabled').checked,
-      // Progrev Flow settings
-      sales_delay_minutes: parseFloat(document.getElementById('funnelSalesDelayMinutes').value) || 60,
-      soft_attack_delay_minutes: parseFloat(document.getElementById('funnelSoftDelayMinutes').value) || 1440,
-      soft_attack_disabled: document.getElementById('funnelSoftDisabled').value === 'true',
+      // Progrev Flow settings (simple inputs)
+      sales_delay_minutes: parseFloat(document.getElementById('funnelSalesDelay').value) || 60,
+      soft_attack_delay_minutes: parseFloat(document.getElementById('funnelSoftAttackDelay').value) || 1440,
       soft_attack_text: document.getElementById('funnelSoftAttackText').value || null,
       congrats_text: document.getElementById('funnelCongratsText').value || null
     };
@@ -5776,16 +6295,19 @@ async function saveFunnelSettings() {
     if (p3) data.price_3m = parseInt(p3) * 100;
     if (p6) data.price_6m = parseInt(p6) * 100;
     if (p12) data.price_12m = parseInt(p12) * 100;
-    
+
     await fetch('/api/funnels/' + currentFunnelId, {
       method: 'PUT',
       headers: {Authorization: auth, 'Content-Type': 'application/json'},
       body: JSON.stringify(data)
     });
-    
+
     // Update local data
     Object.assign(currentFunnelData, data);
-    
+
+    // Update header title if name changed
+    document.getElementById('funnelPageTitle').textContent = data.name;
+
     alert('✅ Sozlamalar saqlandi!');
     loadFunnels();
   } catch(e) {
