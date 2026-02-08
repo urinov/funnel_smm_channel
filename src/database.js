@@ -402,7 +402,21 @@ export async function initDatabase() {
         await client.query(sql);
       } catch (e) {}
     }
-    
+
+    // Lessons table migrations - media fields
+    const lessonMigrations = [
+      `ALTER TABLE lessons ADD COLUMN IF NOT EXISTS video_note_file_id VARCHAR(255)`,
+      `ALTER TABLE lessons ADD COLUMN IF NOT EXISTS document_file_id VARCHAR(255)`,
+      `ALTER TABLE lessons ADD COLUMN IF NOT EXISTS photo_file_id VARCHAR(255)`,
+      `ALTER TABLE lessons ADD COLUMN IF NOT EXISTS text TEXT`
+    ];
+
+    for (const sql of lessonMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
     console.log('Migrations completed');
     
     // Add delay_minutes to pitch_media
@@ -1831,6 +1845,98 @@ export async function migrateToMultiFunnel() {
     ON CONFLICT (telegram_id, funnel_id) DO NOTHING
   `, [funnel.id]);
   console.log('Assigned', rowCount, 'users to default funnel');
-  
+
   return funnel;
 }
+
+// ============ NEW: CustDev Answers API ============
+
+// Get all custdev answers grouped by question ID
+export async function getAllCustDevAnswers() {
+  const { rows } = await pool.query(`
+    SELECT
+      ca.id,
+      ca.telegram_id,
+      ca.question_id,
+      ca.answer as answer_text,
+      ca.created_at,
+      cq.question_text,
+      cq.field_name
+    FROM custdev_answers ca
+    JOIN custdev_questions cq ON cq.id = ca.question_id
+    ORDER BY ca.created_at DESC
+  `);
+
+  // Group by question_id
+  const grouped = {};
+  for (const row of rows) {
+    if (!grouped[row.question_id]) {
+      grouped[row.question_id] = [];
+    }
+    grouped[row.question_id].push(row);
+  }
+
+  return grouped;
+}
+
+// Get user's custdev answers
+export async function getUserCustDevAnswers(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT
+      ca.id,
+      ca.question_id,
+      ca.answer as answer_text,
+      ca.created_at,
+      cq.question_text,
+      cq.field_name
+    FROM custdev_answers ca
+    JOIN custdev_questions cq ON cq.id = ca.question_id
+    WHERE ca.telegram_id = $1
+    ORDER BY cq.after_lesson, cq.sort_order
+  `, [telegramId]);
+
+  return rows;
+}
+
+// Get all settings (combined from bot_messages and settings tables)
+export async function getAllSettings() {
+  // Get from bot_messages
+  const { rows: botMessages } = await pool.query('SELECT key, text as value FROM bot_messages');
+
+  // Get from settings
+  const { rows: settings } = await pool.query('SELECT key, value FROM settings');
+
+  // Combine
+  const result = {};
+
+  for (const row of botMessages) {
+    result[row.key] = row.value;
+  }
+
+  for (const row of settings) {
+    result[row.key] = row.value;
+  }
+
+  // Parse boolean and number fields
+  const booleanFields = ['payme_enabled', 'click_enabled', 'soft_attack_disabled'];
+  const numberFields = ['pitch_after_lesson', 'pitch_delay_minutes', 'sales_delay_minutes',
+                        'soft_attack_delay_minutes', 'require_subscription_before_lesson',
+                        'price_1m', 'price_3m', 'price_6m', 'price_12m'];
+
+  for (const field of booleanFields) {
+    if (result[field] !== undefined) {
+      result[field] = result[field] === 'true';
+    }
+  }
+
+  for (const field of numberFields) {
+    if (result[field] !== undefined && result[field] !== null && result[field] !== '') {
+      result[field] = parseInt(result[field]);
+    }
+  }
+
+  return result;
+}
+
+// Export pool for direct queries if needed
+export { pool };

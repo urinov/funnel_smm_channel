@@ -31,7 +31,7 @@
     .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
 
     /* Table */
-    .table-row { border-bottom: 1px solid #f5f5f5; }
+    .table-row { border-bottom: 1px solid #f5f5f5; cursor: pointer; }
     .table-row:last-child { border-bottom: none; }
     .table-row:hover { background: #fafafa; }
 
@@ -40,6 +40,8 @@
     .badge-green { background: #dcfce7; color: #16a34a; }
     .badge-blue { background: #dbeafe; color: #2563eb; }
     .badge-orange { background: #ffedd5; color: #ea580c; }
+    .badge-yellow { background: #fef3c7; color: #d97706; }
+    .badge-red { background: #fee2e2; color: #dc2626; }
     .badge-gray { background: #f3f4f6; color: #6b7280; }
 
     /* Button */
@@ -48,6 +50,7 @@
     .btn-primary:hover { background: #4f46e5; }
     .btn-secondary { background: #f3f4f6; color: #374151; }
     .btn-secondary:hover { background: #e5e7eb; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
 
     /* Input */
     .input { width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
@@ -55,7 +58,8 @@
 
     /* Modal */
     .modal-overlay { background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
-    .modal-content { background: #fff; border-radius: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-content { background: #fff; border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-lg { max-width: 800px; }
 
     /* Activity item */
     .activity-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
@@ -82,6 +86,9 @@
     .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; padding: 8px 16px; z-index: 50; }
     .mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px; border-radius: 10px; color: #9ca3af; font-size: 10px; }
     .mobile-nav-item.active { color: #6366f1; background: #eef2ff; }
+
+    /* File ID Input */
+    .file-id-input { font-family: monospace; font-size: 12px; background: #f9fafb; }
   </style>
 </head>
 <body>
@@ -117,6 +124,7 @@
       <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar">👥</div>
       <div class="sidebar-item" data-tab="payments" title="To'lovlar">💳</div>
       <div class="sidebar-item" data-tab="lessons" title="Darslar">📚</div>
+      <div class="sidebar-item" data-tab="progrev" title="Progrevlar">🔥</div>
       <div class="sidebar-item" data-tab="custdev" title="CustDev">📝</div>
       <div class="sidebar-item" data-tab="settings" title="Sozlamalar">⚙️</div>
     </nav>
@@ -238,7 +246,6 @@
 
       <!-- Bottom Row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         <!-- Recent Users -->
         <div class="card">
           <div class="p-5 border-b border-gray-100 flex justify-between items-center">
@@ -260,7 +267,6 @@
             <div class="p-4 text-center text-gray-400">Yuklanmoqda...</div>
           </div>
         </div>
-
       </div>
 
     </div>
@@ -289,10 +295,11 @@
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dars</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
+                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amal</th>
               </tr>
             </thead>
             <tbody id="usersTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              <tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
             </tbody>
           </table>
         </div>
@@ -302,6 +309,14 @@
 
     <!-- Payments Tab -->
     <div id="tab-payments" class="hidden">
+      <!-- Payment Status Tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="tab active" data-payment-status="completed" onclick="filterPayments('completed')">✅ To'langan</button>
+        <button class="tab" data-payment-status="pending" onclick="filterPayments('pending')">⏳ Jarayonda</button>
+        <button class="tab" data-payment-status="cancelled" onclick="filterPayments('cancelled')">❌ Bekor qilingan</button>
+        <button class="tab" data-payment-status="all" onclick="filterPayments('all')">📋 Barchasi</button>
+      </div>
+
       <!-- Payment Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="card p-5">
@@ -326,6 +341,22 @@
         </div>
       </div>
 
+      <!-- Payment Status Summary -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="card p-4 border-l-4 border-green-500">
+          <p class="text-sm text-gray-500">To'langan</p>
+          <p class="text-xl font-bold text-green-600" id="payCompletedCount">0</p>
+        </div>
+        <div class="card p-4 border-l-4 border-yellow-500">
+          <p class="text-sm text-gray-500">Jarayonda</p>
+          <p class="text-xl font-bold text-yellow-600" id="payPendingCount">0</p>
+        </div>
+        <div class="card p-4 border-l-4 border-red-500">
+          <p class="text-sm text-gray-500">Bekor qilingan</p>
+          <p class="text-xl font-bold text-red-600" id="payCancelledCount">0</p>
+        </div>
+      </div>
+
       <!-- Payments Table -->
       <div class="card">
         <div class="p-5 border-b border-gray-100">
@@ -339,11 +370,12 @@
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foydalanuvchi</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Summa</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reja</th>
+                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tizim</th>
               </tr>
             </thead>
             <tbody id="paymentsTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              <tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
             </tbody>
           </table>
         </div>
@@ -369,30 +401,154 @@
           <p class="text-gray-400 text-center">Yuklanmoqda...</p>
         </div>
       </div>
+
+      <!-- Media ID Info -->
+      <div class="card mt-6 p-5 bg-blue-50 border-blue-200">
+        <h3 class="font-semibold text-blue-800 mb-2">💡 Media ID olish</h3>
+        <p class="text-sm text-blue-600">
+          Telegram botga video/audio/fayl/video xabar yuboring - bot sizga File ID beradi.
+          O'sha ID ni darsga joylashtirsangiz, foydalanuvchilarga o'sha media yuboriladi.
+        </p>
+      </div>
+    </div>
+
+    <!-- Progrev Tab (Pitch/Sales/Soft Attack) -->
+    <div id="tab-progrev" class="hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Pitch Settings -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">🎬 Pitch (Asosiy taklif)</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Nechanchi darsdan keyin</label>
+              <input type="number" id="pitchAfterLesson" class="input" value="4" min="1">
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - darsdan keyin qancha vaqt o'tib yuboriladi</label>
+              <input type="number" id="pitchDelayMinutes" class="input" value="120" min="0">
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Pitch matni</label>
+              <textarea id="pitchText" class="input h-32 resize-none" placeholder="Maxsus taklif matni..."></textarea>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Video File ID (ixtiyoriy)</label>
+              <input type="text" id="pitchVideoFileId" class="input file-id-input" placeholder="BAACAgIAAxk...">
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Rasm File ID (ixtiyoriy)</label>
+              <input type="text" id="pitchImageFileId" class="input file-id-input" placeholder="AgACAgIAAxk...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales Pitch Settings -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">💰 Sales Pitch (Qayta taklif)</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - pitchdan keyin</label>
+              <input type="number" id="salesDelayMinutes" class="input" value="60" min="0">
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Sales matni</label>
+              <textarea id="salesPitchText" class="input h-32 resize-none" placeholder="Qayta taklif matni..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Soft Attack Settings -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">🔥 Soft Attack (Oxirgi taklif)</h3>
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="softAttackDisabled" class="w-5 h-5 accent-red-600">
+              <label class="text-sm text-gray-600">O'chirilgan</label>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - sales pitchdan keyin</label>
+              <input type="number" id="softAttackDelayMinutes" class="input" value="1440" min="0">
+              <p class="text-xs text-gray-400 mt-1">1440 daqiqa = 24 soat</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Soft attack matni</label>
+              <textarea id="softAttackText" class="input h-32 resize-none" placeholder="Oxirgi taklif matni..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Congrats Message -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">🎉 Tabrik xabari</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Barcha darslar tugaganidan keyin</label>
+              <textarea id="congratsText" class="input h-32 resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button onclick="saveProgrevSettings()" class="btn btn-primary mt-6">💾 Progrev sozlamalarini saqlash</button>
     </div>
 
     <!-- CustDev Tab -->
     <div id="tab-custdev" class="hidden">
-      <!-- CustDev Stats -->
+      <!-- CustDev Overview Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="card p-5 chart-container h-[150px]">
-          <p class="text-gray-500 text-sm mb-2">Yosh</p>
-          <canvas id="ageChart"></canvas>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-1">Jami savollar</p>
+          <p class="text-2xl font-bold text-indigo-600" id="custdevTotalQuestions">0</p>
         </div>
-        <div class="card p-5 chart-container h-[150px]">
-          <p class="text-gray-500 text-sm mb-2">Kasb</p>
-          <canvas id="occupationChart"></canvas>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-1">Jami javoblar</p>
+          <p class="text-2xl font-bold text-green-600" id="custdevTotalAnswers">0</p>
         </div>
-        <div class="card p-5 chart-container h-[150px]">
-          <p class="text-gray-500 text-sm mb-2">Daromad</p>
-          <canvas id="incomeChart"></canvas>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-1">Javob berganlar</p>
+          <p class="text-2xl font-bold text-blue-600" id="custdevRespondents">0</p>
         </div>
-        <div class="card p-5 chart-container h-[150px]">
-          <p class="text-gray-500 text-sm mb-2">Byudjet</p>
-          <canvas id="budgetChart"></canvas>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-1">O'rtacha javob</p>
+          <p class="text-2xl font-bold text-orange-600" id="custdevAvgAnswers">0</p>
         </div>
       </div>
 
+      <!-- CustDev Charts -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-2">Yosh</p>
+          <div class="chart-container h-[120px]">
+            <canvas id="ageChart"></canvas>
+          </div>
+          <div id="ageChartLegend" class="mt-2 text-xs space-y-1"></div>
+        </div>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-2">Kasb</p>
+          <div class="chart-container h-[120px]">
+            <canvas id="occupationChart"></canvas>
+          </div>
+          <div id="occupationChartLegend" class="mt-2 text-xs space-y-1"></div>
+        </div>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-2">Daromad</p>
+          <div class="chart-container h-[120px]">
+            <canvas id="incomeChart"></canvas>
+          </div>
+          <div id="incomeChartLegend" class="mt-2 text-xs space-y-1"></div>
+        </div>
+        <div class="card p-5">
+          <p class="text-gray-500 text-sm mb-2">Byudjet</p>
+          <div class="chart-container h-[120px]">
+            <canvas id="budgetChart"></canvas>
+          </div>
+          <div id="budgetChartLegend" class="mt-2 text-xs space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- Questions List -->
       <div class="card">
         <div class="p-5 border-b border-gray-100 flex justify-between items-center">
           <h3 class="font-semibold text-gray-800 text-lg">📝 CustDev savollari</h3>
@@ -425,7 +581,7 @@
               <input type="text" id="settingFreeChannelLink" class="input" placeholder="https://t.me/channel">
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">Obuna talab qilinadigan dars</label>
+              <label class="text-sm text-gray-600 mb-1 block">Obuna talab qilinadigan dars (0 = talab qilinmaydi)</label>
               <input type="number" id="settingRequireSub" class="input" value="0" min="0">
             </div>
           </div>
@@ -454,25 +610,6 @@
           </div>
         </div>
 
-        <!-- Pitch Settings -->
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">🎬 Pitch sozlamalari</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Nechanchi darsdan keyin</label>
-              <input type="number" id="settingPitchAfter" class="input" value="4" min="1">
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Pitch matni</label>
-              <textarea id="settingPitchText" class="input h-24 resize-none" placeholder="Maxsus taklif matni..."></textarea>
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Pitch delay (daqiqa)</label>
-              <input type="number" id="settingPitchDelay" class="input" value="120" min="0">
-            </div>
-          </div>
-        </div>
-
         <!-- Payment Systems -->
         <div class="card p-5">
           <h3 class="font-semibold text-gray-800 mb-4">💳 To'lov tizimlari</h3>
@@ -487,6 +624,17 @@
               <span class="text-lg">💠</span>
               <span class="font-medium">Click</span>
             </label>
+          </div>
+        </div>
+
+        <!-- Admin Info -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">👤 Admin</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Admin Telegram ID</label>
+              <input type="text" id="settingAdminId" class="input font-mono" placeholder="123456789">
+            </div>
           </div>
         </div>
 
@@ -530,58 +678,230 @@
 
 </div>
 
-<!-- Broadcast Modal -->
+<!-- Broadcast Modal (Advanced) -->
 <div id="broadcastModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-  <div class="modal-content mx-4 p-6">
+  <div class="modal-content modal-lg mx-4 p-6">
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-xl font-bold text-gray-800">📨 Xabar yuborish</h3>
       <button onclick="closeModal('broadcastModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✕</button>
     </div>
-    <div class="space-y-4">
-      <div>
-        <label class="text-sm text-gray-600 mb-1 block">Kimga</label>
-        <select id="broadcastTarget" class="input">
-          <option value="all">Hammaga</option>
-          <option value="paid">To'laganlarga</option>
-          <option value="free">To'lamaganlarga</option>
-        </select>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Target Selection -->
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Kimga yuborish</label>
+          <select id="broadcastTarget" class="input" onchange="toggleUserSelect()">
+            <option value="all">Hammaga</option>
+            <option value="paid">To'laganlarga</option>
+            <option value="free">To'lamaganlarga</option>
+            <option value="specific">Tanlangan foydalanuvchilarga</option>
+          </select>
+        </div>
+
+        <!-- User Search (for specific) -->
+        <div id="userSelectDiv" class="hidden">
+          <label class="text-sm text-gray-600 mb-1 block">Foydalanuvchi qidirish</label>
+          <input type="text" id="broadcastUserSearch" class="input mb-2" placeholder="Ism yoki telefon..." oninput="searchBroadcastUsers()">
+          <div id="broadcastUsersList" class="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1"></div>
+          <div class="mt-2">
+            <p class="text-xs text-gray-500">Tanlangan: <span id="selectedUsersCount">0</span> ta</p>
+            <div id="selectedUsersList" class="flex flex-wrap gap-1 mt-1"></div>
+          </div>
+        </div>
       </div>
-      <div>
-        <label class="text-sm text-gray-600 mb-1 block">Xabar matni</label>
-        <textarea id="broadcastText" class="input h-32 resize-none" placeholder="Xabar yozing..."></textarea>
+
+      <!-- Message Content -->
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Xabar turi</label>
+          <select id="broadcastType" class="input" onchange="toggleBroadcastMedia()">
+            <option value="text">Matn</option>
+            <option value="photo">Rasm + Matn</option>
+            <option value="video">Video + Matn</option>
+            <option value="video_note">Video xabar (dumaloq)</option>
+            <option value="audio">Audio</option>
+            <option value="document">Fayl</option>
+          </select>
+        </div>
+
+        <div id="broadcastMediaDiv" class="hidden">
+          <label class="text-sm text-gray-600 mb-1 block">Media File ID</label>
+          <input type="text" id="broadcastMediaId" class="input file-id-input" placeholder="File ID ni kiriting...">
+          <p class="text-xs text-gray-400 mt-1">Botga media yuboring - ID oling</p>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Xabar matni</label>
+          <textarea id="broadcastText" class="input h-32 resize-none" placeholder="Xabar yozing..."></textarea>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Tugma (ixtiyoriy)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="broadcastBtnText" class="input" placeholder="Tugma matni">
+            <input type="text" id="broadcastBtnUrl" class="input" placeholder="https://...">
+          </div>
+        </div>
       </div>
-      <button onclick="sendBroadcast()" class="btn btn-primary w-full">Yuborish</button>
+    </div>
+
+    <div class="mt-6 flex gap-3">
+      <button onclick="sendBroadcast()" class="btn btn-primary flex-1">📤 Yuborish</button>
+      <button onclick="closeModal('broadcastModal')" class="btn btn-secondary">Bekor qilish</button>
     </div>
   </div>
 </div>
 
-<!-- Lesson Modal -->
+<!-- Lesson Modal (with Media IDs) -->
 <div id="lessonModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-  <div class="modal-content mx-4 p-6">
+  <div class="modal-content modal-lg mx-4 p-6">
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-xl font-bold text-gray-800" id="lessonModalTitle">📚 Yangi dars</h3>
       <button onclick="closeModal('lessonModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✕</button>
     </div>
-    <form id="lessonForm" class="space-y-4">
+    <form id="lessonForm" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <input type="hidden" id="lessonId">
-      <div>
-        <label class="text-sm text-gray-600 mb-1 block">Dars raqami</label>
-        <input type="number" id="lessonNumber" class="input" required min="1">
+
+      <!-- Basic Info -->
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Dars raqami</label>
+            <input type="number" id="lessonNumber" class="input" required min="1">
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Delay (soat)</label>
+            <input type="number" id="lessonDelay" class="input" value="24" min="0">
+          </div>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Sarlavha</label>
+          <input type="text" id="lessonTitle" class="input" required>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Matn</label>
+          <textarea id="lessonText" class="input h-40 resize-none"></textarea>
+        </div>
       </div>
-      <div>
-        <label class="text-sm text-gray-600 mb-1 block">Sarlavha</label>
-        <input type="text" id="lessonTitle" class="input" required>
+
+      <!-- Media IDs -->
+      <div class="space-y-4">
+        <div class="p-3 bg-blue-50 rounded-lg mb-4">
+          <p class="text-sm text-blue-700">💡 Botga media yuboring - File ID oling. O'sha ID ni qo'ying.</p>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">🎬 Video File ID</label>
+          <input type="text" id="lessonVideoFileId" class="input file-id-input" placeholder="BAACAgIAAxk...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">🔵 Video xabar File ID (dumaloq)</label>
+          <input type="text" id="lessonVideoNoteFileId" class="input file-id-input" placeholder="DQACAgIAAxk...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">🎵 Audio File ID</label>
+          <input type="text" id="lessonAudioFileId" class="input file-id-input" placeholder="CQACAgIAAxk...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">📎 Fayl File ID</label>
+          <input type="text" id="lessonDocumentFileId" class="input file-id-input" placeholder="BQACAgIAAxk...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">🖼 Rasm File ID</label>
+          <input type="text" id="lessonPhotoFileId" class="input file-id-input" placeholder="AgACAgIAAxk...">
+        </div>
       </div>
-      <div>
-        <label class="text-sm text-gray-600 mb-1 block">Matn</label>
-        <textarea id="lessonText" class="input h-32 resize-none" required></textarea>
+
+      <div class="lg:col-span-2">
+        <button type="submit" class="btn btn-primary w-full">💾 Saqlash</button>
       </div>
-      <div>
-        <label class="text-sm text-gray-600 mb-1 block">Delay (soat)</label>
-        <input type="number" id="lessonDelay" class="input" value="24" min="0">
-      </div>
-      <button type="submit" class="btn btn-primary w-full">Saqlash</button>
     </form>
+  </div>
+</div>
+
+<!-- User Detail Modal -->
+<div id="userDetailModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="modal-content modal-lg mx-4 p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-gray-800">👤 Foydalanuvchi ma'lumotlari</h3>
+      <button onclick="closeModal('userDetailModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- User Info -->
+      <div>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold" id="userDetailAvatar">U</div>
+          <div>
+            <p class="text-xl font-bold text-gray-800" id="userDetailName">-</p>
+            <p class="text-gray-500" id="userDetailUsername">-</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="text-gray-500">Telegram ID</span>
+            <span class="font-mono font-medium" id="userDetailTgId">-</span>
+          </div>
+          <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="text-gray-500">Telefon</span>
+            <span class="font-medium" id="userDetailPhone">-</span>
+          </div>
+          <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="text-gray-500">Hozirgi dars</span>
+            <span class="badge badge-blue" id="userDetailLesson">-</span>
+          </div>
+          <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="text-gray-500">Status</span>
+            <span id="userDetailStatus">-</span>
+          </div>
+          <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="text-gray-500">Ro'yxatdan o'tgan</span>
+            <span class="font-medium" id="userDetailCreated">-</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4 flex gap-2">
+          <button onclick="sendMessageToUser()" class="btn btn-primary btn-sm flex-1">📨 Xabar yuborish</button>
+        </div>
+      </div>
+
+      <!-- CustDev Answers -->
+      <div>
+        <h4 class="font-semibold text-gray-800 mb-4">📝 CustDev javoblari</h4>
+        <div id="userDetailCustdev" class="space-y-3">
+          <p class="text-gray-400 text-center py-4">Javoblar yo'q</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CustDev Question Stats Modal -->
+<div id="custdevStatsModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="modal-content modal-lg mx-4 p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-gray-800" id="custdevStatsTitle">📊 Savol statistikasi</h3>
+      <button onclick="closeModal('custdevStatsModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Chart -->
+      <div>
+        <div class="chart-container h-[250px]">
+          <canvas id="questionStatsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Answers List -->
+      <div>
+        <h4 class="font-semibold text-gray-800 mb-4">Javoblar ro'yxati</h4>
+        <div id="questionAnswersList" class="max-h-[300px] overflow-y-auto space-y-2">
+          <p class="text-gray-400">Yuklanmoqda...</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -613,6 +933,11 @@
         <label class="text-sm text-gray-600 mb-1 block">Variantlar (har qator - bitta)</label>
         <textarea id="custdevOptions" class="input h-24 resize-none font-mono" placeholder="18-25&#10;26-35&#10;36-45"></textarea>
       </div>
+      <div>
+        <label class="text-sm text-gray-600 mb-1 block">Field nomi (statistika uchun)</label>
+        <input type="text" id="custdevFieldName" class="input" placeholder="age, income, occupation...">
+        <p class="text-xs text-gray-400 mt-1">Masalan: age, income, occupation, budget</p>
+      </div>
       <button type="submit" class="btn btn-primary w-full">Saqlash</button>
     </form>
   </div>
@@ -627,14 +952,18 @@ let allLessons = [];
 let allCustDev = [];
 let currentPage = 1;
 const perPage = 20;
+let paymentFilter = 'completed';
+let selectedBroadcastUsers = new Set();
+let custdevAnswers = {};
 
 // Charts
 let revenueChart, userTypeChart;
 let ageChart, occupationChart, incomeChart, budgetChart;
+let questionStatsChart;
 
 // ========== INITIALIZATION ==========
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
-  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
 });
 
 const saved = localStorage.getItem('adminAuth');
@@ -670,22 +999,22 @@ document.querySelectorAll('.sidebar-item[data-tab], .mobile-nav-item[data-tab]')
 });
 
 function showTab(tab) {
-  // Hide all tabs
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-  document.getElementById('tab-' + tab).classList.remove('hidden');
+  document.getElementById('tab-' + tab)?.classList.remove('hidden');
 
-  // Update sidebar
   document.querySelectorAll('.sidebar-item[data-tab]').forEach(el => el.classList.remove('active'));
   document.querySelector('.sidebar-item[data-tab="' + tab + '"]')?.classList.add('active');
 
-  // Update mobile nav
   document.querySelectorAll('.mobile-nav-item[data-tab]').forEach(el => el.classList.remove('active'));
   document.querySelector('.mobile-nav-item[data-tab="' + tab + '"]')?.classList.add('active');
+
+  // Load tab-specific data
+  if (tab === 'progrev') loadProgrevSettings();
 }
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers()]);
   renderCharts();
 }
 
@@ -693,7 +1022,6 @@ async function loadStats() {
   try {
     const stats = await (await fetch('/api/stats', { headers: { Authorization: auth } })).json();
 
-    // Main stats
     document.getElementById('statTotalUsers').textContent = stats.totalUsers || 0;
     document.getElementById('statPaidUsers').textContent = stats.paidUsers || 0;
     document.getElementById('statRevenue').textContent = fmtMoney(stats.totalRevenue || 0);
@@ -701,12 +1029,10 @@ async function loadStats() {
     const conv = stats.totalUsers > 0 ? Math.round((stats.paidUsers / stats.totalUsers) * 100) : 0;
     document.getElementById('statConversion').textContent = conv + '%';
 
-    // Right panel
     document.getElementById('rightPanelRevenue').textContent = fmtMoney(stats.totalRevenue || 0);
     document.getElementById('rightPanelMonthRevenue').textContent = fmtMoney(stats.monthRevenue || 0);
     document.getElementById('totalRevenueDisplay').textContent = fmtMoney(stats.totalRevenue || 0);
 
-    // User type counts
     document.getElementById('activeUsersCount').textContent = stats.activeUsers || 0;
     document.getElementById('paidUsersCount').textContent = stats.paidUsers || 0;
     document.getElementById('completedUsersCount').textContent = stats.completedUsers || 0;
@@ -726,7 +1052,7 @@ async function loadUsers() {
 
 async function loadPayments() {
   try {
-    const data = await (await fetch('/api/payments', { headers: { Authorization: auth } })).json();
+    const data = await (await fetch('/api/payments?all=true', { headers: { Authorization: auth } })).json();
     allPayments = data;
     renderPayments();
     renderRecentPayments();
@@ -751,6 +1077,35 @@ async function loadCustDev() {
   } catch(e) { console.error('loadCustDev error:', e); }
 }
 
+async function loadCustdevAnswers() {
+  try {
+    const data = await (await fetch('/api/custdev/answers', { headers: { Authorization: auth } })).json();
+    custdevAnswers = data;
+    renderCustDevStats();
+  } catch(e) { console.error('loadCustdevAnswers error:', e); }
+}
+
+async function loadProgrevSettings() {
+  try {
+    const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
+
+    document.getElementById('pitchAfterLesson').value = data.pitch_after_lesson || 4;
+    document.getElementById('pitchDelayMinutes').value = data.pitch_delay_minutes || 120;
+    document.getElementById('pitchText').value = data.pitch_text || '';
+    document.getElementById('pitchVideoFileId').value = data.pitch_video_file_id || '';
+    document.getElementById('pitchImageFileId').value = data.pitch_image_file_id || '';
+
+    document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 60;
+    document.getElementById('salesPitchText').value = data.sales_pitch || '';
+
+    document.getElementById('softAttackDisabled').checked = data.soft_attack_disabled || false;
+    document.getElementById('softAttackDelayMinutes').value = data.soft_attack_delay_minutes || 1440;
+    document.getElementById('softAttackText').value = data.soft_attack_text || '';
+
+    document.getElementById('congratsText').value = data.congrats_text || '';
+  } catch(e) { console.error('loadProgrevSettings error:', e); }
+}
+
 // ========== RENDER FUNCTIONS ==========
 function renderUsers() {
   const filter = document.getElementById('userStatusFilter').value;
@@ -765,12 +1120,12 @@ function renderUsers() {
 
   const tbody = document.getElementById('usersTableBody');
   if (!paginated.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
     return;
   }
 
   tbody.innerHTML = paginated.map(u => `
-    <tr class="table-row">
+    <tr class="table-row" onclick="openUserDetail(${u.telegram_id})">
       <td class="px-5 py-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
@@ -785,9 +1140,12 @@ function renderUsers() {
       <td class="px-5 py-4 text-gray-600">${u.phone || '-'}</td>
       <td class="px-5 py-4"><span class="badge badge-blue">${u.current_lesson || 0}-dars</span></td>
       <td class="px-5 py-4">
-        ${u.is_paid ? '<span class="badge badge-green">💎 Premium</span>' : '<span class="badge badge-gray">Free</span>'}
+        ${u.is_paid ? '<span class="badge badge-green">Premium</span>' : '<span class="badge badge-gray">Free</span>'}
       </td>
       <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
+      <td class="px-5 py-4">
+        <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm">👁</button>
+      </td>
     </tr>
   `).join('');
 
@@ -800,7 +1158,7 @@ function renderUsers() {
   }
 
   let paginationHtml = '';
-  for (let i = 1; i <= totalPages; i++) {
+  for (let i = 1; i <= Math.min(totalPages, 10); i++) {
     paginationHtml += `<button onclick="goToPage(${i})" class="w-10 h-10 rounded-lg ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'}">${i}</button>`;
   }
   pagination.innerHTML = paginationHtml;
@@ -818,12 +1176,14 @@ function searchUsers() {
   const filtered = allUsers.filter(u =>
     (u.first_name || '').toLowerCase().includes(query) ||
     (u.last_name || '').toLowerCase().includes(query) ||
-    (u.phone || '').includes(query)
+    (u.username || '').toLowerCase().includes(query) ||
+    (u.phone || '').includes(query) ||
+    String(u.telegram_id).includes(query)
   );
 
   const tbody = document.getElementById('usersTableBody');
   tbody.innerHTML = filtered.slice(0, 20).map(u => `
-    <tr class="table-row">
+    <tr class="table-row" onclick="openUserDetail(${u.telegram_id})">
       <td class="px-5 py-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
@@ -838,9 +1198,12 @@ function searchUsers() {
       <td class="px-5 py-4 text-gray-600">${u.phone || '-'}</td>
       <td class="px-5 py-4"><span class="badge badge-blue">${u.current_lesson || 0}-dars</span></td>
       <td class="px-5 py-4">
-        ${u.is_paid ? '<span class="badge badge-green">💎 Premium</span>' : '<span class="badge badge-gray">Free</span>'}
+        ${u.is_paid ? '<span class="badge badge-green">Premium</span>' : '<span class="badge badge-gray">Free</span>'}
       </td>
       <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
+      <td class="px-5 py-4">
+        <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm">👁</button>
+      </td>
     </tr>
   `).join('');
 }
@@ -855,7 +1218,7 @@ function renderRecentUsers() {
   }
 
   container.innerHTML = recent.map(u => `
-    <div class="flex items-center gap-3 p-4">
+    <div class="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50" onclick="openUserDetail(${u.telegram_id})">
       <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
         ${(u.first_name || 'U').charAt(0)}
       </div>
@@ -868,29 +1231,54 @@ function renderRecentUsers() {
   `).join('');
 }
 
+function filterPayments(status) {
+  paymentFilter = status;
+
+  document.querySelectorAll('[data-payment-status]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.paymentStatus === status);
+  });
+
+  renderPayments();
+}
+
 function renderPayments() {
   const tbody = document.getElementById('paymentsTableBody');
 
-  if (!allPayments.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
+  let filtered = allPayments;
+  if (paymentFilter !== 'all') {
+    filtered = allPayments.filter(p => p.status === paymentFilter);
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
     return;
   }
 
-  tbody.innerHTML = allPayments.slice(0, 50).map(p => `
-    <tr class="table-row">
-      <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(p.created_at)}</td>
-      <td class="px-5 py-4">
-        <p class="font-medium text-gray-800">${p.first_name || ''} ${p.last_name || ''}</p>
-      </td>
-      <td class="px-5 py-4 font-semibold text-green-600">${fmtMoney(p.amount)}</td>
-      <td class="px-5 py-4"><span class="badge badge-blue">${p.plan || '-'}</span></td>
-      <td class="px-5 py-4 text-gray-500">${p.payment_system || '-'}</td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = filtered.slice(0, 50).map(p => {
+    let statusBadge = '';
+    if (p.status === 'completed') statusBadge = '<span class="badge badge-green">To\'langan</span>';
+    else if (p.status === 'pending') statusBadge = '<span class="badge badge-yellow">Jarayonda</span>';
+    else if (p.status === 'cancelled' || p.status === 'failed') statusBadge = '<span class="badge badge-red">Bekor</span>';
+    else statusBadge = `<span class="badge badge-gray">${p.status || '-'}</span>`;
+
+    return `
+      <tr class="table-row">
+        <td class="px-5 py-4 text-gray-500 text-sm">${fmtDateTime(p.created_at)}</td>
+        <td class="px-5 py-4">
+          <p class="font-medium text-gray-800">${p.first_name || ''} ${p.last_name || ''}</p>
+          <p class="text-xs text-gray-400">ID: ${p.telegram_id || '-'}</p>
+        </td>
+        <td class="px-5 py-4 font-semibold ${p.status === 'completed' ? 'text-green-600' : 'text-gray-600'}">${fmtMoney(p.amount)}</td>
+        <td class="px-5 py-4"><span class="badge badge-blue">${p.plan || '-'}</span></td>
+        <td class="px-5 py-4">${statusBadge}</td>
+        <td class="px-5 py-4 text-gray-500">${p.payment_system || '-'}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderRecentPayments() {
-  const recent = allPayments.slice(0, 5);
+  const recent = allPayments.filter(p => p.status === 'completed').slice(0, 5);
   const container = document.getElementById('recentPaymentsList');
 
   if (!recent.length) {
@@ -911,10 +1299,18 @@ function renderRecentPayments() {
 }
 
 function renderPaymentStats() {
+  const completed = allPayments.filter(p => p.status === 'completed');
+  const pending = allPayments.filter(p => p.status === 'pending');
+  const cancelled = allPayments.filter(p => p.status === 'cancelled' || p.status === 'failed');
+
+  document.getElementById('payCompletedCount').textContent = completed.length;
+  document.getElementById('payPendingCount').textContent = pending.length;
+  document.getElementById('payCancelledCount').textContent = cancelled.length;
+
   const now = new Date();
-  const today = allPayments.filter(p => new Date(p.created_at).toDateString() === now.toDateString());
-  const week = allPayments.filter(p => (now - new Date(p.created_at)) < 7 * 24 * 60 * 60 * 1000);
-  const month = allPayments.filter(p => (now - new Date(p.created_at)) < 30 * 24 * 60 * 60 * 1000);
+  const today = completed.filter(p => new Date(p.created_at).toDateString() === now.toDateString());
+  const week = completed.filter(p => (now - new Date(p.created_at)) < 7 * 24 * 60 * 60 * 1000);
+  const month = completed.filter(p => (now - new Date(p.created_at)) < 30 * 24 * 60 * 60 * 1000);
 
   const sum = arr => arr.reduce((s, p) => s + (p.amount || 0), 0);
 
@@ -924,8 +1320,8 @@ function renderPaymentStats() {
   document.getElementById('payWeekCount').textContent = week.length + ' ta';
   document.getElementById('payMonth').textContent = fmtMoney(sum(month));
   document.getElementById('payMonthCount').textContent = month.length + ' ta';
-  document.getElementById('payTotal').textContent = fmtMoney(sum(allPayments));
-  document.getElementById('payTotalCount').textContent = allPayments.length + ' ta';
+  document.getElementById('payTotal').textContent = fmtMoney(sum(completed));
+  document.getElementById('payTotalCount').textContent = completed.length + ' ta';
 }
 
 function renderLessons() {
@@ -936,23 +1332,35 @@ function renderLessons() {
     return;
   }
 
-  container.innerHTML = allLessons.map(l => `
-    <div class="p-4 flex items-center gap-4 hover:bg-gray-50">
-      <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-        ${l.lesson_number}
+  container.innerHTML = allLessons.map(l => {
+    const hasMedia = l.video_file_id || l.video_note_file_id || l.audio_file_id || l.document_file_id || l.photo_file_id;
+    const mediaIcons = [];
+    if (l.video_file_id) mediaIcons.push('🎬');
+    if (l.video_note_file_id) mediaIcons.push('🔵');
+    if (l.audio_file_id) mediaIcons.push('🎵');
+    if (l.document_file_id) mediaIcons.push('📎');
+    if (l.photo_file_id) mediaIcons.push('🖼');
+
+    return `
+      <div class="p-4 flex items-center gap-4 hover:bg-gray-50">
+        <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+          ${l.lesson_number}
+        </div>
+        <div class="flex-1">
+          <p class="font-medium text-gray-800">${l.title}</p>
+          <p class="text-sm text-gray-400">
+            ${l.delay_hours || 0} soat keyin
+            ${mediaIcons.length ? ' • ' + mediaIcons.join(' ') : ''}
+          </p>
+        </div>
+        <button onclick="editLesson(${l.id})" class="btn btn-secondary text-sm">✏️</button>
+        <button onclick="deleteLesson(${l.id})" class="btn bg-red-50 text-red-600 text-sm">🗑️</button>
       </div>
-      <div class="flex-1">
-        <p class="font-medium text-gray-800">${l.title}</p>
-        <p class="text-sm text-gray-400">${l.delay_hours || 0} soat keyin yuboriladi</p>
-      </div>
-      <button onclick="editLesson(${l.id})" class="btn btn-secondary text-sm">✏️</button>
-      <button onclick="deleteLesson(${l.id})" class="btn bg-red-50 text-red-600 text-sm">🗑️</button>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderLessonProgress() {
-  // Users by lesson
   const lessonCounts = {};
   allUsers.forEach(u => {
     const lesson = u.current_lesson || 0;
@@ -961,7 +1369,6 @@ function renderLessonProgress() {
 
   const maxUsers = Math.max(...Object.values(lessonCounts), 1);
 
-  // Progress stats
   const statsContainer = document.getElementById('lessonProgressStats');
   const panelContainer = document.getElementById('lessonProgressPanel');
 
@@ -998,21 +1405,44 @@ function renderCustDev() {
       </div>
       <div class="flex-1">
         <p class="font-medium text-gray-800">${q.question_text}</p>
-        <p class="text-sm text-gray-400">${q.question_type === 'buttons' ? 'Tugmalar' : 'Matn'} • ${q.answer_count || 0} javob</p>
+        <p class="text-sm text-gray-400">
+          ${q.question_type === 'buttons' ? 'Tugmalar' : 'Matn'}
+          • ${q.answer_count || 0} javob
+          ${q.field_name ? ' • ' + q.field_name : ''}
+        </p>
       </div>
+      <button onclick="openQuestionStats(${q.id})" class="btn btn-secondary text-sm">📊</button>
       <button onclick="editCustDev(${q.id})" class="btn btn-secondary text-sm">✏️</button>
       <button onclick="deleteCustDev(${q.id})" class="btn bg-red-50 text-red-600 text-sm">🗑️</button>
     </div>
   `).join('');
 }
 
+function renderCustDevStats() {
+  // Count stats
+  const totalQuestions = allCustDev.length;
+  const totalAnswers = Object.values(custdevAnswers).reduce((sum, arr) => sum + arr.length, 0);
+  const respondents = new Set();
+  Object.values(custdevAnswers).forEach(answers => {
+    answers.forEach(a => respondents.add(a.telegram_id));
+  });
+  const avgAnswers = respondents.size > 0 ? (totalAnswers / respondents.size).toFixed(1) : 0;
+
+  document.getElementById('custdevTotalQuestions').textContent = totalQuestions;
+  document.getElementById('custdevTotalAnswers').textContent = totalAnswers;
+  document.getElementById('custdevRespondents').textContent = respondents.size;
+  document.getElementById('custdevAvgAnswers').textContent = avgAnswers;
+
+  // Render charts with field data
+  renderCustDevCharts();
+}
+
 function renderRecentActivity() {
   const container = document.getElementById('recentActivity');
 
-  // Combine users and payments, sort by date
   const activities = [
     ...allUsers.slice(0, 5).map(u => ({ type: 'user', data: u, date: new Date(u.created_at) })),
-    ...allPayments.slice(0, 5).map(p => ({ type: 'payment', data: p, date: new Date(p.created_at) }))
+    ...allPayments.filter(p => p.status === 'completed').slice(0, 5).map(p => ({ type: 'payment', data: p, date: new Date(p.created_at) }))
   ].sort((a, b) => b.date - a.date).slice(0, 5);
 
   if (!activities.length) {
@@ -1056,11 +1486,10 @@ function renderRevenueChart() {
   const ctx = document.getElementById('revenueChart')?.getContext('2d');
   if (!ctx) return;
 
-  // Group payments by month
   const monthlyData = {};
   const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
 
-  allPayments.forEach(p => {
+  allPayments.filter(p => p.status === 'completed').forEach(p => {
     const date = new Date(p.created_at);
     const key = months[date.getMonth()];
     monthlyData[key] = (monthlyData[key] || 0) + (p.amount || 0);
@@ -1124,38 +1553,40 @@ function renderUserTypeChart() {
 }
 
 function renderCustDevCharts() {
-  // Get CustDev answers and create charts
-  const answers = {};
-  allUsers.forEach(u => {
-    if (u.custdev_answers) {
-      try {
-        const parsed = typeof u.custdev_answers === 'string' ? JSON.parse(u.custdev_answers) : u.custdev_answers;
-        Object.entries(parsed).forEach(([key, value]) => {
-          if (!answers[key]) answers[key] = {};
-          answers[key][value] = (answers[key][value] || 0) + 1;
-        });
-      } catch(e) {}
+  const colors = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+  // Group answers by field_name
+  const fieldData = {};
+  allCustDev.forEach(q => {
+    if (q.field_name && custdevAnswers[q.id]) {
+      const answers = custdevAnswers[q.id];
+      if (!fieldData[q.field_name]) fieldData[q.field_name] = {};
+
+      answers.forEach(a => {
+        const value = a.answer_text || 'Boshqa';
+        fieldData[q.field_name][value] = (fieldData[q.field_name][value] || 0) + 1;
+      });
     }
   });
 
-  // Create mini pie charts for age, occupation, income, budget
-  ['age', 'occupation', 'income', 'budget'].forEach(field => {
+  // Render charts for each field
+  ['age', 'occupation', 'income', 'budget'].forEach((field, idx) => {
     const ctx = document.getElementById(field + 'Chart')?.getContext('2d');
     if (!ctx) return;
 
-    const data = answers[field] || {};
+    const data = fieldData[field] || {};
     const labels = Object.keys(data);
     const values = Object.values(data);
 
-    if (window[field + 'Chart']) window[field + 'Chart'].destroy();
+    if (window[field + 'ChartInstance']) window[field + 'ChartInstance'].destroy();
 
-    window[field + 'Chart'] = new Chart(ctx, {
+    window[field + 'ChartInstance'] = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels,
         datasets: [{
           data: values.length ? values : [1],
-          backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'],
+          backgroundColor: colors,
           borderWidth: 0
         }]
       },
@@ -1166,6 +1597,17 @@ function renderCustDevCharts() {
         plugins: { legend: { display: false } }
       }
     });
+
+    // Render legend
+    const legendContainer = document.getElementById(field + 'ChartLegend');
+    if (legendContainer && labels.length) {
+      legendContainer.innerHTML = labels.slice(0, 4).map((label, i) => `
+        <div class="flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full" style="background: ${colors[i % colors.length]}"></span>
+          <span class="truncate">${label}: ${values[i]}</span>
+        </div>
+      `).join('');
+    }
   });
 }
 
@@ -1173,32 +1615,183 @@ function renderCustDevCharts() {
 function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-function openBroadcastModal() { openModal('broadcastModal'); }
+// ========== USER DETAIL ==========
+async function openUserDetail(telegramId) {
+  const user = allUsers.find(u => u.telegram_id == telegramId);
+  if (!user) return;
+
+  document.getElementById('userDetailAvatar').textContent = (user.first_name || 'U').charAt(0);
+  document.getElementById('userDetailName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Foydalanuvchi';
+  document.getElementById('userDetailUsername').textContent = user.username ? '@' + user.username : 'username yo\'q';
+  document.getElementById('userDetailTgId').textContent = user.telegram_id;
+  document.getElementById('userDetailPhone').textContent = user.phone || '-';
+  document.getElementById('userDetailLesson').textContent = (user.current_lesson || 0) + '-dars';
+  document.getElementById('userDetailStatus').innerHTML = user.is_paid ? '<span class="badge badge-green">Premium</span>' : '<span class="badge badge-gray">Free</span>';
+  document.getElementById('userDetailCreated').textContent = fmtDateTime(user.created_at);
+
+  // Load user's custdev answers
+  try {
+    const answers = await (await fetch('/api/users/' + telegramId + '/custdev', { headers: { Authorization: auth } })).json();
+    const container = document.getElementById('userDetailCustdev');
+
+    if (!answers || !answers.length) {
+      container.innerHTML = '<p class="text-gray-400 text-center py-4">Javoblar yo\'q</p>';
+    } else {
+      container.innerHTML = answers.map(a => `
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <p class="text-sm text-gray-500 mb-1">${a.question_text}</p>
+          <p class="font-medium text-gray-800">${a.answer_text}</p>
+        </div>
+      `).join('');
+    }
+  } catch(e) {
+    document.getElementById('userDetailCustdev').innerHTML = '<p class="text-red-400 text-center py-4">Xatolik</p>';
+  }
+
+  // Store current user for sending message
+  window.currentUserTgId = telegramId;
+  openModal('userDetailModal');
+}
+
+function sendMessageToUser() {
+  closeModal('userDetailModal');
+  openBroadcastModal();
+  document.getElementById('broadcastTarget').value = 'specific';
+  toggleUserSelect();
+
+  const user = allUsers.find(u => u.telegram_id == window.currentUserTgId);
+  if (user) {
+    selectedBroadcastUsers.add(user.telegram_id);
+    updateSelectedUsersList();
+  }
+}
+
+// ========== BROADCAST ==========
+function openBroadcastModal() {
+  selectedBroadcastUsers.clear();
+  document.getElementById('broadcastTarget').value = 'all';
+  document.getElementById('broadcastType').value = 'text';
+  document.getElementById('broadcastText').value = '';
+  document.getElementById('broadcastMediaId').value = '';
+  document.getElementById('broadcastBtnText').value = '';
+  document.getElementById('broadcastBtnUrl').value = '';
+  toggleUserSelect();
+  toggleBroadcastMedia();
+  openModal('broadcastModal');
+}
+
+function toggleUserSelect() {
+  const target = document.getElementById('broadcastTarget').value;
+  document.getElementById('userSelectDiv').classList.toggle('hidden', target !== 'specific');
+}
+
+function toggleBroadcastMedia() {
+  const type = document.getElementById('broadcastType').value;
+  document.getElementById('broadcastMediaDiv').classList.toggle('hidden', type === 'text');
+}
+
+function searchBroadcastUsers() {
+  const query = document.getElementById('broadcastUserSearch').value.toLowerCase();
+  const container = document.getElementById('broadcastUsersList');
+
+  if (!query) {
+    container.innerHTML = '<p class="text-gray-400 text-sm">Qidirish...</p>';
+    return;
+  }
+
+  const filtered = allUsers.filter(u =>
+    (u.first_name || '').toLowerCase().includes(query) ||
+    (u.phone || '').includes(query) ||
+    String(u.telegram_id).includes(query)
+  ).slice(0, 10);
+
+  container.innerHTML = filtered.map(u => `
+    <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer" onclick="toggleBroadcastUser(${u.telegram_id})">
+      <input type="checkbox" ${selectedBroadcastUsers.has(u.telegram_id) ? 'checked' : ''} class="pointer-events-none">
+      <span class="text-sm">${u.first_name || 'User'}</span>
+      <span class="text-xs text-gray-400">${u.phone || u.telegram_id}</span>
+    </div>
+  `).join('') || '<p class="text-gray-400 text-sm">Topilmadi</p>';
+}
+
+function toggleBroadcastUser(telegramId) {
+  if (selectedBroadcastUsers.has(telegramId)) {
+    selectedBroadcastUsers.delete(telegramId);
+  } else {
+    selectedBroadcastUsers.add(telegramId);
+  }
+  searchBroadcastUsers();
+  updateSelectedUsersList();
+}
+
+function updateSelectedUsersList() {
+  document.getElementById('selectedUsersCount').textContent = selectedBroadcastUsers.size;
+
+  const container = document.getElementById('selectedUsersList');
+  container.innerHTML = Array.from(selectedBroadcastUsers).map(id => {
+    const user = allUsers.find(u => u.telegram_id == id);
+    return `
+      <span class="badge badge-blue flex items-center gap-1">
+        ${user?.first_name || id}
+        <button onclick="toggleBroadcastUser(${id})" class="ml-1">×</button>
+      </span>
+    `;
+  }).join('');
+}
 
 async function sendBroadcast() {
   const target = document.getElementById('broadcastTarget').value;
+  const type = document.getElementById('broadcastType').value;
   const text = document.getElementById('broadcastText').value;
+  const mediaId = document.getElementById('broadcastMediaId').value;
+  const btnText = document.getElementById('broadcastBtnText').value;
+  const btnUrl = document.getElementById('broadcastBtnUrl').value;
 
-  if (!text.trim()) { alert('Xabar matni bo\'sh'); return; }
+  if (!text.trim() && type === 'text') {
+    alert('Xabar matni bo\'sh');
+    return;
+  }
+
+  if (type !== 'text' && !mediaId.trim()) {
+    alert('Media File ID kiriting');
+    return;
+  }
+
+  if (target === 'specific' && selectedBroadcastUsers.size === 0) {
+    alert('Kamida bitta foydalanuvchi tanlang');
+    return;
+  }
 
   try {
-    const res = await fetch('/api/broadcast', {
+    const body = {
+      target,
+      type,
+      text,
+      media_id: mediaId || null,
+      button: btnText && btnUrl ? { text: btnText, url: btnUrl } : null,
+      user_ids: target === 'specific' ? Array.from(selectedBroadcastUsers) : null
+    };
+
+    const res = await fetch('/api/broadcast/advanced', {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target, text })
+      body: JSON.stringify(body)
     });
 
+    const result = await res.json();
+
     if (res.ok) {
-      alert('✅ Xabar yuborildi!');
+      alert(`✅ Xabar yuborildi! ${result.sent || 0} ta muvaffaqiyatli, ${result.failed || 0} ta xato`);
       closeModal('broadcastModal');
-      document.getElementById('broadcastText').value = '';
     } else {
-      alert('Xatolik yuz berdi');
+      alert('Xatolik: ' + (result.error || 'Noma\'lum xato'));
     }
-  } catch(e) { alert('Xatolik: ' + e.message); }
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
 }
 
-// Lessons
+// ========== LESSONS ==========
 function openLessonModal() {
   document.getElementById('lessonModalTitle').textContent = '📚 Yangi dars';
   document.getElementById('lessonId').value = '';
@@ -1206,6 +1799,11 @@ function openLessonModal() {
   document.getElementById('lessonTitle').value = '';
   document.getElementById('lessonText').value = '';
   document.getElementById('lessonDelay').value = 24;
+  document.getElementById('lessonVideoFileId').value = '';
+  document.getElementById('lessonVideoNoteFileId').value = '';
+  document.getElementById('lessonAudioFileId').value = '';
+  document.getElementById('lessonDocumentFileId').value = '';
+  document.getElementById('lessonPhotoFileId').value = '';
   openModal('lessonModal');
 }
 
@@ -1217,8 +1815,13 @@ function editLesson(id) {
   document.getElementById('lessonId').value = lesson.id;
   document.getElementById('lessonNumber').value = lesson.lesson_number;
   document.getElementById('lessonTitle').value = lesson.title;
-  document.getElementById('lessonText').value = lesson.text || '';
+  document.getElementById('lessonText').value = lesson.content || lesson.text || '';
   document.getElementById('lessonDelay').value = lesson.delay_hours || 0;
+  document.getElementById('lessonVideoFileId').value = lesson.video_file_id || '';
+  document.getElementById('lessonVideoNoteFileId').value = lesson.video_note_file_id || '';
+  document.getElementById('lessonAudioFileId').value = lesson.audio_file_id || '';
+  document.getElementById('lessonDocumentFileId').value = lesson.document_file_id || '';
+  document.getElementById('lessonPhotoFileId').value = lesson.photo_file_id || '';
   openModal('lessonModal');
 }
 
@@ -1229,8 +1832,13 @@ document.getElementById('lessonForm').onsubmit = async function(e) {
   const data = {
     lesson_number: parseInt(document.getElementById('lessonNumber').value),
     title: document.getElementById('lessonTitle').value,
-    text: document.getElementById('lessonText').value,
-    delay_hours: parseInt(document.getElementById('lessonDelay').value) || 0
+    content: document.getElementById('lessonText').value,
+    delay_hours: parseInt(document.getElementById('lessonDelay').value) || 0,
+    video_file_id: document.getElementById('lessonVideoFileId').value || null,
+    video_note_file_id: document.getElementById('lessonVideoNoteFileId').value || null,
+    audio_file_id: document.getElementById('lessonAudioFileId').value || null,
+    document_file_id: document.getElementById('lessonDocumentFileId').value || null,
+    photo_file_id: document.getElementById('lessonPhotoFileId').value || null
   };
 
   try {
@@ -1260,7 +1868,7 @@ async function deleteLesson(id) {
   } catch(e) { alert('Xatolik: ' + e.message); }
 }
 
-// CustDev
+// ========== CUSTDEV ==========
 function openCustDevModal() {
   document.getElementById('custdevModalTitle').textContent = '📝 Yangi savol';
   document.getElementById('custdevId').value = '';
@@ -1268,6 +1876,7 @@ function openCustDevModal() {
   document.getElementById('custdevQuestion').value = '';
   document.getElementById('custdevType').value = 'text';
   document.getElementById('custdevOptions').value = '';
+  document.getElementById('custdevFieldName').value = '';
   document.getElementById('custdevOptionsDiv').classList.add('hidden');
   openModal('custdevModal');
 }
@@ -1282,6 +1891,7 @@ function editCustDev(id) {
   document.getElementById('custdevQuestion').value = q.question_text;
   document.getElementById('custdevType').value = q.question_type;
   document.getElementById('custdevOptions').value = q.options ? q.options.join('\n') : '';
+  document.getElementById('custdevFieldName').value = q.field_name || '';
   toggleCustdevOptions();
   openModal('custdevModal');
 }
@@ -1302,7 +1912,8 @@ document.getElementById('custdevForm').onsubmit = async function(e) {
     after_lesson: parseInt(document.getElementById('custdevAfterLesson').value),
     question_text: document.getElementById('custdevQuestion').value,
     question_type: type,
-    options: type === 'buttons' ? optionsText.split('\n').filter(o => o.trim()) : null
+    options: type === 'buttons' ? optionsText.split('\n').filter(o => o.trim()) : null,
+    field_name: document.getElementById('custdevFieldName').value || null
   };
 
   try {
@@ -1332,10 +1943,94 @@ async function deleteCustDev(id) {
   } catch(e) { alert('Xatolik: ' + e.message); }
 }
 
+async function openQuestionStats(questionId) {
+  const question = allCustDev.find(q => q.id === questionId);
+  if (!question) return;
+
+  document.getElementById('custdevStatsTitle').textContent = '📊 ' + question.question_text.substring(0, 50) + '...';
+
+  // Get answers for this question
+  const answers = custdevAnswers[questionId] || [];
+
+  // Count answers
+  const answerCounts = {};
+  answers.forEach(a => {
+    const value = a.answer_text || 'Boshqa';
+    answerCounts[value] = (answerCounts[value] || 0) + 1;
+  });
+
+  const labels = Object.keys(answerCounts);
+  const values = Object.values(answerCounts);
+  const colors = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+  // Render chart
+  const ctx = document.getElementById('questionStatsChart')?.getContext('2d');
+  if (ctx) {
+    if (questionStatsChart) questionStatsChart.destroy();
+
+    questionStatsChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{
+          data: values.length ? values : [1],
+          backgroundColor: colors,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  }
+
+  // Render answers list
+  const listContainer = document.getElementById('questionAnswersList');
+  listContainer.innerHTML = labels.map((label, i) => `
+    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full" style="background: ${colors[i % colors.length]}"></span>
+        <span class="font-medium">${label}</span>
+      </div>
+      <span class="text-gray-600">${values[i]} (${Math.round(values[i] / answers.length * 100)}%)</span>
+    </div>
+  `).join('') || '<p class="text-gray-400">Javoblar yo\'q</p>';
+
+  openModal('custdevStatsModal');
+}
+
+// ========== PROGREV SETTINGS ==========
+async function saveProgrevSettings() {
+  try {
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pitch_after_lesson: parseInt(document.getElementById('pitchAfterLesson').value) || 4,
+        pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 120,
+        pitch_text: document.getElementById('pitchText').value,
+        pitch_video_file_id: document.getElementById('pitchVideoFileId').value || null,
+        pitch_image_file_id: document.getElementById('pitchImageFileId').value || null,
+        sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 60,
+        sales_pitch: document.getElementById('salesPitchText').value,
+        soft_attack_disabled: document.getElementById('softAttackDisabled').checked,
+        soft_attack_delay_minutes: parseInt(document.getElementById('softAttackDelayMinutes').value) || 1440,
+        soft_attack_text: document.getElementById('softAttackText').value,
+        congrats_text: document.getElementById('congratsText').value
+      })
+    });
+
+    alert('✅ Progrev sozlamalari saqlandi!');
+  } catch(e) { alert('Xatolik: ' + e.message); }
+}
+
 // ========== SETTINGS ==========
 async function saveSettings() {
   try {
-    // Save channel settings
     await fetch('/api/settings', {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
@@ -1349,10 +2044,7 @@ async function saveSettings() {
         price_1m: parseInt(document.getElementById('settingPrice1m').value) * 100 || null,
         price_3m: parseInt(document.getElementById('settingPrice3m').value) * 100 || null,
         price_6m: parseInt(document.getElementById('settingPrice6m').value) * 100 || null,
-        price_12m: parseInt(document.getElementById('settingPrice12m').value) * 100 || null,
-        pitch_after_lesson: parseInt(document.getElementById('settingPitchAfter').value) || 4,
-        pitch_text: document.getElementById('settingPitchText').value,
-        pitch_delay_minutes: parseInt(document.getElementById('settingPitchDelay').value) || 120
+        price_12m: parseInt(document.getElementById('settingPrice12m').value) * 100 || null
       })
     });
 
@@ -1370,6 +2062,12 @@ function fmtDate(dateStr) {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' });
+}
+
+function fmtDateTime(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 </script>
 

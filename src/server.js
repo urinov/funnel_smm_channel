@@ -1159,6 +1159,142 @@ app.post('/api/funnels/migrate', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ NEW: CustDev Answers API ============
+app.get('/api/custdev/answers', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const answers = await db.getAllCustDevAnswers();
+    res.json(answers);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get user's custdev answers
+app.get('/api/users/:telegramId/custdev', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const answers = await db.getUserCustDevAnswers(parseInt(req.params.telegramId));
+    res.json(answers);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ NEW: Settings POST (save all settings) ============
+app.post('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const data = req.body;
+
+    // Channel settings
+    if (data.premium_channel_id !== undefined) await db.updateBotMessage('premium_channel_id', data.premium_channel_id);
+    if (data.free_channel_id !== undefined) await db.updateBotMessage('free_channel_id', data.free_channel_id);
+    if (data.free_channel_link !== undefined) await db.updateBotMessage('free_channel_link', data.free_channel_link);
+    if (data.require_subscription_before_lesson !== undefined) await db.updateBotMessage('require_subscription_before_lesson', String(data.require_subscription_before_lesson));
+
+    // Payment settings
+    if (data.payme_enabled !== undefined) await db.updateBotMessage('payme_enabled', String(data.payme_enabled));
+    if (data.click_enabled !== undefined) await db.updateBotMessage('click_enabled', String(data.click_enabled));
+    if (data.price_1m !== undefined) await db.updateBotMessage('price_1m', String(data.price_1m));
+    if (data.price_3m !== undefined) await db.updateBotMessage('price_3m', String(data.price_3m));
+    if (data.price_6m !== undefined) await db.updateBotMessage('price_6m', String(data.price_6m));
+    if (data.price_12m !== undefined) await db.updateBotMessage('price_12m', String(data.price_12m));
+
+    // Progrev settings
+    if (data.pitch_after_lesson !== undefined) await db.updateBotMessage('pitch_after_lesson', String(data.pitch_after_lesson));
+    if (data.pitch_delay_minutes !== undefined) await db.updateBotMessage('pitch_delay_minutes', String(data.pitch_delay_minutes));
+    if (data.pitch_text !== undefined) await db.updateBotMessage('pitch_text', data.pitch_text);
+    if (data.pitch_video_file_id !== undefined) await db.updateBotMessage('pitch_video_file_id', data.pitch_video_file_id || '');
+    if (data.pitch_image_file_id !== undefined) await db.updateBotMessage('pitch_image_file_id', data.pitch_image_file_id || '');
+
+    if (data.sales_delay_minutes !== undefined) await db.updateBotMessage('sales_delay_minutes', String(data.sales_delay_minutes));
+    if (data.sales_pitch !== undefined) await db.updateBotMessage('sales_pitch', data.sales_pitch);
+
+    if (data.soft_attack_disabled !== undefined) await db.updateBotMessage('soft_attack_disabled', String(data.soft_attack_disabled));
+    if (data.soft_attack_delay_minutes !== undefined) await db.updateBotMessage('soft_attack_delay_minutes', String(data.soft_attack_delay_minutes));
+    if (data.soft_attack_text !== undefined) await db.updateBotMessage('soft_attack_text', data.soft_attack_text);
+
+    if (data.congrats_text !== undefined) await db.updateBotMessage('congrats_text', data.congrats_text);
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ NEW: Enhanced Broadcast API ============
+app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
+  try {
+    const { target, type, text, media_id, button, user_ids } = req.body;
+    const { getAllActiveUsers } = await import('./database.js');
+    const { Markup } = await import('telegraf');
+
+    let users = [];
+
+    if (target === 'specific' && user_ids && user_ids.length > 0) {
+      // Send to specific users
+      const allUsers = await getAllActiveUsers();
+      users = allUsers.filter(u => user_ids.includes(u.telegram_id));
+    } else if (target === 'paid') {
+      const allUsers = await getAllActiveUsers();
+      users = allUsers.filter(u => u.is_paid);
+    } else if (target === 'free') {
+      const allUsers = await getAllActiveUsers();
+      users = allUsers.filter(u => !u.is_paid);
+    } else {
+      users = await getAllActiveUsers();
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    // Build inline keyboard if button provided
+    let keyboard = null;
+    if (button && button.text && button.url) {
+      keyboard = Markup.inlineKeyboard([[Markup.button.url(button.text, button.url)]]);
+    }
+
+    for (const user of users) {
+      try {
+        const personalizedText = (text || '')
+          .replace(/\{\{fio\}\}/gi, user.full_name || user.first_name || "do'st")
+          .replace(/\{\{ism\}\}/gi, (user.first_name || "do'st").split(' ')[0])
+          .replace(/\{\{telefon\}\}/gi, user.phone || '')
+          .replace(/\{\{dars\}\}/gi, String(user.current_lesson || 0));
+
+        const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
+
+        if (type === 'video' && media_id) {
+          await bot.telegram.sendVideo(user.telegram_id, media_id, { caption: personalizedText, ...opts });
+        } else if (type === 'photo' && media_id) {
+          await bot.telegram.sendPhoto(user.telegram_id, media_id, { caption: personalizedText, ...opts });
+        } else if (type === 'video_note' && media_id) {
+          await bot.telegram.sendVideoNote(user.telegram_id, media_id);
+          if (personalizedText) await bot.telegram.sendMessage(user.telegram_id, personalizedText, opts);
+        } else if (type === 'audio' && media_id) {
+          await bot.telegram.sendAudio(user.telegram_id, media_id, { caption: personalizedText, ...opts });
+        } else if (type === 'document' && media_id) {
+          await bot.telegram.sendDocument(user.telegram_id, media_id, { caption: personalizedText, ...opts });
+        } else {
+          await bot.telegram.sendMessage(user.telegram_id, personalizedText, opts);
+        }
+        sent++;
+
+        // Rate limiting
+        await new Promise(r => setTimeout(r, 50));
+      } catch (e) {
+        console.error('Broadcast error for user', user.telegram_id, ':', e.message);
+        failed++;
+      }
+    }
+
+    res.json({ success: true, sent, failed, total: users.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const port = process.env.PORT || 3000;
 
 async function start() {
