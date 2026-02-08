@@ -1898,8 +1898,8 @@ export async function getUserCustDevAnswers(telegramId) {
   return rows;
 }
 
-// Get all settings (combined from bot_messages and settings tables)
-export async function getAllSettings() {
+// Get all settings (combined from bot_messages and settings tables) for admin dashboard
+export async function getAllDashboardSettings() {
   // Get from bot_messages
   const { rows: botMessages } = await pool.query('SELECT key, text as value FROM bot_messages');
 

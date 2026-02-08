@@ -913,7 +913,8 @@ app.get('/api/analytics/buyers', authMiddleware, async (req, res) => {
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
     const db = await import('./database.js');
-    const settings = await db.getAllSettings();
+    // Use combined settings from bot_messages and settings tables
+    const settings = await db.getAllDashboardSettings();
     res.json(settings);
   } catch (e) {
     res.status(500).json({ error: e.message });
