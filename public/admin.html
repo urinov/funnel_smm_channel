@@ -1171,7 +1171,67 @@
             </div>
             <p class="text-xs text-gray-400 mt-2">Bo'sh qoldirilsa, umumiy narxlar ishlatiladi</p>
           </div>
-          
+
+          <!-- Progrev Flow vaqtlari -->
+          <div class="glass rounded-2xl p-4">
+            <h4 class="font-medium mb-3">⏱️ Progrev Flow vaqtlari</h4>
+            <div class="space-y-4">
+              <!-- Sales delay -->
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">💰 To'lov xabari (pitch dan keyin)</label>
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <button type="button" onclick="setFunnelSalesDelay(0)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="0">⚡ Darhol</button>
+                  <button type="button" onclick="setFunnelSalesDelay(30)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="30">30 daq</button>
+                  <button type="button" onclick="setFunnelSalesDelay(60)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="60">1 soat</button>
+                  <button type="button" onclick="setFunnelSalesDelay(180)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="180">3 soat</button>
+                  <button type="button" onclick="setFunnelSalesDelay(-1)" class="funnel-sales-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-blue-100" data-value="-1">⚙️ Boshqa</button>
+                </div>
+                <div id="funnelSalesDelayCustomDiv" class="hidden flex gap-2 items-center">
+                  <input type="number" id="funnelSalesDelayValue" class="w-20 px-3 py-2 rounded-xl glass-input" value="1" min="0" onchange="updateFunnelSalesDelayFromCustom()">
+                  <select id="funnelSalesDelayUnit" class="px-3 py-2 rounded-xl glass-input" onchange="updateFunnelSalesDelayFromCustom()">
+                    <option value="1">daqiqa</option>
+                    <option value="60" selected>soat</option>
+                    <option value="1440">kun</option>
+                  </select>
+                </div>
+                <input type="hidden" id="funnelSalesDelayMinutes" value="60">
+              </div>
+
+              <!-- Soft attack delay -->
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">🔔 Eslatma (to'lamagan bo'lsa)</label>
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <button type="button" onclick="setFunnelSoftDelay(-1, true)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="disabled">❌ O'chirish</button>
+                  <button type="button" onclick="setFunnelSoftDelay(720)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="720">12 soat</button>
+                  <button type="button" onclick="setFunnelSoftDelay(1440)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="1440">1 kun</button>
+                  <button type="button" onclick="setFunnelSoftDelay(4320)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="4320">3 kun</button>
+                  <button type="button" onclick="setFunnelSoftDelay(-2)" class="funnel-soft-delay-btn px-3 py-1.5 rounded-lg glass text-sm hover:bg-orange-100" data-value="-2">⚙️ Boshqa</button>
+                </div>
+                <div id="funnelSoftDelayCustomDiv" class="hidden flex gap-2 items-center">
+                  <input type="number" id="funnelSoftDelayValue" class="w-20 px-3 py-2 rounded-xl glass-input" value="24" min="0" onchange="updateFunnelSoftDelayFromCustom()">
+                  <select id="funnelSoftDelayUnit" class="px-3 py-2 rounded-xl glass-input" onchange="updateFunnelSoftDelayFromCustom()">
+                    <option value="60" selected>soat</option>
+                    <option value="1440">kun</option>
+                  </select>
+                </div>
+                <input type="hidden" id="funnelSoftDelayMinutes" value="1440">
+                <input type="hidden" id="funnelSoftDisabled" value="false">
+              </div>
+
+              <!-- Soft attack text -->
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">📝 Eslatma matni</label>
+                <textarea id="funnelSoftAttackText" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🤔 Hali qaror qilmadingizmi?"></textarea>
+              </div>
+
+              <!-- Congrats text -->
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-2 block">🎉 Tabriknoma matni (darslar tugaganda)</label>
+                <textarea id="funnelCongratsText" rows="2" class="w-full px-4 py-3 rounded-xl glass-input resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
+              </div>
+            </div>
+          </div>
+
           <button onclick="saveFunnelSettings()" class="w-full py-3 rounded-xl glass-btn text-white font-medium">💾 Sozlamalarni saqlash</button>
         </div>
       </div>
@@ -2078,10 +2138,21 @@
           </div>
         </div>
         
+        <!-- Info banner -->
+        <div class="glass-card rounded-3xl p-4 mb-6 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-300/30">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">💡</span>
+            <div>
+              <p class="font-medium text-gray-800">CustDev savollarini boshqarish</p>
+              <p class="text-sm text-gray-600 mt-1">Har bir varonka uchun alohida CustDev savollari mavjud. Savollarni qo'shish va tahrirlash uchun <strong>🎯 Varonkalar</strong> bo'limiga o'ting va kerakli varonkani oching.</p>
+            </div>
+          </div>
+        </div>
+
         <div class="glass-card rounded-3xl overflow-hidden mb-6">
           <div class="px-6 py-4 border-b border-white/30 flex justify-between items-center">
-            <h2 class="font-bold text-lg">📝 CustDev Savollar</h2>
-            <button onclick="addCustDev()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">+ Yangi savol</button>
+            <h2 class="font-bold text-lg">📝 CustDev Savollar (umumiy)</h2>
+            <button onclick="showTab('funnels')" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">🎯 Varonkalarga o'tish</button>
           </div>
           <div id="custdevList" class="divide-y divide-white/20"></div>
         </div>
@@ -5407,24 +5478,145 @@ async function saveFunnelPitch() {
 
 function loadFunnelSettings() {
   if (!currentFunnelData) return;
-  
+
   document.getElementById('funnelPremiumChannelId').value = currentFunnelData.premium_channel_id || '';
   document.getElementById('funnelFreeChannelId').value = currentFunnelData.free_channel_id || '';
   document.getElementById('funnelFreeChannelLink').value = currentFunnelData.free_channel_link || '';
   document.getElementById('funnelRequireSubBefore').value = currentFunnelData.require_subscription_before_lesson || 0;
-  
+
   // Payment settings
   document.getElementById('funnelPaymeEnabled').checked = currentFunnelData.payme_enabled !== false;
   document.getElementById('funnelClickEnabled').checked = currentFunnelData.click_enabled !== false;
-  
+
   // Prices
   document.getElementById('funnelPrice1m').value = currentFunnelData.price_1m ? currentFunnelData.price_1m / 100 : '';
   document.getElementById('funnelPrice3m').value = currentFunnelData.price_3m ? currentFunnelData.price_3m / 100 : '';
   document.getElementById('funnelPrice6m').value = currentFunnelData.price_6m ? currentFunnelData.price_6m / 100 : '';
   document.getElementById('funnelPrice12m').value = currentFunnelData.price_12m ? currentFunnelData.price_12m / 100 : '';
+
+  // Progrev Flow settings
+  var salesMinutes = currentFunnelData.sales_delay_minutes || (currentFunnelData.sales_delay_hours ? currentFunnelData.sales_delay_hours * 60 : 60);
+  setFunnelSalesDelay(salesMinutes, true);
+
+  var softDisabled = currentFunnelData.soft_attack_disabled === true;
+  var softMinutes = currentFunnelData.soft_attack_delay_minutes || (currentFunnelData.soft_attack_delay_hours ? currentFunnelData.soft_attack_delay_hours * 60 : 1440);
+  if (softDisabled) {
+    setFunnelSoftDelay(-1, true, true);
+  } else {
+    setFunnelSoftDelay(softMinutes, false, true);
+  }
+
+  document.getElementById('funnelSoftAttackText').value = currentFunnelData.soft_attack_text || '';
+  document.getElementById('funnelCongratsText').value = currentFunnelData.congrats_text || '🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!';
+}
+
+// Helper: Set sales delay
+function setFunnelSalesDelay(minutes, noHighlight) {
+  document.querySelectorAll('.funnel-sales-delay-btn').forEach(function(btn) {
+    btn.classList.remove('bg-blue-500', 'text-white');
+  });
+
+  if (minutes === -1) {
+    // Custom
+    document.getElementById('funnelSalesDelayCustomDiv').classList.remove('hidden');
+    if (!noHighlight) {
+      document.querySelector('.funnel-sales-delay-btn[data-value="-1"]').classList.add('bg-blue-500', 'text-white');
+    }
+    return;
+  }
+
+  document.getElementById('funnelSalesDelayCustomDiv').classList.add('hidden');
+  document.getElementById('funnelSalesDelayMinutes').value = minutes;
+
+  // Highlight the matching button
+  var matchBtn = document.querySelector('.funnel-sales-delay-btn[data-value="' + minutes + '"]');
+  if (matchBtn) {
+    matchBtn.classList.add('bg-blue-500', 'text-white');
+  } else {
+    // Custom value - show custom input
+    document.getElementById('funnelSalesDelayCustomDiv').classList.remove('hidden');
+    document.querySelector('.funnel-sales-delay-btn[data-value="-1"]').classList.add('bg-blue-500', 'text-white');
+    // Convert to best unit
+    if (minutes >= 1440 && minutes % 1440 === 0) {
+      document.getElementById('funnelSalesDelayValue').value = minutes / 1440;
+      document.getElementById('funnelSalesDelayUnit').value = '1440';
+    } else if (minutes >= 60) {
+      document.getElementById('funnelSalesDelayValue').value = minutes / 60;
+      document.getElementById('funnelSalesDelayUnit').value = '60';
+    } else {
+      document.getElementById('funnelSalesDelayValue').value = minutes;
+      document.getElementById('funnelSalesDelayUnit').value = '1';
+    }
+  }
+}
+
+// Helper: Set soft attack delay
+function setFunnelSoftDelay(minutes, disabled, noHighlight) {
+  document.querySelectorAll('.funnel-soft-delay-btn').forEach(function(btn) {
+    btn.classList.remove('bg-orange-500', 'text-white');
+  });
+
+  if (disabled || minutes === -1) {
+    // Disabled
+    document.getElementById('funnelSoftDelayCustomDiv').classList.add('hidden');
+    document.getElementById('funnelSoftDisabled').value = 'true';
+    document.getElementById('funnelSoftDelayMinutes').value = -1;
+    document.querySelector('.funnel-soft-delay-btn[data-value="disabled"]').classList.add('bg-orange-500', 'text-white');
+    return;
+  }
+
+  if (minutes === -2) {
+    // Custom
+    document.getElementById('funnelSoftDelayCustomDiv').classList.remove('hidden');
+    document.getElementById('funnelSoftDisabled').value = 'false';
+    if (!noHighlight) {
+      document.querySelector('.funnel-soft-delay-btn[data-value="-2"]').classList.add('bg-orange-500', 'text-white');
+    }
+    return;
+  }
+
+  document.getElementById('funnelSoftDelayCustomDiv').classList.add('hidden');
+  document.getElementById('funnelSoftDisabled').value = 'false';
+  document.getElementById('funnelSoftDelayMinutes').value = minutes;
+
+  // Highlight the matching button
+  var matchBtn = document.querySelector('.funnel-soft-delay-btn[data-value="' + minutes + '"]');
+  if (matchBtn) {
+    matchBtn.classList.add('bg-orange-500', 'text-white');
+  } else {
+    // Custom value - show custom input
+    document.getElementById('funnelSoftDelayCustomDiv').classList.remove('hidden');
+    document.querySelector('.funnel-soft-delay-btn[data-value="-2"]').classList.add('bg-orange-500', 'text-white');
+    // Convert to best unit
+    if (minutes >= 1440) {
+      document.getElementById('funnelSoftDelayValue').value = minutes / 1440;
+      document.getElementById('funnelSoftDelayUnit').value = '1440';
+    } else {
+      document.getElementById('funnelSoftDelayValue').value = minutes / 60;
+      document.getElementById('funnelSoftDelayUnit').value = '60';
+    }
+  }
+}
+
+// Update sales delay from custom inputs
+function updateFunnelSalesDelayFromCustom() {
+  var value = parseFloat(document.getElementById('funnelSalesDelayValue').value) || 0;
+  var unit = parseInt(document.getElementById('funnelSalesDelayUnit').value) || 1;
+  document.getElementById('funnelSalesDelayMinutes').value = value * unit;
+}
+
+// Update soft delay from custom inputs
+function updateFunnelSoftDelayFromCustom() {
+  var value = parseFloat(document.getElementById('funnelSoftDelayValue').value) || 0;
+  var unit = parseInt(document.getElementById('funnelSoftDelayUnit').value) || 60;
+  document.getElementById('funnelSoftDelayMinutes').value = value * unit;
 }
 
 async function saveFunnelSettings() {
+  // Update custom delays first
+  updateFunnelSalesDelayFromCustom();
+  updateFunnelSoftDelayFromCustom();
+
   try {
     var data = {
       premium_channel_id: document.getElementById('funnelPremiumChannelId').value || null,
@@ -5432,15 +5624,21 @@ async function saveFunnelSettings() {
       free_channel_link: document.getElementById('funnelFreeChannelLink').value || null,
       require_subscription_before_lesson: parseInt(document.getElementById('funnelRequireSubBefore').value) || 0,
       payme_enabled: document.getElementById('funnelPaymeEnabled').checked,
-      click_enabled: document.getElementById('funnelClickEnabled').checked
+      click_enabled: document.getElementById('funnelClickEnabled').checked,
+      // Progrev Flow settings
+      sales_delay_minutes: parseFloat(document.getElementById('funnelSalesDelayMinutes').value) || 60,
+      soft_attack_delay_minutes: parseFloat(document.getElementById('funnelSoftDelayMinutes').value) || 1440,
+      soft_attack_disabled: document.getElementById('funnelSoftDisabled').value === 'true',
+      soft_attack_text: document.getElementById('funnelSoftAttackText').value || null,
+      congrats_text: document.getElementById('funnelCongratsText').value || null
     };
-    
+
     // Add prices if set (convert to tiyin)
     var p1 = document.getElementById('funnelPrice1m').value;
     var p3 = document.getElementById('funnelPrice3m').value;
     var p6 = document.getElementById('funnelPrice6m').value;
     var p12 = document.getElementById('funnelPrice12m').value;
-    
+
     if (p1) data.price_1m = parseInt(p1) * 100;
     if (p3) data.price_3m = parseInt(p3) * 100;
     if (p6) data.price_6m = parseInt(p6) * 100;
