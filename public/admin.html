@@ -1721,19 +1721,43 @@
 
       <!-- Funnels / Varonkalar -->
       <div id="content-funnels" class="hidden">
-        <div class="glass-card rounded-3xl p-6 mb-6">
-          <div class="flex justify-between items-center mb-6">
+        <!-- Header -->
+        <div class="glass-card rounded-3xl p-6 mb-6 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-pink-500/10">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h2 class="font-bold text-2xl text-gray-800">🎯 Varonkalar</h2>
-              <p class="text-gray-500 text-sm mt-1">Ko'p varonkali sotish tizimi</p>
+              <h2 class="font-bold text-2xl md:text-3xl text-gray-800 flex items-center gap-3">
+                <span class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xl shadow-lg">🎯</span>
+                Varonkalar
+              </h2>
+              <p class="text-gray-500 mt-2">Ko'p varonkali sotish tizimi - har bir mahsulot uchun alohida funnel</p>
             </div>
-            <button onclick="openCreateFunnelModal()" class="px-6 py-3 rounded-2xl glass-btn text-white font-medium">+ Yangi varonka</button>
+            <button onclick="openCreateFunnelModal()" class="px-6 py-3 rounded-2xl glass-btn text-white font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+              <span class="text-xl">+</span> Yangi varonka
+            </button>
           </div>
-          
-          <!-- Funnels list -->
-          <div id="funnelsList" class="space-y-4">
+
+          <!-- Quick stats -->
+          <div class="grid grid-cols-3 gap-4 mt-6">
+            <div class="glass rounded-2xl p-4 text-center">
+              <p class="text-3xl font-bold text-violet-600" id="funnelCountStat">0</p>
+              <p class="text-xs text-gray-500 mt-1">Jami varonkalar</p>
+            </div>
+            <div class="glass rounded-2xl p-4 text-center">
+              <p class="text-3xl font-bold text-green-600" id="activeFunnelsStat">0</p>
+              <p class="text-xs text-gray-500 mt-1">Faol</p>
+            </div>
+            <div class="glass rounded-2xl p-4 text-center">
+              <p class="text-3xl font-bold text-blue-600" id="defaultFunnelStat">-</p>
+              <p class="text-xs text-gray-500 mt-1">Default</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnels list -->
+        <div class="glass-card rounded-3xl p-6 mb-6">
+          <div id="funnelsList">
             <div class="text-center py-12 text-gray-400">
-              <span class="text-5xl mb-4 block">🎯</span>
+              <div class="animate-spin w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full mx-auto mb-4"></div>
               <p>Varonkalar yuklanmoqda...</p>
             </div>
           </div>
@@ -4732,46 +4756,146 @@ async function loadFunnels() {
   try {
     allFunnels = await (await fetch('/api/funnels', {headers: {Authorization: auth}})).json();
     renderFunnelsList();
+    updateFunnelStats();
   } catch(e) {
     console.error('loadFunnels error:', e);
     document.getElementById('funnelsList').innerHTML = '<p class="text-red-500 text-center py-4">Xatolik: ' + e.message + '</p>';
   }
 }
 
+function updateFunnelStats() {
+  var total = allFunnels.length;
+  var active = allFunnels.filter(function(f) { return f.is_active; }).length;
+  var defaultFunnel = allFunnels.find(function(f) { return f.is_default; });
+
+  document.getElementById('funnelCountStat').textContent = total;
+  document.getElementById('activeFunnelsStat').textContent = active;
+  document.getElementById('defaultFunnelStat').textContent = defaultFunnel ? defaultFunnel.name.substring(0, 15) : '-';
+}
+
 function renderFunnelsList() {
   if (!allFunnels.length) {
     document.getElementById('funnelsList').innerHTML = `
-      <div class="text-center py-12">
-        <span class="text-5xl mb-4 block">🎯</span>
-        <p class="text-gray-500 mb-4">Hali varonkalar yo'q</p>
-        <button onclick="openCreateFunnelModal()" class="px-6 py-3 rounded-xl glass-btn text-white">+ Birinchi varonka yaratish</button>
+      <div class="text-center py-16">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+          <span class="text-5xl">🎯</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-700 mb-2">Hali varonkalar yo'q</h3>
+        <p class="text-gray-500 mb-6">Birinchi varonkangizni yaratib, sotishni boshlang!</p>
+        <button onclick="openCreateFunnelModal()" class="px-8 py-4 rounded-2xl glass-btn text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+          ✨ Birinchi varonka yaratish
+        </button>
       </div>
     `;
     return;
   }
-  
-  var html = '';
+
+  var html = '<div class="grid gap-4">';
   for (var i = 0; i < allFunnels.length; i++) {
     var f = allFunnels[i];
-    var defaultBadge = f.is_default ? '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs ml-2">Default</span>' : '';
-    var activeBadge = f.is_active ? '' : '<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs ml-2">O\'chirilgan</span>';
-    
-    html += '<div class="glass-card rounded-2xl p-4 flex justify-between items-center">' +
-      '<div class="flex-1">' +
-        '<div class="flex items-center">' +
-          '<h3 class="font-bold text-lg">' + f.name + '</h3>' + defaultBadge + activeBadge +
-        '</div>' +
-        '<p class="text-sm text-gray-500 mt-1">🔗 t.me/bot?start=' + f.slug + '</p>' +
-        (f.description ? '<p class="text-xs text-gray-400 mt-1">' + f.description + '</p>' : '') +
-      '</div>' +
-      '<div class="flex gap-2">' +
-        '<button type="button" data-action="open-funnel" data-id="' + f.id + '" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-violet-100">👁️</button>' +
-        '<button type="button" data-action="edit-funnel" data-id="' + f.id + '" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-blue-100">✏️</button>' +
-        '<button type="button" data-action="delete-funnel" data-id="' + f.id + '" class="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-red-100 text-red-500">🗑️</button>' +
-      '</div>' +
-    '</div>';
+
+    // Badges
+    var badges = '';
+    if (f.is_default) {
+      badges += '<span class="px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-medium shadow-sm">✓ Default</span>';
+    }
+    if (!f.is_active) {
+      badges += '<span class="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-xs font-medium ml-2">O\'chirilgan</span>';
+    }
+
+    // Icon gradient based on index
+    var gradients = [
+      'from-violet-500 to-purple-600',
+      'from-blue-500 to-cyan-500',
+      'from-emerald-500 to-teal-500',
+      'from-orange-500 to-amber-500',
+      'from-pink-500 to-rose-500'
+    ];
+    var gradient = gradients[i % gradients.length];
+
+    // Emoji for funnel type
+    var emoji = '🎯';
+    if (f.slug && f.slug.includes('smm')) emoji = '📱';
+    else if (f.slug && f.slug.includes('pro')) emoji = '⭐';
+    else if (f.slug && f.slug.includes('test')) emoji = '🧪';
+
+    html += `
+      <div class="group glass-card rounded-2xl p-5 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-violet-200">
+        <div class="flex items-start gap-4">
+          <!-- Icon -->
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-2xl shadow-lg flex-shrink-0">
+            ${emoji}
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center flex-wrap gap-2 mb-1">
+              <h3 class="font-bold text-lg text-gray-800 truncate">${f.name}</h3>
+              ${badges}
+            </div>
+
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+              <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 font-mono text-xs">
+                🔗 t.me/bot?start=${f.slug}
+              </span>
+              <button onclick="copyFunnelLink('${f.slug}')" class="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600" title="Nusxalash">
+                📋
+              </button>
+            </div>
+
+            ${f.description ? '<p class="text-sm text-gray-500 line-clamp-1">' + f.description + '</p>' : ''}
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2 flex-shrink-0">
+            <button type="button" data-action="open-funnel" data-id="${f.id}"
+              class="w-11 h-11 rounded-xl glass flex items-center justify-center hover:bg-violet-100 hover:scale-105 transition-all"
+              title="Ochish">
+              👁️
+            </button>
+            <button type="button" data-action="edit-funnel" data-id="${f.id}"
+              class="w-11 h-11 rounded-xl glass flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all"
+              title="Tahrirlash">
+              ✏️
+            </button>
+            <button type="button" data-action="delete-funnel" data-id="${f.id}"
+              class="w-11 h-11 rounded-xl glass flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all text-red-500"
+              title="O'chirish">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
   }
+  html += '</div>';
   document.getElementById('funnelsList').innerHTML = html;
+}
+
+// Copy funnel link to clipboard
+function copyFunnelLink(slug) {
+  var botUsername = 'your_bot'; // TODO: get from settings
+  var link = 'https://t.me/' + botUsername + '?start=' + slug;
+  navigator.clipboard.writeText(link).then(function() {
+    showToast('✅ Link nusxalandi!');
+  }).catch(function() {
+    // Fallback
+    prompt('Link:', link);
+  });
+}
+
+// Simple toast notification
+function showToast(message) {
+  var toast = document.createElement('div');
+  toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-2xl bg-gray-800 text-white font-medium shadow-2xl z-[100] animate-fadeIn';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translate(-50%, 20px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 2000);
 }
 
 function openCreateFunnelModal() {
