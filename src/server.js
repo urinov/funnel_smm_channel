@@ -1097,13 +1097,52 @@ app.put('/api/funnels/:id/plans/:planId', authMiddleware, async (req, res) => {
   }
 });
 
-// Get funnel stats
+// Get funnel stats (enhanced)
 app.get('/api/funnels/:id/stats', authMiddleware, async (req, res) => {
   try {
     const db = await import('./database.js');
-    const stats = await db.getFunnelStats(parseInt(req.params.id));
-    const lessonStats = await db.getFunnelLessonStats(parseInt(req.params.id));
-    res.json({ ...stats, lessonStats });
+    const funnelId = parseInt(req.params.id);
+    const stats = await db.getFunnelStats(funnelId);
+    const lessonStats = await db.getFunnelLessonStats(funnelId);
+    const custdevStats = await db.getFunnelCustdevStats(funnelId);
+    const revenue = await db.getFunnelRevenue(funnelId);
+
+    res.json({
+      ...stats,
+      lessonStats,
+      custdevStats,
+      total_revenue: revenue.total || 0,
+      custdev_answered: custdevStats.reduce((sum, c) => sum + parseInt(c.answer_count || 0), 0),
+      total_lessons: lessonStats.reduce((sum, l) => sum + (parseInt(l.current_lesson) * parseInt(l.user_count)), 0)
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get funnel users
+app.get('/api/funnels/:id/users', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnelId = parseInt(req.params.id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+
+    const result = await db.getFunnelUsers(funnelId, { page, limit, status });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get funnel payments
+app.get('/api/funnels/:id/payments', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const funnelId = parseInt(req.params.id);
+    const payments = await db.getFunnelPayments(funnelId);
+    res.json({ payments });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

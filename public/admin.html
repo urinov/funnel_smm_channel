@@ -1000,11 +1000,13 @@
     <div class="p-6">
       <!-- Tabs -->
       <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <button onclick="showFunnelTab('lessons')" id="funnel-tab-lessons" class="px-4 py-2 rounded-xl bg-violet-500 text-white font-medium whitespace-nowrap">📚 Darslar</button>
+        <button onclick="showFunnelTab('stats')" id="funnel-tab-stats" class="px-4 py-2 rounded-xl bg-violet-500 text-white font-medium whitespace-nowrap">📊 Statistika</button>
+        <button onclick="showFunnelTab('users')" id="funnel-tab-users" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">👥 Userlar</button>
+        <button onclick="showFunnelTab('payments')" id="funnel-tab-payments" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">💰 To'lovlar</button>
+        <button onclick="showFunnelTab('lessons')" id="funnel-tab-lessons" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📚 Darslar</button>
         <button onclick="showFunnelTab('custdev')" id="funnel-tab-custdev" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📝 CustDev</button>
         <button onclick="showFunnelTab('pitch')" id="funnel-tab-pitch" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">🎬 Pitch</button>
         <button onclick="showFunnelTab('settings')" id="funnel-tab-settings" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">⚙️ Sozlamalar</button>
-        <button onclick="showFunnelTab('stats')" id="funnel-tab-stats" class="px-4 py-2 rounded-xl glass-card font-medium whitespace-nowrap">📊 Statistika</button>
       </div>
       
       <!-- Lessons Tab -->
@@ -1237,8 +1239,9 @@
       </div>
       
       <!-- Stats Tab -->
-      <div id="funnel-content-stats" class="hidden">
-        <h3 class="font-bold text-lg mb-4">📊 Statistika</h3>
+      <div id="funnel-content-stats">
+        <h3 class="font-bold text-lg mb-4">📊 Varonka statistikasi</h3>
+        <!-- Main stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="glass rounded-2xl p-4 text-center">
             <p class="text-2xl font-bold text-violet-600" id="funnelStatTotal">0</p>
@@ -1257,8 +1260,100 @@
             <p class="text-xs text-gray-500">Konversiya</p>
           </div>
         </div>
-        <div id="funnelLessonStats" class="glass rounded-2xl p-4">
-          <p class="text-gray-400 text-center">Darslar bo'yicha statistika</p>
+
+        <!-- Revenue stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div class="glass rounded-2xl p-4 text-center bg-gradient-to-br from-green-400/20 to-emerald-500/20">
+            <p class="text-2xl font-bold text-green-600" id="funnelStatRevenue">0</p>
+            <p class="text-xs text-gray-500">Jami daromad (so'm)</p>
+          </div>
+          <div class="glass rounded-2xl p-4 text-center">
+            <p class="text-2xl font-bold text-blue-600" id="funnelStatCustdevAnswered">0</p>
+            <p class="text-xs text-gray-500">CustDev javoblar</p>
+          </div>
+          <div class="glass rounded-2xl p-4 text-center">
+            <p class="text-2xl font-bold text-purple-600" id="funnelStatAvgLesson">0</p>
+            <p class="text-xs text-gray-500">O'rtacha dars</p>
+          </div>
+        </div>
+
+        <!-- Lesson progress -->
+        <div id="funnelLessonStats" class="glass rounded-2xl p-4 mb-4">
+          <h4 class="font-medium mb-3">📚 Darslar bo'yicha progress</h4>
+          <div id="funnelLessonBars" class="space-y-2">
+            <p class="text-gray-400 text-center text-sm">Yuklanmoqda...</p>
+          </div>
+        </div>
+
+        <!-- CustDev stats -->
+        <div id="funnelCustdevStats" class="glass rounded-2xl p-4">
+          <h4 class="font-medium mb-3">📝 CustDev javoblari</h4>
+          <div id="funnelCustdevBars" class="space-y-2">
+            <p class="text-gray-400 text-center text-sm">Yuklanmoqda...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="funnel-content-users" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">👥 Bu varonkadagi userlar</h3>
+          <div class="flex gap-2">
+            <select id="funnelUserFilter" class="px-3 py-2 rounded-xl glass-input text-sm" onchange="loadFunnelUsers()">
+              <option value="all">Barchasi</option>
+              <option value="active">Aktiv</option>
+              <option value="paid">To'lagan</option>
+              <option value="completed">Tugatgan</option>
+            </select>
+          </div>
+        </div>
+        <div class="glass rounded-2xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-white/30">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs">Ism</th>
+                  <th class="px-4 py-3 text-left text-xs">Telefon</th>
+                  <th class="px-4 py-3 text-left text-xs">Dars</th>
+                  <th class="px-4 py-3 text-left text-xs">Status</th>
+                  <th class="px-4 py-3 text-left text-xs">Sana</th>
+                </tr>
+              </thead>
+              <tbody id="funnelUsersTable" class="divide-y divide-white/20">
+                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="flex justify-center mt-4 gap-2" id="funnelUsersPagination"></div>
+      </div>
+
+      <!-- Payments Tab -->
+      <div id="funnel-content-payments" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">💰 Bu varonkadan to'lovlar</h3>
+          <div class="text-right">
+            <p class="text-sm text-gray-500">Jami:</p>
+            <p class="text-xl font-bold text-green-600" id="funnelPaymentsTotal">0 so'm</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-white/30">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs">Foydalanuvchi</th>
+                  <th class="px-4 py-3 text-left text-xs">Summa</th>
+                  <th class="px-4 py-3 text-left text-xs">Reja</th>
+                  <th class="px-4 py-3 text-left text-xs">Tizim</th>
+                  <th class="px-4 py-3 text-left text-xs">Sana</th>
+                </tr>
+              </thead>
+              <tbody id="funnelPaymentsTable" class="divide-y divide-white/20">
+                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -5094,36 +5189,37 @@ async function deleteFunnel(id) {
 async function openFunnel(id) {
   currentFunnelId = id;
   currentFunnelData = allFunnels.find(function(x) { return x.id === id; });
-  
+
   if (!currentFunnelData) return;
-  
+
   document.getElementById('funnelDetailTitle').textContent = '🎯 ' + currentFunnelData.name;
   document.getElementById('funnelDetailSlug').textContent = 't.me/bot?start=' + currentFunnelData.slug;
-  
+
   openModal('funnelDetailModal');
-  showFunnelTab('lessons');
-  loadFunnelLessons();
+  showFunnelTab('stats'); // Default to stats tab
 }
 
 function showFunnelTab(tab) {
   // Hide all tabs
   document.querySelectorAll('[id^="funnel-content-"]').forEach(function(e) { e.classList.add('hidden'); });
-  document.querySelectorAll('[id^="funnel-tab-"]').forEach(function(e) { 
+  document.querySelectorAll('[id^="funnel-tab-"]').forEach(function(e) {
     e.classList.remove('bg-violet-500', 'text-white');
     e.classList.add('glass-card');
   });
-  
+
   // Show selected tab
   document.getElementById('funnel-content-' + tab).classList.remove('hidden');
   document.getElementById('funnel-tab-' + tab).classList.remove('glass-card');
   document.getElementById('funnel-tab-' + tab).classList.add('bg-violet-500', 'text-white');
-  
+
   // Load content
+  if (tab === 'stats') loadFunnelStats();
+  if (tab === 'users') loadFunnelUsers();
+  if (tab === 'payments') loadFunnelPayments();
   if (tab === 'lessons') loadFunnelLessons();
   if (tab === 'custdev') loadFunnelCustDev();
   if (tab === 'pitch') loadFunnelPitch();
   if (tab === 'settings') loadFunnelSettings();
-  if (tab === 'stats') loadFunnelStats();
 }
 
 async function loadFunnelLessons() {
@@ -5662,29 +5758,150 @@ async function saveFunnelSettings() {
 
 async function loadFunnelStats() {
   if (!currentFunnelId) return;
-  
+
   try {
     var stats = await (await fetch('/api/funnels/' + currentFunnelId + '/stats', {headers: {Authorization: auth}})).json();
-    
+
+    // Main stats
     document.getElementById('funnelStatTotal').textContent = stats.total_users || 0;
     document.getElementById('funnelStatActive').textContent = stats.active_users || 0;
     document.getElementById('funnelStatPaid').textContent = stats.paid_users || 0;
-    
+
     var conversion = stats.total_users > 0 ? Math.round((stats.paid_users / stats.total_users) * 100) : 0;
     document.getElementById('funnelStatConversion').textContent = conversion + '%';
-    
-    // Lesson stats
+
+    // Revenue and CustDev stats
+    document.getElementById('funnelStatRevenue').textContent = ((stats.total_revenue || 0) / 100).toLocaleString();
+    document.getElementById('funnelStatCustdevAnswered').textContent = stats.custdev_answered || 0;
+
+    // Average lesson
+    var avgLesson = stats.total_users > 0 ? (stats.total_lessons / stats.total_users).toFixed(1) : 0;
+    document.getElementById('funnelStatAvgLesson').textContent = avgLesson;
+
+    // Lesson progress bars
     if (stats.lessonStats && stats.lessonStats.length) {
-      var html = '<h4 class="font-medium mb-2">Darslar bo\'yicha</h4><div class="space-y-1">';
+      var maxUsers = Math.max.apply(null, stats.lessonStats.map(function(l) { return parseInt(l.user_count); }));
+      var html = '';
       for (var i = 0; i < stats.lessonStats.length; i++) {
         var ls = stats.lessonStats[i];
-        html += '<div class="flex justify-between text-sm"><span>' + ls.current_lesson + '-dars</span><span class="font-medium">' + ls.user_count + ' user</span></div>';
+        var pct = maxUsers > 0 ? (ls.user_count / maxUsers * 100) : 0;
+        html += '<div class="flex items-center gap-3">' +
+          '<span class="text-sm w-16">' + ls.current_lesson + '-dars</span>' +
+          '<div class="flex-1 h-6 bg-white/30 rounded-full overflow-hidden">' +
+            '<div class="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all" style="width:' + pct + '%"></div>' +
+          '</div>' +
+          '<span class="text-sm font-medium w-12 text-right">' + ls.user_count + '</span>' +
+        '</div>';
       }
-      html += '</div>';
-      document.getElementById('funnelLessonStats').innerHTML = html;
+      document.getElementById('funnelLessonBars').innerHTML = html || '<p class="text-gray-400 text-center text-sm">Ma\'lumot yo\'q</p>';
+    } else {
+      document.getElementById('funnelLessonBars').innerHTML = '<p class="text-gray-400 text-center text-sm">Hali userlar yo\'q</p>';
+    }
+
+    // CustDev stats
+    if (stats.custdevStats && stats.custdevStats.length) {
+      var html = '';
+      for (var i = 0; i < stats.custdevStats.length; i++) {
+        var cs = stats.custdevStats[i];
+        html += '<div class="flex items-center justify-between p-2 bg-white/20 rounded-lg">' +
+          '<span class="text-sm">' + (cs.question_text || '').slice(0, 40) + '...</span>' +
+          '<span class="text-sm font-medium text-green-600">' + cs.answer_count + ' javob</span>' +
+        '</div>';
+      }
+      document.getElementById('funnelCustdevBars').innerHTML = html;
+    } else {
+      document.getElementById('funnelCustdevBars').innerHTML = '<p class="text-gray-400 text-center text-sm">CustDev savollari yo\'q</p>';
     }
   } catch(e) {
     console.error('loadFunnelStats error:', e);
+  }
+}
+
+// Load funnel users
+var funnelUsersPage = 1;
+async function loadFunnelUsers(page) {
+  if (!currentFunnelId) return;
+  if (page) funnelUsersPage = page;
+
+  var filter = document.getElementById('funnelUserFilter').value;
+
+  try {
+    var url = '/api/funnels/' + currentFunnelId + '/users?page=' + funnelUsersPage + '&limit=20';
+    if (filter !== 'all') url += '&status=' + filter;
+
+    var data = await (await fetch(url, {headers: {Authorization: auth}})).json();
+
+    if (!data.users || !data.users.length) {
+      document.getElementById('funnelUsersTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Userlar yo\'q</td></tr>';
+      document.getElementById('funnelUsersPagination').innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < data.users.length; i++) {
+      var u = data.users[i];
+      var statusBadge = u.status === 'paid' ? '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs">To\'lagan</span>' :
+                        u.status === 'completed' ? '<span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">Tugatgan</span>' :
+                        '<span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">Aktiv</span>';
+
+      html += '<tr class="hover:bg-white/10">' +
+        '<td class="px-4 py-3">' + (u.first_name || '') + ' ' + (u.last_name || '') + '</td>' +
+        '<td class="px-4 py-3 font-mono text-sm">' + (u.phone || '-') + '</td>' +
+        '<td class="px-4 py-3">' + (u.current_lesson || 0) + '-dars</td>' +
+        '<td class="px-4 py-3">' + statusBadge + '</td>' +
+        '<td class="px-4 py-3 text-sm text-gray-500">' + (u.started_at ? new Date(u.started_at).toLocaleDateString() : '-') + '</td>' +
+      '</tr>';
+    }
+    document.getElementById('funnelUsersTable').innerHTML = html;
+
+    // Pagination
+    var totalPages = Math.ceil(data.total / 20);
+    var paginationHtml = '';
+    for (var p = 1; p <= totalPages && p <= 10; p++) {
+      paginationHtml += '<button onclick="loadFunnelUsers(' + p + ')" class="px-3 py-1 rounded-lg ' + (p === funnelUsersPage ? 'bg-violet-500 text-white' : 'glass') + '">' + p + '</button>';
+    }
+    document.getElementById('funnelUsersPagination').innerHTML = paginationHtml;
+  } catch(e) {
+    console.error('loadFunnelUsers error:', e);
+  }
+}
+
+// Load funnel payments
+async function loadFunnelPayments() {
+  if (!currentFunnelId) return;
+
+  try {
+    var data = await (await fetch('/api/funnels/' + currentFunnelId + '/payments', {headers: {Authorization: auth}})).json();
+
+    // Total
+    var total = (data.payments || []).reduce(function(sum, p) { return sum + (p.amount || 0); }, 0);
+    document.getElementById('funnelPaymentsTotal').textContent = (total / 100).toLocaleString() + ' so\'m';
+
+    if (!data.payments || !data.payments.length) {
+      document.getElementById('funnelPaymentsTable').innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < data.payments.length; i++) {
+      var p = data.payments[i];
+      var amount = ((p.amount || 0) / 100).toLocaleString() + ' so\'m';
+      var planName = p.plan_id === '1month' ? '1 oy' : p.plan_id === '3months' ? '3 oy' : p.plan_id === '6months' ? '6 oy' : p.plan_id === '12months' ? '1 yil' : p.plan_id;
+      var systemBadge = p.payment_type === 'payme' ? '<span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">Payme</span>' :
+                        p.payment_type === 'click' ? '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs">Click</span>' :
+                        '<span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">' + (p.payment_type || 'Noma\'lum') + '</span>';
+
+      html += '<tr class="hover:bg-white/10">' +
+        '<td class="px-4 py-3">' + (p.first_name || '') + ' ' + (p.last_name || '') + '</td>' +
+        '<td class="px-4 py-3 font-medium text-green-600">' + amount + '</td>' +
+        '<td class="px-4 py-3">' + planName + '</td>' +
+        '<td class="px-4 py-3">' + systemBadge + '</td>' +
+        '<td class="px-4 py-3 text-sm text-gray-500">' + (p.created_at ? new Date(p.created_at).toLocaleDateString() : '-') + '</td>' +
+      '</tr>';
+    }
+    document.getElementById('funnelPaymentsTable').innerHTML = html;
+  } catch(e) {
+    console.error('loadFunnelPayments error:', e);
   }
 }
 

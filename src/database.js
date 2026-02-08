@@ -1653,6 +1653,89 @@ export async function getFunnelLessonStats(funnelId) {
   return rows;
 }
 
+// Get CustDev stats for funnel
+export async function getFunnelCustdevStats(funnelId) {
+  const { rows } = await pool.query(`
+    SELECT
+      fc.id,
+      fc.question_text,
+      COUNT(ca.id) as answer_count
+    FROM funnel_custdev fc
+    LEFT JOIN custdev_answers ca ON ca.question_id = fc.id
+    WHERE fc.funnel_id = $1
+    GROUP BY fc.id, fc.question_text
+    ORDER BY fc.after_lesson, fc.sort_order
+  `, [funnelId]);
+  return rows;
+}
+
+// Get funnel revenue
+export async function getFunnelRevenue(funnelId) {
+  const { rows } = await pool.query(`
+    SELECT COALESCE(SUM(p.amount), 0) as total
+    FROM payments p
+    JOIN user_funnels uf ON uf.telegram_id = p.telegram_id
+    WHERE uf.funnel_id = $1 AND p.status = 'completed'
+  `, [funnelId]);
+  return rows[0] || { total: 0 };
+}
+
+// Get funnel users with pagination
+export async function getFunnelUsers(funnelId, { page = 1, limit = 20, status = null }) {
+  const offset = (page - 1) * limit;
+  let whereClause = 'WHERE uf.funnel_id = $1';
+  const params = [funnelId];
+
+  if (status && status !== 'all') {
+    params.push(status);
+    whereClause += ' AND uf.status = $' + params.length;
+  }
+
+  const { rows: users } = await pool.query(`
+    SELECT
+      u.telegram_id,
+      u.first_name,
+      u.last_name,
+      u.phone,
+      uf.current_lesson,
+      uf.status,
+      uf.started_at
+    FROM user_funnels uf
+    JOIN users u ON u.telegram_id = uf.telegram_id
+    ${whereClause}
+    ORDER BY uf.started_at DESC
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+  `, [...params, limit, offset]);
+
+  const { rows: countResult } = await pool.query(`
+    SELECT COUNT(*) as total FROM user_funnels uf ${whereClause}
+  `, params);
+
+  return {
+    users,
+    total: parseInt(countResult[0].total),
+    page,
+    limit
+  };
+}
+
+// Get funnel payments
+export async function getFunnelPayments(funnelId) {
+  const { rows } = await pool.query(`
+    SELECT
+      p.*,
+      u.first_name,
+      u.last_name
+    FROM payments p
+    JOIN users u ON u.telegram_id = p.telegram_id
+    JOIN user_funnels uf ON uf.telegram_id = p.telegram_id AND uf.funnel_id = $1
+    WHERE p.status = 'completed'
+    ORDER BY p.created_at DESC
+    LIMIT 100
+  `, [funnelId]);
+  return rows;
+}
+
 // ============ MIGRATION: Create default funnel from existing data ============
 
 export async function migrateToMultiFunnel() {
