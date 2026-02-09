@@ -1234,6 +1234,8 @@ bot.action('feedback_no', async (ctx) => {
   try {
     // Prevent duplicate processing
     const user = await db.getUser(telegramId);
+    console.log(`📋 User state: feedback_given=${user?.feedback_given}, waiting_feedback=${user?.waiting_feedback}`);
+
     if (user?.feedback_given || user?.waiting_feedback) {
       console.log(`⚠️ Duplicate feedback_no from ${telegramId}, ignoring`);
       await ctx.answerCbQuery('Allaqachon javob berdingiz');
@@ -1244,10 +1246,12 @@ bot.action('feedback_no', async (ctx) => {
 
     // Mark feedback as given FIRST to prevent duplicates
     await db.updateUser(telegramId, { feedback_given: true, waiting_feedback: true, feedback_type: 'negative' });
+    console.log(`✅ Updated user flags for ${telegramId}`);
 
     // Save feedback
     try {
       await db.saveFeedback(telegramId, 'not_liked', 'Bepul darslar yoqmadi');
+      console.log(`✅ Saved feedback for ${telegramId}`);
     } catch (e) {
       console.error(`saveFeedback error:`, e.message);
     }
@@ -1255,15 +1259,19 @@ bot.action('feedback_no', async (ctx) => {
     // Edit message to remove buttons
     try {
       await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-    } catch (e) {}
+    } catch (e) {
+      console.log(`Could not remove buttons: ${e.message}`);
+    }
 
     // Get configurable response
     const noResponse = await db.getSetting('feedback_no_response') ||
       '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing - bu bizga yaxshilanishga yordam beradi!\n\n<i>(Oddiy xabar yozing)</i>';
-    const personalizedResponse = await replaceVars(noResponse, user);
+    console.log(`📝 Sending response: "${noResponse.substring(0, 50)}..."`);
+
+    const personalizedResponse = await replaceVars(noResponse, user || {});
 
     await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
-    console.log(`📝 Negative feedback from ${telegramId}, waiting for reason`);
+    console.log(`✅ Reply sent to ${telegramId}`);
 
     // Schedule sales pitch anyway after delay (backup)
     const salesDelay = parseInt(await db.getSetting('feedback_no_sales_delay')) || 30;
@@ -1274,6 +1282,11 @@ bot.action('feedback_no', async (ctx) => {
     }
   } catch (error) {
     console.error(`❌ Error in feedback_no handler for ${telegramId}:`, error);
+    console.error(`Error stack:`, error.stack);
+    // Try to send error message to user
+    try {
+      await ctx.reply('❌ Xatolik yuz berdi. Iltimos qayta urinib ko\'ring.');
+    } catch (e) {}
     try {
       await ctx.answerCbQuery('Xatolik yuz berdi');
     } catch (e) {}
