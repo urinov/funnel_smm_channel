@@ -355,6 +355,41 @@
         </div>
       </div>
 
+      <!-- Today's Quick Stats -->
+      <div class="card p-4 sm:p-5 mb-4 sm:mb-6 bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <p class="text-indigo-200 text-sm">📅 Bugungi statistika</p>
+            <p class="text-2xl sm:text-3xl font-bold" id="todayDateText"></p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-white/20 rounded-full text-sm" id="todayTimeRange">00:00 - 23:59</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-indigo-200 text-xs uppercase tracking-wide">Yangi userlar</p>
+            <p class="text-2xl sm:text-3xl font-bold" id="todayNewUsers">0</p>
+            <p class="text-xs text-indigo-200 mt-1" id="todayNewUsersChange">O'tgan kunga nisbatan</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-indigo-200 text-xs uppercase tracking-wide">To'lovlar</p>
+            <p class="text-2xl sm:text-3xl font-bold" id="todayPayments">0</p>
+            <p class="text-xs text-indigo-200 mt-1" id="todayPaymentsAmount">0 so'm</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-indigo-200 text-xs uppercase tracking-wide">Dars ko'rganlar</p>
+            <p class="text-2xl sm:text-3xl font-bold" id="todayLessonsWatched">0</p>
+            <p class="text-xs text-indigo-200 mt-1">Bugun aktiv</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-indigo-200 text-xs uppercase tracking-wide">Feedback</p>
+            <p class="text-2xl sm:text-3xl font-bold" id="todayFeedback">0</p>
+            <p class="text-xs text-indigo-200 mt-1" id="todayFeedbackPositive">0 ijobiy</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Charts Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Revenue Chart -->
@@ -2030,6 +2065,7 @@ async function loadSettingsForm() {
 async function loadAll() {
   await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadSettingsForm(), loadMediaLibrary()]);
   renderCharts();
+  renderTodayStats();
 }
 
 async function loadStats() {
@@ -2052,6 +2088,75 @@ async function loadStats() {
     document.getElementById('completedUsersCount').textContent = stats.completedUsers || 0;
 
   } catch(e) { console.error('loadStats error:', e); }
+}
+
+function renderTodayStats() {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Set today's date text
+  const dateEl = document.getElementById('todayDateText');
+  if (dateEl) {
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    dateEl.textContent = today.toLocaleDateString('uz-UZ', options);
+  }
+
+  // Calculate today's new users
+  const todayUsers = allUsers.filter(u => {
+    if (!u.created_at) return false;
+    return u.created_at.split('T')[0] === todayStr;
+  });
+  const todayNewUsersEl = document.getElementById('todayNewUsers');
+  if (todayNewUsersEl) todayNewUsersEl.textContent = todayUsers.length;
+
+  // Calculate yesterday for comparison
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayUsers = allUsers.filter(u => {
+    if (!u.created_at) return false;
+    return u.created_at.split('T')[0] === yesterdayStr;
+  });
+
+  const changeEl = document.getElementById('todayNewUsersChange');
+  if (changeEl) {
+    const diff = todayUsers.length - yesterdayUsers.length;
+    if (diff > 0) changeEl.innerHTML = '<span class="text-green-300">↑ ' + diff + '</span> kechaga nisbatan';
+    else if (diff < 0) changeEl.innerHTML = '<span class="text-red-300">↓ ' + Math.abs(diff) + '</span> kechaga nisbatan';
+    else changeEl.textContent = 'Kecha bilan teng';
+  }
+
+  // Calculate today's payments
+  const todayPayments = allPayments.filter(p => {
+    if (!p.created_at || p.state !== 'performed') return false;
+    return p.created_at.split('T')[0] === todayStr;
+  });
+  const todayPaymentsEl = document.getElementById('todayPayments');
+  if (todayPaymentsEl) todayPaymentsEl.textContent = todayPayments.length;
+
+  const todayPaymentsAmount = todayPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const todayPaymentsAmountEl = document.getElementById('todayPaymentsAmount');
+  if (todayPaymentsAmountEl) todayPaymentsAmountEl.textContent = fmtMoney(todayPaymentsAmount);
+
+  // Calculate active users today (users with activity today)
+  const todayActiveUsers = allUsers.filter(u => {
+    if (!u.last_activity) return false;
+    return u.last_activity.split('T')[0] === todayStr;
+  });
+  const todayLessonsWatchedEl = document.getElementById('todayLessonsWatched');
+  if (todayLessonsWatchedEl) todayLessonsWatchedEl.textContent = todayActiveUsers.length;
+
+  // Calculate today's feedback
+  const todayFeedbackList = allFeedback.filter(f => {
+    if (!f.created_at) return false;
+    return f.created_at.split('T')[0] === todayStr;
+  });
+  const todayFeedbackEl = document.getElementById('todayFeedback');
+  if (todayFeedbackEl) todayFeedbackEl.textContent = todayFeedbackList.length;
+
+  const todayPositive = todayFeedbackList.filter(f => f.feedback_type === 'liked').length;
+  const todayPositiveEl = document.getElementById('todayFeedbackPositive');
+  if (todayPositiveEl) todayPositiveEl.textContent = todayPositive + ' ijobiy';
 }
 
 async function loadUsers() {
