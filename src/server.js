@@ -1202,30 +1202,24 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.price_6m !== undefined) await db.updateBotMessage('price_6m', String(data.price_6m));
     if (data.price_12m !== undefined) await db.updateBotMessage('price_12m', String(data.price_12m));
 
-    // Progrev settings
-    if (data.pitch_after_lesson !== undefined) await db.updateBotMessage('pitch_after_lesson', String(data.pitch_after_lesson));
+    // Progrev settings (delay before feedback question)
     if (data.pitch_delay_minutes !== undefined) await db.updateBotMessage('pitch_delay_minutes', String(data.pitch_delay_minutes));
-    if (data.pitch_text !== undefined) {
-      await db.updateBotMessage('pitch_text', data.pitch_text);
-      // Also save to feedback_question for the feedback flow
-      await db.setSetting('feedback_question', data.pitch_text);
-    }
     if (data.pitch_media_type !== undefined) await db.updateBotMessage('pitch_media_type', data.pitch_media_type || 'none');
     if (data.pitch_video_file_id !== undefined) await db.updateBotMessage('pitch_video_file_id', data.pitch_video_file_id || '');
     if (data.pitch_audio_file_id !== undefined) await db.updateBotMessage('pitch_audio_file_id', data.pitch_audio_file_id || '');
     if (data.pitch_image_file_id !== undefined) await db.updateBotMessage('pitch_image_file_id', data.pitch_image_file_id || '');
     if (data.pitch_video_note_file_id !== undefined) await db.updateBotMessage('pitch_video_note_file_id', data.pitch_video_note_file_id || '');
 
-    // Also update pitch_media table (used by bot for feedback question)
+    // Also update pitch_media table (used by bot for feedback question media)
     if (data.pitch_video_file_id !== undefined || data.pitch_audio_file_id !== undefined ||
-        data.pitch_image_file_id !== undefined || data.pitch_video_note_file_id !== undefined || data.pitch_text !== undefined) {
+        data.pitch_image_file_id !== undefined || data.pitch_video_note_file_id !== undefined) {
       await db.updatePitchMedia({
         media_type: data.pitch_media_type || 'none',
         video_file_id: data.pitch_video_file_id || null,
         audio_file_id: data.pitch_audio_file_id || null,
         image_file_id: data.pitch_image_file_id || null,
         video_note_file_id: data.pitch_video_note_file_id || null,
-        text: data.pitch_text || null
+        text: null // Text is now from feedback_question setting
       });
     }
 

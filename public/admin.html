@@ -823,24 +823,11 @@
     <div id="tab-progrev" class="hidden">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <!-- Pitch Settings -->
+        <!-- Pitch Media Settings -->
         <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">🎬 Pitch (Asosiy taklif)</h3>
+          <h3 class="font-semibold text-gray-800 mb-4">📎 Feedback Media</h3>
+          <p class="text-sm text-gray-500 mb-4">Feedback savoli bilan birga yuboriladigan media (ixtiyoriy)</p>
           <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Nechanchi darsdan keyin</label>
-              <input type="number" id="pitchAfterLesson" class="input" value="4" min="1">
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - darsdan keyin qancha vaqt o'tib yuboriladi</label>
-              <input type="number" id="pitchDelayMinutes" class="input" value="120" min="0">
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Feedback savoli matni (caption)</label>
-              <textarea id="pitchText" class="input h-24 resize-none" placeholder="Bepul darslar yoqdimi? 🤔"></textarea>
-              <p class="text-xs text-gray-400 mt-1">Media bilan birga ko'rsatiladi yoki alohida matn sifatida</p>
-            </div>
-
             <div class="p-4 bg-indigo-50 rounded-lg space-y-4">
               <div>
                 <label class="text-sm font-medium text-indigo-800 mb-2 block">📎 Media turi</label>
@@ -951,14 +938,20 @@ Obuna turini tanlang:"></textarea>
       <!-- Feedback Flow Section -->
       <div class="card p-5 mt-6">
         <h3 class="font-semibold text-gray-800 mb-4">💬 Feedback Flow (Fikr olish va sotuvga o'tish)</h3>
-        <p class="text-sm text-gray-500 mb-4">4-darsdan keyin darhol foydalanuvchi fikrini oling va javobga qarab sotuvga o'ting</p>
+        <p class="text-sm text-gray-500 mb-4">Barcha darslar tugaganidan keyin foydalanuvchi fikrini oling va javobga qarab sotuvga o'ting</p>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Feedback Question -->
           <div class="space-y-4">
             <div class="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
               <input type="checkbox" id="feedbackEnabled" class="w-5 h-5 accent-indigo-600" checked>
-              <label class="text-sm font-medium text-indigo-800">Feedback flow yoqilgan (darsdan keyin darhol so'raydi)</label>
+              <label class="text-sm font-medium text-indigo-800">Feedback flow yoqilgan (darsdan keyin so'raydi)</label>
+            </div>
+
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - tabrikdan keyin feedback savoli</label>
+              <input type="number" id="pitchDelayMinutes" class="input" value="0" min="0">
+              <p class="text-xs text-gray-400 mt-1">0 = darhol yuboriladi</p>
             </div>
 
             <div>
@@ -2454,9 +2447,7 @@ async function loadProgrevSettings() {
   try {
     const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
 
-    document.getElementById('pitchAfterLesson').value = data.pitch_after_lesson || 4;
     document.getElementById('pitchDelayMinutes').value = data.pitch_delay_minutes || 0;
-    document.getElementById('pitchText').value = data.pitch_text || '';
     document.getElementById('pitchVideoFileId').value = data.pitch_video_file_id || '';
     document.getElementById('pitchAudioFileId').value = data.pitch_audio_file_id || '';
     document.getElementById('pitchImageFileId').value = data.pitch_image_file_id || '';
@@ -3899,9 +3890,7 @@ async function saveProgrevSettings() {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        pitch_after_lesson: parseInt(document.getElementById('pitchAfterLesson').value) || 4,
         pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 0,
-        pitch_text: document.getElementById('pitchText').value,
         pitch_media_type: document.getElementById('pitchMediaType').value,
         // Only send the file ID for the selected media type, clear others
         pitch_video_file_id: document.getElementById('pitchMediaType').value === 'video' ? document.getElementById('pitchVideoFileId').value : null,
