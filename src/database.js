@@ -375,7 +375,8 @@ export async function initDatabase() {
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS waiting_subscription BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_free_channel BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_lesson INTEGER`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS feedback_given BOOLEAN DEFAULT FALSE`
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS feedback_given BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS feedback_type VARCHAR(50)`
     ];
     
     for (const sql of userMigrations) {
