@@ -456,8 +456,12 @@ export async function sendLesson(telegramId, lessonNumber) {
 
   if (lesson.show_watched_button !== false) {
     await delay(1000);
-    const btnText = lesson.watched_button_text || '✅ Videoni ko\'rib bo\'ldim';
-    const msg = lesson.watched_message || 'Videoni ko\'rib bo\'lganingizdan keyin tugmani bosing:';
+    // Get default values from settings, then fall back to lesson-specific, then hardcoded defaults
+    const defaultBtnText = await db.getBotMessage('watched_button_default') || '✅ Videoni ko\'rib bo\'ldim';
+    const defaultMsg = await db.getBotMessage('watched_message_default') || 'Videoni ko\'rib bo\'lganingizdan keyin tugmani bosing:';
+
+    const btnText = lesson.watched_button_text || defaultBtnText;
+    const msg = lesson.watched_message || defaultMsg;
     await bot.telegram.sendMessage(telegramId, msg, {
       ...Markup.inlineKeyboard([[Markup.button.callback(btnText, 'watched_' + lessonNumber)]])
     });
@@ -997,7 +1001,8 @@ async function schedulePostLesson(telegramId) {
   console.log(`   Soft attack delay: ${softAttackDelayMinutes} min (disabled: ${softAttackDisabled})`);
 
   // ============ STEP 1: CONGRATULATIONS ============
-  const congratsMsg = await db.getSetting('congrats_text') || await db.getBotMessage('post_lesson_congrats') ||
+  // Read from bot_messages first (where dashboard saves), then fall back
+  const congratsMsg = await db.getBotMessage('congrats_text') || await db.getBotMessage('post_lesson_congrats') ||
     '🎉 <b>Tabriklayman, {{ism}}!</b>\n\nBarcha bepul darslarni tugatdingiz!';
   const personalizedCongrats = await replaceVars(congratsMsg, user);
 

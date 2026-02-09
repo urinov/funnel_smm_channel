@@ -1218,6 +1218,10 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 
     if (data.congrats_text !== undefined) await db.updateBotMessage('congrats_text', data.congrats_text);
 
+    // Lesson completion defaults
+    if (data.watched_message_default !== undefined) await db.updateBotMessage('watched_message_default', data.watched_message_default);
+    if (data.watched_button_default !== undefined) await db.updateBotMessage('watched_button_default', data.watched_button_default);
+
     // Feedback flow settings
     if (data.feedback_enabled !== undefined) await db.setSetting('feedback_enabled', String(data.feedback_enabled));
     if (data.feedback_question !== undefined) await db.setSetting('feedback_question', data.feedback_question);

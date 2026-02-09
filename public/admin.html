@@ -795,6 +795,22 @@
           </div>
         </div>
 
+        <!-- Lesson Completion Settings -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">📺 Dars ko'rish tugmasi</h3>
+          <p class="text-xs text-gray-400 mb-3">Har bir darsdan keyin ko'rsatiladigan matnlar (default qiymatlar)</p>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Tugmadan oldingi matn</label>
+              <input type="text" id="watchedMessageDefault" class="input" placeholder="Videoni ko'rib bo'lganingizdan keyin tugmani bosing:">
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Tugma matni</label>
+              <input type="text" id="watchedButtonDefault" class="input" placeholder="✅ Videoni ko'rib bo'ldim">
+            </div>
+          </div>
+        </div>
+
         <!-- Congrats Message -->
         <div class="card p-5">
           <h3 class="font-semibold text-gray-800 mb-4">🎉 Tabrik xabari</h3>
@@ -2106,6 +2122,10 @@ async function loadProgrevSettings() {
     document.getElementById('softAttackText').value = data.soft_attack_text || '';
 
     document.getElementById('congratsText').value = data.congrats_text || '';
+
+    // Lesson completion defaults
+    document.getElementById('watchedMessageDefault').value = data.watched_message_default || '';
+    document.getElementById('watchedButtonDefault').value = data.watched_button_default || '';
 
     // Feedback flow settings
     document.getElementById('feedbackEnabled').checked = data.feedback_enabled !== false;
@@ -3532,6 +3552,9 @@ async function saveProgrevSettings() {
         soft_attack_delay_minutes: parseInt(document.getElementById('softAttackDelayMinutes').value) || 1440,
         soft_attack_text: document.getElementById('softAttackText').value,
         congrats_text: document.getElementById('congratsText').value,
+        // Lesson completion defaults
+        watched_message_default: document.getElementById('watchedMessageDefault').value,
+        watched_button_default: document.getElementById('watchedButtonDefault').value,
         // Feedback flow settings
         feedback_enabled: document.getElementById('feedbackEnabled').checked,
         feedback_question: document.getElementById('feedbackQuestion').value,
