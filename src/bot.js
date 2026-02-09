@@ -1089,6 +1089,14 @@ async function sendFeedbackQuestion(telegramId) {
         parse_mode: 'HTML',
         ...feedbackButtons
       });
+    } else if (pitch?.video_note_file_id) {
+      // Video notes can't have captions with buttons, so send separately
+      await bot.telegram.sendVideoNote(telegramId, pitch.video_note_file_id);
+      await delay(500);
+      await bot.telegram.sendMessage(telegramId, text, {
+        parse_mode: 'HTML',
+        ...feedbackButtons
+      });
     } else if (pitch?.audio_file_id) {
       await bot.telegram.sendVoice(telegramId, pitch.audio_file_id, {
         caption: text,

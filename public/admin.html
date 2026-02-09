@@ -746,21 +746,46 @@
               <input type="number" id="pitchDelayMinutes" class="input" value="120" min="0">
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">Pitch matni</label>
-              <textarea id="pitchText" class="input h-32 resize-none" placeholder="Maxsus taklif matni..."></textarea>
+              <label class="text-sm text-gray-600 mb-1 block">Feedback savoli matni (caption)</label>
+              <textarea id="pitchText" class="input h-24 resize-none" placeholder="Bepul darslar yoqdimi? 🤔"></textarea>
+              <p class="text-xs text-gray-400 mt-1">Media bilan birga ko'rsatiladi yoki alohida matn sifatida</p>
             </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Video File ID (ixtiyoriy)</label>
-              <input type="text" id="pitchVideoFileId" class="input file-id-input" placeholder="BAACAgIAAxk...">
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">🎤 Audio/Ovozli xabar File ID (ixtiyoriy)</label>
-              <input type="text" id="pitchAudioFileId" class="input file-id-input" placeholder="AwACAgIAAxk...">
-              <p class="text-xs text-gray-400 mt-1">Feedback savolidagi ovozli xabar uchun</p>
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Rasm File ID (ixtiyoriy)</label>
-              <input type="text" id="pitchImageFileId" class="input file-id-input" placeholder="AgACAgIAAxk...">
+
+            <div class="p-4 bg-indigo-50 rounded-lg space-y-4">
+              <div>
+                <label class="text-sm font-medium text-indigo-800 mb-2 block">📎 Media turi</label>
+                <select id="pitchMediaType" class="input" onchange="togglePitchMediaFields()">
+                  <option value="none">📝 Faqat matn (mediasiz)</option>
+                  <option value="video">🎬 Video</option>
+                  <option value="audio">🎤 Ovozli xabar (voice)</option>
+                  <option value="image">🖼️ Rasm</option>
+                  <option value="video_note">⚪ Video xabar (dumaloq)</option>
+                </select>
+              </div>
+
+              <div id="pitchMediaVideoField" class="hidden">
+                <label class="text-sm text-gray-600 mb-1 block">Video File ID</label>
+                <input type="text" id="pitchVideoFileId" class="input file-id-input" placeholder="BAACAgIAAxk...">
+                <p class="text-xs text-gray-400 mt-1">Botga video yuboring va file_id ni oling</p>
+              </div>
+
+              <div id="pitchMediaAudioField" class="hidden">
+                <label class="text-sm text-gray-600 mb-1 block">Audio/Voice File ID</label>
+                <input type="text" id="pitchAudioFileId" class="input file-id-input" placeholder="AwACAgIAAxk...">
+                <p class="text-xs text-gray-400 mt-1">Botga ovozli xabar yuboring va file_id ni oling</p>
+              </div>
+
+              <div id="pitchMediaImageField" class="hidden">
+                <label class="text-sm text-gray-600 mb-1 block">Rasm File ID</label>
+                <input type="text" id="pitchImageFileId" class="input file-id-input" placeholder="AgACAgIAAxk...">
+                <p class="text-xs text-gray-400 mt-1">Botga rasm yuboring va file_id ni oling</p>
+              </div>
+
+              <div id="pitchMediaVideoNoteField" class="hidden">
+                <label class="text-sm text-gray-600 mb-1 block">Video Note File ID (dumaloq video)</label>
+                <input type="text" id="pitchVideoNoteFileId" class="input file-id-input" placeholder="DQACAgIAAxk...">
+                <p class="text-xs text-gray-400 mt-1">Botga dumaloq video xabar yuboring va file_id ni oling</p>
+              </div>
             </div>
           </div>
         </div>
@@ -2113,6 +2138,27 @@ function filterFeedback() {
   renderFeedback();
 }
 
+function togglePitchMediaFields() {
+  const mediaType = document.getElementById('pitchMediaType').value;
+
+  // Hide all media fields
+  document.getElementById('pitchMediaVideoField').classList.add('hidden');
+  document.getElementById('pitchMediaAudioField').classList.add('hidden');
+  document.getElementById('pitchMediaImageField').classList.add('hidden');
+  document.getElementById('pitchMediaVideoNoteField').classList.add('hidden');
+
+  // Show selected field
+  if (mediaType === 'video') {
+    document.getElementById('pitchMediaVideoField').classList.remove('hidden');
+  } else if (mediaType === 'audio') {
+    document.getElementById('pitchMediaAudioField').classList.remove('hidden');
+  } else if (mediaType === 'image') {
+    document.getElementById('pitchMediaImageField').classList.remove('hidden');
+  } else if (mediaType === 'video_note') {
+    document.getElementById('pitchMediaVideoNoteField').classList.remove('hidden');
+  }
+}
+
 async function loadProgrevSettings() {
   try {
     const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
@@ -2123,6 +2169,17 @@ async function loadProgrevSettings() {
     document.getElementById('pitchVideoFileId').value = data.pitch_video_file_id || '';
     document.getElementById('pitchAudioFileId').value = data.pitch_audio_file_id || '';
     document.getElementById('pitchImageFileId').value = data.pitch_image_file_id || '';
+    document.getElementById('pitchVideoNoteFileId').value = data.pitch_video_note_file_id || '';
+
+    // Determine media type from file IDs
+    let mediaType = 'none';
+    if (data.pitch_video_file_id) mediaType = 'video';
+    else if (data.pitch_audio_file_id) mediaType = 'audio';
+    else if (data.pitch_image_file_id) mediaType = 'image';
+    else if (data.pitch_video_note_file_id) mediaType = 'video_note';
+    if (data.pitch_media_type) mediaType = data.pitch_media_type;
+    document.getElementById('pitchMediaType').value = mediaType;
+    togglePitchMediaFields();
 
     document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 0;
     document.getElementById('salesPitchText').value = data.sales_pitch || '';
@@ -3554,9 +3611,12 @@ async function saveProgrevSettings() {
         pitch_after_lesson: parseInt(document.getElementById('pitchAfterLesson').value) || 4,
         pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 0,
         pitch_text: document.getElementById('pitchText').value,
-        pitch_video_file_id: document.getElementById('pitchVideoFileId').value || null,
-        pitch_audio_file_id: document.getElementById('pitchAudioFileId').value || null,
-        pitch_image_file_id: document.getElementById('pitchImageFileId').value || null,
+        pitch_media_type: document.getElementById('pitchMediaType').value,
+        // Only send the file ID for the selected media type, clear others
+        pitch_video_file_id: document.getElementById('pitchMediaType').value === 'video' ? document.getElementById('pitchVideoFileId').value : null,
+        pitch_audio_file_id: document.getElementById('pitchMediaType').value === 'audio' ? document.getElementById('pitchAudioFileId').value : null,
+        pitch_image_file_id: document.getElementById('pitchMediaType').value === 'image' ? document.getElementById('pitchImageFileId').value : null,
+        pitch_video_note_file_id: document.getElementById('pitchMediaType').value === 'video_note' ? document.getElementById('pitchVideoNoteFileId').value : null,
         sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 0,
         sales_pitch: document.getElementById('salesPitchText').value,
         soft_attack_disabled: document.getElementById('softAttackDisabled').checked,

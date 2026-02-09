@@ -425,6 +425,11 @@ export async function initDatabase() {
       await client.query(`ALTER TABLE pitch_media ADD COLUMN IF NOT EXISTS delay_minutes INTEGER DEFAULT 0`);
     } catch (e) {}
 
+    // Add video_note_file_id to pitch_media
+    try {
+      await client.query(`ALTER TABLE pitch_media ADD COLUMN IF NOT EXISTS video_note_file_id VARCHAR(255)`);
+    } catch (e) {}
+
     // Migrate custdev_questions to funnel_custdev for default funnel
     try {
       // Check if there's a default funnel
@@ -716,14 +721,15 @@ export async function updatePitchMedia(data) {
     await pool.query('UPDATE pitch_media SET ' + setClause + ', updated_at = NOW() WHERE id = ' + existing.id, values);
   } else {
     await pool.query(`
-      INSERT INTO pitch_media (media_type, video_file_id, image_file_id, audio_file_id, text, delay_hours)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO pitch_media (media_type, video_file_id, image_file_id, audio_file_id, video_note_file_id, text, delay_hours)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, [
       data.media_type || 'text',
-      data.video_file_id,
-      data.image_file_id,
-      data.audio_file_id,
-      data.text,
+      data.video_file_id || null,
+      data.image_file_id || null,
+      data.audio_file_id || null,
+      data.video_note_file_id || null,
+      data.text || null,
       data.delay_hours !== null && data.delay_hours !== undefined ? data.delay_hours : 2
     ]);
   }
@@ -1948,6 +1954,9 @@ export async function getAllDashboardSettings() {
 
   // Add pitch_media values (if not already set in bot_messages)
   if (pitchMedia[0]) {
+    if (!result.pitch_media_type && pitchMedia[0].media_type) {
+      result.pitch_media_type = pitchMedia[0].media_type;
+    }
     if (!result.pitch_video_file_id && pitchMedia[0].video_file_id) {
       result.pitch_video_file_id = pitchMedia[0].video_file_id;
     }
@@ -1956,6 +1965,9 @@ export async function getAllDashboardSettings() {
     }
     if (!result.pitch_image_file_id && pitchMedia[0].image_file_id) {
       result.pitch_image_file_id = pitchMedia[0].image_file_id;
+    }
+    if (!result.pitch_video_note_file_id && pitchMedia[0].video_note_file_id) {
+      result.pitch_video_note_file_id = pitchMedia[0].video_note_file_id;
     }
     if (!result.pitch_text && pitchMedia[0].text) {
       result.pitch_text = pitchMedia[0].text;
