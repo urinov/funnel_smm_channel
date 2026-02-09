@@ -1149,22 +1149,23 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         <!-- Pricing -->
         <div class="card p-5">
           <h3 class="font-semibold text-gray-800 mb-4">💰 Narxlar (so'm)</h3>
+          <p class="text-xs text-gray-500 mb-4">1 oylik narxni kiriting - 3/6/12 oylik avtomatik chegirma bilan hisoblanadi</p>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">1 oylik</label>
-              <input type="number" id="settingPrice1m" class="input" placeholder="97000">
+              <label class="text-sm text-gray-600 mb-1 block">1 oylik <span class="text-blue-600 font-medium">(asosiy)</span></label>
+              <input type="number" id="settingPrice1m" class="input" placeholder="97000" oninput="calculateDiscountedPrices()">
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">3 oylik</label>
-              <input type="number" id="settingPrice3m" class="input" placeholder="247000">
+              <label class="text-sm text-gray-600 mb-1 block">3 oylik <span class="text-green-600 font-medium">(-10%)</span></label>
+              <input type="number" id="settingPrice3m" class="input bg-gray-100" placeholder="247000" readonly>
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">6 oylik</label>
-              <input type="number" id="settingPrice6m" class="input" placeholder="447000">
+              <label class="text-sm text-gray-600 mb-1 block">6 oylik <span class="text-green-600 font-medium">(-25%)</span></label>
+              <input type="number" id="settingPrice6m" class="input bg-gray-100" placeholder="447000" readonly>
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">12 oylik</label>
-              <input type="number" id="settingPrice12m" class="input" placeholder="797000">
+              <label class="text-sm text-gray-600 mb-1 block">12 oylik <span class="text-green-600 font-medium">(-40%)</span></label>
+              <input type="number" id="settingPrice12m" class="input bg-gray-100" placeholder="797000" readonly>
             </div>
           </div>
         </div>
@@ -2030,8 +2031,13 @@ async function loadSettingsForm() {
     document.getElementById('settingPayme').checked = data.payme_enabled !== false;
     document.getElementById('settingClick').checked = data.click_enabled !== false;
 
-    // Price settings
-    if (data.price_1m) document.getElementById('settingPrice1m').value = Math.round(data.price_1m / 100);
+    // Price settings - load and calculate discounts
+    if (data.price_1m) {
+      document.getElementById('settingPrice1m').value = Math.round(data.price_1m / 100);
+      // Auto-calculate discounted prices for display
+      calculateDiscountedPrices();
+    }
+    // Also show saved values if different (for backward compatibility)
     if (data.price_3m) document.getElementById('settingPrice3m').value = Math.round(data.price_3m / 100);
     if (data.price_6m) document.getElementById('settingPrice6m').value = Math.round(data.price_6m / 100);
     if (data.price_12m) document.getElementById('settingPrice12m').value = Math.round(data.price_12m / 100);
@@ -3922,6 +3928,18 @@ async function saveProgrevSettings() {
 }
 
 // ========== SETTINGS ==========
+
+// Auto-calculate 3/6/12 month prices with discounts
+function calculateDiscountedPrices() {
+  const price1m = parseInt(document.getElementById('settingPrice1m').value) || 0;
+  if (price1m > 0) {
+    // Automatic discounts: 3 months = 10%, 6 months = 25%, 12 months = 40%
+    document.getElementById('settingPrice3m').value = Math.round(price1m * 3 * 0.90);
+    document.getElementById('settingPrice6m').value = Math.round(price1m * 6 * 0.75);
+    document.getElementById('settingPrice12m').value = Math.round(price1m * 12 * 0.60);
+  }
+}
+
 async function saveSettings() {
   try {
     await fetch('/api/settings', {
@@ -3934,10 +3952,8 @@ async function saveSettings() {
         require_subscription_before_lesson: parseInt(document.getElementById('settingRequireSub').value) || 0,
         payme_enabled: document.getElementById('settingPayme').checked,
         click_enabled: document.getElementById('settingClick').checked,
-        price_1m: parseInt(document.getElementById('settingPrice1m').value) * 100 || null,
-        price_3m: parseInt(document.getElementById('settingPrice3m').value) * 100 || null,
-        price_6m: parseInt(document.getElementById('settingPrice6m').value) * 100 || null,
-        price_12m: parseInt(document.getElementById('settingPrice12m').value) * 100 || null
+        price_1m: parseInt(document.getElementById('settingPrice1m').value) * 100 || null
+        // 3/6/12 month prices are auto-calculated on server with discounts
       })
     });
 

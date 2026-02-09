@@ -1197,10 +1197,34 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     // Payment settings
     if (data.payme_enabled !== undefined) await db.updateBotMessage('payme_enabled', String(data.payme_enabled));
     if (data.click_enabled !== undefined) await db.updateBotMessage('click_enabled', String(data.click_enabled));
-    if (data.price_1m !== undefined) await db.updateBotMessage('price_1m', String(data.price_1m));
-    if (data.price_3m !== undefined) await db.updateBotMessage('price_3m', String(data.price_3m));
-    if (data.price_6m !== undefined) await db.updateBotMessage('price_6m', String(data.price_6m));
-    if (data.price_12m !== undefined) await db.updateBotMessage('price_12m', String(data.price_12m));
+
+    // Price settings with automatic discount calculation
+    // When 1-month price is set, calculate 3/6/12 month prices with discounts
+    if (data.price_1m !== undefined) {
+      const basePrice = parseInt(data.price_1m);
+      await db.updateBotMessage('price_1m', String(basePrice));
+
+      // Automatic discounts: 3 months = 10%, 6 months = 25%, 12 months = 40%
+      const price3m = Math.round(basePrice * 3 * 0.90);  // 10% discount
+      const price6m = Math.round(basePrice * 6 * 0.75);  // 25% discount
+      const price12m = Math.round(basePrice * 12 * 0.60); // 40% discount
+
+      await db.updateBotMessage('price_3m', String(price3m));
+      await db.updateBotMessage('price_6m', String(price6m));
+      await db.updateBotMessage('price_12m', String(price12m));
+
+      // Also update subscription_plans table (used by bot)
+      await db.updateSubscriptionPlan('1month', { price: basePrice, discount_percent: 0 });
+      await db.updateSubscriptionPlan('3month', { price: price3m, discount_percent: 10 });
+      await db.updateSubscriptionPlan('6month', { price: price6m, discount_percent: 25 });
+      await db.updateSubscriptionPlan('1year', { price: price12m, discount_percent: 40 });
+
+      console.log('💰 Prices updated: 1m=' + basePrice + ', 3m=' + price3m + ' (-10%), 6m=' + price6m + ' (-25%), 12m=' + price12m + ' (-40%)');
+    }
+    // Allow manual override of individual prices
+    if (data.price_3m !== undefined && data.price_1m === undefined) await db.updateBotMessage('price_3m', String(data.price_3m));
+    if (data.price_6m !== undefined && data.price_1m === undefined) await db.updateBotMessage('price_6m', String(data.price_6m));
+    if (data.price_12m !== undefined && data.price_1m === undefined) await db.updateBotMessage('price_12m', String(data.price_12m));
 
     // Progrev settings (delay before feedback question)
     if (data.pitch_delay_minutes !== undefined) await db.updateBotMessage('pitch_delay_minutes', String(data.pitch_delay_minutes));
