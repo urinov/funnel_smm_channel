@@ -1205,7 +1205,11 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     // Progrev settings
     if (data.pitch_after_lesson !== undefined) await db.updateBotMessage('pitch_after_lesson', String(data.pitch_after_lesson));
     if (data.pitch_delay_minutes !== undefined) await db.updateBotMessage('pitch_delay_minutes', String(data.pitch_delay_minutes));
-    if (data.pitch_text !== undefined) await db.updateBotMessage('pitch_text', data.pitch_text);
+    if (data.pitch_text !== undefined) {
+      await db.updateBotMessage('pitch_text', data.pitch_text);
+      // Also save to feedback_question for the feedback flow
+      await db.setSetting('feedback_question', data.pitch_text);
+    }
     if (data.pitch_media_type !== undefined) await db.updateBotMessage('pitch_media_type', data.pitch_media_type || 'none');
     if (data.pitch_video_file_id !== undefined) await db.updateBotMessage('pitch_video_file_id', data.pitch_video_file_id || '');
     if (data.pitch_audio_file_id !== undefined) await db.updateBotMessage('pitch_audio_file_id', data.pitch_audio_file_id || '');
