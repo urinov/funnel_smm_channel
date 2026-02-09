@@ -2282,33 +2282,26 @@ function renderMediaLibrary() {
 
     const caption = m.caption ? m.caption.slice(0, 50) + (m.caption.length > 50 ? '...' : '') : '';
     const fileName = m.file_name || 'Nomsiz';
+    const safeCaption = (m.caption || '').replace(/'/g, "\\'");
 
-    return \`
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-          <span class="text-2xl">\${icon}</span>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="badge badge-\${color} text-xs">\${typeName}</span>
-              <span class="text-xs text-gray-400">\${time}</span>
-            </div>
-            <p class="text-sm font-medium text-gray-700 truncate" title="\${fileName}">\${fileName}</p>
-            \${caption ? \`<p class="text-xs text-gray-500 truncate">\${caption}</p>\` : ''}
-          </div>
-        </div>
-        <div class="flex items-center gap-2 ml-2">
-          <button onclick="copyMediaId('\${m.file_id}')" class="btn btn-secondary text-xs px-2 py-1" title="File ID nusxalash">
-            📋
-          </button>
-          <button onclick="editMediaCaption(\${m.id}, '\${(m.caption || '').replace(/'/g, "\\\\'")}', '\${m.file_id}')" class="btn btn-secondary text-xs px-2 py-1" title="Izoh o'zgartirish">
-            ✏️
-          </button>
-          <button onclick="deleteMediaItem(\${m.id})" class="btn btn-danger text-xs px-2 py-1" title="O'chirish">
-            🗑
-          </button>
-        </div>
-      </div>
-    \`;
+    return '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">' +
+      '<div class="flex items-center gap-3 flex-1 min-w-0">' +
+        '<span class="text-2xl">' + icon + '</span>' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="flex items-center gap-2">' +
+            '<span class="badge badge-' + color + ' text-xs">' + typeName + '</span>' +
+            '<span class="text-xs text-gray-400">' + time + '</span>' +
+          '</div>' +
+          '<p class="text-sm font-medium text-gray-700 truncate" title="' + fileName + '">' + fileName + '</p>' +
+          (caption ? '<p class="text-xs text-gray-500 truncate">' + caption + '</p>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="flex items-center gap-2 ml-2">' +
+        '<button onclick="copyMediaId(\'' + m.file_id + '\')" class="btn btn-secondary text-xs px-2 py-1" title="File ID nusxalash">📋</button>' +
+        '<button onclick="editMediaCaption(' + m.id + ', \'' + safeCaption + '\', \'' + m.file_id + '\')" class="btn btn-secondary text-xs px-2 py-1" title="Izoh o\'zgartirish">✏️</button>' +
+        '<button onclick="deleteMediaItem(' + m.id + ')" class="btn btn-danger text-xs px-2 py-1" title="O\'chirish">🗑</button>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
@@ -2347,14 +2340,14 @@ function editMediaCaption(id, currentCaption, fileId) {
 }
 
 async function deleteMediaItem(id) {
-  if (!confirm('Bu media faylni o\\'chirishni xohlaysizmi?')) return;
+  if (!confirm("Bu media faylni o'chirishni xohlaysizmi?")) return;
 
   try {
     await fetch('/api/media/' + id, {
       method: 'DELETE',
       headers: { Authorization: auth }
     });
-    showToast('✅ Media o\\'chirildi!');
+    showToast("✅ Media o'chirildi!");
     loadMediaLibrary();
   } catch(e) {
     showToast('❌ Xatolik: ' + e.message);
