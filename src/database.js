@@ -1928,6 +1928,9 @@ export async function getAllDashboardSettings() {
   // Get from app_settings (new)
   const { rows: appSettings } = await pool.query('SELECT key, value FROM app_settings');
 
+  // Get from pitch_media table
+  const { rows: pitchMedia } = await pool.query('SELECT * FROM pitch_media WHERE is_active = TRUE ORDER BY id DESC LIMIT 1');
+
   // Combine (app_settings has highest priority)
   const result = {};
 
@@ -1941,6 +1944,22 @@ export async function getAllDashboardSettings() {
 
   for (const row of appSettings) {
     result[row.key] = row.value;
+  }
+
+  // Add pitch_media values (if not already set in bot_messages)
+  if (pitchMedia[0]) {
+    if (!result.pitch_video_file_id && pitchMedia[0].video_file_id) {
+      result.pitch_video_file_id = pitchMedia[0].video_file_id;
+    }
+    if (!result.pitch_audio_file_id && pitchMedia[0].audio_file_id) {
+      result.pitch_audio_file_id = pitchMedia[0].audio_file_id;
+    }
+    if (!result.pitch_image_file_id && pitchMedia[0].image_file_id) {
+      result.pitch_image_file_id = pitchMedia[0].image_file_id;
+    }
+    if (!result.pitch_text && pitchMedia[0].text) {
+      result.pitch_text = pitchMedia[0].text;
+    }
   }
 
   // Parse boolean and number fields

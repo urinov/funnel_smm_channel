@@ -754,6 +754,11 @@
               <input type="text" id="pitchVideoFileId" class="input file-id-input" placeholder="BAACAgIAAxk...">
             </div>
             <div>
+              <label class="text-sm text-gray-600 mb-1 block">🎤 Audio/Ovozli xabar File ID (ixtiyoriy)</label>
+              <input type="text" id="pitchAudioFileId" class="input file-id-input" placeholder="AwACAgIAAxk...">
+              <p class="text-xs text-gray-400 mt-1">Feedback savolidagi ovozli xabar uchun</p>
+            </div>
+            <div>
               <label class="text-sm text-gray-600 mb-1 block">Rasm File ID (ixtiyoriy)</label>
               <input type="text" id="pitchImageFileId" class="input file-id-input" placeholder="AgACAgIAAxk...">
             </div>
@@ -762,15 +767,19 @@
 
         <!-- Sales Pitch Settings -->
         <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">💰 Sales Pitch (Qayta taklif)</h3>
+          <h3 class="font-semibold text-gray-800 mb-4">💰 Sales Pitch (Narxlar xabari)</h3>
+          <p class="text-xs text-gray-400 mb-3">Feedback "Ha" javobidan keyin yoki dars tugaganida ko'rsatiladi</p>
           <div class="space-y-4">
             <div>
               <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - pitchdan keyin</label>
               <input type="number" id="salesDelayMinutes" class="input" value="60" min="0">
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">Sales matni</label>
-              <textarea id="salesPitchText" class="input h-32 resize-none" placeholder="Qayta taklif matni..."></textarea>
+              <label class="text-sm text-gray-600 mb-1 block">Sales matn sarlavhasi</label>
+              <textarea id="salesPitchText" class="input h-32 resize-none" placeholder="🎓 SMM PRO KURSGA TAKLIF!
+
+Obuna turini tanlang:"></textarea>
+              <p class="text-xs text-gray-400 mt-1">Bu matn narxlar ro'yxati bilan birga ko'rsatiladi</p>
             </div>
           </div>
         </div>
@@ -2112,6 +2121,7 @@ async function loadProgrevSettings() {
     document.getElementById('pitchDelayMinutes').value = data.pitch_delay_minutes || 0;
     document.getElementById('pitchText').value = data.pitch_text || '';
     document.getElementById('pitchVideoFileId').value = data.pitch_video_file_id || '';
+    document.getElementById('pitchAudioFileId').value = data.pitch_audio_file_id || '';
     document.getElementById('pitchImageFileId').value = data.pitch_image_file_id || '';
 
     document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 0;
@@ -3545,6 +3555,7 @@ async function saveProgrevSettings() {
         pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 0,
         pitch_text: document.getElementById('pitchText').value,
         pitch_video_file_id: document.getElementById('pitchVideoFileId').value || null,
+        pitch_audio_file_id: document.getElementById('pitchAudioFileId').value || null,
         pitch_image_file_id: document.getElementById('pitchImageFileId').value || null,
         sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 0,
         sales_pitch: document.getElementById('salesPitchText').value,
