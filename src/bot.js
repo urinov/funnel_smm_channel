@@ -1197,7 +1197,7 @@ Bepul darslar yoqdimi? 👇`;
 
 // ============ FEEDBACK HANDLERS ============
 
-// Ha - yoqdi → to'g'ridan-to'g'ri narxlar
+// Ha - yoqdi → Pullik kanal haqida info + tugma
 bot.action('feedback_yes', async (ctx) => {
   const telegramId = ctx.from.id;
   console.log(`🔘 feedback_yes clicked by ${telegramId}`);
@@ -1234,20 +1234,11 @@ bot.action('feedback_yes', async (ctx) => {
       console.log(`Could not remove buttons: ${e.message}`);
     }
 
-    // Get configurable response
-    const yesResponse = await db.getSetting('feedback_yes_response') || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
-    console.log(`📝 Sending response: "${yesResponse.substring(0, 50)}..."`);
+    await delay(500);
 
-    const personalizedResponse = await replaceVars(yesResponse, user || {});
-
-    await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
-    console.log(`✅ Reply sent to ${telegramId}`);
-
-    await delay(1500);
-
-    // Show prices directly - IMMEDIATE CONVERSION
-    await sendSalesPitch(telegramId);
-    console.log(`✅ Positive feedback from ${telegramId} → Sales pitch sent`);
+    // Send pitch info with media and button
+    await sendPitchInfo(telegramId);
+    console.log(`✅ Positive feedback from ${telegramId} → Pitch info sent`);
   } catch (error) {
     console.error(`❌ Error in feedback_yes handler for ${telegramId}:`, error);
     console.error(`Error stack:`, error.stack);
@@ -1259,6 +1250,73 @@ bot.action('feedback_yes', async (ctx) => {
     } catch (e) {}
   }
 });
+
+// Send pitch info with media and "Kursga yozilish" button
+async function sendPitchInfo(telegramId) {
+  const user = await db.getUser(telegramId);
+
+  // Get pitch info text
+  const pitchInfoText = await db.getSetting('pitch_info_text') ||
+    '🎉 Ajoyib tanlov!\n\nTo\'liq kursda sizni kutmoqda:\n✅ 50+ dars\n✅ Amaliy topshiriqlar\n✅ Sertifikat\n\nHoziroq ro\'yxatdan o\'ting! 👇';
+
+  // Get button text
+  const pitchBtnText = await db.getSetting('pitch_info_btn') || '🚀 Kursga yozilish';
+
+  // Get pitch media
+  const pitchMedia = await db.getPitchMedia();
+
+  const personalizedText = await replaceVars(pitchInfoText, user || {});
+
+  const button = Markup.inlineKeyboard([
+    [Markup.button.callback(pitchBtnText, 'show_sales_pitch')]
+  ]);
+
+  console.log(`📤 Sending pitch info to ${telegramId}`);
+
+  try {
+    if (pitchMedia?.video_file_id) {
+      await bot.telegram.sendVideo(telegramId, pitchMedia.video_file_id, {
+        caption: personalizedText,
+        parse_mode: 'HTML',
+        ...button
+      });
+    } else if (pitchMedia?.video_note_file_id) {
+      // Video notes can't have captions, send separately
+      await bot.telegram.sendVideoNote(telegramId, pitchMedia.video_note_file_id);
+      await delay(500);
+      await bot.telegram.sendMessage(telegramId, personalizedText, {
+        parse_mode: 'HTML',
+        ...button
+      });
+    } else if (pitchMedia?.audio_file_id) {
+      await bot.telegram.sendVoice(telegramId, pitchMedia.audio_file_id, {
+        caption: personalizedText,
+        parse_mode: 'HTML',
+        ...button
+      });
+    } else if (pitchMedia?.image_file_id) {
+      await bot.telegram.sendPhoto(telegramId, pitchMedia.image_file_id, {
+        caption: personalizedText,
+        parse_mode: 'HTML',
+        ...button
+      });
+    } else {
+      // Just text with button
+      await bot.telegram.sendMessage(telegramId, personalizedText, {
+        parse_mode: 'HTML',
+        ...button
+      });
+    }
+    console.log(`✅ Pitch info sent to ${telegramId}`);
+  } catch (e) {
+    console.error(`❌ Error sending pitch info to ${telegramId}:`, e.message);
+    // Fallback to just text
+    await bot.telegram.sendMessage(telegramId, personalizedText, {
+      parse_mode: 'HTML',
+      ...button
+    });
+  }
+}
 
 // Yo'q - yoqmadi → sabab so'rash
 bot.action('feedback_no', async (ctx) => {

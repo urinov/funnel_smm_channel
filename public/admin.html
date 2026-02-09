@@ -821,211 +821,196 @@
 
     <!-- Progrev Tab (Pitch/Sales/Soft Attack) -->
     <div id="tab-progrev" class="hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <!-- Pitch Media Settings -->
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">📎 Feedback Media</h3>
-          <p class="text-sm text-gray-500 mb-4">Feedback savoli bilan birga yuboriladigan media (ixtiyoriy)</p>
-          <div class="space-y-4">
-            <div class="p-4 bg-indigo-50 rounded-lg space-y-4">
-              <div>
-                <label class="text-sm font-medium text-indigo-800 mb-2 block">📎 Media turi</label>
-                <select id="pitchMediaType" class="input" onchange="togglePitchMediaFields()">
-                  <option value="none">📝 Faqat matn (mediasiz)</option>
-                  <option value="video">🎬 Video</option>
-                  <option value="audio">🎤 Ovozli xabar (voice)</option>
-                  <option value="image">🖼️ Rasm</option>
-                  <option value="video_note">⚪ Video xabar (dumaloq)</option>
-                </select>
-              </div>
+      <!-- Flow Visual Guide -->
+      <div class="card p-4 mb-6 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <h3 class="font-semibold text-gray-800 mb-3">📊 Progrev ketma-ketligi</h3>
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full">1. Tabrik</span>
+          <span class="text-gray-400">→</span>
+          <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">2. Feedback savoli</span>
+          <span class="text-gray-400">→</span>
+          <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full">3. Ha: Kurs haqida</span>
+          <span class="text-gray-400">→</span>
+          <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full">4. Sales Pitch</span>
+          <span class="text-gray-400">→</span>
+          <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full">5. Soft Attack</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Yo'q javobida: Sabab so'rash → Follow-up → (ixtiyoriy) Chegirmali taklif</p>
+      </div>
 
-              <div id="pitchMediaVideoField" class="hidden">
-                <label class="text-sm text-gray-600 mb-1 block">Video File ID</label>
-                <input type="text" id="pitchVideoFileId" class="input file-id-input" placeholder="BAACAgIAAxk...">
-                <p class="text-xs text-gray-400 mt-1">Botga video yuboring va file_id ni oling</p>
-              </div>
+      <!-- Step 1: Congrats -->
+      <div class="card p-5 mb-4 border-l-4 border-green-500">
+        <h3 class="font-semibold text-gray-800 mb-2">1️⃣ Tabrik xabari</h3>
+        <p class="text-xs text-gray-500 mb-3">Barcha darslar tugaganidan keyin</p>
+        <textarea id="congratsText" class="input h-24 resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
+      </div>
 
-              <div id="pitchMediaAudioField" class="hidden">
-                <label class="text-sm text-gray-600 mb-1 block">Audio/Voice File ID</label>
-                <input type="text" id="pitchAudioFileId" class="input file-id-input" placeholder="AwACAgIAAxk...">
-                <p class="text-xs text-gray-400 mt-1">Botga ovozli xabar yuboring va file_id ni oling</p>
-              </div>
-
-              <div id="pitchMediaImageField" class="hidden">
-                <label class="text-sm text-gray-600 mb-1 block">Rasm File ID</label>
-                <input type="text" id="pitchImageFileId" class="input file-id-input" placeholder="AgACAgIAAxk...">
-                <p class="text-xs text-gray-400 mt-1">Botga rasm yuboring va file_id ni oling</p>
-              </div>
-
-              <div id="pitchMediaVideoNoteField" class="hidden">
-                <label class="text-sm text-gray-600 mb-1 block">Video Note File ID (dumaloq video)</label>
-                <input type="text" id="pitchVideoNoteFileId" class="input file-id-input" placeholder="DQACAgIAAxk...">
-                <p class="text-xs text-gray-400 mt-1">Botga dumaloq video xabar yuboring va file_id ni oling</p>
-              </div>
+      <!-- Step 2: Feedback Question -->
+      <div class="card p-5 mb-4 border-l-4 border-blue-500">
+        <h3 class="font-semibold text-gray-800 mb-2">2️⃣ Feedback savoli</h3>
+        <p class="text-xs text-gray-500 mb-3">Darslar yoqdimi so'rash</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg mb-3">
+              <input type="checkbox" id="feedbackEnabled" class="w-5 h-5 accent-blue-600" checked>
+              <label class="text-sm font-medium text-blue-800">Feedback flow yoqilgan</label>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - tabrikdan keyin</label>
+              <input type="number" id="pitchDelayMinutes" class="input" value="0" min="0">
+              <p class="text-xs text-gray-400 mt-1">0 = darhol</p>
+            </div>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Savol matni</label>
+            <textarea id="feedbackQuestion" class="input h-20 resize-none" placeholder="Bepul darslar yoqdimi? 🤔"></textarea>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <input type="text" id="feedbackYesBtn" class="input text-sm" value="👍 Ha, juda yoqdi!" placeholder="Ha tugmasi">
+              <input type="text" id="feedbackNoBtn" class="input text-sm" value="😐 Unchalik emas" placeholder="Yo'q tugmasi">
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Sales Pitch Settings -->
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">💰 Sales Pitch (Narxlar xabari)</h3>
-          <p class="text-xs text-gray-400 mb-3">Feedback "Ha" javobidan keyin yoki dars tugaganida ko'rsatiladi</p>
-          <div class="space-y-4">
+      <!-- Step 3: Positive Response - Course Info -->
+      <div class="card p-5 mb-4 border-l-4 border-purple-500">
+        <h3 class="font-semibold text-gray-800 mb-2">3️⃣ ✅ "Ha" javobidan keyin - Kurs haqida</h3>
+        <p class="text-xs text-gray-500 mb-3">Pullik kurs haqida ma'lumot + tugma → Sales Pitch ga o'tish</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Kurs haqida matn</label>
+            <textarea id="pitchInfoText" class="input h-32 resize-none" placeholder="🎉 Ajoyib tanlov!
+
+To'liq kursda sizni kutmoqda:
+✅ 50+ dars
+✅ Amaliy topshiriqlar
+✅ Sertifikat
+
+Hoziroq ro'yxatdan o'ting! 👇"></textarea>
+            <div class="mt-2">
+              <label class="text-sm text-gray-600 mb-1 block">Tugma matni</label>
+              <input type="text" id="pitchInfoBtn" class="input" value="🚀 Kursga yozilish" placeholder="Tugma matni">
+            </div>
+          </div>
+          <div class="p-4 bg-purple-50 rounded-lg space-y-3">
+            <label class="text-sm font-medium text-purple-800 block">📎 Media (ixtiyoriy)</label>
+            <select id="pitchMediaType" class="input" onchange="togglePitchMediaFields()">
+              <option value="none">📝 Faqat matn</option>
+              <option value="video">🎬 Video</option>
+              <option value="audio">🎤 Ovozli xabar</option>
+              <option value="image">🖼️ Rasm</option>
+              <option value="video_note">⚪ Dumaloq video</option>
+            </select>
+            <div id="pitchMediaVideoField" class="hidden">
+              <input type="text" id="pitchVideoFileId" class="input file-id-input text-sm" placeholder="Video File ID">
+            </div>
+            <div id="pitchMediaAudioField" class="hidden">
+              <input type="text" id="pitchAudioFileId" class="input file-id-input text-sm" placeholder="Audio File ID">
+            </div>
+            <div id="pitchMediaImageField" class="hidden">
+              <input type="text" id="pitchImageFileId" class="input file-id-input text-sm" placeholder="Rasm File ID">
+            </div>
+            <div id="pitchMediaVideoNoteField" class="hidden">
+              <input type="text" id="pitchVideoNoteFileId" class="input file-id-input text-sm" placeholder="Video Note File ID">
+            </div>
+            <p class="text-xs text-gray-500">Botga media yuboring va File ID ni oling</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3b: Negative Response -->
+      <div class="card p-5 mb-4 border-l-4 border-red-400">
+        <h3 class="font-semibold text-gray-800 mb-2">3️⃣ ❌ "Yo'q" javobidan keyin</h3>
+        <p class="text-xs text-gray-500 mb-3">Sabab so'rash va follow-up</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="space-y-3">
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - pitchdan keyin</label>
-              <input type="number" id="salesDelayMinutes" class="input" value="60" min="0">
+              <label class="text-sm text-gray-600 mb-1 block">Sabab so'rash xabari</label>
+              <textarea id="feedbackNoResponse" class="input h-20 resize-none" placeholder="😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing..."></textarea>
             </div>
             <div>
-              <label class="text-sm text-gray-600 mb-1 block">Sales matn sarlavhasi</label>
-              <textarea id="salesPitchText" class="input h-32 resize-none" placeholder="🎓 SMM PRO KURSGA TAKLIF!
+              <label class="text-sm text-gray-600 mb-1 block">Follow-up xabar (sabab yozganidan keyin)</label>
+              <textarea id="feedbackFollowup" class="input h-20 resize-none" placeholder="Rahmat fikringiz uchun! 🙏 Biz doimo yaxshilanib boramiz..."></textarea>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+              <input type="checkbox" id="feedbackSpecialOfferEnabled" class="w-5 h-5 accent-orange-600">
+              <label class="text-sm font-medium text-orange-800">Maxsus 20% chegirma taklifi</label>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Chegirma xabari</label>
+              <textarea id="feedbackSpecialOffer" class="input h-16 resize-none" placeholder="🎁 Sizga maxsus 20% chegirma!"></textarea>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Sales Pitch ga o'tish (daqiqa)</label>
+              <input type="number" id="feedbackNoSalesDelay" class="input" value="30" min="0">
+              <p class="text-xs text-gray-400 mt-1">0 = follow-up dan keyin darhol</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Sales Pitch -->
+      <div class="card p-5 mb-4 border-l-4 border-orange-500">
+        <h3 class="font-semibold text-gray-800 mb-2">4️⃣ Sales Pitch (Narxlar)</h3>
+        <p class="text-xs text-gray-500 mb-3">"Kursga yozilish" tugmasi bosilgandan keyin</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Sales matn sarlavhasi</label>
+            <textarea id="salesPitchText" class="input h-28 resize-none" placeholder="🎓 SMM PRO KURSGA TAKLIF!
 
 Obuna turini tanlang:"></textarea>
-              <p class="text-xs text-gray-400 mt-1">Bu matn narxlar ro'yxati bilan birga ko'rsatiladi</p>
-            </div>
+            <p class="text-xs text-gray-400 mt-1">Narxlar avtomatik qo'shiladi</p>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - feedback yo'q bo'lsa</label>
+            <input type="number" id="salesDelayMinutes" class="input" value="0" min="0">
+            <p class="text-xs text-gray-400 mt-1">Agar feedback o'chirilgan bo'lsa, tabrikdan keyin</p>
           </div>
         </div>
+      </div>
 
-        <!-- Soft Attack Settings -->
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">🔥 Soft Attack (Oxirgi taklif)</h3>
-          <div class="space-y-4">
-            <div class="flex items-center gap-3">
+      <!-- Step 5: Soft Attack -->
+      <div class="card p-5 mb-4 border-l-4 border-red-500">
+        <h3 class="font-semibold text-gray-800 mb-2">5️⃣ Soft Attack (Oxirgi taklif)</h3>
+        <p class="text-xs text-gray-500 mb-3">Sotib olmagan foydalanuvchilarga</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
               <input type="checkbox" id="softAttackDisabled" class="w-5 h-5 accent-red-600">
               <label class="text-sm text-gray-600">O'chirilgan</label>
             </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - sales pitchdan keyin</label>
-              <input type="number" id="softAttackDelayMinutes" class="input" value="1440" min="0">
-              <p class="text-xs text-gray-400 mt-1">1440 daqiqa = 24 soat</p>
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Soft attack matni</label>
-              <textarea id="softAttackText" class="input h-32 resize-none" placeholder="Oxirgi taklif matni..."></textarea>
-            </div>
+            <label class="text-sm text-gray-600 mb-1 block">Soft attack matni</label>
+            <textarea id="softAttackText" class="input h-24 resize-none" placeholder="🤔 Hali qaror qilmadingizmi?
+
+Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
-        </div>
-
-        <!-- Lesson Completion Settings -->
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">📺 Dars ko'rish tugmasi</h3>
-          <p class="text-xs text-gray-400 mb-3">Har bir darsdan keyin ko'rsatiladigan matnlar (default qiymatlar)</p>
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Tugmadan oldingi matn</label>
-              <input type="text" id="watchedMessageDefault" class="input" placeholder="Videoni ko'rib bo'lganingizdan keyin tugmani bosing:">
-            </div>
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Tugma matni</label>
-              <input type="text" id="watchedButtonDefault" class="input" placeholder="✅ Videoni ko'rib bo'ldim">
-            </div>
-          </div>
-        </div>
-
-        <!-- Congrats Message -->
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">🎉 Tabrik xabari</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Barcha darslar tugaganidan keyin</label>
-              <textarea id="congratsText" class="input h-32 resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Feedback Flow Section -->
-      <div class="card p-5 mt-6">
-        <h3 class="font-semibold text-gray-800 mb-4">💬 Feedback Flow (Fikr olish va sotuvga o'tish)</h3>
-        <p class="text-sm text-gray-500 mb-4">Barcha darslar tugaganidan keyin foydalanuvchi fikrini oling va javobga qarab sotuvga o'ting</p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Feedback Question -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
-              <input type="checkbox" id="feedbackEnabled" class="w-5 h-5 accent-indigo-600" checked>
-              <label class="text-sm font-medium text-indigo-800">Feedback flow yoqilgan (darsdan keyin so'raydi)</label>
-            </div>
-
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - tabrikdan keyin feedback savoli</label>
-              <input type="number" id="pitchDelayMinutes" class="input" value="0" min="0">
-              <p class="text-xs text-gray-400 mt-1">0 = darhol yuboriladi</p>
-            </div>
-
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Feedback savoli</label>
-              <textarea id="feedbackQuestion" class="input h-24 resize-none" placeholder="Bepul darslar yoqdimi? 🤔"></textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="text-sm text-gray-600 mb-1 block">👍 Ha tugmasi</label>
-                <input type="text" id="feedbackYesBtn" class="input" value="👍 Ha, juda yoqdi!">
-              </div>
-              <div>
-                <label class="text-sm text-gray-600 mb-1 block">👎 Yo'q tugmasi</label>
-                <input type="text" id="feedbackNoBtn" class="input" value="😐 Unchalik emas">
-              </div>
-            </div>
-          </div>
-
-          <!-- Feedback Responses -->
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">✅ Ijobiy javobdan keyin (darhol sotuvga o'tadi)</label>
-              <textarea id="feedbackYesResponse" class="input h-20 resize-none" placeholder="🎉 Ajoyib! Unda to'liq kursga taklif qilaman..."></textarea>
-            </div>
-
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">❌ Salbiy javobdan keyin (sabab so'raydi)</label>
-              <textarea id="feedbackNoResponse" class="input h-20 resize-none" placeholder="😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing..."></textarea>
-            </div>
-
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">🔄 Salbiy feedbackdan keyin qancha vaqtda sotuvga o'tadi (daqiqa)</label>
-              <input type="number" id="feedbackNoSalesDelay" class="input" value="30" min="0">
-              <p class="text-xs text-gray-400 mt-1">0 = darhol sabab yozganidan keyin</p>
-            </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Delay (daqiqa) - sales pitchdan keyin</label>
+            <input type="number" id="softAttackDelayMinutes" class="input" value="1440" min="0">
+            <p class="text-xs text-gray-400 mt-1">1440 daqiqa = 24 soat</p>
           </div>
         </div>
       </div>
 
-      <!-- Negative Feedback Follow-up -->
-      <div class="card p-5 mt-6">
-        <h3 class="font-semibold text-gray-800 mb-4">🔄 Salbiy feedback follow-up</h3>
-        <p class="text-sm text-gray-500 mb-4">Foydalanuvchi salbiy fikr bildirganidan keyin yuboriladi</p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Follow-up xabar (sabab yozganidan keyin)</label>
-              <textarea id="feedbackFollowup" class="input h-28 resize-none" placeholder="Rahmat fikringiz uchun! 🙏
-
-Biz doimo yaxshilanib boramiz. Shunday bo'lsa ham, to'liq kursda bunday muammolar yo'q - professional darajada tayyorlangan..."></textarea>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="feedbackFollowupShowPrices" class="w-5 h-5 accent-indigo-600" checked>
-              <label class="text-sm text-gray-600">Follow-up bilan birga narxlarni ko'rsatish</label>
-            </div>
+      <!-- Lesson Completion Settings -->
+      <div class="card p-5 mb-4">
+        <h3 class="font-semibold text-gray-800 mb-2">📺 Dars ko'rish tugmasi (default)</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Tugmadan oldingi matn</label>
+            <input type="text" id="watchedMessageDefault" class="input" placeholder="Videoni ko'rib bo'lganingizdan keyin tugmani bosing:">
           </div>
-
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm text-gray-600 mb-1 block">Maxsus chegirma taklifi (salbiy feedback uchun)</label>
-              <textarea id="feedbackSpecialOffer" class="input h-20 resize-none" placeholder="🎁 Sizga maxsus 20% chegirma! Faqat bugun amal qiladi..."></textarea>
-            </div>
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="feedbackSpecialOfferEnabled" class="w-5 h-5 accent-orange-600">
-              <label class="text-sm text-gray-600">Maxsus chegirma taklifini yoqish</label>
-            </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Tugma matni</label>
+            <input type="text" id="watchedButtonDefault" class="input" placeholder="✅ Videoni ko'rib bo'ldim">
           </div>
         </div>
       </div>
 
-      <button onclick="saveProgrevSettings()" class="btn btn-primary mt-6">💾 Progrev sozlamalarini saqlash</button>
+      <button onclick="saveProgrevSettings()" class="btn btn-primary">💾 Progrev sozlamalarini saqlash</button>
     </div>
 
     <!-- CustDev Tab -->
@@ -2447,13 +2432,25 @@ async function loadProgrevSettings() {
   try {
     const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
 
+    // Step 1: Congrats
+    document.getElementById('congratsText').value = data.congrats_text || '';
+
+    // Step 2: Feedback question
+    document.getElementById('feedbackEnabled').checked = data.feedback_enabled !== false;
     document.getElementById('pitchDelayMinutes').value = data.pitch_delay_minutes || 0;
+    document.getElementById('feedbackQuestion').value = data.feedback_question || 'Bepul darslar yoqdimi? 🤔';
+    document.getElementById('feedbackYesBtn').value = data.feedback_yes_btn || '👍 Ha, juda yoqdi!';
+    document.getElementById('feedbackNoBtn').value = data.feedback_no_btn || '😐 Unchalik emas';
+
+    // Step 3: Pitch info (after "Ha")
+    document.getElementById('pitchInfoText').value = data.pitch_info_text || '🎉 Ajoyib tanlov!\n\nTo\'liq kursda sizni kutmoqda:\n✅ 50+ dars\n✅ Amaliy topshiriqlar\n✅ Sertifikat\n\nHoziroq ro\'yxatdan o\'ting! 👇';
+    document.getElementById('pitchInfoBtn').value = data.pitch_info_btn || '🚀 Kursga yozilish';
+
+    // Pitch media
     document.getElementById('pitchVideoFileId').value = data.pitch_video_file_id || '';
     document.getElementById('pitchAudioFileId').value = data.pitch_audio_file_id || '';
     document.getElementById('pitchImageFileId').value = data.pitch_image_file_id || '';
     document.getElementById('pitchVideoNoteFileId').value = data.pitch_video_note_file_id || '';
-
-    // Determine media type from file IDs
     let mediaType = 'none';
     if (data.pitch_video_file_id) mediaType = 'video';
     else if (data.pitch_audio_file_id) mediaType = 'audio';
@@ -2463,31 +2460,25 @@ async function loadProgrevSettings() {
     document.getElementById('pitchMediaType').value = mediaType;
     togglePitchMediaFields();
 
-    document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 0;
+    // Step 3b: Negative response
+    document.getElementById('feedbackNoResponse').value = data.feedback_no_response || '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing...';
+    document.getElementById('feedbackFollowup').value = data.feedback_followup || '';
+    document.getElementById('feedbackSpecialOfferEnabled').checked = data.feedback_special_offer_enabled || false;
+    document.getElementById('feedbackSpecialOffer').value = data.feedback_special_offer || '';
+    document.getElementById('feedbackNoSalesDelay').value = data.feedback_no_sales_delay || 30;
+
+    // Step 4: Sales pitch
     document.getElementById('salesPitchText').value = data.sales_pitch || '';
+    document.getElementById('salesDelayMinutes').value = data.sales_delay_minutes || 0;
 
+    // Step 5: Soft attack
     document.getElementById('softAttackDisabled').checked = data.soft_attack_disabled || false;
-    document.getElementById('softAttackDelayMinutes').value = data.soft_attack_delay_minutes || 1440;
     document.getElementById('softAttackText').value = data.soft_attack_text || '';
-
-    document.getElementById('congratsText').value = data.congrats_text || '';
+    document.getElementById('softAttackDelayMinutes').value = data.soft_attack_delay_minutes || 1440;
 
     // Lesson completion defaults
     document.getElementById('watchedMessageDefault').value = data.watched_message_default || '';
     document.getElementById('watchedButtonDefault').value = data.watched_button_default || '';
-
-    // Feedback flow settings
-    document.getElementById('feedbackEnabled').checked = data.feedback_enabled !== false;
-    document.getElementById('feedbackQuestion').value = data.feedback_question || 'Bepul darslar yoqdimi? 🤔';
-    document.getElementById('feedbackYesBtn').value = data.feedback_yes_btn || '👍 Ha, juda yoqdi!';
-    document.getElementById('feedbackNoBtn').value = data.feedback_no_btn || '😐 Unchalik emas';
-    document.getElementById('feedbackYesResponse').value = data.feedback_yes_response || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
-    document.getElementById('feedbackNoResponse').value = data.feedback_no_response || '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing...';
-    document.getElementById('feedbackNoSalesDelay').value = data.feedback_no_sales_delay || 30;
-    document.getElementById('feedbackFollowup').value = data.feedback_followup || '';
-    document.getElementById('feedbackFollowupShowPrices').checked = data.feedback_followup_show_prices !== false;
-    document.getElementById('feedbackSpecialOffer').value = data.feedback_special_offer || '';
-    document.getElementById('feedbackSpecialOfferEnabled').checked = data.feedback_special_offer_enabled || false;
   } catch(e) { console.error('loadProgrevSettings error:', e); }
 }
 
@@ -3886,38 +3877,43 @@ async function openQuestionStats(questionId) {
 // ========== PROGREV SETTINGS ==========
 async function saveProgrevSettings() {
   try {
+    const mediaType = document.getElementById('pitchMediaType').value;
     await fetch('/api/settings', {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 0,
-        pitch_media_type: document.getElementById('pitchMediaType').value,
-        // Only send the file ID for the selected media type, clear others
-        pitch_video_file_id: document.getElementById('pitchMediaType').value === 'video' ? document.getElementById('pitchVideoFileId').value : null,
-        pitch_audio_file_id: document.getElementById('pitchMediaType').value === 'audio' ? document.getElementById('pitchAudioFileId').value : null,
-        pitch_image_file_id: document.getElementById('pitchMediaType').value === 'image' ? document.getElementById('pitchImageFileId').value : null,
-        pitch_video_note_file_id: document.getElementById('pitchMediaType').value === 'video_note' ? document.getElementById('pitchVideoNoteFileId').value : null,
-        sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 0,
-        sales_pitch: document.getElementById('salesPitchText').value,
-        soft_attack_disabled: document.getElementById('softAttackDisabled').checked,
-        soft_attack_delay_minutes: parseInt(document.getElementById('softAttackDelayMinutes').value) || 1440,
-        soft_attack_text: document.getElementById('softAttackText').value,
+        // Step 1: Congrats
         congrats_text: document.getElementById('congratsText').value,
-        // Lesson completion defaults
-        watched_message_default: document.getElementById('watchedMessageDefault').value,
-        watched_button_default: document.getElementById('watchedButtonDefault').value,
-        // Feedback flow settings
+        // Step 2: Feedback question
         feedback_enabled: document.getElementById('feedbackEnabled').checked,
+        pitch_delay_minutes: parseInt(document.getElementById('pitchDelayMinutes').value) || 0,
         feedback_question: document.getElementById('feedbackQuestion').value,
         feedback_yes_btn: document.getElementById('feedbackYesBtn').value,
         feedback_no_btn: document.getElementById('feedbackNoBtn').value,
-        feedback_yes_response: document.getElementById('feedbackYesResponse').value,
+        // Step 3: Pitch info (after "Ha")
+        pitch_info_text: document.getElementById('pitchInfoText').value,
+        pitch_info_btn: document.getElementById('pitchInfoBtn').value,
+        pitch_media_type: mediaType,
+        pitch_video_file_id: mediaType === 'video' ? document.getElementById('pitchVideoFileId').value : null,
+        pitch_audio_file_id: mediaType === 'audio' ? document.getElementById('pitchAudioFileId').value : null,
+        pitch_image_file_id: mediaType === 'image' ? document.getElementById('pitchImageFileId').value : null,
+        pitch_video_note_file_id: mediaType === 'video_note' ? document.getElementById('pitchVideoNoteFileId').value : null,
+        // Step 3b: Negative response
         feedback_no_response: document.getElementById('feedbackNoResponse').value,
-        feedback_no_sales_delay: parseInt(document.getElementById('feedbackNoSalesDelay').value) || 30,
         feedback_followup: document.getElementById('feedbackFollowup').value,
-        feedback_followup_show_prices: document.getElementById('feedbackFollowupShowPrices').checked,
+        feedback_special_offer_enabled: document.getElementById('feedbackSpecialOfferEnabled').checked,
         feedback_special_offer: document.getElementById('feedbackSpecialOffer').value,
-        feedback_special_offer_enabled: document.getElementById('feedbackSpecialOfferEnabled').checked
+        feedback_no_sales_delay: parseInt(document.getElementById('feedbackNoSalesDelay').value) || 30,
+        // Step 4: Sales pitch
+        sales_pitch: document.getElementById('salesPitchText').value,
+        sales_delay_minutes: parseInt(document.getElementById('salesDelayMinutes').value) || 0,
+        // Step 5: Soft attack
+        soft_attack_disabled: document.getElementById('softAttackDisabled').checked,
+        soft_attack_text: document.getElementById('softAttackText').value,
+        soft_attack_delay_minutes: parseInt(document.getElementById('softAttackDelayMinutes').value) || 1440,
+        // Lesson completion defaults
+        watched_message_default: document.getElementById('watchedMessageDefault').value,
+        watched_button_default: document.getElementById('watchedButtonDefault').value
       })
     });
 
