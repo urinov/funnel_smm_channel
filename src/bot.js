@@ -1052,13 +1052,20 @@ async function schedulePostLesson(telegramId) {
 async function sendFeedbackQuestion(telegramId) {
   const user = await db.getUser(telegramId);
 
-  // Get configurable texts
+  // Reset feedback_given flag for new feedback flow
+  await db.updateUser(telegramId, { feedback_given: false, waiting_feedback: false });
+
+  // Get configurable texts from dashboard
   const feedbackQuestion = await db.getSetting('feedback_question') || 'Bepul darslar yoqdimi? 🤔';
   const yesBtn = await db.getSetting('feedback_yes_btn') || '👍 Ha, juda yoqdi!';
   const noBtn = await db.getSetting('feedback_no_btn') || '😐 Unchalik emas';
 
+  // Get pitch media (video/audio/image) but use dashboard text for caption
   const pitch = await db.getPitchMedia();
-  let text = await replaceVars(pitch?.text || feedbackQuestion, user);
+
+  // ALWAYS use dashboard feedback_question setting for the text
+  // pitch.text is for old video pitch flow, not feedback flow
+  let text = await replaceVars(feedbackQuestion, user);
 
   const feedbackButtons = Markup.inlineKeyboard([
     [
@@ -1066,6 +1073,9 @@ async function sendFeedbackQuestion(telegramId) {
       Markup.button.callback(noBtn, 'feedback_no')
     ]
   ]);
+
+  console.log(`📤 Sending feedback question to ${telegramId}: "${text.substring(0, 50)}..."`);
+  console.log(`   Buttons: "${yesBtn}" / "${noBtn}"`);
 
   try {
     if (pitch?.video_file_id) {
@@ -1092,7 +1102,7 @@ async function sendFeedbackQuestion(telegramId) {
         ...feedbackButtons
       });
     }
-    console.log(`📤 Feedback question sent to ${telegramId}`);
+    console.log(`✅ Feedback question sent to ${telegramId}`);
   } catch (e) {
     console.error(`❌ Error sending feedback to ${telegramId}:`, e.message);
   }
@@ -1163,10 +1173,23 @@ Bepul darslar yoqdimi? 👇`;
 
 // Ha - yoqdi → to'g'ridan-to'g'ri narxlar
 bot.action('feedback_yes', async (ctx) => {
+  const telegramId = ctx.from.id;
+
+  // Prevent duplicate processing
+  const user = await db.getUser(telegramId);
+  if (user?.feedback_given) {
+    console.log(`⚠️ Duplicate feedback_yes from ${telegramId}, ignoring`);
+    await ctx.answerCbQuery('Allaqachon javob berdingiz');
+    return;
+  }
+
   await ctx.answerCbQuery('Ajoyib! 🎉');
 
+  // Mark feedback as given FIRST to prevent duplicates
+  await db.updateUser(telegramId, { feedback_given: true });
+
   // Save feedback
-  await db.saveFeedback(ctx.from.id, 'liked', 'Bepul darslar yoqdi');
+  await db.saveFeedback(telegramId, 'liked', 'Bepul darslar yoqdi');
 
   // Edit message to remove buttons
   try {
@@ -1175,23 +1198,35 @@ bot.action('feedback_yes', async (ctx) => {
 
   // Get configurable response
   const yesResponse = await db.getSetting('feedback_yes_response') || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
-  const user = await db.getUser(ctx.from.id);
   const personalizedResponse = await replaceVars(yesResponse, user);
 
   await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
   await delay(1500);
 
   // Show prices directly - IMMEDIATE CONVERSION
-  await sendSalesPitch(ctx.from.id);
-  console.log(`✅ Positive feedback from ${ctx.from.id} → Sales pitch sent`);
+  await sendSalesPitch(telegramId);
+  console.log(`✅ Positive feedback from ${telegramId} → Sales pitch sent`);
 });
 
 // Yo'q - yoqmadi → sabab so'rash
 bot.action('feedback_no', async (ctx) => {
+  const telegramId = ctx.from.id;
+
+  // Prevent duplicate processing
+  const user = await db.getUser(telegramId);
+  if (user?.feedback_given || user?.waiting_feedback) {
+    console.log(`⚠️ Duplicate feedback_no from ${telegramId}, ignoring`);
+    await ctx.answerCbQuery('Allaqachon javob berdingiz');
+    return;
+  }
+
   await ctx.answerCbQuery();
 
+  // Mark feedback as given FIRST to prevent duplicates
+  await db.updateUser(telegramId, { feedback_given: true, waiting_feedback: true, feedback_type: 'negative' });
+
   // Save feedback
-  await db.saveFeedback(ctx.from.id, 'not_liked', 'Bepul darslar yoqmadi');
+  await db.saveFeedback(telegramId, 'not_liked', 'Bepul darslar yoqmadi');
 
   // Edit message to remove buttons
   try {
@@ -1201,20 +1236,17 @@ bot.action('feedback_no', async (ctx) => {
   // Get configurable response
   const noResponse = await db.getSetting('feedback_no_response') ||
     '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing - bu bizga yaxshilanishga yordam beradi!\n\n<i>(Oddiy xabar yozing)</i>';
-  const user = await db.getUser(ctx.from.id);
   const personalizedResponse = await replaceVars(noResponse, user);
 
   await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
-
-  // Set user state to waiting for feedback
-  await db.updateUser(ctx.from.id, { waiting_feedback: true, feedback_type: 'negative' });
+  console.log(`📝 Negative feedback from ${telegramId}, waiting for reason`);
 
   // Schedule sales pitch anyway after delay (backup)
   const salesDelay = parseInt(await db.getSetting('feedback_no_sales_delay')) || 30;
   if (salesDelay > 0) {
     const salesTime = new Date(Date.now() + salesDelay * 60 * 1000);
-    await db.scheduleMessage(ctx.from.id, 'sales_pitch', salesTime, { from_negative_feedback: true });
-    console.log(`📅 Negative feedback from ${ctx.from.id} → Sales pitch scheduled in ${salesDelay} min`);
+    await db.scheduleMessage(telegramId, 'sales_pitch', salesTime, { from_negative_feedback: true });
+    console.log(`📅 Negative feedback from ${telegramId} → Sales pitch scheduled in ${salesDelay} min`);
   }
 });
 
