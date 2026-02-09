@@ -352,7 +352,7 @@ bot.on('text', async (ctx) => {
       if (showPrices) {
         await delay(2000);
 
-        // Check for special offer
+        // Check for special offer with automatic 20% discount
         const specialOfferEnabled = await db.getSetting('feedback_special_offer_enabled');
         if (specialOfferEnabled === 'true' || specialOfferEnabled === true) {
           const specialOffer = await db.getSetting('feedback_special_offer') ||
@@ -360,10 +360,15 @@ bot.on('text', async (ctx) => {
           const personalizedOffer = await replaceVars(specialOffer, user);
           await ctx.reply(personalizedOffer, { parse_mode: 'HTML' });
           await delay(1500);
-        }
 
-        await sendSalesPitch(telegramId);
-        console.log(`✅ Sales pitch sent after negative feedback from ${telegramId}`);
+          // Send prices with 20% discount
+          await sendSalesPitch(telegramId, 20);
+          console.log(`✅ Sales pitch with 20% discount sent after negative feedback from ${telegramId}`);
+        } else {
+          // Send regular prices
+          await sendSalesPitch(telegramId);
+          console.log(`✅ Sales pitch sent after negative feedback from ${telegramId}`);
+        }
 
         // Cancel any scheduled sales pitch since we already sent it
         try {
@@ -1224,42 +1229,54 @@ bot.action('feedback_yes', async (ctx) => {
 // Yo'q - yoqmadi → sabab so'rash
 bot.action('feedback_no', async (ctx) => {
   const telegramId = ctx.from.id;
+  console.log(`🔘 feedback_no clicked by ${telegramId}`);
 
-  // Prevent duplicate processing
-  const user = await db.getUser(telegramId);
-  if (user?.feedback_given || user?.waiting_feedback) {
-    console.log(`⚠️ Duplicate feedback_no from ${telegramId}, ignoring`);
-    await ctx.answerCbQuery('Allaqachon javob berdingiz');
-    return;
-  }
-
-  await ctx.answerCbQuery();
-
-  // Mark feedback as given FIRST to prevent duplicates
-  await db.updateUser(telegramId, { feedback_given: true, waiting_feedback: true, feedback_type: 'negative' });
-
-  // Save feedback
-  await db.saveFeedback(telegramId, 'not_liked', 'Bepul darslar yoqmadi');
-
-  // Edit message to remove buttons
   try {
-    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-  } catch (e) {}
+    // Prevent duplicate processing
+    const user = await db.getUser(telegramId);
+    if (user?.feedback_given || user?.waiting_feedback) {
+      console.log(`⚠️ Duplicate feedback_no from ${telegramId}, ignoring`);
+      await ctx.answerCbQuery('Allaqachon javob berdingiz');
+      return;
+    }
 
-  // Get configurable response
-  const noResponse = await db.getSetting('feedback_no_response') ||
-    '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing - bu bizga yaxshilanishga yordam beradi!\n\n<i>(Oddiy xabar yozing)</i>';
-  const personalizedResponse = await replaceVars(noResponse, user);
+    await ctx.answerCbQuery('Tushundim');
 
-  await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
-  console.log(`📝 Negative feedback from ${telegramId}, waiting for reason`);
+    // Mark feedback as given FIRST to prevent duplicates
+    await db.updateUser(telegramId, { feedback_given: true, waiting_feedback: true, feedback_type: 'negative' });
 
-  // Schedule sales pitch anyway after delay (backup)
-  const salesDelay = parseInt(await db.getSetting('feedback_no_sales_delay')) || 30;
-  if (salesDelay > 0) {
-    const salesTime = new Date(Date.now() + salesDelay * 60 * 1000);
-    await db.scheduleMessage(telegramId, 'sales_pitch', salesTime, { from_negative_feedback: true });
-    console.log(`📅 Negative feedback from ${telegramId} → Sales pitch scheduled in ${salesDelay} min`);
+    // Save feedback
+    try {
+      await db.saveFeedback(telegramId, 'not_liked', 'Bepul darslar yoqmadi');
+    } catch (e) {
+      console.error(`saveFeedback error:`, e.message);
+    }
+
+    // Edit message to remove buttons
+    try {
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+    } catch (e) {}
+
+    // Get configurable response
+    const noResponse = await db.getSetting('feedback_no_response') ||
+      '😔 Tushunaman. Iltimos, nimada kamchilik borligini yozing - bu bizga yaxshilanishga yordam beradi!\n\n<i>(Oddiy xabar yozing)</i>';
+    const personalizedResponse = await replaceVars(noResponse, user);
+
+    await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
+    console.log(`📝 Negative feedback from ${telegramId}, waiting for reason`);
+
+    // Schedule sales pitch anyway after delay (backup)
+    const salesDelay = parseInt(await db.getSetting('feedback_no_sales_delay')) || 30;
+    if (salesDelay > 0) {
+      const salesTime = new Date(Date.now() + salesDelay * 60 * 1000);
+      await db.scheduleMessage(telegramId, 'sales_pitch', salesTime, { from_negative_feedback: true });
+      console.log(`📅 Negative feedback from ${telegramId} → Sales pitch scheduled in ${salesDelay} min`);
+    }
+  } catch (error) {
+    console.error(`❌ Error in feedback_no handler for ${telegramId}:`, error);
+    try {
+      await ctx.answerCbQuery('Xatolik yuz berdi');
+    } catch (e) {}
   }
 });
 
@@ -1269,30 +1286,55 @@ bot.action('show_prices', async (ctx) => {
   await sendSalesPitch(ctx.from.id);
 });
 
-export async function sendSalesPitch(telegramId) {
+export async function sendSalesPitch(telegramId, extraDiscount = 0) {
   const user = await db.getUser(telegramId);
   const plans = await db.getSubscriptionPlans(true);
-  
+
   let text = await db.getBotMessage('sales_pitch') || '🎓 <b>SMM PRO KURSGA TAKLIF!</b>\n\nObuna turini tanlang:';
   text = await replaceVars(text, user);
-  
-  // Create plan selection buttons
+
+  // Create plan selection buttons with optional extra discount
   const planButtons = plans.map(plan => {
-    const priceFormatted = formatMoney(plan.price);
-    const label = plan.discount_percent > 0 
-      ? `${plan.name} - ${priceFormatted} (-${plan.discount_percent}%)`
+    let finalPrice = plan.price;
+    let totalDiscount = plan.discount_percent || 0;
+
+    // Apply extra discount if provided (e.g., 20% for special offer)
+    if (extraDiscount > 0) {
+      finalPrice = Math.round(plan.price * (100 - extraDiscount) / 100);
+      totalDiscount = extraDiscount + (plan.discount_percent || 0);
+    }
+
+    const priceFormatted = formatMoney(finalPrice);
+    const label = totalDiscount > 0
+      ? `${plan.name} - ${priceFormatted} (-${totalDiscount}%)`
       : `${plan.name} - ${priceFormatted}`;
-    return [Markup.button.callback(label, `plan_${plan.id}`)];
+    // Store both original plan and discount info in callback
+    const callbackData = extraDiscount > 0 ? `discount_plan_${extraDiscount}_${plan.id}` : `plan_${plan.id}`;
+    return [Markup.button.callback(label, callbackData)];
   });
-  
+
   // Add info about plans
   let plansInfo = '\n\n📋 <b>Obuna turlari:</b>\n';
   for (const plan of plans) {
-    const priceFormatted = formatMoney(plan.price);
-    const discount = plan.discount_percent > 0 ? ` <i>(-${plan.discount_percent}% chegirma)</i>` : '';
-    plansInfo += `• ${plan.name}: <b>${priceFormatted}</b>${discount}\n`;
+    let finalPrice = plan.price;
+    let totalDiscount = plan.discount_percent || 0;
+
+    if (extraDiscount > 0) {
+      finalPrice = Math.round(plan.price * (100 - extraDiscount) / 100);
+      totalDiscount = extraDiscount + (plan.discount_percent || 0);
+    }
+
+    const priceFormatted = formatMoney(finalPrice);
+    const originalPrice = extraDiscount > 0 ? ` <s>${formatMoney(plan.price)}</s>` : '';
+    const discountText = totalDiscount > 0 ? ` <i>(-${totalDiscount}% chegirma)</i>` : '';
+    plansInfo += `• ${plan.name}:${originalPrice} <b>${priceFormatted}</b>${discountText}\n`;
   }
-  
+
+  // Add special badge for discounted offers
+  if (extraDiscount > 0) {
+    text = `🎁 <b>MAXSUS ${extraDiscount}% CHEGIRMA!</b>\n\n` + text;
+  }
+
   await bot.telegram.sendMessage(telegramId, text + plansInfo, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
@@ -1302,6 +1344,58 @@ export async function sendSalesPitch(telegramId) {
   });
   await db.updateUser(telegramId, { funnel_step: 10 });
 }
+
+// Handle discounted plan selection (special offer)
+bot.action(/^discount_plan_(\d+)_(.+)$/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const discountPercent = parseInt(ctx.match[1]);
+  const planId = ctx.match[2];
+  const telegramId = ctx.from.id;
+
+  const plan = await db.getSubscriptionPlan(planId);
+  if (!plan) {
+    return ctx.reply('❌ Bunday obuna turi topilmadi');
+  }
+
+  // Calculate discounted price
+  const discountedPrice = Math.round(plan.price * (100 - discountPercent) / 100);
+
+  const orderId = ('DSC' + Date.now() + telegramId).slice(0, 20);
+  await db.createPayment(orderId, telegramId, discountedPrice, planId);
+
+  const paymeUrl = BASE_URL + '/payme/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
+  const clickUrl = BASE_URL + '/click/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
+
+  // Check which payment systems are enabled
+  const paymeEnabledStr = await db.getSetting('payme_enabled') || await db.getBotMessage('payme_enabled');
+  const clickEnabledStr = await db.getSetting('click_enabled') || await db.getBotMessage('click_enabled');
+
+  const paymeEnabled = paymeEnabledStr !== 'false' && paymeEnabledStr !== false;
+  const clickEnabled = clickEnabledStr !== 'false' && clickEnabledStr !== false;
+
+  // Build payment buttons based on settings
+  const paymentButtons = [];
+  if (paymeEnabled) paymentButtons.push(Markup.button.url('💳 Payme', paymeUrl));
+  if (clickEnabled) paymentButtons.push(Markup.button.url('💠 Click', clickUrl));
+
+  if (paymentButtons.length === 0) {
+    return ctx.reply('❌ Hozircha to\'lov tizimlari mavjud emas. Keyinroq urinib ko\'ring.');
+  }
+
+  const text = `🎁 <b>${plan.name} obuna tanlandi (${discountPercent}% chegirma!)</b>\n\n` +
+    `💰 Asl narx: <s>${formatMoney(plan.price)}</s>\n` +
+    `🔥 Chegirmali narx: <b>${formatMoney(discountedPrice)}</b>\n` +
+    `📅 Muddat: <b>${plan.duration_days} kun</b>\n\n` +
+    `To'lov usulini tanlang:`;
+
+  await ctx.editMessageText(text, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      paymentButtons,
+      [Markup.button.callback('⬅️ Orqaga', 'back_to_plans')]
+    ])
+  });
+});
 
 // Handle plan selection
 bot.action(/^plan_(.+)$/, async (ctx) => {

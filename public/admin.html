@@ -674,6 +674,61 @@
 
     <!-- Library Tab (Darslar kutubxonasi) -->
     <div id="tab-library" class="hidden">
+
+      <!-- Media Library Section (Botga yuborilgan fayllar) -->
+      <div class="card p-5 mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <h3 class="font-semibold text-gray-800 text-lg">📁 Media kutubxonasi</h3>
+            <p class="text-sm text-gray-500">Botga yuborilgan barcha media fayllar</p>
+          </div>
+          <div class="flex gap-2">
+            <select id="mediaTypeFilter" class="input text-sm" onchange="loadMediaLibrary()">
+              <option value="all">Barchasi</option>
+              <option value="video">🎬 Video</option>
+              <option value="photo">🖼 Rasm</option>
+              <option value="voice">🎤 Ovozli</option>
+              <option value="audio">🎵 Audio</option>
+              <option value="video_note">⚪ Video xabar</option>
+            </select>
+            <button onclick="loadMediaLibrary()" class="btn btn-secondary text-sm">🔄</button>
+          </div>
+        </div>
+
+        <!-- Media Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+          <div class="bg-indigo-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500">Jami</p>
+            <p class="text-lg font-bold text-indigo-600" id="mediaStatsTotal">0</p>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500">Video</p>
+            <p class="text-lg font-bold text-blue-600" id="mediaStatsVideo">0</p>
+          </div>
+          <div class="bg-green-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500">Rasm</p>
+            <p class="text-lg font-bold text-green-600" id="mediaStatsPhoto">0</p>
+          </div>
+          <div class="bg-orange-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500">Audio</p>
+            <p class="text-lg font-bold text-orange-600" id="mediaStatsAudio">0</p>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500">Video xabar</p>
+            <p class="text-lg font-bold text-purple-600" id="mediaStatsVideoNote">0</p>
+          </div>
+        </div>
+
+        <div id="mediaLibraryList" class="space-y-2 max-h-[400px] overflow-y-auto">
+          <p class="text-gray-400 text-center py-8">Yuklanmoqda...</p>
+        </div>
+
+        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p class="text-sm text-blue-800">💡 <strong>Yangi media qo'shish:</strong> Botga istalgan media (video, rasm, audio) yuboring - avtomatik kutubxonaga qo'shiladi!</p>
+        </div>
+      </div>
+
+      <!-- Darslar kutubxonasi -->
       <div class="card p-5 mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
@@ -1973,7 +2028,7 @@ async function loadSettingsForm() {
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadSettingsForm()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadSettingsForm(), loadMediaLibrary()]);
   renderCharts();
 }
 
@@ -2060,6 +2115,144 @@ async function loadFeedback() {
     if (container) {
       container.innerHTML = '<div class="p-8 text-center text-red-500">Xatolik: ' + e.message + '</div>';
     }
+  }
+}
+
+// ========== MEDIA LIBRARY ==========
+let allMedia = [];
+
+async function loadMediaLibrary() {
+  try {
+    const filterType = document.getElementById('mediaTypeFilter')?.value || 'all';
+    const url = filterType === 'all' ? '/api/media' : '/api/media/' + filterType;
+    const data = await (await fetch(url, { headers: { Authorization: auth } })).json();
+    allMedia = Array.isArray(data) ? data : [];
+    renderMediaLibrary();
+  } catch(e) {
+    console.error('loadMediaLibrary error:', e);
+    const container = document.getElementById('mediaLibraryList');
+    if (container) {
+      container.innerHTML = '<div class="p-8 text-center text-red-500">Xatolik: ' + e.message + '</div>';
+    }
+  }
+}
+
+function renderMediaLibrary() {
+  const container = document.getElementById('mediaLibraryList');
+  if (!container) return;
+
+  // Calculate stats
+  const videoCount = allMedia.filter(m => m.file_type === 'video').length;
+  const photoCount = allMedia.filter(m => m.file_type === 'photo').length;
+  const audioCount = allMedia.filter(m => m.file_type === 'audio' || m.file_type === 'voice').length;
+  const videoNoteCount = allMedia.filter(m => m.file_type === 'video_note').length;
+
+  document.getElementById('mediaStatsTotal').textContent = allMedia.length;
+  document.getElementById('mediaStatsVideo').textContent = videoCount;
+  document.getElementById('mediaStatsPhoto').textContent = photoCount;
+  document.getElementById('mediaStatsAudio').textContent = audioCount;
+  document.getElementById('mediaStatsVideoNote').textContent = videoNoteCount;
+
+  if (!allMedia.length) {
+    container.innerHTML = `<div class="p-8 text-center text-gray-400">
+      <p class="mb-2">Hali media yo'q</p>
+      <p class="text-xs">Botga video, rasm yoki audio yuboring - bu yerda ko'rinadi</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = allMedia.map(m => {
+    const time = timeAgo(m.created_at);
+
+    // Get icon and color based on type
+    let icon = '📎';
+    let color = 'gray';
+    let typeName = m.file_type;
+
+    if (m.file_type === 'video') { icon = '🎬'; color = 'blue'; typeName = 'Video'; }
+    else if (m.file_type === 'photo') { icon = '🖼'; color = 'green'; typeName = 'Rasm'; }
+    else if (m.file_type === 'voice') { icon = '🎤'; color = 'orange'; typeName = 'Ovozli'; }
+    else if (m.file_type === 'audio') { icon = '🎵'; color = 'orange'; typeName = 'Audio'; }
+    else if (m.file_type === 'video_note') { icon = '⚪'; color = 'purple'; typeName = 'Video xabar'; }
+
+    const caption = m.caption ? m.caption.slice(0, 50) + (m.caption.length > 50 ? '...' : '') : '';
+    const fileName = m.file_name || 'Nomsiz';
+
+    return \`
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <span class="text-2xl">\${icon}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="badge badge-\${color} text-xs">\${typeName}</span>
+              <span class="text-xs text-gray-400">\${time}</span>
+            </div>
+            <p class="text-sm font-medium text-gray-700 truncate" title="\${fileName}">\${fileName}</p>
+            \${caption ? \`<p class="text-xs text-gray-500 truncate">\${caption}</p>\` : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-2 ml-2">
+          <button onclick="copyMediaId('\${m.file_id}')" class="btn btn-secondary text-xs px-2 py-1" title="File ID nusxalash">
+            📋
+          </button>
+          <button onclick="editMediaCaption(\${m.id}, '\${(m.caption || '').replace(/'/g, "\\\\'")}', '\${m.file_id}')" class="btn btn-secondary text-xs px-2 py-1" title="Izoh o'zgartirish">
+            ✏️
+          </button>
+          <button onclick="deleteMediaItem(\${m.id})" class="btn btn-danger text-xs px-2 py-1" title="O'chirish">
+            🗑
+          </button>
+        </div>
+      </div>
+    \`;
+  }).join('');
+}
+
+function copyMediaId(fileId) {
+  navigator.clipboard.writeText(fileId).then(() => {
+    showToast('✅ File ID nusxalandi!');
+  }).catch(e => {
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = fileId;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('✅ File ID nusxalandi!');
+  });
+}
+
+function editMediaCaption(id, currentCaption, fileId) {
+  const newCaption = prompt('Yangi izoh kiriting:', currentCaption);
+  if (newCaption === null) return; // cancelled
+
+  fetch('/api/media/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: auth },
+    body: JSON.stringify({ caption: newCaption })
+  })
+  .then(r => r.json())
+  .then(() => {
+    showToast('✅ Izoh saqlandi!');
+    loadMediaLibrary();
+  })
+  .catch(e => {
+    showToast('❌ Xatolik: ' + e.message);
+  });
+}
+
+async function deleteMediaItem(id) {
+  if (!confirm('Bu media faylni o\\'chirishni xohlaysizmi?')) return;
+
+  try {
+    await fetch('/api/media/' + id, {
+      method: 'DELETE',
+      headers: { Authorization: auth }
+    });
+    showToast('✅ Media o\\'chirildi!');
+    loadMediaLibrary();
+  } catch(e) {
+    showToast('❌ Xatolik: ' + e.message);
   }
 }
 
