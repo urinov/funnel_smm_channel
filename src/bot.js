@@ -95,13 +95,21 @@ async function replaceVars(text, user) {
 
 bot.command('admin', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return ctx.reply('Admin huquqi yoq');
-  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html`, { parse_mode: 'HTML' });
+  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html`, { parse_mode: 'HTML' });
 });
 
 bot.command('testpitch', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return;
-  await ctx.reply('📤 Pitch yuborilmoqda...');
-  await sendVideoPitch(ctx.from.id);
+  await ctx.reply('📤 Feedback savoli yuborilmoqda...');
+  await sendFeedbackQuestion(ctx.from.id);
+});
+
+bot.command('testfeedback', async (ctx) => {
+  if (!isAdmin(ctx.from.id)) return;
+  // Reset feedback flags first so we can test again
+  await db.updateUser(ctx.from.id, { feedback_given: false, waiting_feedback: false, feedback_type: null });
+  await ctx.reply('📤 Feedback savoli yuborilmoqda (flaglar reset qilindi)...');
+  await sendFeedbackQuestion(ctx.from.id);
 });
 
 bot.command('testsales', async (ctx) => {
@@ -1192,38 +1200,64 @@ Bepul darslar yoqdimi? 👇`;
 // Ha - yoqdi → to'g'ridan-to'g'ri narxlar
 bot.action('feedback_yes', async (ctx) => {
   const telegramId = ctx.from.id;
+  console.log(`🔘 feedback_yes clicked by ${telegramId}`);
 
-  // Prevent duplicate processing
-  const user = await db.getUser(telegramId);
-  if (user?.feedback_given) {
-    console.log(`⚠️ Duplicate feedback_yes from ${telegramId}, ignoring`);
-    await ctx.answerCbQuery('Allaqachon javob berdingiz');
-    return;
-  }
-
-  await ctx.answerCbQuery('Ajoyib! 🎉');
-
-  // Mark feedback as given FIRST to prevent duplicates
-  await db.updateUser(telegramId, { feedback_given: true });
-
-  // Save feedback
-  await db.saveFeedback(telegramId, 'liked', 'Bepul darslar yoqdi');
-
-  // Edit message to remove buttons
   try {
-    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-  } catch (e) {}
+    // Prevent duplicate processing
+    const user = await db.getUser(telegramId);
+    console.log(`📋 User state: feedback_given=${user?.feedback_given}, waiting_feedback=${user?.waiting_feedback}`);
 
-  // Get configurable response
-  const yesResponse = await db.getSetting('feedback_yes_response') || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
-  const personalizedResponse = await replaceVars(yesResponse, user);
+    if (user?.feedback_given) {
+      console.log(`⚠️ Duplicate feedback_yes from ${telegramId}, ignoring`);
+      await ctx.answerCbQuery('Allaqachon javob berdingiz');
+      return;
+    }
 
-  await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
-  await delay(1500);
+    await ctx.answerCbQuery('Ajoyib! 🎉');
 
-  // Show prices directly - IMMEDIATE CONVERSION
-  await sendSalesPitch(telegramId);
-  console.log(`✅ Positive feedback from ${telegramId} → Sales pitch sent`);
+    // Mark feedback as given FIRST to prevent duplicates
+    await db.updateUser(telegramId, { feedback_given: true, feedback_type: 'positive' });
+    console.log(`✅ Updated user flags for ${telegramId}`);
+
+    // Save feedback
+    try {
+      await db.saveFeedback(telegramId, 'liked', 'Bepul darslar yoqdi');
+      console.log(`✅ Saved feedback for ${telegramId}`);
+    } catch (e) {
+      console.error(`saveFeedback error:`, e.message);
+    }
+
+    // Edit message to remove buttons
+    try {
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+    } catch (e) {
+      console.log(`Could not remove buttons: ${e.message}`);
+    }
+
+    // Get configurable response
+    const yesResponse = await db.getSetting('feedback_yes_response') || '🎉 Ajoyib! Unda to\'liq kursga taklif qilaman...';
+    console.log(`📝 Sending response: "${yesResponse.substring(0, 50)}..."`);
+
+    const personalizedResponse = await replaceVars(yesResponse, user || {});
+
+    await ctx.reply(personalizedResponse, { parse_mode: 'HTML' });
+    console.log(`✅ Reply sent to ${telegramId}`);
+
+    await delay(1500);
+
+    // Show prices directly - IMMEDIATE CONVERSION
+    await sendSalesPitch(telegramId);
+    console.log(`✅ Positive feedback from ${telegramId} → Sales pitch sent`);
+  } catch (error) {
+    console.error(`❌ Error in feedback_yes handler for ${telegramId}:`, error);
+    console.error(`Error stack:`, error.stack);
+    try {
+      await ctx.reply('❌ Xatolik yuz berdi. Iltimos qayta urinib ko\'ring.');
+    } catch (e) {}
+    try {
+      await ctx.answerCbQuery('Xatolik yuz berdi');
+    } catch (e) {}
+  }
 });
 
 // Yo'q - yoqmadi → sabab so'rash
