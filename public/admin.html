@@ -21,7 +21,7 @@
       --pill: #e8ecf7;
       --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
       --shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.06);
-      --mobile-nav-h: 84px;
+      --mobile-nav-h: 96px;
     }
     body { background: radial-gradient(1200px 800px at 20% -10%, #ffffff 0%, var(--bg) 55%, #e9eef8 100%); min-height: 100vh; color: var(--ink); }
 
@@ -245,8 +245,11 @@
       table.responsive-table tbody tr td button { border-radius: 10px; }
 
       /* Bottom spacing so content is readable above nav */
-      .main-content { padding-bottom: calc(var(--mobile-nav-h) + 40px + env(safe-area-inset-bottom)) !important; }
+      .main-content { padding-bottom: calc(var(--mobile-nav-h) + 80px + env(safe-area-inset-bottom)) !important; }
       .mobile-nav { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+
+      /* Modal readability above browser/nav bars */
+      .modal-content { max-height: calc(100vh - 140px); padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
 
       /* Section readability */
       .card { padding: 14px !important; }
@@ -1729,6 +1732,10 @@ let ageChart, occupationChart, incomeChart, budgetChart;
 let questionStatsChart;
 
 // ========== INITIALIZATION ==========
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+const chartTickFont = () => ({ size: isMobile() ? 10 : 12, family: 'Inter' });
+const chartLayoutPadding = () => isMobile() ? { left: 6, right: 6, top: 6, bottom: 16 } : { left: 0, right: 0, top: 0, bottom: 0 };
+
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
   year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
 });
@@ -3256,10 +3263,27 @@ function renderRevenueChart(period = 'week') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: chartLayoutPadding() },
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false } },
-        y: { grid: { color: '#f3f4f6' }, ticks: { callback: v => v >= 1000 ? (v/1000) + 'K' : v } }
+        x: {
+          grid: { display: false },
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: isMobile() ? 6 : 12,
+            maxRotation: isMobile() ? 45 : 0,
+            minRotation: isMobile() ? 45 : 0,
+            font: chartTickFont()
+          }
+        },
+        y: {
+          grid: { color: '#f3f4f6' },
+          ticks: {
+            callback: v => v >= 1000 ? (v/1000) + 'K' : v,
+            font: chartTickFont(),
+            padding: 6
+          }
+        }
       }
     }
   });
@@ -3446,7 +3470,9 @@ function renderSubscriberGrowthChart(period = 'day') {
           backgroundColor: 'rgba(99, 102, 241, 0.1)',
           fill: true,
           tension: 0.4,
-          pointRadius: 4,
+          pointRadius: isMobile() ? 2 : 4,
+          pointHoverRadius: isMobile() ? 3 : 5,
+          borderWidth: isMobile() ? 2 : 3,
           pointBackgroundColor: '#6366f1',
           pointBorderColor: '#fff',
           pointBorderWidth: 2
@@ -3458,7 +3484,9 @@ function renderSubscriberGrowthChart(period = 'day') {
           backgroundColor: 'transparent',
           fill: false,
           tension: 0.4,
-          pointRadius: 3,
+          pointRadius: isMobile() ? 1.5 : 3,
+          pointHoverRadius: isMobile() ? 2.5 : 4,
+          borderWidth: isMobile() ? 2 : 3,
           pointBackgroundColor: '#d1d5db',
           pointBorderColor: '#fff',
           pointBorderWidth: 1,
@@ -3469,13 +3497,23 @@ function renderSubscriberGrowthChart(period = 'day') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: chartLayoutPadding() },
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false } },
+        x: {
+          grid: { display: false },
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: isMobile() ? 6 : 12,
+            maxRotation: isMobile() ? 45 : 0,
+            minRotation: isMobile() ? 45 : 0,
+            font: chartTickFont()
+          }
+        },
         y: {
           grid: { color: '#f3f4f6' },
           beginAtZero: true,
-          ticks: { stepSize: 1 }
+          ticks: { stepSize: 1, font: chartTickFont(), padding: 6 }
         }
       }
     }
@@ -3505,7 +3543,7 @@ function renderUserTypeChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '70%',
+      cutout: isMobile() ? '68%' : '70%',
       plugins: { legend: { display: false } }
     }
   });
@@ -3562,7 +3600,7 @@ function renderCustDevCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '60%',
+        cutout: isMobile() ? '62%' : '60%',
         plugins: { legend: { display: false } }
       }
     });
@@ -4003,7 +4041,10 @@ async function openQuestionStats(questionId) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom' }
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 8, font: chartTickFont() }
+          }
         }
       }
     });
