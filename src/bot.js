@@ -254,13 +254,13 @@ async function handleLegacyStart(ctx, telegramId, tgUser) {
 }
 
 // Send lesson from specific funnel
-async function sendFunnelLesson(telegramId, funnelId, lessonNumber) {
+async function sendFunnelLesson(telegramId, funnelId, lessonNumber, opts = {}) {
   try {
     const lesson = await db.getFunnelLesson(funnelId, lessonNumber);
     if (!lesson) {
       console.log('❌ Funnel lesson not found:', funnelId, lessonNumber);
       // Fallback to regular lessons
-      return sendLesson(telegramId, lessonNumber);
+      return sendLesson(telegramId, lessonNumber, opts);
     }
     
     const user = await db.getUser(telegramId);
@@ -289,19 +289,29 @@ async function sendFunnelLesson(telegramId, funnelId, lessonNumber) {
       await bot.telegram.sendMessage(telegramId, `<b>📚 ${lesson.lesson_number}-dars: ${lesson.title}</b>\n\n${content}`, { parse_mode: 'HTML' });
     }
     
-    // Update user progress
-    await db.updateUser(telegramId, { current_lesson: lessonNumber, funnel_step: lessonNumber });
-    await db.updateUserFunnelProgress(telegramId, funnelId, lessonNumber, 0);
+    // Update user progress (skip if replay)
+    if (!opts.replay) {
+      await db.updateUser(telegramId, { current_lesson: lessonNumber, funnel_step: lessonNumber });
+      await db.updateUserFunnelProgress(telegramId, funnelId, lessonNumber, 0);
+    }
     
     // Show watched button if enabled
     if (lesson.show_watched_button !== false) {
       const btnText = lesson.watched_button_text || 'Videoni ko\'rib bo\'ldim ✅';
       await delay(1000);
-      await bot.telegram.sendMessage(telegramId, 'Videoni ko\'rib bo\'lgach, tugmani bosing:', {
-        ...Markup.inlineKeyboard([
-          [Markup.button.callback(btnText, `watched_funnel_${funnelId}_${lessonNumber}`)]
-        ])
-      });
+      if (opts.replay && opts.resumeLesson) {
+        await bot.telegram.sendMessage(telegramId, 'Dars tugagach, davom etish uchun bosing:', {
+          ...Markup.inlineKeyboard([
+            [Markup.button.callback('Davom etish ▶️', `resume_f:${funnelId}:${opts.resumeLesson}`)]
+          ])
+        });
+      } else {
+        await bot.telegram.sendMessage(telegramId, 'Videoni ko\'rib bo\'lgach, tugmani bosing:', {
+          ...Markup.inlineKeyboard([
+            [Markup.button.callback(btnText, `watched_funnel_${funnelId}_${lessonNumber}`)]
+          ])
+        });
+      }
     }
     
     console.log('✅ Sent funnel lesson:', funnelId, lessonNumber, 'to', telegramId);
@@ -440,7 +450,7 @@ async function startLessons(telegramId) {
   await sendLesson(telegramId, 1);
 }
 
-export async function sendLesson(telegramId, lessonNumber) {
+export async function sendLesson(telegramId, lessonNumber, opts = {}) {
   const lesson = await db.getLesson(lessonNumber);
   if (!lesson) {
     console.log('Lesson not found:', lessonNumber);
@@ -466,7 +476,9 @@ export async function sendLesson(telegramId, lessonNumber) {
     await bot.telegram.sendMessage(telegramId, caption, { parse_mode: 'HTML' });
   }
 
-  await db.updateUser(telegramId, { current_lesson: lessonNumber, funnel_step: lessonNumber + 1, custdev_step: 0 });
+  if (!opts.replay) {
+    await db.updateUser(telegramId, { current_lesson: lessonNumber, funnel_step: lessonNumber + 1, custdev_step: 0 });
+  }
 
   if (lesson.show_watched_button !== false) {
     await delay(1000);
@@ -476,14 +488,22 @@ export async function sendLesson(telegramId, lessonNumber) {
 
     const btnText = lesson.watched_button_text || defaultBtnText;
     const msg = lesson.watched_message || defaultMsg;
-    await bot.telegram.sendMessage(telegramId, msg, {
-      ...Markup.inlineKeyboard([[Markup.button.callback(btnText, 'watched_' + lessonNumber)]])
-    });
+    if (opts.replay && opts.resumeLesson) {
+      await bot.telegram.sendMessage(telegramId, 'Dars tugagach, davom etish uchun bosing:', {
+        ...Markup.inlineKeyboard([[Markup.button.callback('Davom etish ▶️', `resume_l:${opts.resumeLesson}`)]])
+      });
+    } else {
+      await bot.telegram.sendMessage(telegramId, msg, {
+        ...Markup.inlineKeyboard([[Markup.button.callback(btnText, 'watched_' + lessonNumber)]])
+      });
+    }
   } else {
     const totalLessons = await db.getLessonsCount();
     await delay(3000);
-    if (lessonNumber < totalLessons) await startCustDev(telegramId, lessonNumber);
-    else await schedulePostLesson(telegramId);
+    if (!opts.replay) {
+      if (lessonNumber < totalLessons) await startCustDev(telegramId, lessonNumber);
+      else await schedulePostLesson(telegramId);
+    }
   }
 }
 
@@ -1687,6 +1707,60 @@ bot.action('question', async (ctx) => {
   await ctx.reply('Savollaringiz bolsa: @' + (process.env.ADMIN_USERNAME || 'firdavsurinovs'));
 });
 
+bot.action(/^rf:(\d+):(\d+):(\d+)$/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    const telegramId = ctx.from.id;
+    const funnelId = parseInt(ctx.match[1]);
+    const lesson = parseInt(ctx.match[2]);
+    const resume = parseInt(ctx.match[3]);
+    await ctx.reply(`Tanlangan dars: ${lesson}-dars. Tugagach, davom etamiz.`);
+    await sendFunnelLesson(telegramId, funnelId, lesson, { replay: true, resumeLesson: resume });
+  } catch (e) {
+    console.error('Replay funnel error:', e);
+    await ctx.reply('Xatolik. Birozdan keyin urinib ko\'ring.');
+  }
+});
+
+bot.action(/^rl:(\d+):(\d+)$/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    const telegramId = ctx.from.id;
+    const lesson = parseInt(ctx.match[1]);
+    const resume = parseInt(ctx.match[2]);
+    await ctx.reply(`Tanlangan dars: ${lesson}-dars. Tugagach, davom etamiz.`);
+    await sendLesson(telegramId, lesson, { replay: true, resumeLesson: resume });
+  } catch (e) {
+    console.error('Replay lesson error:', e);
+    await ctx.reply('Xatolik. Birozdan keyin urinib ko\'ring.');
+  }
+});
+
+bot.action(/^resume_f:(\d+):(\d+)$/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    const telegramId = ctx.from.id;
+    const funnelId = parseInt(ctx.match[1]);
+    const resume = parseInt(ctx.match[2]);
+    await sendFunnelLesson(telegramId, funnelId, resume);
+  } catch (e) {
+    console.error('Resume funnel error:', e);
+    await ctx.reply('Xatolik. Birozdan keyin urinib ko\'ring.');
+  }
+});
+
+bot.action(/^resume_l:(\d+)$/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    const telegramId = ctx.from.id;
+    const resume = parseInt(ctx.match[1]);
+    await sendLesson(telegramId, resume);
+  } catch (e) {
+    console.error('Resume lesson error:', e);
+    await ctx.reply('Xatolik. Birozdan keyin urinib ko\'ring.');
+  }
+});
+
 function formatLessonHistory(lessons, currentLesson, maxItems = 5) {
   const prev = (lessons || [])
     .filter(l => Number(l.lesson_number) < Number(currentLesson))
@@ -1695,6 +1769,22 @@ function formatLessonHistory(lessons, currentLesson, maxItems = 5) {
   const recent = prev.slice(-maxItems);
   const lines = recent.map(l => `${l.lesson_number}-dars: ${l.title || ''}`.trim());
   return `Oldingi darslar:\n${lines.join('\n')}`;
+}
+
+function buildHistoryButtons(lessons, currentLesson, resumeLesson, funnelId = null, maxItems = 5) {
+  const prev = (lessons || [])
+    .filter(l => Number(l.lesson_number) < Number(currentLesson))
+    .sort((a, b) => Number(a.lesson_number) - Number(b.lesson_number))
+    .slice(-maxItems);
+  if (!prev.length) return null;
+  const rows = prev.map(l => {
+    const lessonNum = Number(l.lesson_number);
+    const data = funnelId
+      ? `rf:${funnelId}:${lessonNum}:${resumeLesson}`
+      : `rl:${lessonNum}:${resumeLesson}`;
+    return [Markup.button.callback(`${lessonNum}-dars`, data)];
+  });
+  return Markup.inlineKeyboard(rows);
 }
 
 bot.command('continue', async (ctx) => {
@@ -1714,10 +1804,11 @@ bot.command('continue', async (ctx) => {
 
       const lessons = await db.getFunnelLessons(activeFunnel.funnel_id);
       const history = formatLessonHistory(lessons, current);
+      const historyButtons = buildHistoryButtons(lessons, current, current, activeFunnel.funnel_id);
       let msg = `Siz ${current}-darsda to'xtagansiz. Qayta ko'rib chiqamiz.\n`;
       if (history) msg += `\n${history}\n`;
-      msg += '\nDavom etamiz...';
-      await ctx.reply(msg);
+      msg += '\nAgar oldingi darsni ko\'rmoqchi bo\'lsangiz, pastdan tanlang.';
+      await ctx.reply(msg, historyButtons ? { ...historyButtons } : undefined);
       await delay(500);
       return sendFunnelLesson(telegramId, activeFunnel.funnel_id, current);
     }
@@ -1731,10 +1822,11 @@ bot.command('continue', async (ctx) => {
 
     const lessons = await db.getAllLessons();
     const history = formatLessonHistory(lessons, current);
+    const historyButtons = buildHistoryButtons(lessons, current, current);
     let msg = `Siz ${current}-darsda to'xtagansiz. Qayta ko'rib chiqamiz.\n`;
     if (history) msg += `\n${history}\n`;
-    msg += '\nDavom etamiz...';
-    await ctx.reply(msg);
+    msg += '\nAgar oldingi darsni ko\'rmoqchi bo\'lsangiz, pastdan tanlang.';
+    await ctx.reply(msg, historyButtons ? { ...historyButtons } : undefined);
     await delay(500);
     await sendLesson(telegramId, current);
   } catch (e) {
