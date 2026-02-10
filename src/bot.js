@@ -330,11 +330,11 @@ bot.on('contact', async (ctx) => {
   }
 });
 
-bot.on('text', async (ctx) => {
+bot.on('text', async (ctx, next) => {
   try {
     const telegramId = ctx.from.id;
     const text = ctx.message.text;
-    if (text.startsWith('/')) return;
+    if (text.startsWith('/')) return next();
 
     const user = await db.getUser(telegramId);
     if (!user) return;
