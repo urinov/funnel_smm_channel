@@ -207,7 +207,8 @@ bot.start(async (ctx) => {
     }
 
     if (user.funnel_step > 0) {
-      return ctx.reply(`Qaytganingiz bilan, ${user.full_name || "do'st"}!\n\nSiz ${user.current_lesson || 0}-darsdasiz.\nDavom etish: /continue`);
+      const currentLesson = userFunnel?.current_lesson ?? user.current_lesson ?? 0;
+      return ctx.reply(`Qaytganingiz bilan, ${user.full_name || "do'st"}!\n\nSiz ${currentLesson}-darsdasiz.\nDavom etish: /continue`);
     }
 
     await startLessons(telegramId);
@@ -1686,13 +1687,55 @@ bot.action('question', async (ctx) => {
   await ctx.reply('Savollaringiz bolsa: @' + (process.env.ADMIN_USERNAME || 'firdavsurinovs'));
 });
 
+function formatLessonHistory(lessons, currentLesson, maxItems = 5) {
+  const prev = (lessons || [])
+    .filter(l => Number(l.lesson_number) < Number(currentLesson))
+    .sort((a, b) => Number(a.lesson_number) - Number(b.lesson_number));
+  if (!prev.length) return '';
+  const recent = prev.slice(-maxItems);
+  const lines = recent.map(l => `${l.lesson_number}-dars: ${l.title || ''}`.trim());
+  return `Oldingi darslar:\n${lines.join('\n')}`;
+}
+
 bot.command('continue', async (ctx) => {
-  const user = await db.getUser(ctx.from.id);
+  const telegramId = ctx.from.id;
+  const user = await db.getUser(telegramId);
   if (!user) return ctx.reply('/start bosing.');
-  const total = await db.getLessonsCount();
-  const next = (user.current_lesson || 0) + 1;
-  if (next <= total) await sendLesson(ctx.from.id, next);
-  else await sendSalesPitch(ctx.from.id);
+
+  const activeFunnel = await db.getUserActiveFunnel(telegramId);
+  if (activeFunnel) {
+    const current = activeFunnel.current_lesson || user.current_lesson || 0;
+    if (current <= 0) {
+      await ctx.reply('Darslar qayta boshlanadi. Birinchi darsdan boshlaymiz.');
+      await delay(500);
+      return sendFunnelLesson(telegramId, activeFunnel.funnel_id, 1);
+    }
+
+    const lessons = await db.getFunnelLessons(activeFunnel.funnel_id);
+    const history = formatLessonHistory(lessons, current);
+    let msg = `Siz ${current}-darsda to'xtagansiz. Qayta ko'rib chiqamiz.\n`;
+    if (history) msg += `\n${history}\n`;
+    msg += '\nDavom etamiz...';
+    await ctx.reply(msg);
+    await delay(500);
+    return sendFunnelLesson(telegramId, activeFunnel.funnel_id, current);
+  }
+
+  const current = user.current_lesson || 0;
+  if (current <= 0) {
+    await ctx.reply('Darslar qayta boshlanadi. Birinchi darsdan boshlaymiz.');
+    await delay(500);
+    return startLessons(telegramId);
+  }
+
+  const lessons = await db.getAllLessons();
+  const history = formatLessonHistory(lessons, current);
+  let msg = `Siz ${current}-darsda to'xtagansiz. Qayta ko'rib chiqamiz.\n`;
+  if (history) msg += `\n${history}\n`;
+  msg += '\nDavom etamiz...';
+  await ctx.reply(msg);
+  await delay(500);
+  await sendLesson(telegramId, current);
 });
 
 bot.on('video', async (ctx) => {
