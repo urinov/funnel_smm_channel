@@ -245,11 +245,14 @@
       table.responsive-table tbody tr td button { border-radius: 10px; }
 
       /* Bottom spacing so content is readable above nav */
-      .main-content { padding-bottom: calc(var(--mobile-nav-h) + 80px + env(safe-area-inset-bottom)) !important; }
+      .main-content {
+        padding-bottom: calc(var(--mobile-nav-h) + 120px + env(safe-area-inset-bottom)) !important;
+        scroll-padding-bottom: calc(var(--mobile-nav-h) + 120px + env(safe-area-inset-bottom));
+      }
       .mobile-nav { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
 
       /* Modal readability above browser/nav bars */
-      .modal-content { max-height: calc(100vh - 140px); padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+      .modal-content { max-height: calc(100vh - 120px); padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 
       /* Section readability */
       .card { padding: 14px !important; }
@@ -1734,7 +1737,8 @@ let questionStatsChart;
 // ========== INITIALIZATION ==========
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 const chartTickFont = () => ({ size: isMobile() ? 10 : 12, family: 'Inter' });
-const chartLayoutPadding = () => isMobile() ? { left: 6, right: 6, top: 6, bottom: 16 } : { left: 0, right: 0, top: 0, bottom: 0 };
+const chartLayoutPadding = () => isMobile() ? { left: 6, right: 6, top: 6, bottom: 20 } : { left: 0, right: 0, top: 0, bottom: 0 };
+const chartMaxXTicks = () => isMobile() ? 5 : 12;
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
   year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
@@ -3265,12 +3269,14 @@ function renderRevenueChart(period = 'week') {
       maintainAspectRatio: false,
       layout: { padding: chartLayoutPadding() },
       plugins: { legend: { display: false } },
+      interaction: { mode: 'index', intersect: false },
       scales: {
         x: {
           grid: { display: false },
           ticks: {
             autoSkip: true,
-            maxTicksLimit: isMobile() ? 6 : 12,
+            maxTicksLimit: chartMaxXTicks(),
+            autoSkipPadding: isMobile() ? 18 : 6,
             maxRotation: isMobile() ? 45 : 0,
             minRotation: isMobile() ? 45 : 0,
             font: chartTickFont()
@@ -3281,7 +3287,7 @@ function renderRevenueChart(period = 'week') {
           ticks: {
             callback: v => v >= 1000 ? (v/1000) + 'K' : v,
             font: chartTickFont(),
-            padding: 6
+            padding: 8
           }
         }
       }
@@ -3499,12 +3505,14 @@ function renderSubscriberGrowthChart(period = 'day') {
       maintainAspectRatio: false,
       layout: { padding: chartLayoutPadding() },
       plugins: { legend: { display: false } },
+      interaction: { mode: 'index', intersect: false },
       scales: {
         x: {
           grid: { display: false },
           ticks: {
             autoSkip: true,
-            maxTicksLimit: isMobile() ? 6 : 12,
+            maxTicksLimit: chartMaxXTicks(),
+            autoSkipPadding: isMobile() ? 18 : 6,
             maxRotation: isMobile() ? 45 : 0,
             minRotation: isMobile() ? 45 : 0,
             font: chartTickFont()
