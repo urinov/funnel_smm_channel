@@ -295,12 +295,12 @@
   <main class="main-content flex-1 ml-[70px] p-6 pb-24 md:pb-6">
 
     <!-- Header -->
-    <header class="flex justify-between items-center mb-6">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
         <p class="text-gray-500 text-sm" id="currentDate"></p>
       </div>
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-2 w-full sm:w-auto">
         <button onclick="openBroadcastModal()" class="btn btn-primary flex items-center gap-2">
           <span>📨</span> Xabar yuborish
         </button>
@@ -394,12 +394,12 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Revenue Chart -->
         <div class="card p-5 lg:col-span-2">
-          <div class="flex justify-between items-center mb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
               <p class="text-gray-500 text-sm">Daromad</p>
               <p class="text-3xl font-bold text-gray-800" id="totalRevenueDisplay">0 so'm</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <button class="tab active" data-period="week">Hafta</button>
               <button class="tab" data-period="month">Oy</button>
               <button class="tab" data-period="year">Yil</button>
@@ -467,7 +467,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Users -->
         <div class="card">
-          <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+          <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 class="font-semibold text-gray-800">So'nggi foydalanuvchilar</h3>
             <button onclick="showTab('users')" class="text-indigo-600 text-sm font-medium">Barchasi →</button>
           </div>
@@ -478,7 +478,7 @@
 
         <!-- Recent Payments -->
         <div class="card">
-          <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+          <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 class="font-semibold text-gray-800">So'nggi to'lovlar</h3>
             <button onclick="showTab('payments')" class="text-indigo-600 text-sm font-medium">Barchasi →</button>
           </div>
@@ -497,7 +497,7 @@
           <div class="flex flex-col lg:flex-row justify-between gap-4 mb-4">
             <h3 class="font-semibold text-gray-800 text-lg">👥 Foydalanuvchilar <span class="text-gray-400 font-normal" id="filteredUsersCount"></span></h3>
             <div class="flex gap-2 items-center flex-wrap">
-              <input type="text" id="userSearch" class="input py-2 px-3 w-48" placeholder="🔍 Ism, telefon..." oninput="applyUserFilters()">
+              <input type="text" id="userSearch" class="input py-2 px-3 w-full sm:w-48" placeholder="🔍 Ism, telefon..." oninput="applyUserFilters()">
               <button onclick="toggleAdvancedFilters()" class="btn btn-secondary btn-sm flex items-center gap-1">
                 <span>🎛️</span> <span id="advFilterLabel">Filtrlar</span>
               </button>
@@ -605,7 +605,7 @@
     <!-- Payments Tab -->
     <div id="tab-payments" class="hidden">
       <!-- Payment Status Tabs -->
-      <div class="flex gap-2 mb-4">
+      <div class="flex flex-wrap gap-2 mb-4">
         <button class="tab active" data-payment-status="completed" onclick="filterPayments('completed')">✅ To'langan</button>
         <button class="tab" data-payment-status="pending" onclick="filterPayments('pending')">⏳ Jarayonda</button>
         <button class="tab" data-payment-status="cancelled" onclick="filterPayments('cancelled')">❌ Bekor qilingan</button>
@@ -680,7 +680,7 @@
     <!-- Lessons Tab -->
     <div id="tab-lessons" class="hidden">
       <div class="card">
-        <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+        <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 class="font-semibold text-gray-800 text-lg">📚 Darslar</h3>
           <button onclick="openLessonModal()" class="btn btn-primary">+ Yangi dars</button>
         </div>
@@ -717,8 +717,8 @@
             <h3 class="font-semibold text-gray-800 text-lg">📁 Media kutubxonasi</h3>
             <p class="text-sm text-gray-500">Botga yuborilgan barcha media fayllar</p>
           </div>
-          <div class="flex gap-2">
-            <select id="mediaTypeFilter" class="input text-sm" onchange="loadMediaLibrary()">
+          <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <select id="mediaTypeFilter" class="input text-sm w-full sm:w-auto" onchange="loadMediaLibrary()">
               <option value="all">Barchasi</option>
               <option value="video">🎬 Video</option>
               <option value="photo">🖼 Rasm</option>
@@ -726,7 +726,7 @@
               <option value="audio">🎵 Audio</option>
               <option value="video_note">⚪ Video xabar</option>
             </select>
-            <button onclick="loadMediaLibrary()" class="btn btn-secondary text-sm">🔄</button>
+            <button onclick="loadMediaLibrary()" class="btn btn-secondary text-sm w-full sm:w-auto">🔄</button>
           </div>
         </div>
 
@@ -1069,7 +1069,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
       <!-- Questions List -->
       <div class="card">
-        <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+        <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 class="font-semibold text-gray-800 text-lg">📝 CustDev savollari</h3>
           <button onclick="openCustDevModal()" class="btn btn-primary">+ Yangi savol</button>
         </div>
@@ -1085,14 +1085,14 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
             <h3 class="font-semibold text-gray-800 text-lg">💬 Foydalanuvchi feedbacklari</h3>
             <p class="text-sm text-gray-400">Bepul darslar haqida fikrlar</p>
           </div>
-          <div class="flex gap-2">
-            <select id="feedbackFilter" class="input py-2 px-3 w-auto text-sm" onchange="filterFeedback()">
+          <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <select id="feedbackFilter" class="input py-2 px-3 w-full sm:w-auto text-sm" onchange="filterFeedback()">
               <option value="all">Barchasi</option>
               <option value="liked">👍 Yoqdi</option>
               <option value="not_liked">👎 Yoqmadi</option>
               <option value="disliked_reason">📝 Sabablar</option>
             </select>
-            <button onclick="loadFeedback()" class="btn btn-secondary text-sm">🔄 Yangilash</button>
+            <button onclick="loadFeedback()" class="btn btn-secondary text-sm w-full sm:w-auto">🔄 Yangilash</button>
           </div>
         </div>
 
