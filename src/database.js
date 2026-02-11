@@ -46,6 +46,7 @@ export async function initDatabase() {
         payment_id VARCHAR(255),
         status VARCHAR(50) DEFAULT 'active',
         is_active BOOLEAN DEFAULT TRUE,
+        reminder_sent_10d BOOLEAN DEFAULT FALSE,
         reminder_sent_5d BOOLEAN DEFAULT FALSE,
         reminder_sent_3d BOOLEAN DEFAULT FALSE,
         reminder_sent_1d BOOLEAN DEFAULT FALSE,
@@ -356,6 +357,7 @@ export async function initDatabase() {
     const subscriptionMigrations = [
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS plan_id VARCHAR(20) DEFAULT '1month'`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE`,
+      `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_10d BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_5d BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_3d BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_1d BOOLEAN DEFAULT FALSE`
@@ -532,11 +534,12 @@ async function seedDefaultData(client) {
   }
 
   // Seed subscription reminder messages
-  const reminderKeys = ['reminder_5d', 'reminder_3d', 'reminder_1d', 'reminder_expired'];
+  const reminderKeys = ['reminder_10d', 'reminder_5d', 'reminder_3d', 'reminder_1d', 'reminder_expired'];
   for (const key of reminderKeys) {
     const { rows: existing } = await client.query('SELECT 1 FROM bot_messages WHERE key = $1', [key]);
     if (existing.length === 0) {
       let text = '';
+      if (key === 'reminder_10d') text = '📅 Hurmatli {{ism}}, premium kanaldagi obunangiz tugashiga 10 kun qoldi.\n\nDavom ettirish uchun hoziroq uzaytiring:';
       if (key === 'reminder_5d') text = '⏰ Hurmatli {{ism}}, obunangiz tugashiga 5 kun qoldi!\n\nObunani uzaytirish uchun quyidagi tugmani bosing:';
       if (key === 'reminder_3d') text = '⚠️ Hurmatli {{ism}}, obunangiz tugashiga 3 kun qoldi!\n\nPremium kanalga kirishni davom ettirish uchun obunani uzaytiring:';
       if (key === 'reminder_1d') text = '🚨 Hurmatli {{ism}}, obunangiz ERTAGA tugaydi!\n\nKanaldan chiqarib yuborilmaslik uchun hoziroq uzaytiring:';
@@ -971,12 +974,14 @@ export async function createSubscription(telegramId, planId, amount, paymentMeth
   const endDate = new Date();
   endDate.setDate(endDate.getDate() + durationDays);
 
-  await pool.query(`
+  const { rows } = await pool.query(`
     INSERT INTO subscriptions (user_id, telegram_id, plan_id, start_date, end_date, amount, payment_method, payment_id, is_active)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+    RETURNING *
   `, [user?.id, telegramId, planId, startDate, endDate, amount, paymentMethod, paymentId]);
 
   await updateUser(telegramId, { is_paid: true });
+  return rows[0] || null;
 }
 
 // ============ Subscription Plans Functions ============
@@ -1020,7 +1025,7 @@ export async function extendSubscription(telegramId, planId, additionalDays) {
     
     await pool.query(`
       UPDATE subscriptions SET end_date = $1, 
-        reminder_sent_5d = false, reminder_sent_3d = false, reminder_sent_1d = false
+        reminder_sent_10d = false, reminder_sent_5d = false, reminder_sent_3d = false, reminder_sent_1d = false
       WHERE id = $2
     `, [newEndDate, current.id]);
     
@@ -1033,7 +1038,8 @@ export async function extendSubscription(telegramId, planId, additionalDays) {
 export async function getExpiringSubscriptions(daysRemaining) {
   // Determine which reminder column to check
   let reminderColumn;
-  if (daysRemaining === 5) reminderColumn = 'reminder_sent_5d';
+  if (daysRemaining === 10) reminderColumn = 'reminder_sent_10d';
+  else if (daysRemaining === 5) reminderColumn = 'reminder_sent_5d';
   else if (daysRemaining === 3) reminderColumn = 'reminder_sent_3d';
   else reminderColumn = 'reminder_sent_1d';
   
@@ -1050,7 +1056,7 @@ export async function getExpiringSubscriptions(daysRemaining) {
 }
 
 export async function markReminderSent(subscriptionId, reminderType) {
-  // reminderType: '5d', '3d', or '1d'
+  // reminderType: '10d', '5d', '3d', or '1d'
   const column = 'reminder_sent_' + reminderType;
   await pool.query(`UPDATE subscriptions SET ${column} = true WHERE id = $1`, [subscriptionId]);
 }
@@ -1996,4 +2002,3 @@ export async function getAllDashboardSettings() {
 
   return result;
 }
-

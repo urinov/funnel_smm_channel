@@ -384,6 +384,7 @@
       <div class="sidebar-item" data-tab="library" title="Kutubxona"><span>📖</span><span class="sidebar-label">Kutubxona</span></div>
       <div class="sidebar-item" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
       <div class="sidebar-item" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
+      <div class="sidebar-item" data-tab="renewal" title="Uzaytirish"><span>🔁</span><span class="sidebar-label">Uzaytirish</span></div>
       <div class="sidebar-item" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
     </nav>
 
@@ -422,6 +423,10 @@
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('custdev'); toggleMobileMenu();">
           <span class="text-2xl mb-2">📝</span>
           <span class="text-xs text-gray-600">CustDev</span>
+        </div>
+        <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('renewal'); toggleMobileMenu();">
+          <span class="text-2xl mb-2">🔁</span>
+          <span class="text-xs text-gray-600">Uzaytirish</span>
         </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('settings'); toggleMobileMenu();">
           <span class="text-2xl mb-2">⚙️</span>
@@ -1260,6 +1265,45 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         <div id="feedbackList" class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
           <div class="p-8 text-center text-gray-400">Yuklanmoqda...</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tab-renewal" class="hidden">
+      <div class="card p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div>
+            <h3 class="font-semibold text-gray-800">🔁 Uzaytirish eslatmalari</h3>
+            <p class="text-sm text-gray-500">10/5/3/1 kun qolganda yuboriladigan matnlar. To'lov summalari xabarda tugmalar orqali avtomatik chiqadi.</p>
+          </div>
+          <button onclick="loadRenewalSettings()" class="btn btn-secondary btn-sm">🔄 Yangilash</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">10 kun oldin</label>
+            <textarea id="renewalReminder10d" class="input h-28 resize-none" placeholder="10 kun oldin yuboriladigan xabar"></textarea>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">5 kun oldin</label>
+            <textarea id="renewalReminder5d" class="input h-28 resize-none" placeholder="5 kun oldin yuboriladigan xabar"></textarea>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">3 kun oldin</label>
+            <textarea id="renewalReminder3d" class="input h-28 resize-none" placeholder="3 kun oldin yuboriladigan xabar"></textarea>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">1 kun oldin</label>
+            <textarea id="renewalReminder1d" class="input h-28 resize-none" placeholder="1 kun oldin yuboriladigan xabar"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="text-sm text-gray-600 mb-1 block">Obuna tugagandan keyin</label>
+          <textarea id="renewalReminderExpired" class="input h-28 resize-none" placeholder="Obuna tugagandan keyingi xabar"></textarea>
+        </div>
+
+        <button onclick="saveRenewalSettings()" class="btn btn-primary mt-5">💾 Uzaytirish sozlamalarini saqlash</button>
       </div>
     </div>
 
@@ -2191,6 +2235,7 @@ function showTab(tab) {
   // Load tab-specific data
   if (tab === 'progrev') loadProgrevSettings();
   if (tab === 'custdev') loadFeedback();
+  if (tab === 'renewal') loadRenewalSettings();
   if (tab === 'settings') loadSettingsForm();
 }
 
@@ -2224,7 +2269,7 @@ async function loadSettingsForm() {
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadSettingsForm(), loadMediaLibrary()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary()]);
   renderCharts();
   renderTodayStats();
 }
@@ -4146,6 +4191,39 @@ async function saveProgrevSettings() {
 }
 
 // ========== SETTINGS ==========
+
+async function loadRenewalSettings() {
+  try {
+    const data = await (await fetch('/api/subscription-reminders', { headers: { Authorization: auth } })).json();
+    document.getElementById('renewalReminder10d').value = data.reminder_10d || '';
+    document.getElementById('renewalReminder5d').value = data.reminder_5d || '';
+    document.getElementById('renewalReminder3d').value = data.reminder_3d || '';
+    document.getElementById('renewalReminder1d').value = data.reminder_1d || '';
+    document.getElementById('renewalReminderExpired').value = data.reminder_expired || '';
+  } catch (e) {
+    console.error('loadRenewalSettings error:', e);
+  }
+}
+
+async function saveRenewalSettings() {
+  try {
+    await fetch('/api/subscription-reminders', {
+      method: 'PUT',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reminder_10d: document.getElementById('renewalReminder10d').value,
+        reminder_5d: document.getElementById('renewalReminder5d').value,
+        reminder_3d: document.getElementById('renewalReminder3d').value,
+        reminder_1d: document.getElementById('renewalReminder1d').value,
+        reminder_expired: document.getElementById('renewalReminderExpired').value
+      })
+    });
+
+    alert('✅ Uzaytirish eslatmalari saqlandi!');
+  } catch (e) {
+    alert('Xatolik: ' + e.message);
+  }
+}
 
 // Auto-calculate 3/6/12 month prices with discounts
 function calculateDiscountedPrices() {

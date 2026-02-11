@@ -403,6 +403,7 @@ app.get('/api/subscription-reminders', authMiddleware, async (req, res) => {
   try {
     const { getBotMessage } = await import('./database.js');
     const reminders = {
+      reminder_10d: await getBotMessage('reminder_10d') || '📅 Hurmatli {{ism}}, premium kanaldagi obunangiz tugashiga 10 kun qoldi.\n\nDavom ettirish uchun hoziroq uzaytiring:',
       reminder_5d: await getBotMessage('reminder_5d') || '⏰ Hurmatli {{ism}}, obunangiz tugashiga 5 kun qoldi!\n\nObunani uzaytirish uchun quyidagi tugmani bosing:',
       reminder_3d: await getBotMessage('reminder_3d') || '⚠️ Hurmatli {{ism}}, obunangiz tugashiga 3 kun qoldi!\n\nPremium kanalga kirishni davom ettirish uchun obunani uzaytiring:',
       reminder_1d: await getBotMessage('reminder_1d') || '🚨 Hurmatli {{ism}}, obunangiz ERTAGA tugaydi!\n\nKanaldan chiqarib yuborilmaslik uchun hoziroq uzaytiring:',
@@ -417,8 +418,9 @@ app.get('/api/subscription-reminders', authMiddleware, async (req, res) => {
 app.put('/api/subscription-reminders', authMiddleware, async (req, res) => {
   try {
     const { updateBotMessage } = await import('./database.js');
-    const { reminder_5d, reminder_3d, reminder_1d, reminder_expired } = req.body;
+    const { reminder_10d, reminder_5d, reminder_3d, reminder_1d, reminder_expired } = req.body;
     
+    if (reminder_10d !== undefined) await updateBotMessage('reminder_10d', reminder_10d);
     if (reminder_5d !== undefined) await updateBotMessage('reminder_5d', reminder_5d);
     if (reminder_3d !== undefined) await updateBotMessage('reminder_3d', reminder_3d);
     if (reminder_1d !== undefined) await updateBotMessage('reminder_1d', reminder_1d);

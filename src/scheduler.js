@@ -56,6 +56,18 @@ async function processScheduledMessages() {
 // ==================== CHECK SUBSCRIPTION REMINDERS ====================
 async function checkSubscriptionReminders() {
   try {
+    // 10 days reminder
+    const expiring10Days = await db.getExpiringSubscriptions(10);
+    for (const sub of expiring10Days) {
+      try {
+        await sendRenewalReminder(sub.telegram_id, 10, sub.id);
+        await db.markReminderSent(sub.id, '10d');
+        console.log(`Sent 10-day reminder to ${sub.telegram_id}`);
+      } catch (e) {
+        console.error(`10-day reminder error for ${sub.telegram_id}:`, e.message);
+      }
+    }
+
     // 5 days reminder
     const expiring5Days = await db.getExpiringSubscriptions(5);
     for (const sub of expiring5Days) {

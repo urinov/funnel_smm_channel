@@ -201,14 +201,24 @@ async function handleClickCallback(req, res) {
 
     // Check if this is an extension
     const isExtension = orderId.startsWith('EXT');
+    let finalEndDate = null;
     
     if (isExtension) {
       // Extend existing subscription
       const newEndDate = await db.extendSubscription(payment.telegram_id, planId, durationDays);
-      console.log('Subscription extended to:', newEndDate);
+      if (newEndDate) {
+        finalEndDate = newEndDate;
+        console.log('Subscription extended to:', newEndDate);
+      } else {
+        // Fallback: if active subscription does not exist, create a new one
+        const createdSub = await db.createSubscription(payment.telegram_id, planId, payment.amount, 'click', orderId);
+        finalEndDate = createdSub?.end_date ? new Date(createdSub.end_date) : null;
+        console.log('No active subscription to extend, created new subscription for:', payment.telegram_id);
+      }
     } else {
       // Create new subscription
-      await db.createSubscription(payment.telegram_id, planId, payment.amount, 'click', orderId);
+      const createdSub = await db.createSubscription(payment.telegram_id, planId, payment.amount, 'click', orderId);
+      finalEndDate = createdSub?.end_date ? new Date(createdSub.end_date) : null;
     }
 
     // Activate user
@@ -222,12 +232,13 @@ async function handleClickCallback(req, res) {
     // Notify user with channel access
     try {
       const planName = plan ? plan.name : '1 oylik';
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + durationDays);
-      const endDateStr = endDate.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
+      const endDateForMessage = finalEndDate || (await db.getActiveSubscription(payment.telegram_id))?.end_date;
+      const endDateStr = endDateForMessage
+        ? new Date(endDateForMessage).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' })
+        : 'aniqlanmadi';
       
       let successMessage = '🎉 <b>To\'lov muvaffaqiyatli qabul qilindi!</b>\n\n' +
-        '✅ Premium obuna faollashtirildi.\n\n' +
+        (isExtension ? '✅ Premium obuna muddati uzaytirildi.\n\n' : '✅ Premium obuna faollashtirildi.\n\n') +
         `📦 Obuna: <b>${planName}</b>\n` +
         `📅 Amal qilish muddati: <b>${endDateStr}</b> gacha\n\n`;
       
