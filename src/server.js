@@ -48,6 +48,7 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
+  req.adminUser = user;
   next();
 };
 
@@ -209,6 +210,61 @@ app.get('/api/conversations/:telegramId', authMiddleware, async (req, res) => {
     const rows = await getUserMessages(telegramId, limit);
     res.json(rows);
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/telegram-file/:fileId', authMiddleware, async (req, res) => {
+  try {
+    const fileId = decodeURIComponent(req.params.fileId || '').trim();
+    if (!fileId) {
+      return res.status(400).json({ error: 'fileId kerak' });
+    }
+
+    const file = await bot.telegram.getFile(fileId);
+    if (!file?.file_path) {
+      return res.status(404).json({ error: 'Fayl topilmadi' });
+    }
+
+    const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
+    const tgResp = await fetch(fileUrl);
+    if (!tgResp.ok) {
+      return res.status(tgResp.status).json({ error: 'Telegram file fetch xatolik' });
+    }
+
+    const contentType = tgResp.headers.get('content-type') || 'application/octet-stream';
+    const arrayBuffer = await tgResp.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.send(buffer);
+  } catch (e) {
+    console.error('telegram-file proxy error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/conversations/:telegramId/reply', authMiddleware, async (req, res) => {
+  try {
+    const telegramId = parseInt(req.params.telegramId);
+    const text = String(req.body?.text || '').trim();
+
+    if (!telegramId || !text) {
+      return res.status(400).json({ error: 'telegramId va text kerak' });
+    }
+
+    await bot.telegram.sendMessage(telegramId, text, { parse_mode: 'HTML' });
+
+    const { logUserMessage } = await import('./database.js');
+    await logUserMessage(telegramId, 'admin_outgoing', text, {
+      source: 'dashboard',
+      admin_user: req.adminUser || 'admin'
+    });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Conversation reply error:', e);
     res.status(500).json({ error: e.message });
   }
 });

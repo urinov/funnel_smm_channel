@@ -355,7 +355,7 @@
     .tg-chat-body { max-height: 72vh; overflow-y: auto; padding: 14px; background: radial-gradient(circle at 20% 10%, rgba(224,255,214,0.6) 0%, rgba(195,232,183,0.65) 50%, rgba(180,218,170,0.7) 100%); }
     .tg-bubble-row { display: flex; margin-bottom: 8px; }
     .tg-bubble-row.user { justify-content: flex-end; }
-    .tg-bubble { max-width: 78%; border-radius: 18px; padding: 9px 12px 8px; box-shadow: 0 2px 8px rgba(15,23,42,0.08); word-break: break-word; }
+    .tg-bubble { max-width: 78%; border-radius: 18px; padding: 9px 12px 8px; box-shadow: 0 2px 8px rgba(15,23,42,0.08); word-break: break-word; background: #fff; border-bottom-left-radius: 6px; }
     .tg-bubble.user { background: #d9f8c5; border-bottom-right-radius: 6px; }
     .tg-bubble.action { background: #ecf1ff; border: 1px solid rgba(91,124,250,0.2); }
     .tg-meta { font-size: 11px; color: #6b7280; display: flex; justify-content: flex-end; gap: 8px; margin-top: 5px; }
@@ -775,32 +775,54 @@
 
     <!-- Conversations Tab -->
     <div id="tab-conversations" class="hidden">
-      <div class="card p-5">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
-          <h3 class="font-semibold text-gray-800 text-lg">💬 User suhbatlari</h3>
-          <div class="flex gap-2 items-center">
-            <input id="convSearch" type="text" class="input py-2 px-3 w-full sm:w-64" placeholder="🔍 Ism, username, ID..." oninput="renderConversationUsers()">
-            <button onclick="loadConversations()" class="btn btn-secondary btn-sm">🔄</button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="lg:col-span-1 border border-gray-100 rounded-xl bg-white/60">
-            <div class="px-4 py-3 border-b border-gray-100 text-sm text-gray-500">Userlar</div>
+      <div class="card p-4">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div class="xl:col-span-3 border border-gray-100 rounded-xl bg-white/70">
+            <div class="px-3 py-3 border-b border-gray-100">
+              <p class="text-sm font-semibold text-gray-700">💬 Chats</p>
+              <div class="flex gap-2 mt-2">
+                <input id="convSearch" type="text" class="input py-2 px-3" placeholder="Search chat..." oninput="renderConversationUsers()">
+                <button onclick="loadConversations()" class="btn btn-secondary btn-sm">🔄</button>
+              </div>
+            </div>
             <div id="convUsersList" class="conv-users-list">
               <div class="p-4 text-center text-gray-400">Yuklanmoqda...</div>
             </div>
           </div>
-          <div class="lg:col-span-2 tg-chat-shell">
+
+          <div class="xl:col-span-6 tg-chat-shell">
             <div class="tg-chat-head">
               <div class="conv-avatar" id="convHeaderAvatar">U</div>
               <div class="min-w-0">
-                <p class="font-medium text-gray-800 truncate" id="convSelectedUser">User tanlang</p>
+                <p class="font-semibold text-gray-800 truncate" id="convSelectedUser">User tanlang</p>
                 <p class="text-xs text-gray-500 truncate" id="convSelectedUserMeta">Chat tarixini ko'rish uchun chapdan user tanlang</p>
               </div>
             </div>
             <div id="convMessagesList" class="tg-chat-body">
               <div class="text-center text-gray-500">Chap tomondan userni tanlang</div>
+            </div>
+            <div class="border-t border-gray-100 bg-white/85 p-3 flex items-end gap-2">
+              <textarea id="convReplyInput" class="input min-h-[44px] max-h-[120px] resize-y" placeholder="Type your message..." onkeydown="handleConvReplyKey(event)"></textarea>
+              <button id="convReplyBtn" onclick="sendConversationReply()" class="btn btn-primary">📨</button>
+            </div>
+          </div>
+
+          <div class="xl:col-span-3 border border-gray-100 rounded-xl bg-white/70 p-4">
+            <p class="text-sm font-semibold text-gray-700 mb-3">User info</p>
+            <div class="space-y-2 text-sm">
+              <div><span class="text-gray-400">Ism:</span> <span id="convInfoName" class="text-gray-700">-</span></div>
+              <div><span class="text-gray-400">Username:</span> <span id="convInfoUsername" class="text-gray-700">-</span></div>
+              <div><span class="text-gray-400">Telegram ID:</span> <span id="convInfoTgId" class="text-gray-700">-</span></div>
+              <div><span class="text-gray-400">Telefon:</span> <span id="convInfoPhone" class="text-gray-700">-</span></div>
+              <div><span class="text-gray-400">Dars:</span> <span id="convInfoLesson" class="text-gray-700">-</span></div>
+              <div><span class="text-gray-400">Status:</span> <span id="convInfoStatus" class="text-gray-700">-</span></div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-gray-100">
+              <p class="text-xs text-gray-400 mb-2">Quick actions</p>
+              <div class="flex flex-col gap-2">
+                <button onclick="insertQuickReply('Assalomu alaykum! Xabaringiz uchun rahmat 🙌')" class="btn btn-secondary btn-sm text-left">Salomlashish</button>
+                <button onclick="insertQuickReply('Rahmat, tekshirib sizga tez orada javob beraman.')" class="btn btn-secondary btn-sm text-left">Standart javob</button>
+              </div>
             </div>
           </div>
         </div>
@@ -2551,7 +2573,7 @@ function renderConversationUsers() {
             <p class="text-xs text-gray-400 truncate">${escapeHtml(username)} • ${u.telegram_id}</p>
             <p class="text-xs text-gray-500 mt-1 truncate">${escapeHtml(preview)}</p>
           </div>
-          <span class="text-[10px] text-gray-400">${fmtDateTime(u.created_at).split(' ')[1] || ''}</span>
+          <span class="text-[10px] text-gray-400">${timeAgo(u.created_at)}</span>
         </div>
       </button>
     `;
@@ -2582,6 +2604,7 @@ async function openConversationUser(telegramId) {
     const userName = user?.full_name || user?.username || ('User ' + telegramId);
     if (header) header.textContent = userName;
     if (headerAvatar) headerAvatar.textContent = (userName || 'U').charAt(0).toUpperCase();
+    fillConversationUserInfo(user || { telegram_id: telegramId, username: null, phone: null, current_lesson: 0, is_paid: false, full_name: userName });
 
     if (!messages.length) {
       messagesContainer.innerHTML = '<div class="text-center text-gray-400">Xabarlar yoq</div>';
@@ -2597,20 +2620,41 @@ async function openConversationUser(telegramId) {
       headerMeta.textContent = `${username} • ID ${telegramId} • dars ${lesson} • step ${funnel}`;
     }
 
-    messagesContainer.innerHTML = messages
-      .slice()
-      .reverse()
-      .map(m => {
+    const timeline = messages.slice().reverse();
+    messagesContainer.innerHTML = timeline
+      .map((m, idx) => {
         const metaObj = normalizeMessageMeta(m.meta);
         const text = formatConversationMessage(m, metaObj);
+        const mediaPreview = buildMediaPreviewHtml(m, metaObj);
         const isAction = m.message_type === 'callback';
-        const tag = isAction ? '🔘 button' : (m.message_type || 'text');
+        const isOutgoing = m.message_type === 'admin_outgoing';
+        const isBotOutgoing = String(m.message_type || '').startsWith('bot_outgoing_');
+        const isIncomingUser = !isOutgoing && !isBotOutgoing;
+        const rowClass = isOutgoing ? 'user' : 'incoming';
+        const bubbleClass = isOutgoing ? 'user' : '';
+        const tag = isOutgoing
+          ? '🧑‍💼 admin'
+          : (isBotOutgoing ? '🤖 bot' : (isAction ? '🔘 button' : (m.message_type || 'text')));
         const stepInfo = `d:${metaObj.current_lesson ?? '-'} s:${metaObj.funnel_step ?? '-'}`;
+        let replyContext = '';
+        if (isIncomingUser) {
+          for (let i = idx - 1; i >= 0; i--) {
+            const prev = timeline[i];
+            const prevType = String(prev.message_type || '');
+            if (prevType === 'admin_outgoing' || prevType.startsWith('bot_outgoing_')) {
+              const prevText = formatConversationMessage(prev, normalizeMessageMeta(prev.meta));
+              replyContext = prevText ? prevText.slice(0, 90) : '';
+              break;
+            }
+          }
+        }
         return `
-          <div class="tg-bubble-row user">
-            <div class="tg-bubble user ${isAction ? 'action' : ''}">
+          <div class="tg-bubble-row ${rowClass}">
+            <div class="tg-bubble ${bubbleClass} ${isAction ? 'action' : ''}">
               <span class="tg-tag">${escapeHtml(tag)}</span>
+              ${replyContext ? `<p class="text-[11px] text-gray-500 mb-1">↪ Javob berilgan xabar: ${escapeHtml(replyContext)}</p>` : ''}
               <p class="text-sm text-gray-800 whitespace-pre-wrap break-words">${escapeHtml(text)}</p>
+              ${mediaPreview}
               <div class="tg-meta">
                 <span>${escapeHtml(stepInfo)}</span>
                 <span>${fmtDateTime(m.created_at).split(' ')[1] || fmtDateTime(m.created_at)}</span>
@@ -2626,6 +2670,64 @@ async function openConversationUser(telegramId) {
   }
 }
 
+function fillConversationUserInfo(user) {
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = v ?? '-';
+  };
+  set('convInfoName', user.full_name || user.username || '-');
+  set('convInfoUsername', user.username ? '@' + user.username : '-');
+  set('convInfoTgId', user.telegram_id || '-');
+  set('convInfoPhone', user.phone || '-');
+  set('convInfoLesson', (user.current_lesson ?? 0) + '-dars');
+  set('convInfoStatus', user.is_paid ? 'Premium' : 'Free');
+}
+
+function handleConvReplyKey(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendConversationReply();
+  }
+}
+
+async function sendConversationReply() {
+  if (!selectedConversationUserId) {
+    alert('Avval user tanlang');
+    return;
+  }
+  const input = document.getElementById('convReplyInput');
+  const btn = document.getElementById('convReplyBtn');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+
+  try {
+    if (btn) btn.disabled = true;
+    const res = await fetch('/api/conversations/' + selectedConversationUserId + '/reply', {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}));
+      throw new Error(payload.error || ('API error: ' + res.status));
+    }
+    if (input) input.value = '';
+    await loadConversations();
+    await openConversationUser(selectedConversationUserId);
+  } catch (e) {
+    alert('Xatolik: ' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function insertQuickReply(text) {
+  const input = document.getElementById('convReplyInput');
+  if (!input) return;
+  input.value = text;
+  input.focus();
+}
+
 function normalizeMessageMeta(meta) {
   if (!meta) return {};
   if (typeof meta === 'object') return meta;
@@ -2634,8 +2736,18 @@ function normalizeMessageMeta(meta) {
 
 function formatConversationMessage(message, metaObj) {
   if (message.message_type === 'callback') {
-    return `Tugma bosildi: ${message.text_content || 'callback'}`;
+    return `Tugma bosildi: ${humanizeCallbackData(message.text_content || 'callback')}`;
   }
+  if (message.message_type === 'admin_outgoing') {
+    return message.text_content || '';
+  }
+  if (message.message_type === 'bot_outgoing_video') return message.text_content || '🎬 Video yuborildi';
+  if (message.message_type === 'bot_outgoing_photo') return message.text_content || '🖼 Rasm yuborildi';
+  if (message.message_type === 'bot_outgoing_voice') return message.text_content || '🎤 Ovozli xabar yuborildi';
+  if (message.message_type === 'bot_outgoing_audio') return message.text_content || '🎵 Audio yuborildi';
+  if (message.message_type === 'bot_outgoing_video_note') return message.text_content || '🔵 Video note yuborildi';
+  if (message.message_type === 'bot_outgoing_document') return message.text_content || '📎 Hujjat yuborildi';
+  if (message.message_type === 'bot_outgoing_text') return message.text_content || '';
   if (message.message_type === 'contact') {
     return `Kontakt yuborildi: ${message.text_content || ''}`.trim();
   }
@@ -2647,9 +2759,77 @@ function formatConversationMessage(message, metaObj) {
 
 function getConversationPreview(message) {
   if (!message) return '';
-  if (message.message_type === 'callback') return 'Tugma: ' + (message.text_content || '');
+  if (message.message_type === 'callback') return 'Tugma: ' + humanizeCallbackData(message.text_content || '');
+  if (message.message_type === 'admin_outgoing') return 'Siz: ' + (message.text_content || '');
+  if (message.message_type && message.message_type.startsWith('bot_outgoing_')) return formatConversationMessage(message, {});
   if (message.text_content) return message.text_content;
   return '(' + (message.message_type || 'event') + ')';
+}
+
+function humanizeCallbackData(data) {
+  const raw = String(data || '');
+  let m;
+
+  if ((m = raw.match(/^watched_(\d+)$/))) return `${m[1]}-dars: "ko'rib bo'ldim"`;
+  if ((m = raw.match(/^watched_funnel_(\d+)_(\d+)$/))) return `Funnel ${m[1]}, ${m[2]}-dars ko'rildi`;
+  if ((m = raw.match(/^cd_(\d+)_(.+)$/))) return `CustDev savol ${m[1]} javobi: ${decodeURIComponentSafe(m[2])}`;
+  if ((m = raw.match(/^fcd_(\d+)_(\d+)_(\d+)_(.+)$/))) return `Funnel CustDev javobi: ${decodeURIComponentSafe(m[4])}`;
+  if ((m = raw.match(/^check_subscription_?(\d*)$/))) return `Obuna tekshirish${m[1] ? ` (${m[1]}-dars)` : ''}`;
+  if ((m = raw.match(/^check_funnel_sub_(\d+)_(\d+)$/))) return `Funnel obuna tekshirish (funnel ${m[1]}, lesson ${m[2]})`;
+  if (raw === 'feedback_yes') return 'Feedback: Ha, yoqdi';
+  if (raw === 'feedback_no') return 'Feedback: Yoqmadi';
+  if ((m = raw.match(/^plan_(.+)$/))) return `Tarif tanlandi: ${m[1]}`;
+  if ((m = raw.match(/^extend_(.+)$/))) return `Obuna uzaytirish tarifi: ${m[1]}`;
+  if ((m = raw.match(/^discount_plan_(\d+)_(.+)$/))) return `${m[1]}% chegirma tarifi: ${m[2]}`;
+  if ((m = raw.match(/^resume_[lf]:(.+)$/))) return `Davom etish: ${m[1]}`;
+  if (raw === 'question') return 'Savolim bor tugmasi';
+  if (raw === 'back_to_plans') return 'Tariflarga qaytish';
+  if (raw === 'cancel_extend') return 'Uzaytirishni bekor qilish';
+  return raw;
+}
+
+function decodeURIComponentSafe(value) {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+function buildMediaPreviewHtml(message, metaObj) {
+  const type = String(message?.message_type || '');
+  const fileRef = metaObj?.file_ref || metaObj?.file_id;
+  if (!fileRef) return '';
+
+  const src = '/api/telegram-file/' + encodeURIComponent(fileRef);
+
+  if (type.includes('photo')) {
+    return `<div class="mt-2">
+      <img src="${src}" alt="preview" class="rounded-xl border border-gray-200 max-h-[220px] object-cover" loading="lazy" />
+    </div>`;
+  }
+
+  if (type.includes('video') && !type.includes('video_note')) {
+    return `<div class="mt-2">
+      <video src="${src}" controls preload="metadata" class="rounded-xl border border-gray-200 max-h-[260px] w-full bg-black/80"></video>
+    </div>`;
+  }
+
+  if (type.includes('video_note')) {
+    return `<div class="mt-2">
+      <video src="${src}" controls preload="metadata" class="rounded-full border border-gray-200 w-[180px] h-[180px] bg-black/80 object-cover"></video>
+    </div>`;
+  }
+
+  if (type.includes('audio') || type.includes('voice')) {
+    return `<div class="mt-2">
+      <audio src="${src}" controls preload="metadata" class="w-full"></audio>
+    </div>`;
+  }
+
+  if (type.includes('document')) {
+    return `<div class="mt-2 text-xs">
+      <a href="${src}" target="_blank" class="text-indigo-600 underline">📎 Hujjatni ochish</a>
+    </div>`;
+  }
+
+  return '';
 }
 
 // ========== MEDIA LIBRARY ==========
