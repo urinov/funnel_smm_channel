@@ -6,6 +6,7 @@ const BASE_URL = process.env.BASE_URL;
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id.trim())).filter(Boolean);
 const DEFAULT_PRICE = parseInt(process.env.SUBSCRIPTION_PRICE || '9700000');
 const PREMIUM_CHANNEL_ID = process.env.PREMIUM_CHANNEL_ID; // e.g., -1001234567890
+const CHAT_MONITOR_ENABLED = process.env.CHAT_MONITOR_ENABLED !== 'false';
 
 if (!BOT_TOKEN) throw new Error('BOT_TOKEN kerak');
 
@@ -93,9 +94,81 @@ async function replaceVars(text, user) {
     .replace(/\{\{price\}\}/gi, formatMoney(price));
 }
 
+function extractIncomingMessage(message) {
+  if (!message) return null;
+  if (message.text) return { type: 'text', text: message.text, meta: null };
+  if (message.contact) return { type: 'contact', text: message.contact.phone_number || null, meta: { first_name: message.contact.first_name, user_id: message.contact.user_id } };
+  if (message.photo) return { type: 'photo', text: message.caption || null, meta: { file_id: message.photo[message.photo.length - 1]?.file_id || null } };
+  if (message.video) return { type: 'video', text: message.caption || null, meta: { file_id: message.video.file_id, file_name: message.video.file_name || null } };
+  if (message.voice) return { type: 'voice', text: message.caption || null, meta: { file_id: message.voice.file_id } };
+  if (message.audio) return { type: 'audio', text: message.caption || null, meta: { file_id: message.audio.file_id, file_name: message.audio.file_name || null } };
+  if (message.video_note) return { type: 'video_note', text: null, meta: { file_id: message.video_note.file_id } };
+  if (message.document) return { type: 'document', text: message.caption || null, meta: { file_id: message.document.file_id, file_name: message.document.file_name || null } };
+  return { type: 'other', text: null, meta: null };
+}
+
+async function sendAdmins(text) {
+  for (const adminId of ADMIN_IDS) {
+    try {
+      await bot.telegram.sendMessage(adminId, text, { parse_mode: 'HTML' });
+    } catch (e) {
+      console.error(`Admin notify error (${adminId}):`, e.message);
+    }
+  }
+}
+
+function isUserMilestone(totalUsers) {
+  return totalUsers === 100 || (totalUsers >= 500 && totalUsers % 500 === 0);
+}
+
+async function maybeNotifyUserMilestone(tgUser) {
+  try {
+    const totalUsers = await db.getTotalUsersCount();
+    if (!isUserMilestone(totalUsers)) return;
+
+    const mention = tgUser.username ? '@' + tgUser.username : 'username yoq';
+    const msg =
+      `🎯 <b>User milestone</b>\n` +
+      `Jami user: <b>${totalUsers}</b>\n\n` +
+      `🆔 <code>${tgUser.id}</code>\n` +
+      `👤 ${tgUser.first_name || ''} ${tgUser.last_name || ''}\n` +
+      `🔗 ${mention}`;
+    await sendAdmins(msg);
+  } catch (e) {
+    console.error('Milestone notify error:', e.message);
+  }
+}
+
+bot.use(async (ctx, next) => {
+  try {
+    if (CHAT_MONITOR_ENABLED && ctx.message && ctx.from && !isAdmin(ctx.from.id)) {
+      const payload = extractIncomingMessage(ctx.message);
+      if (payload) {
+        await db.logUserMessage(ctx.from.id, payload.type, payload.text, payload.meta);
+
+        const userName = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ').trim() || 'Nomalum';
+        const username = ctx.from.username ? '@' + ctx.from.username : 'username yoq';
+        const preview = payload.text ? payload.text.slice(0, 600) : `(media: ${payload.type})`;
+
+        await sendAdmins(
+          `💬 <b>Yangi user xabari</b>\n` +
+          `🆔 <code>${ctx.from.id}</code>\n` +
+          `👤 ${userName}\n` +
+          `🔗 ${username}\n` +
+          `📝 ${preview}`
+        );
+      }
+    }
+  } catch (e) {
+    console.error('Chat monitor error:', e.message);
+  }
+
+  return next();
+});
+
 bot.command('admin', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return ctx.reply('Admin huquqi yoq');
-  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html`, { parse_mode: 'HTML' });
+  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html\n🛰 Chat monitor: ${CHAT_MONITOR_ENABLED ? 'yoqilgan' : 'o\'chirilgan'} (ENV: CHAT_MONITOR_ENABLED)`, { parse_mode: 'HTML' });
 });
 
 bot.command('testpitch', async (ctx) => {
@@ -166,6 +239,7 @@ bot.start(async (ctx) => {
 
     if (!user) {
       user = await db.createUser(telegramId, tgUser.username, null);
+      await maybeNotifyUserMilestone(tgUser);
       
       // Start user in this funnel
       await db.startUserInFunnel(telegramId, funnel.id);
@@ -224,6 +298,7 @@ async function handleLegacyStart(ctx, telegramId, tgUser) {
 
   if (!user) {
     user = await db.createUser(telegramId, tgUser.username, null);
+    await maybeNotifyUserMilestone(tgUser);
     const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
     await ctx.reply(welcome, { parse_mode: 'HTML' });
     await delay(500);

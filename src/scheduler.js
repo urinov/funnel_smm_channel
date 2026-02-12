@@ -4,6 +4,51 @@ import * as db from './database.js';
 import { bot, sendLesson, sendVideoPitch, sendSalesPitch, sendSoftAttack } from './bot.js';
 import { sendRenewalReminder, handleExpiredSubscription } from './payments/paymentHandler.js';
 
+const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id.trim())).filter(Boolean);
+const REPORT_TIMEZONE = 'Asia/Tashkent';
+
+function formatMoney(t) {
+  return (Number(t || 0) / 100).toLocaleString('uz-UZ') + " so'm";
+}
+
+async function sendDailyAdminReport() {
+  try {
+    const stats = await db.getDailyReportStats();
+    const day = new Date().toLocaleDateString('uz-UZ', { timeZone: REPORT_TIMEZONE });
+
+    const latestUsersText = stats.recentNewUsers.length
+      ? stats.recentNewUsers
+          .map((u, i) => {
+            const name = u.full_name || u.username || String(u.telegram_id);
+            return `${i + 1}. ${name} (${u.telegram_id})`;
+          })
+          .join('\n')
+      : 'Bugun yangi user yoq';
+
+    const report =
+      `📊 <b>Kunlik otchot (${day})</b>\n\n` +
+      `👥 Yangi userlar: <b>${stats.newUsersToday}</b>\n` +
+      `👤 Jami userlar: <b>${stats.totalUsers}</b>\n` +
+      `🟢 Bugun aktiv userlar: <b>${stats.activeUsersToday}</b>\n` +
+      `💬 User xabarlari: <b>${stats.messagesToday}</b>\n\n` +
+      `💳 Bugungi to'lovlar: <b>${stats.successfulPaymentsToday}</b>\n` +
+      `💰 Bugungi tushum: <b>${formatMoney(stats.revenueToday)}</b>\n` +
+      `📦 Yangi obunalar: <b>${stats.newSubscriptionsToday}</b>\n\n` +
+      `📝 Feedback: <b>${stats.feedbackTotalToday}</b> (✅ ${stats.feedbackPositiveToday} / ❌ ${stats.feedbackNegativeToday})\n\n` +
+      `🆕 Oxirgi yangi userlar:\n${latestUsersText}`;
+
+    for (const adminId of ADMIN_IDS) {
+      try {
+        await bot.telegram.sendMessage(adminId, report, { parse_mode: 'HTML' });
+      } catch (e) {
+        console.error(`Daily report send error (${adminId}):`, e.message);
+      }
+    }
+  } catch (e) {
+    console.error('sendDailyAdminReport error:', e);
+  }
+}
+
 // ==================== PROCESS SCHEDULED MESSAGES ====================
 async function processScheduledMessages() {
   try {
@@ -152,10 +197,17 @@ export function startScheduler() {
     checkExpiredSubscriptions();
   });
 
+  // Har kuni 23:00 da adminlarga kunlik to'liq otchot
+  cron.schedule('0 23 * * *', () => {
+    console.log('Running daily admin report...');
+    sendDailyAdminReport();
+  }, { timezone: REPORT_TIMEZONE });
+
   console.log('✅ Scheduler started:');
   console.log('   - Scheduled messages: every minute');
   console.log('   - Subscription reminders: daily at 9:00');
   console.log('   - Expired subscriptions: every 5 minutes');
+  console.log(`   - Daily admin report: 23:00 (${REPORT_TIMEZONE})`);
 }
 
-export { processScheduledMessages, checkSubscriptionReminders, checkExpiredSubscriptions };
+export { processScheduledMessages, checkSubscriptionReminders, checkExpiredSubscriptions, sendDailyAdminReport };

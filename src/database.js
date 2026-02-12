@@ -330,6 +330,17 @@ export async function initDatabase() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_messages (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        message_type VARCHAR(50) NOT NULL,
+        text_content TEXT,
+        meta JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // ============ MIGRATIONS - Add missing columns ============
     console.log('Running migrations...');
     
@@ -564,6 +575,11 @@ export async function createUser(telegramId, username, fullName) {
     RETURNING *
   `, [telegramId, username, fullName]);
   return rows[0];
+}
+
+export async function getTotalUsersCount() {
+  const { rows } = await pool.query('SELECT COUNT(*)::int AS count FROM users');
+  return rows[0]?.count || 0;
 }
 
 export async function updateUser(telegramId, data) {
@@ -1387,6 +1403,108 @@ export async function saveFeedback(telegramId, feedbackType, feedbackText) {
     INSERT INTO user_feedback (telegram_id, feedback_type, feedback_text)
     VALUES ($1, $2, $3)
   `, [telegramId, feedbackType, feedbackText]);
+}
+
+export async function logUserMessage(telegramId, messageType, textContent = null, meta = null) {
+  await pool.query(`
+    INSERT INTO user_messages (telegram_id, message_type, text_content, meta)
+    VALUES ($1, $2, $3, $4)
+  `, [telegramId, messageType, textContent, meta ? JSON.stringify(meta) : null]);
+}
+
+export async function getRecentUserMessages(limit = 200) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 200, 1), 1000);
+  const { rows } = await pool.query(`
+    SELECT
+      m.id,
+      m.telegram_id,
+      m.message_type,
+      m.text_content,
+      m.meta,
+      m.created_at,
+      u.full_name,
+      u.username,
+      u.phone
+    FROM user_messages m
+    LEFT JOIN users u ON u.telegram_id = m.telegram_id
+    ORDER BY m.created_at DESC
+    LIMIT $1
+  `, [safeLimit]);
+  return rows;
+}
+
+export async function getUserMessages(telegramId, limit = 300) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 300, 1), 2000);
+  const { rows } = await pool.query(`
+    SELECT id, telegram_id, message_type, text_content, meta, created_at
+    FROM user_messages
+    WHERE telegram_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2
+  `, [telegramId, safeLimit]);
+  return rows;
+}
+
+export async function getDailyReportStats() {
+  const { rows: userRows } = await pool.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) AS new_users_today,
+      COUNT(*) AS total_users,
+      COUNT(*) FILTER (WHERE DATE(last_activity) = CURRENT_DATE) AS active_users_today
+    FROM users
+    WHERE is_blocked = FALSE
+  `);
+
+  const { rows: messageRows } = await pool.query(`
+    SELECT COUNT(*) AS messages_today
+    FROM user_messages
+    WHERE DATE(created_at) = CURRENT_DATE
+  `);
+
+  const { rows: paymentRows } = await pool.query(`
+    SELECT
+      COUNT(*) AS successful_payments_today,
+      COALESCE(SUM(amount), 0) AS revenue_today
+    FROM payments
+    WHERE state = 'performed' AND DATE(created_at) = CURRENT_DATE
+  `);
+
+  const { rows: subscriptionRows } = await pool.query(`
+    SELECT COUNT(*) AS new_subscriptions_today
+    FROM subscriptions
+    WHERE DATE(created_at) = CURRENT_DATE
+  `);
+
+  const { rows: feedbackRows } = await pool.query(`
+    SELECT
+      COUNT(*) AS feedback_total_today,
+      COUNT(*) FILTER (WHERE feedback_type IN ('positive', 'liked')) AS feedback_positive_today,
+      COUNT(*) FILTER (WHERE feedback_type IN ('negative', 'disliked', 'disliked_reason')) AS feedback_negative_today
+    FROM user_feedback
+    WHERE DATE(created_at) = CURRENT_DATE
+  `);
+
+  const { rows: milestoneRows } = await pool.query(`
+    SELECT telegram_id, full_name, username, phone, created_at
+    FROM users
+    WHERE DATE(created_at) = CURRENT_DATE
+    ORDER BY created_at DESC
+    LIMIT 10
+  `);
+
+  return {
+    newUsersToday: parseInt(userRows[0]?.new_users_today) || 0,
+    totalUsers: parseInt(userRows[0]?.total_users) || 0,
+    activeUsersToday: parseInt(userRows[0]?.active_users_today) || 0,
+    messagesToday: parseInt(messageRows[0]?.messages_today) || 0,
+    successfulPaymentsToday: parseInt(paymentRows[0]?.successful_payments_today) || 0,
+    revenueToday: parseInt(paymentRows[0]?.revenue_today) || 0,
+    newSubscriptionsToday: parseInt(subscriptionRows[0]?.new_subscriptions_today) || 0,
+    feedbackTotalToday: parseInt(feedbackRows[0]?.feedback_total_today) || 0,
+    feedbackPositiveToday: parseInt(feedbackRows[0]?.feedback_positive_today) || 0,
+    feedbackNegativeToday: parseInt(feedbackRows[0]?.feedback_negative_today) || 0,
+    recentNewUsers: milestoneRows
+  };
 }
 
 export async function getAllFeedback() {

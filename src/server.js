@@ -190,6 +190,29 @@ app.get('/api/users/:telegramId', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/conversations', authMiddleware, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 200;
+    const { getRecentUserMessages } = await import('./database.js');
+    const rows = await getRecentUserMessages(limit);
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/conversations/:telegramId', authMiddleware, async (req, res) => {
+  try {
+    const telegramId = parseInt(req.params.telegramId);
+    const limit = parseInt(req.query.limit) || 300;
+    const { getUserMessages } = await import('./database.js');
+    const rows = await getUserMessages(telegramId, limit);
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/lessons', authMiddleware, async (req, res) => {
   try {
     const { getAllLessons } = await import('./database.js');
@@ -571,6 +594,17 @@ app.post('/api/test/soft-attack', authMiddleware, async (req, res) => {
     res.json({ success: true, message: 'Soft attack sent to ' + adminId });
   } catch (e) {
     console.error('❌ Test soft-attack error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/test/daily-report', authMiddleware, async (req, res) => {
+  try {
+    const { sendDailyAdminReport } = await import('./scheduler.js');
+    await sendDailyAdminReport();
+    res.json({ success: true, message: 'Daily report sent to admins' });
+  } catch (e) {
+    console.error('❌ Daily report test error:', e);
     res.status(500).json({ error: e.message });
   }
 });
