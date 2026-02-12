@@ -1102,6 +1102,27 @@
         <p class="text-xs text-gray-500 mt-2">Yo'q javobida: Sabab so'rash → Follow-up → (ixtiyoriy) Chegirmali taklif</p>
       </div>
 
+      <!-- Universal Progrev Formatter -->
+      <div class="card p-4 mb-4 border-l-4 border-indigo-400">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+          <h3 class="font-semibold text-gray-800 text-sm">✍️ Progrev matn formatlash</h3>
+          <p id="progrevActiveEditorLabel" class="text-xs text-gray-500">Maydon tanlanmagan</p>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('b')" title="Bold"><b>B</b></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('i')" title="Italic"><i>I</i></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('u')" title="Underline"><u>U</u></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('s')" title="Strike"><s>S</s></button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('spoiler')" title="Spoiler">🙈</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('blockquote')" title="Quote">❝ Quote</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('blockquote_expand')" title="Expandable quote (bosganda ochiladi)">📖 Expand Quote</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('code')" title="Code">{ }</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('link')" title="Link">🔗</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('emoji')" title="Custom emoji">✨</button>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Qaysi maydonga yozayotgan bo'lsangiz, tugma o'sha maydonga ishlaydi. `Expand Quote` Telegramda bosilganda ochiladi.</p>
+      </div>
+
       <!-- Step 1: Congrats -->
       <div class="card p-5 mb-4 border-l-4 border-green-500">
         <h3 class="font-semibold text-gray-800 mb-2">1️⃣ Tabrik xabari</h3>
@@ -1683,9 +1704,21 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         <!-- Message Text -->
         <div>
           <label class="text-sm font-medium text-gray-700 mb-2 block">✏️ Xabar matni</label>
+          <div class="flex flex-wrap gap-1 mb-2">
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('b')"><b>B</b></button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('i')"><i>I</i></button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('u')"><u>U</u></button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('s')"><s>S</s></button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('spoiler')">🙈 Spoiler</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('blockquote')">❝ Quote</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('blockquote_expand')">📖 Expand Quote</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('code')">{ }</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('link')">🔗 Link</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="applyBroadcastFormat('emoji')">✨ Emoji</button>
+          </div>
           <textarea id="broadcastText" class="input h-36 resize-none" placeholder="Salom, {{ism}}! 👋&#10;&#10;Xabaringizni yozing..." oninput="updatePreview()"></textarea>
           <div class="flex justify-between mt-1">
-            <p class="text-xs text-gray-400">HTML teglar qo'llab-quvvatlanadi: &lt;b&gt;, &lt;i&gt;, &lt;a&gt;</p>
+            <p class="text-xs text-gray-400">HTML teglar: &lt;b&gt;, &lt;i&gt;, &lt;tg-spoiler&gt;, &lt;blockquote expandable&gt;, &lt;tg-emoji&gt;</p>
             <p class="text-xs text-gray-400"><span id="charCount">0</span> belgi</p>
           </div>
         </div>
@@ -1940,6 +1973,7 @@ let allConversations = [];
 let selectedConversationUserId = null;
 let selectedReplyToMessageId = null;
 let selectedReplyToSnippet = '';
+let activeProgrevEditorId = null;
 let currentPage = 1;
 const perPage = 20;
 let paymentFilter = 'completed';
@@ -2258,6 +2292,21 @@ function insertVariable(variable) {
   updatePreview();
 }
 
+function applyBroadcastFormat(kind) {
+  if (kind === 'link') {
+    insertLinkTemplateTo('broadcastText');
+    updatePreview();
+    return;
+  }
+  if (kind === 'emoji') {
+    insertCustomEmojiTemplateTo('broadcastText');
+    updatePreview();
+    return;
+  }
+  wrapTextareaSelection('broadcastText', kind);
+  updatePreview();
+}
+
 function updatePreview() {
   const text = document.getElementById('broadcastText').value || '';
   const btnText = document.getElementById('broadcastBtnText').value;
@@ -2389,7 +2438,10 @@ function showTab(tab) {
   document.querySelector('.mobile-nav-item[data-tab="' + tab + '"]')?.classList.add('active');
 
   // Load tab-specific data
-  if (tab === 'progrev') loadProgrevSettings();
+  if (tab === 'progrev') {
+    loadProgrevSettings();
+    initProgrevFormatEditors();
+  }
   if (tab === 'custdev') loadFeedback();
   if (tab === 'conversations') loadConversations();
   if (tab === 'renewal') loadRenewalSettings();
@@ -2859,6 +2911,7 @@ function wrapTextareaSelection(textareaId, kind) {
     s: ['<s>', '</s>'],
     spoiler: ['<tg-spoiler>', '</tg-spoiler>'],
     blockquote: ['<blockquote>', '</blockquote>'],
+    blockquote_expand: ['<blockquote expandable>', '</blockquote>'],
     code: ['<code>', '</code>']
   };
   const pair = map[kind];
@@ -2869,6 +2922,47 @@ function wrapTextareaSelection(textareaId, kind) {
   const pos = start + insert.length;
   input.focus();
   input.setSelectionRange(pos, pos);
+}
+
+function initProgrevFormatEditors() {
+  const container = document.getElementById('tab-progrev');
+  if (!container) return;
+  const fields = container.querySelectorAll('textarea, input[type="text"]');
+  fields.forEach((el) => {
+    if (el.dataset.progrevFormatBound === '1') return;
+    el.dataset.progrevFormatBound = '1';
+    el.addEventListener('focus', () => setActiveProgrevEditor(el.id));
+    el.addEventListener('click', () => setActiveProgrevEditor(el.id));
+  });
+}
+
+function setActiveProgrevEditor(editorId) {
+  activeProgrevEditorId = editorId || null;
+  const label = document.getElementById('progrevActiveEditorLabel');
+  if (!label) return;
+  if (!activeProgrevEditorId) {
+    label.textContent = 'Maydon tanlanmagan';
+    return;
+  }
+  const el = document.getElementById(activeProgrevEditorId);
+  const fieldLabel = el?.closest('div')?.querySelector('label')?.textContent?.trim() || activeProgrevEditorId;
+  label.textContent = `Aktiv maydon: ${fieldLabel}`;
+}
+
+function applyProgrevFormat(kind) {
+  if (!activeProgrevEditorId) {
+    alert("Avval biror matn maydonini tanlang");
+    return;
+  }
+  if (kind === 'link') {
+    insertLinkTemplateTo(activeProgrevEditorId);
+    return;
+  }
+  if (kind === 'emoji') {
+    insertCustomEmojiTemplateTo(activeProgrevEditorId);
+    return;
+  }
+  wrapTextareaSelection(activeProgrevEditorId, kind);
 }
 
 function insertLinkTemplate() {
