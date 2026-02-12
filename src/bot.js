@@ -17,6 +17,93 @@ const delay = (ms) => new Promise(r => setTimeout(r, ms));
 const isAdmin = (id) => ADMIN_IDS.includes(id);
 const formatMoney = (t) => (t / 100).toLocaleString('uz-UZ') + " so'm";
 
+function isTrackableUserChat(chatId) {
+  const id = Number(chatId);
+  return Number.isFinite(id) && id > 0 && !isAdmin(id);
+}
+
+async function logBotOutgoing(chatId, messageType, textContent = null, meta = null, result = null) {
+  if (!CHAT_MONITOR_ENABLED || !isTrackableUserChat(chatId)) return;
+  try {
+    await db.logUserMessage(chatId, messageType, textContent, {
+      ...(meta || {}),
+      direction: 'bot_to_user',
+      message_id: result?.message_id || null
+    });
+  } catch (e) {
+    console.error('logBotOutgoing error:', e.message);
+  }
+}
+
+function installOutgoingMessageLogger() {
+  const telegram = bot.telegram;
+
+  const wrap = (methodName, mapper) => {
+    const original = telegram[methodName].bind(telegram);
+    telegram[methodName] = async (...args) => {
+      const result = await original(...args);
+      try {
+        const mapped = mapper(...args);
+        await logBotOutgoing(mapped.chatId, mapped.messageType, mapped.textContent, mapped.meta, result);
+      } catch (e) {
+        console.error(`Outgoing logger (${methodName}) error:`, e.message);
+      }
+      return result;
+    };
+  };
+
+  wrap('sendMessage', (chatId, text) => ({
+    chatId,
+    messageType: 'bot_outgoing_text',
+    textContent: text || '',
+    meta: { method: 'sendMessage' }
+  }));
+
+  wrap('sendVideo', (chatId, video, extra = {}) => ({
+    chatId,
+    messageType: 'bot_outgoing_video',
+    textContent: extra?.caption || '[VIDEO yuborildi]',
+    meta: { method: 'sendVideo', file_ref: typeof video === 'string' ? video : null }
+  }));
+
+  wrap('sendPhoto', (chatId, photo, extra = {}) => ({
+    chatId,
+    messageType: 'bot_outgoing_photo',
+    textContent: extra?.caption || '[RASM yuborildi]',
+    meta: { method: 'sendPhoto', file_ref: typeof photo === 'string' ? photo : null }
+  }));
+
+  wrap('sendVoice', (chatId, voice, extra = {}) => ({
+    chatId,
+    messageType: 'bot_outgoing_voice',
+    textContent: extra?.caption || '[OVOZLI xabar yuborildi]',
+    meta: { method: 'sendVoice', file_ref: typeof voice === 'string' ? voice : null }
+  }));
+
+  wrap('sendAudio', (chatId, audio, extra = {}) => ({
+    chatId,
+    messageType: 'bot_outgoing_audio',
+    textContent: extra?.caption || '[AUDIO yuborildi]',
+    meta: { method: 'sendAudio', file_ref: typeof audio === 'string' ? audio : null }
+  }));
+
+  wrap('sendVideoNote', (chatId, videoNote) => ({
+    chatId,
+    messageType: 'bot_outgoing_video_note',
+    textContent: '[VIDEO NOTE yuborildi]',
+    meta: { method: 'sendVideoNote', file_ref: typeof videoNote === 'string' ? videoNote : null }
+  }));
+
+  wrap('sendDocument', (chatId, document, extra = {}) => ({
+    chatId,
+    messageType: 'bot_outgoing_document',
+    textContent: extra?.caption || '[HUJJAT yuborildi]',
+    meta: { method: 'sendDocument', file_ref: typeof document === 'string' ? document : null }
+  }));
+}
+
+installOutgoingMessageLogger();
+
 // Get subscription price from database (legacy - for default)
 async function getSubscriptionPrice() {
   try {
@@ -253,7 +340,10 @@ bot.command('resetme', async (ctx) => {
 bot.command('stats', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return;
   const s = await db.getFullStats();
-  await ctx.reply(`Statistika\n\nJami: ${s.total_users}\nPremium: ${s.paid_users}\nBugun: +${s.today_users}\n\nOylik: ${formatMoney(parseInt(s.monthly_revenue) || 0)}`, { parse_mode: 'HTML' });
+  await ctx.reply(
+    `Statistika\n\nJami: ${s.totalUsers}\nPremium: ${s.paidUsers}\nBugun: +${s.todayUsers}\n\nOylik: ${formatMoney(parseInt(s.monthRevenue) || 0)}`,
+    { parse_mode: 'HTML' }
+  );
 });
 
 bot.start(async (ctx) => {
