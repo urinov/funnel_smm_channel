@@ -2729,17 +2729,20 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
   listEl.innerHTML = items.map((item) => {
     const emojiId = item._emojiId;
     const emojiChar = String(item.emoji_char || '✨').slice(0, 2);
-    const mediaFileId = item.thumb_file_id || item.file_id || '';
+    // Video custom emoji: file_id bilan video preview.
+    // Animated TGS custom emoji: thumbnail bo'lsa rasm preview, bo'lmasa text fallback.
+    const mediaFileId = item.is_video ? (item.file_id || '') : (item.thumb_file_id || '');
     const previewSrc = mediaFileId ? `/api/telegram-file/${encodeURIComponent(mediaFileId)}` : '';
     const badge = item.is_video ? 'video anim' : (item.is_animated ? 'anim (static preview)' : 'static');
     const seen = Number(item.seen_count || 0);
 
-    let previewHtml = `<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">${escapeHtml(emojiChar)}</div>`;
+    const fallbackHtml = `<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">${escapeHtml(emojiChar)}</div>`;
+    let previewHtml = fallbackHtml;
     if (previewSrc) {
       if (item.is_video) {
-        previewHtml = `<video src="${previewSrc}" autoplay muted loop playsinline class="w-8 h-8 rounded-lg object-cover bg-gray-100"></video>`;
+        previewHtml = `<video src="${previewSrc}" autoplay muted loop playsinline class="w-8 h-8 rounded-lg object-cover bg-gray-100" onerror="this.outerHTML='${escapeJsString(fallbackHtml)}'"></video>`;
       } else {
-        previewHtml = `<img src="${previewSrc}" alt="${escapeHtml(emojiChar)}" class="w-8 h-8 rounded-lg object-cover bg-gray-100" loading="lazy" />`;
+        previewHtml = `<img src="${previewSrc}" alt="${escapeHtml(emojiChar)}" class="w-8 h-8 rounded-lg object-cover bg-gray-100" loading="lazy" onerror="this.outerHTML='${escapeJsString(fallbackHtml)}'" />`;
       }
     }
 
