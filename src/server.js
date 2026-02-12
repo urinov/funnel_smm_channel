@@ -265,13 +265,23 @@ app.get('/api/custom-emojis', authMiddleware, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 300;
     const refresh = String(req.query.refresh || '1') !== '0';
-    const { getCustomEmojis } = await import('./database.js');
+    const { getCustomEmojis, getSetting } = await import('./database.js');
     let rows = await getCustomEmojis(limit);
 
     if (refresh) {
       await hydrateCustomEmojiMeta(rows);
       rows = await getCustomEmojis(limit);
     }
+
+    const hiddenRaw = await getSetting('hidden_custom_emojis');
+    let hiddenIds = [];
+    try {
+      hiddenIds = Array.isArray(JSON.parse(hiddenRaw || '[]')) ? JSON.parse(hiddenRaw || '[]') : [];
+    } catch (_) {
+      hiddenIds = [];
+    }
+    const hiddenSet = new Set(hiddenIds.map((v) => String(v || '').replace(/\D/g, '')).filter(Boolean));
+    rows = rows.filter((row) => !hiddenSet.has(String(row?.custom_emoji_id || '').replace(/\D/g, '')));
 
     res.json(rows);
   } catch (e) {
@@ -287,8 +297,21 @@ app.delete('/api/custom-emojis/:customEmojiId', authMiddleware, async (req, res)
       return res.status(400).json({ error: 'customEmojiId noto‘g‘ri' });
     }
 
-    const { deleteCustomEmoji } = await import('./database.js');
+    const { deleteCustomEmoji, getSetting, setSetting } = await import('./database.js');
     const deleted = await deleteCustomEmoji(customEmojiId);
+
+    // Deleted emoji key qayta kuzatilsa ham dashboardda chiqmasligi uchun hide ro'yxatga qo'shamiz
+    const hiddenRaw = await getSetting('hidden_custom_emojis');
+    let hidden = [];
+    try {
+      hidden = Array.isArray(JSON.parse(hiddenRaw || '[]')) ? JSON.parse(hiddenRaw || '[]') : [];
+    } catch (_) {
+      hidden = [];
+    }
+    if (!hidden.includes(customEmojiId)) {
+      hidden.push(customEmojiId);
+      await setSetting('hidden_custom_emojis', JSON.stringify(hidden));
+    }
 
     if (!deleted) {
       return res.status(404).json({ error: 'Emoji topilmadi' });
@@ -301,11 +324,39 @@ app.delete('/api/custom-emojis/:customEmojiId', authMiddleware, async (req, res)
   }
 });
 
+app.delete('/api/unicode-emojis/:emojiValue', authMiddleware, async (req, res) => {
+  try {
+    const emoji = decodeURIComponent(String(req.params.emojiValue || '')).trim();
+    if (!emoji) {
+      return res.status(400).json({ error: 'emoji noto‘g‘ri' });
+    }
+
+    const { getSetting, setSetting } = await import('./database.js');
+    const raw = await getSetting('hidden_unicode_emojis');
+    let hidden = [];
+    try {
+      hidden = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
+    } catch (_) {
+      hidden = [];
+    }
+
+    if (!hidden.includes(emoji)) {
+      hidden.push(emoji);
+      await setSetting('hidden_unicode_emojis', JSON.stringify(hidden));
+    }
+
+    res.json({ ok: true, emoji });
+  } catch (e) {
+    console.error('unicode emoji hide error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/unicode-emojis', authMiddleware, async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 3000, 100), 10000);
     const top = Math.min(Math.max(parseInt(req.query.top) || 120, 20), 400);
-    const { getRecentUserMessages } = await import('./database.js');
+    const { getRecentUserMessages, getSetting } = await import('./database.js');
     const rows = await getRecentUserMessages(limit);
 
     const usage = new Map();
@@ -325,7 +376,17 @@ app.get('/api/unicode-emojis', authMiddleware, async (req, res) => {
       }
     }
 
+    const hiddenRaw = await getSetting('hidden_unicode_emojis');
+    let hiddenList = [];
+    try {
+      hiddenList = Array.isArray(JSON.parse(hiddenRaw || '[]')) ? JSON.parse(hiddenRaw || '[]') : [];
+    } catch (_) {
+      hiddenList = [];
+    }
+    const hiddenSet = new Set(hiddenList.map((v) => String(v || '').trim()).filter(Boolean));
+
     const result = Array.from(usage.values())
+      .filter((item) => !hiddenSet.has(String(item?.emoji || '').trim()))
       .sort((a, b) => {
         const ad = new Date(a.last_seen_at).getTime();
         const bd = new Date(b.last_seen_at).getTime();

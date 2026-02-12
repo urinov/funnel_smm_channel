@@ -2824,10 +2824,8 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
     }
 
     if (compact) {
-      const removeBtn = !isUnicode
-        ? `<button type="button" class="absolute top-1 right-1 w-6 h-6 rounded-md bg-white/90 border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
-             onclick="removeCustomEmojiFromLibrary('${emojiId}', event)" title="Emoji o'chirish">🗑</button>`
-        : '';
+      const removeBtn = `<button type="button" class="absolute top-1 right-1 w-6 h-6 rounded-md bg-white/90 border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
+             onclick="removeEmojiFromLibrary('${isUnicode ? 'unicode' : 'custom'}', '${escapeJsString(isUnicode ? unicodeChar : emojiId)}', event)" title="Emoji o'chirish">🗑</button>`;
       return `
         <div class="relative">
           <button type="button" class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2 w-full"
@@ -2843,10 +2841,8 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
       `;
     }
 
-    const removeBtn = !isUnicode
-      ? `<button type="button" class="ml-2 px-2 py-1 rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
-           onclick="removeCustomEmojiFromLibrary('${emojiId}', event)">🗑</button>`
-      : '';
+    const removeBtn = `<button type="button" class="ml-2 px-2 py-1 rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
+           onclick="removeEmojiFromLibrary('${isUnicode ? 'unicode' : 'custom'}', '${escapeJsString(isUnicode ? unicodeChar : emojiId)}', event)">🗑</button>`;
     return `
       <div class="w-full rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2">
         <button type="button" class="w-full text-left"
@@ -3218,32 +3214,46 @@ function insertUnicodeEmojiFromLibrary(emojiChar) {
   insertTextIntoBestEditor(safeEmoji);
 }
 
-async function removeCustomEmojiFromLibrary(customEmojiId, event) {
+async function removeEmojiFromLibrary(kind, value, event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  const safeId = String(customEmojiId || '').replace(/\D/g, '');
-  if (!safeId) return;
+  const safeKind = String(kind || '').trim();
+  if (safeKind !== 'custom' && safeKind !== 'unicode') return;
 
-  const confirmed = confirm(`Emoji o'chirilsinmi?\nID: ${safeId}`);
+  const rawValue = String(value || '').trim();
+  const safeValue = safeKind === 'custom' ? rawValue.replace(/\D/g, '') : rawValue;
+  if (!safeValue) return;
+
+  const label = safeKind === 'custom' ? `ID: ${safeValue}` : `Emoji: ${safeValue}`;
+  const confirmed = confirm(`Emoji o'chirilsinmi?\n${label}`);
   if (!confirmed) return;
 
   try {
-    const res = await fetch('/api/custom-emojis/' + encodeURIComponent(safeId), {
+    const endpoint = safeKind === 'custom'
+      ? '/api/custom-emojis/' + encodeURIComponent(safeValue)
+      : '/api/unicode-emojis/' + encodeURIComponent(safeValue);
+    const res = await fetch(endpoint, {
       method: 'DELETE',
       headers: { Authorization: auth }
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || ('API error: ' + res.status));
 
-    customEmojiLibrary = (Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [])
-      .filter((item) => String(item?.custom_emoji_id || '').replace(/\D/g, '') !== safeId);
+    if (safeKind === 'custom') {
+      customEmojiLibrary = (Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [])
+        .filter((item) => String(item?.custom_emoji_id || '').replace(/\D/g, '') !== safeValue);
+    } else {
+      unicodeEmojiLibrary = (Array.isArray(unicodeEmojiLibrary) ? unicodeEmojiLibrary : [])
+        .filter((item) => String(item?.emoji || '').trim() !== safeValue);
+    }
+
     renderCustomEmojiLibrary();
     showToast('Emoji o\'chirildi');
   } catch (e) {
-    console.error('removeCustomEmojiFromLibrary error:', e);
+    console.error('removeEmojiFromLibrary error:', e);
     showToast('O\'chirishda xatolik: ' + e.message, 'error');
   }
 }
