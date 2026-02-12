@@ -6,6 +6,8 @@
   <title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
@@ -1992,6 +1994,8 @@ let allCustDev = [];
 let allFeedback = [];
 let allConversations = [];
 let customEmojiLibrary = [];
+let emojiLottieInstances = [];
+const emojiTgsDataCache = new Map();
 let selectedConversationUserId = null;
 let selectedReplyToMessageId = null;
 let selectedReplyToSnippet = '';
@@ -2703,8 +2707,53 @@ async function loadCustomEmojiLibrary(forceRefresh = false) {
 }
 
 function renderCustomEmojiLibrary() {
+  clearEmojiLottiePreviews();
   renderCustomEmojiBankInto('emojiBankList', 'emojiBankCount', false);
   renderCustomEmojiBankInto('emojiBankProgrevList', 'emojiBankProgrevCount', true);
+  initEmojiLottiePreviews();
+}
+
+function clearEmojiLottiePreviews() {
+  emojiLottieInstances.forEach((inst) => {
+    try { inst.destroy(); } catch (_) {}
+  });
+  emojiLottieInstances = [];
+}
+
+async function initEmojiLottiePreviews() {
+  if (typeof window.lottie === 'undefined' || typeof window.pako === 'undefined') return;
+  const targets = Array.from(document.querySelectorAll('[data-emoji-tgs-file-id]'));
+  for (const container of targets) {
+    const fileId = String(container.dataset.emojiTgsFileId || '').trim();
+    if (!fileId || container.dataset.emojiLoaded === '1') continue;
+
+    try {
+      let animationData = emojiTgsDataCache.get(fileId);
+      if (!animationData) {
+        const response = await fetch('/api/telegram-file/' + encodeURIComponent(fileId), { headers: { Authorization: auth } });
+        if (!response.ok) throw new Error('TGS load failed');
+        const ab = await response.arrayBuffer();
+        const uint8 = new Uint8Array(ab);
+        const jsonText = window.pako.ungzip(uint8, { to: 'string' });
+        animationData = JSON.parse(jsonText);
+        emojiTgsDataCache.set(fileId, animationData);
+      }
+
+      container.innerHTML = '';
+      const inst = window.lottie.loadAnimation({
+        container,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData
+      });
+      emojiLottieInstances.push(inst);
+      container.dataset.emojiLoaded = '1';
+    } catch (e) {
+      // fallback text saqlanadi
+      container.dataset.emojiLoaded = '0';
+    }
+  }
 }
 
 function renderCustomEmojiBankInto(listId, countId, compact = false) {
@@ -2730,10 +2779,10 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
     const emojiId = item._emojiId;
     const emojiChar = String(item.emoji_char || '✨').slice(0, 2);
     // Video custom emoji: file_id bilan video preview.
-    // Animated TGS custom emoji: thumbnail bo'lsa rasm preview, bo'lmasa text fallback.
+    // Animated TGS custom emoji: lottie bilan jonli render, bo'lmasa text fallback.
     const mediaFileId = item.is_video ? (item.file_id || '') : (item.thumb_file_id || '');
     const previewSrc = mediaFileId ? `/api/telegram-file/${encodeURIComponent(mediaFileId)}` : '';
-    const badge = item.is_video ? 'video anim' : (item.is_animated ? 'anim (static preview)' : 'static');
+    const badge = item.is_video ? 'video anim' : (item.is_animated ? 'anim (live)' : 'static');
     const seen = Number(item.seen_count || 0);
 
     const fallbackHtml = `<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">${escapeHtml(emojiChar)}</div>`;
@@ -2741,9 +2790,12 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
     if (previewSrc) {
       if (item.is_video) {
         previewHtml = `<video src="${previewSrc}" autoplay muted loop playsinline class="w-8 h-8 rounded-lg object-cover bg-gray-100" onerror="this.outerHTML='${escapeJsString(fallbackHtml)}'"></video>`;
-      } else {
+      } else if (!item.is_animated) {
         previewHtml = `<img src="${previewSrc}" alt="${escapeHtml(emojiChar)}" class="w-8 h-8 rounded-lg object-cover bg-gray-100" loading="lazy" onerror="this.outerHTML='${escapeJsString(fallbackHtml)}'" />`;
       }
+    }
+    if (item.is_animated && !item.is_video && item.file_id) {
+      previewHtml = `<div data-emoji-tgs-file-id="${escapeHtml(item.file_id)}" class="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">${escapeHtml(emojiChar)}</div>`;
     }
 
     if (compact) {
@@ -2772,6 +2824,7 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
       </button>
     `;
   }).join('');
+
 }
 
 function renderConversationUsers() {
