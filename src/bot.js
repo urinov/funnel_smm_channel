@@ -7,6 +7,7 @@ const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id
 const DEFAULT_PRICE = parseInt(process.env.SUBSCRIPTION_PRICE || '9700000');
 const PREMIUM_CHANNEL_ID = process.env.PREMIUM_CHANNEL_ID; // e.g., -1001234567890
 const CHAT_MONITOR_ENABLED = process.env.CHAT_MONITOR_ENABLED !== 'false';
+const CHAT_MONITOR_NOTIFY_ADMINS = process.env.CHAT_MONITOR_NOTIFY_ADMINS === 'true';
 
 if (!BOT_TOKEN) throw new Error('BOT_TOKEN kerak');
 
@@ -149,6 +150,10 @@ async function logAndNotifyUserActivity(ctx, activityType, textContent = null, m
 
   await db.logUserMessage(telegramId, activityType, textContent, mergedMeta);
 
+  if (!CHAT_MONITOR_NOTIFY_ADMINS) {
+    return;
+  }
+
   const userName = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ').trim() || 'Nomalum';
   const username = ctx.from.username ? '@' + ctx.from.username : 'username yoq';
   const preview = textContent ? String(textContent).slice(0, 500) : `(event: ${activityType})`;
@@ -211,7 +216,7 @@ bot.use(async (ctx, next) => {
 
 bot.command('admin', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return ctx.reply('Admin huquqi yoq');
-  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html\n🛰 Chat monitor: ${CHAT_MONITOR_ENABLED ? 'yoqilgan' : 'o\'chirilgan'} (ENV: CHAT_MONITOR_ENABLED)`, { parse_mode: 'HTML' });
+  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html\n🛰 Chat monitor: ${CHAT_MONITOR_ENABLED ? 'yoqilgan' : 'o\'chirilgan'}\n🔔 Realtime admin notify: ${CHAT_MONITOR_NOTIFY_ADMINS ? 'yoqilgan' : 'o\'chirilgan'} (ENV: CHAT_MONITOR_NOTIFY_ADMINS)`, { parse_mode: 'HTML' });
 });
 
 bot.command('testpitch', async (ctx) => {

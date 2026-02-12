@@ -40,6 +40,10 @@ services:
         sync: false
       - key: SUBSCRIPTION_PRICE
         value: "9700000"
+      - key: CHAT_MONITOR_ENABLED
+        value: "true"
+      - key: CHAT_MONITOR_NOTIFY_ADMINS
+        value: "false"
       - key: ADMIN_USER
         sync: false
       - key: ADMIN_PASS
