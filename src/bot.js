@@ -17,6 +17,36 @@ const delay = (ms) => new Promise(r => setTimeout(r, ms));
 const isAdmin = (id) => ADMIN_IDS.includes(id);
 const formatMoney = (t) => (t / 100).toLocaleString('uz-UZ') + " so'm";
 
+export async function setupAdminWebAppMenu() {
+  if (!BASE_URL) {
+    console.log('⚠️ BASE_URL yoq, admin WebApp menu o\'rnatilmadi');
+    return;
+  }
+
+  if (!ADMIN_IDS.length) {
+    console.log('⚠️ ADMIN_IDS bo\'sh, admin WebApp menu o\'rnatilmadi');
+    return;
+  }
+
+  const webAppUrl = `${BASE_URL.replace(/\/+$/, '')}/admin.html`;
+
+  for (const adminId of ADMIN_IDS) {
+    try {
+      await bot.telegram.setChatMenuButton({
+        chat_id: adminId,
+        menu_button: {
+          type: 'web_app',
+          text: 'Admin panel',
+          web_app: { url: webAppUrl }
+        }
+      });
+      console.log(`✅ Admin menu button o\'rnatildi: ${adminId}`);
+    } catch (e) {
+      console.error(`❌ Admin menu button error (${adminId}):`, e.message);
+    }
+  }
+}
+
 function isTrackableUserChat(chatId) {
   const id = Number(chatId);
   return Number.isFinite(id) && id > 0 && !isAdmin(id);
@@ -376,7 +406,17 @@ bot.use(async (ctx, next) => {
 
 bot.command('admin', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return ctx.reply('Admin huquqi yoq');
-  await ctx.reply(`🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${BASE_URL}/admin.html\n🛰 Chat monitor: ${CHAT_MONITOR_ENABLED ? 'yoqilgan' : 'o\'chirilgan'}\n🔔 Realtime admin notify: ${CHAT_MONITOR_NOTIFY_ADMINS ? 'yoqilgan' : 'o\'chirilgan'} (ENV: CHAT_MONITOR_NOTIFY_ADMINS)`, { parse_mode: 'HTML' });
+  const webAppUrl = BASE_URL ? `${BASE_URL.replace(/\/+$/, '')}/admin.html` : null;
+  const webAppButton = webAppUrl
+    ? Markup.inlineKeyboard([
+        [Markup.button.webApp('📊 Admin panelni ochish', webAppUrl)]
+      ])
+    : null;
+
+  await ctx.reply(
+    `🔐 Admin Panel\n\n/stats - Statistika\n/resetme - Reset qilish\n/testfeedback - Feedback savolini test qilish\n/testpitch - Pitch ni test qilish\n/testsales - To'lov tugmalarini test qilish\n\n📊 Dashboard: ${webAppUrl || 'BASE_URL yo\'q'}\n🛰 Chat monitor: ${CHAT_MONITOR_ENABLED ? 'yoqilgan' : 'o\'chirilgan'}\n🔔 Realtime admin notify: ${CHAT_MONITOR_NOTIFY_ADMINS ? 'yoqilgan' : 'o\'chirilgan'} (ENV: CHAT_MONITOR_NOTIFY_ADMINS)`,
+    { parse_mode: 'HTML', ...(webAppButton || {}) }
+  );
 });
 
 bot.command('testpitch', async (ctx) => {

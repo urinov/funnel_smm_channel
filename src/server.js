@@ -5,10 +5,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
+import crypto from 'crypto';
 import FormData from 'form-data';
 
 import { initDatabase } from './database.js';
-import { bot, sendBroadcast } from './bot.js';
+import { bot, sendBroadcast, setupAdminWebAppMenu } from './bot.js';
 import paymeRouter from './payments/payme.js';
 import clickRouter from './payments/click.js';
 import { startScheduler } from './scheduler.js';
@@ -19,6 +20,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const ADMIN_IDS = (process.env.ADMIN_IDS || '')
+  .split(',')
+  .map((id) => parseInt(id.trim(), 10))
+  .filter((id) => Number.isFinite(id));
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,7 +40,99 @@ app.use((req, res, next) => {
   next();
 });
 
+function timingSafeEqualHex(a, b) {
+  try {
+    const left = Buffer.from(String(a || ''), 'hex');
+    const right = Buffer.from(String(b || ''), 'hex');
+    if (left.length !== right.length || left.length === 0) return false;
+    return crypto.timingSafeEqual(left, right);
+  } catch {
+    return false;
+  }
+}
+
+function verifyTelegramWebAppInitData(initDataRaw) {
+  try {
+    if (!initDataRaw || !process.env.BOT_TOKEN) {
+      return { ok: false, error: 'Missing initData or BOT_TOKEN' };
+    }
+
+    const params = new URLSearchParams(initDataRaw);
+    const hash = params.get('hash');
+    if (!hash) return { ok: false, error: 'Missing hash' };
+
+    const dataCheckArr = [];
+    for (const [key, value] of params.entries()) {
+      if (key === 'hash') continue;
+      dataCheckArr.push(`${key}=${value}`);
+    }
+    dataCheckArr.sort();
+    const dataCheckString = dataCheckArr.join('\n');
+
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(process.env.BOT_TOKEN)
+      .digest();
+    const calculatedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex');
+
+    if (!timingSafeEqualHex(calculatedHash, hash)) {
+      return { ok: false, error: 'Hash mismatch' };
+    }
+
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!authDate || nowSec - authDate > 24 * 60 * 60) {
+      return { ok: false, error: 'initData expired' };
+    }
+
+    const userRaw = params.get('user');
+    if (!userRaw) return { ok: false, error: 'Missing user payload' };
+
+    const user = JSON.parse(userRaw);
+    const telegramId = Number(user?.id);
+    if (!Number.isFinite(telegramId) || telegramId <= 0) {
+      return { ok: false, error: 'Invalid Telegram user id' };
+    }
+
+    return { ok: true, telegramId, user };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+function tryTelegramWebAppAuth(req) {
+  const telegramInitData = req.get('X-Telegram-Init-Data');
+  if (!telegramInitData) return { ok: false, skip: true };
+
+  const verified = verifyTelegramWebAppInitData(telegramInitData);
+  if (!verified.ok) return { ok: false, status: 401, error: 'Invalid Telegram WebApp auth' };
+
+  if (!ADMIN_IDS.includes(verified.telegramId)) {
+    return { ok: false, status: 403, error: 'Access denied' };
+  }
+
+  return {
+    ok: true,
+    telegramId: verified.telegramId,
+    user: verified.user
+  };
+}
+
 const authMiddleware = (req, res, next) => {
+  const tgAuth = tryTelegramWebAppAuth(req);
+  if (tgAuth.ok) {
+    req.adminUser = `tg_${tgAuth.telegramId}`;
+    req.adminTelegramId = tgAuth.telegramId;
+    req.authSource = 'telegram_webapp';
+    return next();
+  }
+  if (!tgAuth.skip) {
+    return res.status(tgAuth.status || 401).json({ error: tgAuth.error || 'Unauthorized' });
+  }
+
   const authHeader = req.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Basic ')) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -49,6 +146,7 @@ const authMiddleware = (req, res, next) => {
   }
 
   req.adminUser = user;
+  req.authSource = 'basic';
   next();
 };
 
@@ -103,6 +201,17 @@ function extractUnicodeEmojis(text) {
 
 app.get('/health', (req, res) => res.send('ok'));
 app.get('/', (req, res) => res.send('Telegram Bot is running'));
+app.get('/api/auth/telegram-webapp', (req, res) => {
+  const tgAuth = tryTelegramWebAppAuth(req);
+  if (!tgAuth.ok) {
+    return res.status(tgAuth.status || 401).json({ ok: false, error: tgAuth.error || 'Unauthorized' });
+  }
+  res.json({
+    ok: true,
+    auth_source: 'telegram_webapp',
+    telegram_id: tgAuth.telegramId
+  });
+});
 
 // Payme test endpoint - tekshirish uchun
 app.get('/payme/test', (req, res) => {
@@ -1770,6 +1879,8 @@ async function start() {
           console.error('setWebhook error', e);
         }
       }
+
+      await setupAdminWebAppMenu();
     });
   } catch (e) {
     console.error('Startup error:', e);

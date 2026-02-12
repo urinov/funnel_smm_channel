@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
@@ -2097,6 +2098,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 <script>
 // ========== GLOBAL STATE ==========
 let auth = '';
+let tgInitData = '';
 let allUsers = [];
 let allPayments = [];
 let allLessons = [];
@@ -2132,13 +2134,73 @@ const chartTextColor = () => '#64748b';
 const chartAccent = () => '#5b7cfa';
 const chartAccentSoft = () => 'rgba(91,124,250,0.16)';
 const chartMuted = () => 'rgba(148,163,184,0.7)';
+const nativeFetch = window.fetch.bind(window);
+
+window.fetch = function(input, init = {}) {
+  const url = typeof input === 'string' ? input : (input?.url || '');
+  const isApiRequest = url.startsWith('/api/') || url.includes('/api/');
+  if (!isApiRequest) return nativeFetch(input, init);
+
+  const nextInit = { ...init };
+  const headers = new Headers(nextInit.headers || (input instanceof Request ? input.headers : undefined));
+  if (auth) headers.set('Authorization', auth);
+  if (tgInitData) headers.set('X-Telegram-Init-Data', tgInitData);
+  nextInit.headers = headers;
+
+  return nativeFetch(input, nextInit);
+};
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
   year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
 });
 
-const saved = localStorage.getItem('adminAuth');
-if (saved) { auth = saved; showDashboard(); }
+function blockAccess(message) {
+  const title = document.querySelector('#loginModal h1');
+  const subtitle = document.querySelector('#loginModal p.text-gray-500');
+  const form = document.getElementById('loginForm');
+  const error = document.getElementById('loginError');
+
+  if (title) title.textContent = 'Ruxsat yo\'q';
+  if (subtitle) subtitle.textContent = 'Bu sahifa faqat admin uchun';
+  if (form) {
+    form.classList.add('opacity-60', 'pointer-events-none');
+    form.querySelectorAll('input, button').forEach((el) => {
+      el.disabled = true;
+    });
+  }
+  if (error) {
+    error.textContent = message || 'Kirish rad etildi';
+    error.classList.remove('hidden');
+  }
+}
+
+async function initAuth() {
+  const tgWebApp = window.Telegram?.WebApp;
+  if (tgWebApp?.initData) {
+    tgInitData = tgWebApp.initData;
+    try {
+      tgWebApp.ready();
+      tgWebApp.expand();
+    } catch (_) {}
+
+    try {
+      const r = await fetch('/api/auth/telegram-webapp');
+      if (!r.ok) throw new Error('forbidden');
+      showDashboard();
+      return;
+    } catch (e) {
+      blockAccess('Siz admin emassiz. WebApp yopildi.');
+      return;
+    }
+  }
+
+  const saved = localStorage.getItem('adminAuth');
+  if (saved) {
+    auth = saved;
+    showDashboard();
+  }
+}
+initAuth();
 
 // Login
 document.getElementById('loginForm').onsubmit = async function(e) {
