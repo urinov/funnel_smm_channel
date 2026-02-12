@@ -349,7 +349,7 @@ bot.use(async (ctx, next) => {
       await persistCustomEmojisFromMessage(ctx);
     }
 
-    if (CHAT_MONITOR_ENABLED && ctx.from && !isAdmin(ctx.from.id)) {
+    if (CHAT_MONITOR_ENABLED && ctx.from) {
       if (ctx.message) {
         const payload = extractIncomingMessage(ctx.message);
         if (payload) {
