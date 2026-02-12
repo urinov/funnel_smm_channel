@@ -100,6 +100,13 @@ function installOutgoingMessageLogger() {
     textContent: extra?.caption || '[HUJJAT yuborildi]',
     meta: { method: 'sendDocument', file_ref: typeof document === 'string' ? document : null }
   }));
+
+  wrap('sendSticker', (chatId, sticker) => ({
+    chatId,
+    messageType: 'bot_outgoing_sticker',
+    textContent: '[STICKER yuborildi]',
+    meta: { method: 'sendSticker', sticker_file_id: typeof sticker === 'string' ? sticker : null }
+  }));
 }
 
 installOutgoingMessageLogger();
@@ -284,7 +291,11 @@ bot.use(async (ctx, next) => {
       if (ctx.message) {
         const payload = extractIncomingMessage(ctx.message);
         if (payload) {
-          await logAndNotifyUserActivity(ctx, payload.type, payload.text, payload.meta);
+          await logAndNotifyUserActivity(ctx, payload.type, payload.text, {
+            ...(payload.meta || {}),
+            message_id: ctx.message.message_id || null,
+            reply_to_message_id: ctx.message.reply_to_message?.message_id || null
+          });
         }
       }
 

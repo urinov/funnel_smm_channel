@@ -249,20 +249,53 @@ app.post('/api/conversations/:telegramId/reply', authMiddleware, async (req, res
   try {
     const telegramId = parseInt(req.params.telegramId);
     const text = String(req.body?.text || '').trim();
+    const stickerFileId = String(req.body?.sticker_file_id || '').trim();
+    const replyToMessageId = parseInt(req.body?.reply_to_message_id) || null;
+    const parseMode = String(req.body?.parse_mode || 'HTML').toUpperCase();
+    const disableLinkPreview = req.body?.disable_link_preview === true;
 
-    if (!telegramId || !text) {
-      return res.status(400).json({ error: 'telegramId va text kerak' });
+    if (!telegramId || (!text && !stickerFileId)) {
+      return res.status(400).json({ error: 'telegramId va (text yoki sticker_file_id) kerak' });
     }
 
-    await bot.telegram.sendMessage(telegramId, text, { parse_mode: 'HTML' });
+    const sent = [];
+    const replyParams = replyToMessageId ? { reply_parameters: { message_id: replyToMessageId } } : {};
 
     const { logUserMessage } = await import('./database.js');
-    await logUserMessage(telegramId, 'admin_outgoing', text, {
-      source: 'dashboard',
-      admin_user: req.adminUser || 'admin'
-    });
 
-    res.json({ success: true });
+    if (text) {
+      const sentMsg = await bot.telegram.sendMessage(telegramId, text, {
+        parse_mode: parseMode === 'MARKDOWNV2' ? 'MarkdownV2' : 'HTML',
+        link_preview_options: { is_disabled: disableLinkPreview },
+        ...replyParams
+      });
+      sent.push(sentMsg?.message_id);
+
+      await logUserMessage(telegramId, 'admin_outgoing', text, {
+        source: 'dashboard',
+        admin_user: req.adminUser || 'admin',
+        parse_mode: parseMode,
+        message_id: sentMsg?.message_id || null,
+        reply_to_message_id: replyToMessageId || null
+      });
+    }
+
+    if (stickerFileId) {
+      const sentSticker = await bot.telegram.sendSticker(telegramId, stickerFileId, {
+        ...replyParams
+      });
+      sent.push(sentSticker?.message_id);
+
+      await logUserMessage(telegramId, 'admin_outgoing_sticker', '[STICKER yuborildi]', {
+        source: 'dashboard',
+        admin_user: req.adminUser || 'admin',
+        sticker_file_id: stickerFileId,
+        message_id: sentSticker?.message_id || null,
+        reply_to_message_id: replyToMessageId || null
+      });
+    }
+
+    res.json({ success: true, message_ids: sent });
   } catch (e) {
     console.error('Conversation reply error:', e);
     res.status(500).json({ error: e.message });

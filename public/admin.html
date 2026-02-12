@@ -801,9 +801,45 @@
             <div id="convMessagesList" class="tg-chat-body">
               <div class="text-center text-gray-500">Chap tomondan userni tanlang</div>
             </div>
-            <div class="border-t border-gray-100 bg-white/85 p-3 flex items-end gap-2">
-              <textarea id="convReplyInput" class="input min-h-[44px] max-h-[120px] resize-y" placeholder="Type your message..." onkeydown="handleConvReplyKey(event)"></textarea>
-              <button id="convReplyBtn" onclick="sendConversationReply()" class="btn btn-primary">📨</button>
+            <div class="border-t border-gray-100 bg-white/85 p-3 space-y-2">
+              <div id="convReplyToBar" class="hidden text-xs bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 text-indigo-700">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="truncate">
+                    ↪ Javob beriladigan xabar: <span id="convReplyToText"></span>
+                  </div>
+                  <button class="text-indigo-600" onclick="clearConversationReplyTo()">✕</button>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-1">
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('b')" title="Bold"><b>B</b></button>
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('i')" title="Italic"><i>I</i></button>
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('u')" title="Underline"><u>U</u></button>
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('s')" title="Strike"><s>S</s></button>
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('spoiler')" title="Spoiler">🙈</button>
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('blockquote')" title="Quote">❝ ❞</button>
+                <button class="btn btn-secondary btn-sm" onclick="wrapReplySelection('code')" title="Code">{ }</button>
+                <button class="btn btn-secondary btn-sm" onclick="insertLinkTemplate()" title="Link">🔗</button>
+                <button class="btn btn-secondary btn-sm" onclick="insertCustomEmojiTemplate()" title="Custom Emoji">✨</button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input id="convStickerFileId" class="input py-2 px-3" placeholder="Sticker file_id (ixtiyoriy)">
+                <div class="flex items-center gap-2">
+                  <select id="convParseMode" class="input py-2 px-3">
+                    <option value="HTML">HTML (tavsiya)</option>
+                    <option value="MarkdownV2">MarkdownV2</option>
+                  </select>
+                  <label class="text-xs text-gray-600 flex items-center gap-1">
+                    <input type="checkbox" id="convDisablePreview"> Link preview off
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex items-end gap-2">
+                <textarea id="convReplyInput" class="input min-h-[44px] max-h-[140px] resize-y" placeholder="Type your message... (HTML format ham mumkin)" onkeydown="handleConvReplyKey(event)"></textarea>
+                <button id="convReplyBtn" onclick="sendConversationReply()" class="btn btn-primary">📨</button>
+              </div>
             </div>
           </div>
 
@@ -1864,6 +1900,8 @@ let allCustDev = [];
 let allFeedback = [];
 let allConversations = [];
 let selectedConversationUserId = null;
+let selectedReplyToMessageId = null;
+let selectedReplyToSnippet = '';
 let currentPage = 1;
 const perPage = 20;
 let paymentFilter = 'completed';
@@ -2648,9 +2686,10 @@ async function openConversationUser(telegramId) {
             }
           }
         }
+        const messageId = metaObj.message_id || null;
         return `
           <div class="tg-bubble-row ${rowClass}">
-            <div class="tg-bubble ${bubbleClass} ${isAction ? 'action' : ''}">
+            <div class="tg-bubble ${bubbleClass} ${isAction ? 'action' : ''}" ${messageId ? `data-message-id="${messageId}" onclick="setConversationReplyTo(${messageId}, '${escapeJsString(text.slice(0, 120))}')"` : ''} style="${messageId ? 'cursor:pointer;' : ''}">
               <span class="tg-tag">${escapeHtml(tag)}</span>
               ${replyContext ? `<p class="text-[11px] text-gray-500 mb-1">↪ Javob berilgan xabar: ${escapeHtml(replyContext)}</p>` : ''}
               <p class="text-sm text-gray-800 whitespace-pre-wrap break-words">${escapeHtml(text)}</p>
@@ -2696,22 +2735,36 @@ async function sendConversationReply() {
     return;
   }
   const input = document.getElementById('convReplyInput');
+  const stickerInput = document.getElementById('convStickerFileId');
+  const parseModeSelect = document.getElementById('convParseMode');
+  const disablePreviewEl = document.getElementById('convDisablePreview');
   const btn = document.getElementById('convReplyBtn');
   const text = (input?.value || '').trim();
-  if (!text) return;
+  const stickerFileId = (stickerInput?.value || '').trim();
+  const parseMode = (parseModeSelect?.value || 'HTML');
+  const disableLinkPreview = !!disablePreviewEl?.checked;
+  if (!text && !stickerFileId) return;
 
   try {
     if (btn) btn.disabled = true;
     const res = await fetch('/api/conversations/' + selectedConversationUserId + '/reply', {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({
+        text,
+        sticker_file_id: stickerFileId,
+        parse_mode: parseMode,
+        disable_link_preview: disableLinkPreview,
+        reply_to_message_id: selectedReplyToMessageId || null
+      })
     });
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}));
       throw new Error(payload.error || ('API error: ' + res.status));
     }
     if (input) input.value = '';
+    if (stickerInput) stickerInput.value = '';
+    clearConversationReplyTo();
     await loadConversations();
     await openConversationUser(selectedConversationUserId);
   } catch (e) {
@@ -2725,6 +2778,69 @@ function insertQuickReply(text) {
   const input = document.getElementById('convReplyInput');
   if (!input) return;
   input.value = text;
+  input.focus();
+}
+
+function setConversationReplyTo(messageId, snippet) {
+  selectedReplyToMessageId = Number(messageId) || null;
+  selectedReplyToSnippet = snippet || '';
+  const bar = document.getElementById('convReplyToBar');
+  const textEl = document.getElementById('convReplyToText');
+  if (bar) bar.classList.remove('hidden');
+  if (textEl) textEl.textContent = selectedReplyToSnippet;
+}
+
+function clearConversationReplyTo() {
+  selectedReplyToMessageId = null;
+  selectedReplyToSnippet = '';
+  const bar = document.getElementById('convReplyToBar');
+  const textEl = document.getElementById('convReplyToText');
+  if (bar) bar.classList.add('hidden');
+  if (textEl) textEl.textContent = '';
+}
+
+function wrapReplySelection(kind) {
+  const input = document.getElementById('convReplyInput');
+  if (!input) return;
+  const start = input.selectionStart ?? 0;
+  const end = input.selectionEnd ?? 0;
+  const selected = input.value.slice(start, end) || 'text';
+  const map = {
+    b: ['<b>', '</b>'],
+    i: ['<i>', '</i>'],
+    u: ['<u>', '</u>'],
+    s: ['<s>', '</s>'],
+    spoiler: ['<tg-spoiler>', '</tg-spoiler>'],
+    blockquote: ['<blockquote>', '</blockquote>'],
+    code: ['<code>', '</code>']
+  };
+  const pair = map[kind];
+  if (!pair) return;
+  const [open, close] = pair;
+  const insert = open + selected + close;
+  input.value = input.value.slice(0, start) + insert + input.value.slice(end);
+  const pos = start + insert.length;
+  input.focus();
+  input.setSelectionRange(pos, pos);
+}
+
+function insertLinkTemplate() {
+  const input = document.getElementById('convReplyInput');
+  if (!input) return;
+  const text = '<a href="https://example.com">Link text</a>';
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + text + input.value.slice(end);
+  input.focus();
+}
+
+function insertCustomEmojiTemplate() {
+  const input = document.getElementById('convReplyInput');
+  if (!input) return;
+  const text = '<tg-emoji emoji-id="5368324170671202286">✨</tg-emoji>';
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + text + input.value.slice(end);
   input.focus();
 }
 
@@ -2747,7 +2863,9 @@ function formatConversationMessage(message, metaObj) {
   if (message.message_type === 'bot_outgoing_audio') return message.text_content || '🎵 Audio yuborildi';
   if (message.message_type === 'bot_outgoing_video_note') return message.text_content || '🔵 Video note yuborildi';
   if (message.message_type === 'bot_outgoing_document') return message.text_content || '📎 Hujjat yuborildi';
+  if (message.message_type === 'bot_outgoing_sticker') return message.text_content || '🎭 Sticker yuborildi';
   if (message.message_type === 'bot_outgoing_text') return message.text_content || '';
+  if (message.message_type === 'admin_outgoing_sticker') return '🎭 Siz sticker yubordingiz';
   if (message.message_type === 'contact') {
     return `Kontakt yuborildi: ${message.text_content || ''}`.trim();
   }
@@ -2761,6 +2879,7 @@ function getConversationPreview(message) {
   if (!message) return '';
   if (message.message_type === 'callback') return 'Tugma: ' + humanizeCallbackData(message.text_content || '');
   if (message.message_type === 'admin_outgoing') return 'Siz: ' + (message.text_content || '');
+  if (message.message_type === 'admin_outgoing_sticker') return 'Siz: sticker yubordingiz';
   if (message.message_type && message.message_type.startsWith('bot_outgoing_')) return formatConversationMessage(message, {});
   if (message.text_content) return message.text_content;
   return '(' + (message.message_type || 'event') + ')';
@@ -2792,9 +2911,17 @@ function decodeURIComponentSafe(value) {
   try { return decodeURIComponent(value); } catch { return value; }
 }
 
+function escapeJsString(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, ' ');
+}
+
 function buildMediaPreviewHtml(message, metaObj) {
   const type = String(message?.message_type || '');
-  const fileRef = metaObj?.file_ref || metaObj?.file_id;
+  const fileRef = metaObj?.file_ref || metaObj?.file_id || metaObj?.sticker_file_id;
   if (!fileRef) return '';
 
   const src = '/api/telegram-file/' + encodeURIComponent(fileRef);
@@ -2826,6 +2953,12 @@ function buildMediaPreviewHtml(message, metaObj) {
   if (type.includes('document')) {
     return `<div class="mt-2 text-xs">
       <a href="${src}" target="_blank" class="text-indigo-600 underline">📎 Hujjatni ochish</a>
+    </div>`;
+  }
+
+  if (type.includes('sticker')) {
+    return `<div class="mt-2">
+      <img src="${src}" alt="sticker" class="max-h-[180px] max-w-[180px] rounded-lg border border-gray-200" loading="lazy" />
     </div>`;
   }
 
