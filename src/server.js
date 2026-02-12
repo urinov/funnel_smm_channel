@@ -264,17 +264,36 @@ app.post('/api/conversations/:telegramId/reply', authMiddleware, async (req, res
     const { logUserMessage } = await import('./database.js');
 
     if (text) {
-      const sentMsg = await bot.telegram.sendMessage(telegramId, text, {
-        parse_mode: parseMode === 'MARKDOWNV2' ? 'MarkdownV2' : 'HTML',
-        link_preview_options: { is_disabled: disableLinkPreview },
-        ...replyParams
-      });
+      const hasHtmlTags = /<[^>]+>/.test(text);
+      const preferredParseMode =
+        parseMode === 'MARKDOWNV2'
+          ? (hasHtmlTags ? 'HTML' : 'MarkdownV2')
+          : 'HTML';
+
+      let sentMsg;
+      try {
+        sentMsg = await bot.telegram.sendMessage(telegramId, text, {
+          parse_mode: preferredParseMode,
+          link_preview_options: { is_disabled: disableLinkPreview },
+          ...replyParams
+        });
+      } catch (sendErr) {
+        const errText = String(sendErr?.message || '');
+        const parseError = errText.includes("can't parse entities");
+        if (!parseError) throw sendErr;
+
+        // Fallback: yuborishni parse_mode siz qilib, xabar yo'qolib ketmasin
+        sentMsg = await bot.telegram.sendMessage(telegramId, text, {
+          link_preview_options: { is_disabled: disableLinkPreview },
+          ...replyParams
+        });
+      }
       sent.push(sentMsg?.message_id);
 
       await logUserMessage(telegramId, 'admin_outgoing', text, {
         source: 'dashboard',
         admin_user: req.adminUser || 'admin',
-        parse_mode: parseMode,
+        parse_mode: preferredParseMode,
         message_id: sentMsg?.message_id || null,
         reply_to_message_id: replyToMessageId || null
       });
@@ -1350,6 +1369,10 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.price_3m !== undefined && data.price_1m === undefined) await db.updateBotMessage('price_3m', String(data.price_3m));
     if (data.price_6m !== undefined && data.price_1m === undefined) await db.updateBotMessage('price_6m', String(data.price_6m));
     if (data.price_12m !== undefined && data.price_1m === undefined) await db.updateBotMessage('price_12m', String(data.price_12m));
+
+    // Progrev settings (delay before feedback question)
+    if (data.welcome !== undefined) await db.updateBotMessage('welcome', data.welcome);
+    if (data.ask_name !== undefined) await db.updateBotMessage('ask_name', data.ask_name);
 
     // Progrev settings (delay before feedback question)
     if (data.pitch_delay_minutes !== undefined) await db.updateBotMessage('pitch_delay_minutes', String(data.pitch_delay_minutes));

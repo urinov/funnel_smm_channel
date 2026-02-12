@@ -1109,6 +1109,44 @@
         <textarea id="congratsText" class="input h-24 resize-none" placeholder="🎉 Tabriklayman! Barcha bepul darslarni tugatdingiz!"></textarea>
       </div>
 
+      <!-- Start Messages -->
+      <div class="card p-5 mb-4 border-l-4 border-indigo-500">
+        <h3 class="font-semibold text-gray-800 mb-2">🆕 Start xabarlari</h3>
+        <p class="text-xs text-gray-500 mb-3">/start bosilganda yuboriladigan birinchi xabarlar</p>
+
+        <div class="flex flex-wrap gap-1 mb-3">
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','b')"><b>B</b></button>
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','i')"><i>I</i></button>
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','u')"><u>U</u></button>
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','s')"><s>S</s></button>
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','spoiler')">🙈 Spoiler</button>
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','blockquote')">❝ Quote</button>
+          <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startWelcomeText','code')">{ }</button>
+          <button class="btn btn-secondary btn-sm" onclick="insertLinkTemplateTo('startWelcomeText')">🔗 Link</button>
+          <button class="btn btn-secondary btn-sm" onclick="insertCustomEmojiTemplateTo('startWelcomeText')">✨ Emoji</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Welcome xabari (`welcome`)</label>
+            <textarea id="startWelcomeText" class="input h-36 resize-none" placeholder="🎉 Assalomu alaykum!..."></textarea>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Ism so'rash xabari (`ask_name`)</label>
+            <textarea id="startAskNameText" class="input h-36 resize-none" placeholder="👤 Iltimos, ism-familiyangizni kiriting:"></textarea>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startAskNameText','b')"><b>B</b></button>
+              <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startAskNameText','i')"><i>I</i></button>
+              <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startAskNameText','spoiler')">🙈</button>
+              <button class="btn btn-secondary btn-sm" onclick="wrapTextareaSelection('startAskNameText','blockquote')">❝</button>
+              <button class="btn btn-secondary btn-sm" onclick="insertLinkTemplateTo('startAskNameText')">🔗</button>
+              <button class="btn btn-secondary btn-sm" onclick="insertCustomEmojiTemplateTo('startAskNameText')">✨</button>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Bu maydonlar HTML parse mode bilan yuboriladi. `&lt;tg-spoiler&gt;`, `&lt;blockquote&gt;`, `&lt;tg-emoji ...&gt;` ishlaydi.</p>
+      </div>
+
       <!-- Step 2: Feedback Question -->
       <div class="card p-5 mb-4 border-l-4 border-blue-500">
         <h3 class="font-semibold text-gray-800 mb-2">2️⃣ Feedback savoli</h3>
@@ -2741,7 +2779,12 @@ async function sendConversationReply() {
   const btn = document.getElementById('convReplyBtn');
   const text = (input?.value || '').trim();
   const stickerFileId = (stickerInput?.value || '').trim();
-  const parseMode = (parseModeSelect?.value || 'HTML');
+  let parseMode = (parseModeSelect?.value || 'HTML');
+  const hasHtmlTags = /<[^>]+>/.test(text);
+  if (parseMode === 'MarkdownV2' && hasHtmlTags) {
+    parseMode = 'HTML';
+    if (parseModeSelect) parseModeSelect.value = 'HTML';
+  }
   const disableLinkPreview = !!disablePreviewEl?.checked;
   if (!text && !stickerFileId) return;
 
@@ -2800,7 +2843,11 @@ function clearConversationReplyTo() {
 }
 
 function wrapReplySelection(kind) {
-  const input = document.getElementById('convReplyInput');
+  wrapTextareaSelection('convReplyInput', kind);
+}
+
+function wrapTextareaSelection(textareaId, kind) {
+  const input = document.getElementById(textareaId);
   if (!input) return;
   const start = input.selectionStart ?? 0;
   const end = input.selectionEnd ?? 0;
@@ -2825,7 +2872,15 @@ function wrapReplySelection(kind) {
 }
 
 function insertLinkTemplate() {
-  const input = document.getElementById('convReplyInput');
+  insertLinkTemplateTo('convReplyInput');
+}
+
+function insertCustomEmojiTemplate() {
+  insertCustomEmojiTemplateTo('convReplyInput');
+}
+
+function insertLinkTemplateTo(textareaId) {
+  const input = document.getElementById(textareaId);
   if (!input) return;
   const text = '<a href="https://example.com">Link text</a>';
   const start = input.selectionStart ?? input.value.length;
@@ -2834,8 +2889,8 @@ function insertLinkTemplate() {
   input.focus();
 }
 
-function insertCustomEmojiTemplate() {
-  const input = document.getElementById('convReplyInput');
+function insertCustomEmojiTemplateTo(textareaId) {
+  const input = document.getElementById(textareaId);
   if (!input) return;
   const text = '<tg-emoji emoji-id="5368324170671202286">✨</tg-emoji>';
   const start = input.selectionStart ?? input.value.length;
@@ -3195,6 +3250,10 @@ function togglePitchMediaFields() {
 async function loadProgrevSettings() {
   try {
     const data = await (await fetch('/api/settings', { headers: { Authorization: auth } })).json();
+
+    // Start messages
+    document.getElementById('startWelcomeText').value = data.welcome || '';
+    document.getElementById('startAskNameText').value = data.ask_name || '';
 
     // Step 1: Congrats
     document.getElementById('congratsText').value = data.congrats_text || '';
@@ -4687,6 +4746,9 @@ async function saveProgrevSettings() {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        // Start messages
+        welcome: document.getElementById('startWelcomeText').value,
+        ask_name: document.getElementById('startAskNameText').value,
         // Step 1: Congrats
         congrats_text: document.getElementById('congratsText').value,
         // Step 2: Feedback question
