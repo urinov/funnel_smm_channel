@@ -1994,6 +1994,7 @@ let allCustDev = [];
 let allFeedback = [];
 let allConversations = [];
 let customEmojiLibrary = [];
+let unicodeEmojiLibrary = [];
 let emojiLottieInstances = [];
 const emojiTgsDataCache = new Map();
 let selectedConversationUserId = null;
@@ -2691,14 +2692,21 @@ async function loadCustomEmojiLibrary(forceRefresh = false) {
   const progrevCountEl = document.getElementById('emojiBankProgrevCount');
   try {
     const refreshFlag = forceRefresh ? '1' : '0';
-    const response = await fetch('/api/custom-emojis?limit=400&refresh=' + refreshFlag, { headers: { Authorization: auth } });
-    if (!response.ok) throw new Error('API error: ' + response.status);
-    const data = await response.json();
-    customEmojiLibrary = Array.isArray(data) ? data : [];
+    const [customResp, unicodeResp] = await Promise.all([
+      fetch('/api/custom-emojis?limit=400&refresh=' + refreshFlag, { headers: { Authorization: auth } }),
+      fetch('/api/unicode-emojis?limit=4000&top=180', { headers: { Authorization: auth } })
+    ]);
+    if (!customResp.ok) throw new Error('Custom emoji API error: ' + customResp.status);
+    if (!unicodeResp.ok) throw new Error('Unicode emoji API error: ' + unicodeResp.status);
+    const customData = await customResp.json();
+    const unicodeData = await unicodeResp.json();
+    customEmojiLibrary = Array.isArray(customData) ? customData : [];
+    unicodeEmojiLibrary = Array.isArray(unicodeData) ? unicodeData : [];
     renderCustomEmojiLibrary();
   } catch (e) {
     console.error('loadCustomEmojiLibrary error:', e);
     customEmojiLibrary = [];
+    unicodeEmojiLibrary = [];
     if (countEl) countEl.textContent = '0 ta emoji';
     if (listEl) listEl.innerHTML = '<div class="text-xs text-red-500">Emoji bank yuklanmadi</div>';
     if (progrevCountEl) progrevCountEl.textContent = '0 ta emoji';
@@ -2761,12 +2769,27 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
   const countEl = document.getElementById(countId);
   if (!listEl) return;
 
-  const items = (Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [])
-    .map((item) => ({
-      ...item,
-      _emojiId: String(item?.custom_emoji_id || '').replace(/\D/g, '')
-    }))
-    .filter((item) => item._emojiId);
+  const customItems = (Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [])
+    .map((item) => {
+      const id = String(item?.custom_emoji_id || '').replace(/\D/g, '');
+      if (!id) return null;
+      return { ...item, _kind: 'custom', _emojiId: id };
+    })
+    .filter(Boolean);
+
+  const unicodeItems = (Array.isArray(unicodeEmojiLibrary) ? unicodeEmojiLibrary : [])
+    .map((item) => {
+      const emoji = String(item?.emoji || '').trim();
+      if (!emoji) return null;
+      return { ...item, _kind: 'unicode', _unicodeEmoji: emoji };
+    })
+    .filter(Boolean);
+
+  const items = [...customItems, ...unicodeItems].sort((a, b) => {
+    const ad = new Date(a.last_seen_at || 0).getTime();
+    const bd = new Date(b.last_seen_at || 0).getTime();
+    return bd - ad;
+  });
 
   if (countEl) countEl.textContent = `${items.length} ta emoji`;
 
@@ -2776,13 +2799,15 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
   }
 
   listEl.innerHTML = items.map((item) => {
-    const emojiId = item._emojiId;
-    const emojiChar = String(item.emoji_char || '✨').slice(0, 2);
+    const isUnicode = item._kind === 'unicode';
+    const emojiId = item._emojiId || '';
+    const unicodeChar = String(item._unicodeEmoji || '🙂');
+    const emojiChar = isUnicode ? unicodeChar : String(item.emoji_char || '✨').slice(0, 2);
     // Video custom emoji: file_id bilan video preview.
     // Animated TGS custom emoji: lottie bilan jonli render, bo'lmasa text fallback.
-    const mediaFileId = item.is_video ? (item.file_id || '') : (item.thumb_file_id || '');
+    const mediaFileId = isUnicode ? '' : (item.is_video ? (item.file_id || '') : (item.thumb_file_id || ''));
     const previewSrc = mediaFileId ? `/api/telegram-file/${encodeURIComponent(mediaFileId)}` : '';
-    const badge = item.is_video ? 'video anim' : (item.is_animated ? 'anim (live)' : 'static');
+    const badge = isUnicode ? 'unicode' : (item.is_video ? 'video anim' : (item.is_animated ? 'anim (live)' : 'static'));
     const seen = Number(item.seen_count || 0);
 
     const fallbackHtml = `<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">${escapeHtml(emojiChar)}</div>`;
@@ -2794,34 +2819,48 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
         previewHtml = `<img src="${previewSrc}" alt="${escapeHtml(emojiChar)}" class="w-8 h-8 rounded-lg object-cover bg-gray-100" loading="lazy" onerror="this.outerHTML='${escapeJsString(fallbackHtml)}'" />`;
       }
     }
-    if (item.is_animated && !item.is_video && item.file_id) {
+    if (!isUnicode && item.is_animated && !item.is_video && item.file_id) {
       previewHtml = `<div data-emoji-tgs-file-id="${escapeHtml(item.file_id)}" class="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">${escapeHtml(emojiChar)}</div>`;
     }
 
     if (compact) {
+      const removeBtn = !isUnicode
+        ? `<button type="button" class="absolute top-1 right-1 w-6 h-6 rounded-md bg-white/90 border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
+             onclick="removeCustomEmojiFromLibrary('${emojiId}', event)" title="Emoji o'chirish">🗑</button>`
+        : '';
       return `
-        <button class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2"
-          onclick="insertCustomEmojiFromLibrary('${emojiId}')"
-          title="${escapeHtml(emojiId)}">
-          <div class="flex items-center gap-2 justify-center">
-            ${previewHtml}
-            <span class="text-sm">${escapeHtml(emojiChar)}</span>
-          </div>
-        </button>
+        <div class="relative">
+          <button type="button" class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2 w-full"
+            onclick="${isUnicode ? `insertUnicodeEmojiFromLibrary('${escapeJsString(unicodeChar)}')` : `insertCustomEmojiFromLibrary('${emojiId}')`}"
+            title="${escapeHtml(isUnicode ? emojiChar : emojiId)}">
+            <div class="flex items-center gap-2 justify-center">
+              ${previewHtml}
+              <span class="text-sm">${escapeHtml(emojiChar)}</span>
+            </div>
+          </button>
+          ${removeBtn}
+        </div>
       `;
     }
 
+    const removeBtn = !isUnicode
+      ? `<button type="button" class="ml-2 px-2 py-1 rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
+           onclick="removeCustomEmojiFromLibrary('${emojiId}', event)">🗑</button>`
+      : '';
     return `
-      <button class="w-full text-left rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2"
-        onclick="insertCustomEmojiFromLibrary('${emojiId}')">
-        <div class="flex items-center gap-2">
-          ${previewHtml}
-          <div class="min-w-0 flex-1">
-            <p class="text-xs font-medium text-gray-700 truncate">${escapeHtml(emojiChar)} • ${escapeHtml(emojiId)}</p>
-            <p class="text-[11px] text-gray-500">${escapeHtml(badge)} • ishlatilgan: ${seen}</p>
+      <div class="w-full rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2">
+        <button type="button" class="w-full text-left"
+          onclick="${isUnicode ? `insertUnicodeEmojiFromLibrary('${escapeJsString(unicodeChar)}')` : `insertCustomEmojiFromLibrary('${emojiId}')`}">
+          <div class="flex items-center gap-2">
+            ${previewHtml}
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-medium text-gray-700 truncate">${escapeHtml(emojiChar)} • ${escapeHtml(isUnicode ? 'unicode' : emojiId)}</p>
+              <p class="text-[11px] text-gray-500">${escapeHtml(badge)} • ishlatilgan: ${seen}</p>
+            </div>
           </div>
-        </div>
-      </button>
+        </button>
+        <div class="mt-2 flex justify-end">${removeBtn}</div>
+      </div>
     `;
   }).join('');
 
@@ -3171,6 +3210,42 @@ function insertCustomEmojiFromLibrary(customEmojiId) {
   if (!safeId) return;
   const tag = `<tg-emoji emoji-id="${safeId}">✨</tg-emoji>`;
   insertTextIntoBestEditor(tag);
+}
+
+function insertUnicodeEmojiFromLibrary(emojiChar) {
+  const safeEmoji = String(emojiChar || '').trim();
+  if (!safeEmoji) return;
+  insertTextIntoBestEditor(safeEmoji);
+}
+
+async function removeCustomEmojiFromLibrary(customEmojiId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const safeId = String(customEmojiId || '').replace(/\D/g, '');
+  if (!safeId) return;
+
+  const confirmed = confirm(`Emoji o'chirilsinmi?\nID: ${safeId}`);
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch('/api/custom-emojis/' + encodeURIComponent(safeId), {
+      method: 'DELETE',
+      headers: { Authorization: auth }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('API error: ' + res.status));
+
+    customEmojiLibrary = (Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [])
+      .filter((item) => String(item?.custom_emoji_id || '').replace(/\D/g, '') !== safeId);
+    renderCustomEmojiLibrary();
+    showToast('Emoji o\'chirildi');
+  } catch (e) {
+    console.error('removeCustomEmojiFromLibrary error:', e);
+    showToast('O\'chirishda xatolik: ' + e.message, 'error');
+  }
 }
 
 function insertTextIntoBestEditor(text) {

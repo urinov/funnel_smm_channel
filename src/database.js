@@ -1505,6 +1505,18 @@ export async function getCustomEmojis(limit = 300) {
   return rows;
 }
 
+export async function deleteCustomEmoji(customEmojiId) {
+  const normalizedId = String(customEmojiId || '').replace(/\D/g, '');
+  if (!normalizedId) return false;
+
+  const { rowCount } = await pool.query(`
+    DELETE FROM custom_emoji_library
+    WHERE custom_emoji_id = $1
+  `, [normalizedId]);
+
+  return rowCount > 0;
+}
+
 export async function getRecentUserMessages(limit = 200) {
   const safeLimit = Math.min(Math.max(parseInt(limit) || 200, 1), 1000);
   const { rows } = await pool.query(`

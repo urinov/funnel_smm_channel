@@ -93,6 +93,14 @@ async function hydrateCustomEmojiMeta(customEmojiRows = []) {
   }
 }
 
+function extractUnicodeEmojis(text) {
+  const value = String(text || '');
+  if (!value) return [];
+  const pattern = /(\p{Regional_Indicator}{2}|\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?)*)/gu;
+  const matches = value.match(pattern);
+  return Array.isArray(matches) ? matches.filter(Boolean) : [];
+}
+
 app.get('/health', (req, res) => res.send('ok'));
 app.get('/', (req, res) => res.send('Telegram Bot is running'));
 
@@ -268,6 +276,67 @@ app.get('/api/custom-emojis', authMiddleware, async (req, res) => {
     res.json(rows);
   } catch (e) {
     console.error('custom emoji list error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/custom-emojis/:customEmojiId', authMiddleware, async (req, res) => {
+  try {
+    const customEmojiId = String(req.params.customEmojiId || '').replace(/\D/g, '');
+    if (!customEmojiId) {
+      return res.status(400).json({ error: 'customEmojiId noto‘g‘ri' });
+    }
+
+    const { deleteCustomEmoji } = await import('./database.js');
+    const deleted = await deleteCustomEmoji(customEmojiId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Emoji topilmadi' });
+    }
+
+    res.json({ ok: true, custom_emoji_id: customEmojiId });
+  } catch (e) {
+    console.error('custom emoji delete error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/unicode-emojis', authMiddleware, async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 3000, 100), 10000);
+    const top = Math.min(Math.max(parseInt(req.query.top) || 120, 20), 400);
+    const { getRecentUserMessages } = await import('./database.js');
+    const rows = await getRecentUserMessages(limit);
+
+    const usage = new Map();
+    for (const row of rows) {
+      const txt = String(row?.text_content || '');
+      if (!txt) continue;
+      const emojis = extractUnicodeEmojis(txt);
+      if (!emojis.length) continue;
+
+      for (const emoji of emojis) {
+        const prev = usage.get(emoji) || { emoji, seen_count: 0, last_seen_at: row.created_at };
+        prev.seen_count += 1;
+        if (!prev.last_seen_at || new Date(row.created_at) > new Date(prev.last_seen_at)) {
+          prev.last_seen_at = row.created_at;
+        }
+        usage.set(emoji, prev);
+      }
+    }
+
+    const result = Array.from(usage.values())
+      .sort((a, b) => {
+        const ad = new Date(a.last_seen_at).getTime();
+        const bd = new Date(b.last_seen_at).getTime();
+        if (bd !== ad) return bd - ad;
+        return b.seen_count - a.seen_count;
+      })
+      .slice(0, top);
+
+    res.json(result);
+  } catch (e) {
+    console.error('unicode emoji list error:', e);
     res.status(500).json({ error: e.message });
   }
 });
