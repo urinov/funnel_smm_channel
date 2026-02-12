@@ -33,8 +33,8 @@ export async function setupAdminWebAppMenu() {
   for (const adminId of ADMIN_IDS) {
     try {
       await bot.telegram.setChatMenuButton({
-        chat_id: adminId,
-        menu_button: {
+        chatId: adminId,
+        menuButton: {
           type: 'web_app',
           text: 'Admin panel',
           web_app: { url: webAppUrl }
@@ -407,6 +407,20 @@ bot.use(async (ctx, next) => {
 bot.command('admin', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return ctx.reply('Admin huquqi yoq');
   const webAppUrl = BASE_URL ? `${BASE_URL.replace(/\/+$/, '')}/admin.html` : null;
+  if (webAppUrl) {
+    try {
+      await bot.telegram.setChatMenuButton({
+        chatId: ctx.from.id,
+        menuButton: {
+          type: 'web_app',
+          text: 'Admin panel',
+          web_app: { url: webAppUrl }
+        }
+      });
+    } catch (e) {
+      console.error('setChatMenuButton (/admin) error:', e.message);
+    }
+  }
   const webAppButton = webAppUrl
     ? Markup.inlineKeyboard([
         [Markup.button.webApp('📊 Admin panelni ochish', webAppUrl)]
