@@ -117,6 +117,53 @@ async function sendAdmins(text) {
   }
 }
 
+function escapeHtml(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+async function buildUserSnapshot(telegramId) {
+  const [user, userFunnel] = await Promise.all([
+    db.getUser(telegramId),
+    db.getUserActiveFunnel(telegramId)
+  ]);
+
+  return {
+    current_lesson: userFunnel?.current_lesson ?? user?.current_lesson ?? 0,
+    funnel_step: user?.funnel_step ?? 0,
+    custdev_step: userFunnel?.custdev_step ?? user?.custdev_step ?? 0,
+    active_funnel_id: userFunnel?.funnel_id ?? null
+  };
+}
+
+async function logAndNotifyUserActivity(ctx, activityType, textContent = null, meta = null) {
+  const telegramId = ctx.from?.id;
+  if (!telegramId) return;
+
+  const snapshot = await buildUserSnapshot(telegramId);
+  const mergedMeta = { ...(meta || {}), ...snapshot };
+
+  await db.logUserMessage(telegramId, activityType, textContent, mergedMeta);
+
+  const userName = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ').trim() || 'Nomalum';
+  const username = ctx.from.username ? '@' + ctx.from.username : 'username yoq';
+  const preview = textContent ? String(textContent).slice(0, 500) : `(event: ${activityType})`;
+
+  await sendAdmins(
+    `💬 <b>User faolligi</b>\n` +
+    `🆔 <code>${telegramId}</code>\n` +
+    `👤 ${escapeHtml(userName)}\n` +
+    `🔗 ${escapeHtml(username)}\n` +
+    `🏷 ${escapeHtml(activityType)}\n` +
+    `📚 dars=${snapshot.current_lesson} | funnel_step=${snapshot.funnel_step}\n` +
+    `📝 ${escapeHtml(preview)}`
+  );
+}
+
 function isUserMilestone(totalUsers) {
   return totalUsers === 100 || (totalUsers >= 500 && totalUsers % 500 === 0);
 }
@@ -141,22 +188,18 @@ async function maybeNotifyUserMilestone(tgUser) {
 
 bot.use(async (ctx, next) => {
   try {
-    if (CHAT_MONITOR_ENABLED && ctx.message && ctx.from && !isAdmin(ctx.from.id)) {
-      const payload = extractIncomingMessage(ctx.message);
-      if (payload) {
-        await db.logUserMessage(ctx.from.id, payload.type, payload.text, payload.meta);
+    if (CHAT_MONITOR_ENABLED && ctx.from && !isAdmin(ctx.from.id)) {
+      if (ctx.message) {
+        const payload = extractIncomingMessage(ctx.message);
+        if (payload) {
+          await logAndNotifyUserActivity(ctx, payload.type, payload.text, payload.meta);
+        }
+      }
 
-        const userName = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ').trim() || 'Nomalum';
-        const username = ctx.from.username ? '@' + ctx.from.username : 'username yoq';
-        const preview = payload.text ? payload.text.slice(0, 600) : `(media: ${payload.type})`;
-
-        await sendAdmins(
-          `💬 <b>Yangi user xabari</b>\n` +
-          `🆔 <code>${ctx.from.id}</code>\n` +
-          `👤 ${userName}\n` +
-          `🔗 ${username}\n` +
-          `📝 ${preview}`
-        );
+      if (ctx.callbackQuery?.data) {
+        await logAndNotifyUserActivity(ctx, 'callback', ctx.callbackQuery.data, {
+          callback_message_id: ctx.callbackQuery.message?.message_id || null
+        });
       }
     }
   } catch (e) {
