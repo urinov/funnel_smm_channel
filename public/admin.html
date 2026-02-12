@@ -2824,10 +2824,10 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
     }
 
     if (compact) {
-      const removeBtn = `<button type="button" class="absolute top-1 right-1 w-6 h-6 rounded-md bg-white/90 border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
+      const removeBtn = `<button type="button" class="px-2 py-1 rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
              onclick="removeEmojiFromLibrary('${isUnicode ? 'unicode' : 'custom'}', '${escapeJsString(isUnicode ? unicodeChar : emojiId)}', event)" title="Emoji o'chirish">🗑</button>`;
       return `
-        <div class="relative">
+        <div class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2">
           <button type="button" class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2 w-full"
             onclick="${isUnicode ? `insertUnicodeEmojiFromLibrary('${escapeJsString(unicodeChar)}')` : `insertCustomEmojiFromLibrary('${emojiId}')`}"
             title="${escapeHtml(isUnicode ? emojiChar : emojiId)}">
@@ -2836,7 +2836,7 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
               <span class="text-sm">${escapeHtml(emojiChar)}</span>
             </div>
           </button>
-          ${removeBtn}
+          <div class="mt-2 flex justify-end">${removeBtn}</div>
         </div>
       `;
     }
