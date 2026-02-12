@@ -54,6 +54,45 @@ const authMiddleware = (req, res, next) => {
 
 const upload = multer({ dest: '/tmp/uploads/' });
 
+async function hydrateCustomEmojiMeta(customEmojiRows = []) {
+  const unresolvedIds = customEmojiRows
+    .filter((row) => row?.custom_emoji_id && !row?.file_id)
+    .map((row) => row.custom_emoji_id);
+
+  if (!unresolvedIds.length) return;
+
+  const chunks = [];
+  const chunkSize = 200;
+  for (let i = 0; i < unresolvedIds.length; i += chunkSize) {
+    chunks.push(unresolvedIds.slice(i, i + chunkSize));
+  }
+
+  const { upsertCustomEmoji } = await import('./database.js');
+
+  for (const ids of chunks) {
+    try {
+      const stickers = await bot.telegram.callApi('getCustomEmojiStickers', {
+        custom_emoji_ids: ids
+      });
+      const list = Array.isArray(stickers) ? stickers : [];
+
+      for (const sticker of list) {
+        if (!sticker?.custom_emoji_id) continue;
+        await upsertCustomEmoji(String(sticker.custom_emoji_id), {
+          emoji_char: sticker.emoji || null,
+          file_id: sticker.file_id || null,
+          thumb_file_id: sticker.thumbnail?.file_id || null,
+          is_animated: sticker.is_animated === true,
+          is_video: sticker.is_video === true,
+          set_name: sticker.set_name || null
+        });
+      }
+    } catch (e) {
+      console.error('hydrate custom emoji error:', e.message);
+    }
+  }
+}
+
 app.get('/health', (req, res) => res.send('ok'));
 app.get('/', (req, res) => res.send('Telegram Bot is running'));
 
@@ -214,6 +253,25 @@ app.get('/api/conversations/:telegramId', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/custom-emojis', authMiddleware, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 300;
+    const refresh = String(req.query.refresh || '1') !== '0';
+    const { getCustomEmojis } = await import('./database.js');
+    let rows = await getCustomEmojis(limit);
+
+    if (refresh) {
+      await hydrateCustomEmojiMeta(rows);
+      rows = await getCustomEmojis(limit);
+    }
+
+    res.json(rows);
+  } catch (e) {
+    console.error('custom emoji list error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/telegram-file/:fileId', authMiddleware, async (req, res) => {
   try {
     const fileId = decodeURIComponent(req.params.fileId || '').trim();
@@ -261,9 +319,20 @@ app.post('/api/conversations/:telegramId/reply', authMiddleware, async (req, res
     const sent = [];
     const replyParams = replyToMessageId ? { reply_parameters: { message_id: replyToMessageId } } : {};
 
-    const { logUserMessage } = await import('./database.js');
+    const { logUserMessage, upsertCustomEmoji } = await import('./database.js');
 
     if (text) {
+      const customEmojiMatches = [...text.matchAll(/<tg-emoji\s+emoji-id="([^"]+)">([^<]*)<\/tg-emoji>/g)];
+      for (const match of customEmojiMatches) {
+        const customEmojiId = String(match[1] || '').trim();
+        const emojiChar = String(match[2] || '').trim();
+        if (!customEmojiId) continue;
+        await upsertCustomEmoji(customEmojiId, {
+          emoji_char: emojiChar || null,
+          last_used_by: telegramId
+        });
+      }
+
       const hasHtmlTags = /<[^>]+>/.test(text);
       const preferredParseMode =
         parseMode === 'MARKDOWNV2'

@@ -860,6 +860,17 @@
                 <button onclick="insertQuickReply('Rahmat, tekshirib sizga tez orada javob beraman.')" class="btn btn-secondary btn-sm text-left">Standart javob</button>
               </div>
             </div>
+            <div class="mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <p class="text-xs text-gray-400">Custom emoji bank</p>
+                <button onclick="loadCustomEmojiLibrary(true)" class="btn btn-secondary btn-sm">🔄</button>
+              </div>
+              <div id="emojiBankCount" class="text-xs text-gray-500 mb-2">0 ta emoji</div>
+              <div id="emojiBankList" class="max-h-[260px] overflow-y-auto space-y-1">
+                <div class="text-xs text-gray-400">Yuklanmoqda...</div>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Emoji ustiga bossangiz, aktiv matn maydoniga qo'shiladi.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1970,6 +1981,7 @@ let allLessons = [];
 let allCustDev = [];
 let allFeedback = [];
 let allConversations = [];
+let customEmojiLibrary = [];
 let selectedConversationUserId = null;
 let selectedReplyToMessageId = null;
 let selectedReplyToSnippet = '';
@@ -2443,7 +2455,10 @@ function showTab(tab) {
     initProgrevFormatEditors();
   }
   if (tab === 'custdev') loadFeedback();
-  if (tab === 'conversations') loadConversations();
+  if (tab === 'conversations') {
+    loadConversations();
+    loadCustomEmojiLibrary();
+  }
   if (tab === 'renewal') loadRenewalSettings();
   if (tab === 'settings') loadSettingsForm();
 }
@@ -2478,7 +2493,7 @@ async function loadSettingsForm() {
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadCustomEmojiLibrary(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary()]);
   renderCharts();
   renderTodayStats();
 }
@@ -2652,6 +2667,69 @@ async function loadConversations() {
     if (usersContainer) usersContainer.innerHTML = '<div class="p-4 text-center text-red-500">Xatolik: ' + e.message + '</div>';
     if (messagesContainer) messagesContainer.innerHTML = '<div class="p-4 text-center text-red-500">Xatolik: ' + e.message + '</div>';
   }
+}
+
+async function loadCustomEmojiLibrary(forceRefresh = false) {
+  const listEl = document.getElementById('emojiBankList');
+  const countEl = document.getElementById('emojiBankCount');
+  try {
+    const refreshFlag = forceRefresh ? '1' : '0';
+    const response = await fetch('/api/custom-emojis?limit=400&refresh=' + refreshFlag, { headers: { Authorization: auth } });
+    if (!response.ok) throw new Error('API error: ' + response.status);
+    const data = await response.json();
+    customEmojiLibrary = Array.isArray(data) ? data : [];
+    renderCustomEmojiLibrary();
+  } catch (e) {
+    console.error('loadCustomEmojiLibrary error:', e);
+    customEmojiLibrary = [];
+    if (countEl) countEl.textContent = '0 ta emoji';
+    if (listEl) listEl.innerHTML = '<div class="text-xs text-red-500">Emoji bank yuklanmadi</div>';
+  }
+}
+
+function renderCustomEmojiLibrary() {
+  const listEl = document.getElementById('emojiBankList');
+  const countEl = document.getElementById('emojiBankCount');
+  if (!listEl) return;
+
+  const items = Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [];
+  if (countEl) countEl.textContent = `${items.length} ta emoji`;
+
+  if (!items.length) {
+    listEl.innerHTML = '<div class="text-xs text-gray-400">Hozircha custom emoji topilmadi</div>';
+    return;
+  }
+
+  listEl.innerHTML = items.map((item) => {
+    const emojiId = String(item.custom_emoji_id || '');
+    const emojiChar = item.emoji_char || '✨';
+    const mediaFileId = item.thumb_file_id || item.file_id || '';
+    const previewSrc = mediaFileId ? `/api/telegram-file/${encodeURIComponent(mediaFileId)}` : '';
+    const badge = item.is_video ? 'video' : (item.is_animated ? 'anim' : 'static');
+    const seen = Number(item.seen_count || 0);
+
+    let previewHtml = `<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">${escapeHtml(emojiChar)}</div>`;
+    if (previewSrc) {
+      if (item.is_video) {
+        previewHtml = `<video src="${previewSrc}" autoplay muted loop playsinline class="w-8 h-8 rounded-lg object-cover bg-gray-100"></video>`;
+      } else {
+        previewHtml = `<img src="${previewSrc}" alt="${escapeHtml(emojiChar)}" class="w-8 h-8 rounded-lg object-cover bg-gray-100" loading="lazy" />`;
+      }
+    }
+
+    return `
+      <button class="w-full text-left rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2"
+        onclick="insertCustomEmojiFromLibrary('${escapeJsString(emojiId)}','${escapeJsString(emojiChar)}')">
+        <div class="flex items-center gap-2">
+          ${previewHtml}
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-medium text-gray-700 truncate">${escapeHtml(emojiChar)} • ${escapeHtml(emojiId)}</p>
+            <p class="text-[11px] text-gray-500">${escapeHtml(badge)} • ishlatilgan: ${seen}</p>
+          </div>
+        </div>
+      </button>
+    `;
+  }).join('');
 }
 
 function renderConversationUsers() {
@@ -2991,6 +3069,49 @@ function insertCustomEmojiTemplateTo(textareaId) {
   const end = input.selectionEnd ?? input.value.length;
   input.value = input.value.slice(0, start) + text + input.value.slice(end);
   input.focus();
+}
+
+function insertCustomEmojiFromLibrary(customEmojiId, emojiChar) {
+  const safeId = String(customEmojiId || '').trim();
+  if (!safeId) return;
+  const safeChar = String(emojiChar || '✨');
+  const tag = `<tg-emoji emoji-id="${safeId}">${safeChar}</tg-emoji>`;
+  insertTextIntoBestEditor(tag);
+}
+
+function insertTextIntoBestEditor(text) {
+  const active = document.activeElement;
+  const isTextInput = active && (
+    active.tagName === 'TEXTAREA' ||
+    (active.tagName === 'INPUT' && (active.type === 'text' || active.type === 'search'))
+  );
+
+  if (isTextInput && typeof active.value === 'string') {
+    const start = active.selectionStart ?? active.value.length;
+    const end = active.selectionEnd ?? active.value.length;
+    active.value = active.value.slice(0, start) + text + active.value.slice(end);
+    active.focus();
+    return;
+  }
+
+  if (activeProgrevEditorId) {
+    const target = document.getElementById(activeProgrevEditorId);
+    if (target && typeof target.value === 'string') {
+      const start = target.selectionStart ?? target.value.length;
+      const end = target.selectionEnd ?? target.value.length;
+      target.value = target.value.slice(0, start) + text + target.value.slice(end);
+      target.focus();
+      return;
+    }
+  }
+
+  const convInput = document.getElementById('convReplyInput');
+  if (convInput) {
+    const start = convInput.selectionStart ?? convInput.value.length;
+    const end = convInput.selectionEnd ?? convInput.value.length;
+    convInput.value = convInput.value.slice(0, start) + text + convInput.value.slice(end);
+    convInput.focus();
+  }
 }
 
 function normalizeMessageMeta(meta) {

@@ -202,6 +202,41 @@ function extractIncomingMessage(message) {
   return { type: 'other', text: null, meta: null };
 }
 
+function extractCustomEmojiEntities(message) {
+  if (!message) return [];
+  const entities = [
+    ...(Array.isArray(message.entities) ? message.entities : []),
+    ...(Array.isArray(message.caption_entities) ? message.caption_entities : [])
+  ];
+
+  return entities
+    .filter((e) => e?.type === 'custom_emoji' && e?.custom_emoji_id)
+    .map((e) => ({
+      custom_emoji_id: String(e.custom_emoji_id),
+      emoji_char: typeof e?.emoji === 'string' ? e.emoji : null
+    }));
+}
+
+async function persistCustomEmojisFromMessage(ctx) {
+  try {
+    const message = ctx?.message;
+    const telegramId = ctx?.from?.id;
+    if (!message || !telegramId) return;
+
+    const emojis = extractCustomEmojiEntities(message);
+    if (!emojis.length) return;
+
+    for (const item of emojis) {
+      await db.upsertCustomEmoji(item.custom_emoji_id, {
+        emoji_char: item.emoji_char,
+        last_used_by: telegramId
+      });
+    }
+  } catch (e) {
+    console.error('persistCustomEmojisFromMessage error:', e.message);
+  }
+}
+
 async function sendAdmins(text) {
   for (const adminId of ADMIN_IDS) {
     try {
@@ -287,6 +322,10 @@ async function maybeNotifyUserMilestone(tgUser) {
 
 bot.use(async (ctx, next) => {
   try {
+    if (ctx.message) {
+      await persistCustomEmojisFromMessage(ctx);
+    }
+
     if (CHAT_MONITOR_ENABLED && ctx.from && !isAdmin(ctx.from.id)) {
       if (ctx.message) {
         const payload = extractIncomingMessage(ctx.message);

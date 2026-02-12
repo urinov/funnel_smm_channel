@@ -341,6 +341,23 @@ export async function initDatabase() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS custom_emoji_library (
+        custom_emoji_id VARCHAR(64) PRIMARY KEY,
+        emoji_char VARCHAR(16),
+        file_id VARCHAR(255),
+        thumb_file_id VARCHAR(255),
+        is_animated BOOLEAN DEFAULT FALSE,
+        is_video BOOLEAN DEFAULT FALSE,
+        set_name VARCHAR(255),
+        seen_count INTEGER DEFAULT 1,
+        last_used_by BIGINT,
+        first_seen_at TIMESTAMP DEFAULT NOW(),
+        last_seen_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // ============ MIGRATIONS - Add missing columns ============
     console.log('Running migrations...');
     
@@ -431,6 +448,30 @@ export async function initDatabase() {
         await client.query(sql);
       } catch (e) {}
     }
+
+    const customEmojiMigrations = [
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS emoji_char VARCHAR(16)`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS file_id VARCHAR(255)`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS thumb_file_id VARCHAR(255)`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS is_animated BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS is_video BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS set_name VARCHAR(255)`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS seen_count INTEGER DEFAULT 1`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS last_used_by BIGINT`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS first_seen_at TIMESTAMP DEFAULT NOW()`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT NOW()`,
+      `ALTER TABLE custom_emoji_library ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`
+    ];
+
+    for (const sql of customEmojiMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_custom_emoji_last_seen ON custom_emoji_library(last_seen_at DESC)`);
+    } catch (e) {}
 
     console.log('Migrations completed');
     
@@ -1410,6 +1451,58 @@ export async function logUserMessage(telegramId, messageType, textContent = null
     INSERT INTO user_messages (telegram_id, message_type, text_content, meta)
     VALUES ($1, $2, $3, $4)
   `, [telegramId, messageType, textContent, meta ? JSON.stringify(meta) : null]);
+}
+
+export async function upsertCustomEmoji(customEmojiId, data = {}) {
+  const emojiChar = data.emoji_char || null;
+  const fileId = data.file_id || null;
+  const thumbFileId = data.thumb_file_id || null;
+  const isAnimated = data.is_animated === true;
+  const isVideo = data.is_video === true;
+  const setName = data.set_name || null;
+  const lastUsedBy = data.last_used_by || null;
+
+  const { rows } = await pool.query(`
+    INSERT INTO custom_emoji_library (
+      custom_emoji_id,
+      emoji_char,
+      file_id,
+      thumb_file_id,
+      is_animated,
+      is_video,
+      set_name,
+      seen_count,
+      last_used_by,
+      first_seen_at,
+      last_seen_at,
+      updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, 1, $8, NOW(), NOW(), NOW())
+    ON CONFLICT (custom_emoji_id) DO UPDATE SET
+      emoji_char = COALESCE(EXCLUDED.emoji_char, custom_emoji_library.emoji_char),
+      file_id = COALESCE(EXCLUDED.file_id, custom_emoji_library.file_id),
+      thumb_file_id = COALESCE(EXCLUDED.thumb_file_id, custom_emoji_library.thumb_file_id),
+      is_animated = COALESCE(custom_emoji_library.is_animated, FALSE) OR COALESCE(EXCLUDED.is_animated, FALSE),
+      is_video = COALESCE(custom_emoji_library.is_video, FALSE) OR COALESCE(EXCLUDED.is_video, FALSE),
+      set_name = COALESCE(EXCLUDED.set_name, custom_emoji_library.set_name),
+      seen_count = COALESCE(custom_emoji_library.seen_count, 0) + 1,
+      last_used_by = COALESCE(EXCLUDED.last_used_by, custom_emoji_library.last_used_by),
+      last_seen_at = NOW(),
+      updated_at = NOW()
+    RETURNING *
+  `, [customEmojiId, emojiChar, fileId, thumbFileId, isAnimated, isVideo, setName, lastUsedBy]);
+
+  return rows[0] || null;
+}
+
+export async function getCustomEmojis(limit = 300) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 300, 1), 1000);
+  const { rows } = await pool.query(`
+    SELECT *
+    FROM custom_emoji_library
+    ORDER BY last_seen_at DESC
+    LIMIT $1
+  `, [safeLimit]);
+  return rows;
 }
 
 export async function getRecentUserMessages(limit = 200) {
