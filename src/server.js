@@ -322,7 +322,7 @@ app.post('/api/conversations/:telegramId/reply', authMiddleware, async (req, res
     const { logUserMessage, upsertCustomEmoji } = await import('./database.js');
 
     if (text) {
-      const customEmojiMatches = [...text.matchAll(/<tg-emoji\s+emoji-id="([^"]+)">([^<]*)<\/tg-emoji>/g)];
+      const customEmojiMatches = [...text.matchAll(/<tg-emoji\s+emoji-id="([^"]+)">([\s\S]*?)<\/tg-emoji>/g)];
       for (const match of customEmojiMatches) {
         const customEmojiId = String(match[1] || '').trim();
         const emojiChar = String(match[2] || '').trim();

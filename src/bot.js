@@ -204,17 +204,37 @@ function extractIncomingMessage(message) {
 
 function extractCustomEmojiEntities(message) {
   if (!message) return [];
+  const results = [];
+
   const entities = [
     ...(Array.isArray(message.entities) ? message.entities : []),
     ...(Array.isArray(message.caption_entities) ? message.caption_entities : [])
   ];
 
-  return entities
-    .filter((e) => e?.type === 'custom_emoji' && e?.custom_emoji_id)
-    .map((e) => ({
-      custom_emoji_id: String(e.custom_emoji_id),
-      emoji_char: typeof e?.emoji === 'string' ? e.emoji : null
-    }));
+  for (const e of entities) {
+    if (e?.type === 'custom_emoji' && e?.custom_emoji_id) {
+      results.push({
+        custom_emoji_id: String(e.custom_emoji_id),
+        emoji_char: null
+      });
+    }
+  }
+
+  // Telegram ba'zida custom emoji/sticker alohida sticker message bo'lib keladi
+  if (message.sticker?.custom_emoji_id) {
+    results.push({
+      custom_emoji_id: String(message.sticker.custom_emoji_id),
+      emoji_char: message.sticker.emoji || null
+    });
+  }
+
+  // Dublikatlarni olib tashlash
+  const seen = new Set();
+  return results.filter((item) => {
+    if (seen.has(item.custom_emoji_id)) return false;
+    seen.add(item.custom_emoji_id);
+    return true;
+  });
 }
 
 async function persistCustomEmojisFromMessage(ctx) {
