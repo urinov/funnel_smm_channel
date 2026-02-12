@@ -1132,6 +1132,16 @@
           <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('emoji')" title="Custom emoji">✨</button>
         </div>
         <p class="text-xs text-gray-400 mt-2">Qaysi maydonga yozayotgan bo'lsangiz, tugma o'sha maydonga ishlaydi. `Expand Quote` Telegramda bosilganda ochiladi.</p>
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <p class="text-xs text-gray-500">Custom emoji bank (Progrev)</p>
+            <button onclick="loadCustomEmojiLibrary(true)" class="btn btn-secondary btn-sm">🔄</button>
+          </div>
+          <div id="emojiBankProgrevCount" class="text-xs text-gray-500 mb-2">0 ta emoji</div>
+          <div id="emojiBankProgrevList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+            <div class="text-xs text-gray-400">Yuklanmoqda...</div>
+          </div>
+        </div>
       </div>
 
       <!-- Step 1: Congrats -->
@@ -2453,6 +2463,7 @@ function showTab(tab) {
   if (tab === 'progrev') {
     loadProgrevSettings();
     initProgrevFormatEditors();
+    loadCustomEmojiLibrary();
   }
   if (tab === 'custdev') loadFeedback();
   if (tab === 'conversations') {
@@ -2672,6 +2683,8 @@ async function loadConversations() {
 async function loadCustomEmojiLibrary(forceRefresh = false) {
   const listEl = document.getElementById('emojiBankList');
   const countEl = document.getElementById('emojiBankCount');
+  const progrevListEl = document.getElementById('emojiBankProgrevList');
+  const progrevCountEl = document.getElementById('emojiBankProgrevCount');
   try {
     const refreshFlag = forceRefresh ? '1' : '0';
     const response = await fetch('/api/custom-emojis?limit=400&refresh=' + refreshFlag, { headers: { Authorization: auth } });
@@ -2684,15 +2697,28 @@ async function loadCustomEmojiLibrary(forceRefresh = false) {
     customEmojiLibrary = [];
     if (countEl) countEl.textContent = '0 ta emoji';
     if (listEl) listEl.innerHTML = '<div class="text-xs text-red-500">Emoji bank yuklanmadi</div>';
+    if (progrevCountEl) progrevCountEl.textContent = '0 ta emoji';
+    if (progrevListEl) progrevListEl.innerHTML = '<div class="text-xs text-red-500">Emoji bank yuklanmadi</div>';
   }
 }
 
 function renderCustomEmojiLibrary() {
-  const listEl = document.getElementById('emojiBankList');
-  const countEl = document.getElementById('emojiBankCount');
+  renderCustomEmojiBankInto('emojiBankList', 'emojiBankCount', false);
+  renderCustomEmojiBankInto('emojiBankProgrevList', 'emojiBankProgrevCount', true);
+}
+
+function renderCustomEmojiBankInto(listId, countId, compact = false) {
+  const listEl = document.getElementById(listId);
+  const countEl = document.getElementById(countId);
   if (!listEl) return;
 
-  const items = Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [];
+  const items = (Array.isArray(customEmojiLibrary) ? customEmojiLibrary : [])
+    .map((item) => ({
+      ...item,
+      _emojiId: String(item?.custom_emoji_id || '').replace(/\D/g, '')
+    }))
+    .filter((item) => item._emojiId);
+
   if (countEl) countEl.textContent = `${items.length} ta emoji`;
 
   if (!items.length) {
@@ -2701,11 +2727,11 @@ function renderCustomEmojiLibrary() {
   }
 
   listEl.innerHTML = items.map((item) => {
-    const emojiId = String(item.custom_emoji_id || '');
-    const emojiChar = item.emoji_char || '✨';
+    const emojiId = item._emojiId;
+    const emojiChar = String(item.emoji_char || '✨').slice(0, 2);
     const mediaFileId = item.thumb_file_id || item.file_id || '';
     const previewSrc = mediaFileId ? `/api/telegram-file/${encodeURIComponent(mediaFileId)}` : '';
-    const badge = item.is_video ? 'video' : (item.is_animated ? 'anim' : 'static');
+    const badge = item.is_video ? 'video anim' : (item.is_animated ? 'anim (static preview)' : 'static');
     const seen = Number(item.seen_count || 0);
 
     let previewHtml = `<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">${escapeHtml(emojiChar)}</div>`;
@@ -2717,9 +2743,22 @@ function renderCustomEmojiLibrary() {
       }
     }
 
+    if (compact) {
+      return `
+        <button class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2"
+          onclick="insertCustomEmojiFromLibrary('${emojiId}')"
+          title="${escapeHtml(emojiId)}">
+          <div class="flex items-center gap-2 justify-center">
+            ${previewHtml}
+            <span class="text-sm">${escapeHtml(emojiChar)}</span>
+          </div>
+        </button>
+      `;
+    }
+
     return `
       <button class="w-full text-left rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2"
-        onclick="insertCustomEmojiFromLibrary('${escapeJsString(emojiId)}','${escapeJsString(emojiChar)}')">
+        onclick="insertCustomEmojiFromLibrary('${emojiId}')">
         <div class="flex items-center gap-2">
           ${previewHtml}
           <div class="min-w-0 flex-1">
@@ -3071,11 +3110,10 @@ function insertCustomEmojiTemplateTo(textareaId) {
   input.focus();
 }
 
-function insertCustomEmojiFromLibrary(customEmojiId, emojiChar) {
-  const safeId = String(customEmojiId || '').trim();
+function insertCustomEmojiFromLibrary(customEmojiId) {
+  const safeId = String(customEmojiId || '').replace(/\D/g, '');
   if (!safeId) return;
-  const safeChar = String(emojiChar || '✨');
-  const tag = `<tg-emoji emoji-id="${safeId}">${safeChar}</tg-emoji>`;
+  const tag = `<tg-emoji emoji-id="${safeId}">✨</tg-emoji>`;
   insertTextIntoBestEditor(tag);
 }
 

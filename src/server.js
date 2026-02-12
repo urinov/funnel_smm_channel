@@ -324,7 +324,7 @@ app.post('/api/conversations/:telegramId/reply', authMiddleware, async (req, res
     if (text) {
       const customEmojiMatches = [...text.matchAll(/<tg-emoji\s+emoji-id="([^"]+)">([\s\S]*?)<\/tg-emoji>/g)];
       for (const match of customEmojiMatches) {
-        const customEmojiId = String(match[1] || '').trim();
+        const customEmojiId = String(match[1] || '').replace(/\D/g, '');
         const emojiChar = String(match[2] || '').trim();
         if (!customEmojiId) continue;
         await upsertCustomEmoji(customEmojiId, {

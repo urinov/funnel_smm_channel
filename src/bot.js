@@ -231,8 +231,11 @@ function extractCustomEmojiEntities(message) {
   // Dublikatlarni olib tashlash
   const seen = new Set();
   return results.filter((item) => {
-    if (seen.has(item.custom_emoji_id)) return false;
-    seen.add(item.custom_emoji_id);
+    const normalizedId = String(item.custom_emoji_id || '').replace(/\D/g, '');
+    if (!normalizedId) return false;
+    if (seen.has(normalizedId)) return false;
+    item.custom_emoji_id = normalizedId;
+    seen.add(normalizedId);
     return true;
   });
 }
