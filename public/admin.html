@@ -362,6 +362,116 @@
     .tg-bubble.action { background: #ecf1ff; border: 1px solid rgba(91,124,250,0.2); }
     .tg-meta { font-size: 11px; color: #6b7280; display: flex; justify-content: flex-end; gap: 8px; margin-top: 5px; }
     .tg-tag { display: inline-flex; align-items: center; font-size: 10px; border-radius: 999px; padding: 2px 7px; margin-bottom: 4px; background: rgba(255,255,255,0.72); color: #475569; border: 1px solid rgba(15,23,42,0.08); }
+
+    /* Progrev UI polish */
+    .progrev-flow-card {
+      border: 1px solid rgba(91,124,250,0.18);
+      background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,245,255,0.86) 100%);
+      box-shadow: 0 14px 30px rgba(15,23,42,0.08);
+    }
+    .progrev-flow-track { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .progrev-flow-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      border: 1px solid transparent;
+    }
+    .progrev-flow-arrow { color: #94a3b8; font-weight: 700; }
+    .flow-green { background: #d9fbe7; color: #166534; border-color: #b4eccd; }
+    .flow-blue { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+    .flow-purple { background: #f3e8ff; color: #6b21a8; border-color: #e9d5ff; }
+    .flow-orange { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+    .flow-red { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .progrev-editor-card {
+      border: 1px solid rgba(99,102,241,0.24);
+      border-radius: 20px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,247,255,0.88) 100%);
+      box-shadow: 0 16px 34px rgba(15,23,42,0.08);
+    }
+    .format-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+    .format-btn {
+      min-width: 42px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.28);
+      background: rgba(255,255,255,0.92);
+      color: #1f2937;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .18s ease;
+    }
+    .format-btn:hover {
+      border-color: rgba(99,102,241,0.45);
+      background: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(99,102,241,0.15);
+    }
+    .format-btn.wide { min-width: auto; padding: 0 12px; }
+
+    .emoji-bank-shell {
+      margin-top: 12px;
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.68);
+      padding: 10px;
+    }
+    .emoji-bank-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .emoji-bank-refresh {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.28);
+      background: #fff;
+      color: #475569;
+      transition: all .18s ease;
+    }
+    .emoji-bank-refresh:hover {
+      border-color: rgba(99,102,241,0.45);
+      color: #4338ca;
+      transform: translateY(-1px);
+    }
+    #emojiBankProgrevList { gap: 10px; }
+    #emojiBankProgrevList .emoji-chip {
+      border: 1px solid rgba(203,213,225,0.75);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.9);
+      padding: 8px;
+      transition: all .18s ease;
+    }
+    #emojiBankProgrevList .emoji-chip:hover {
+      border-color: rgba(99,102,241,0.36);
+      box-shadow: 0 10px 18px rgba(15,23,42,0.08);
+      transform: translateY(-1px);
+    }
+    #emojiBankProgrevList .emoji-main-btn {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(226,232,240,1);
+      background: #fff;
+      padding: 8px 6px;
+    }
+    #emojiBankProgrevList .emoji-trash-btn {
+      padding: 2px 8px;
+      border-radius: 8px;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      background: #fff;
+      font-size: 12px;
+    }
+    #emojiBankProgrevList .emoji-trash-btn:hover { background: #fef2f2; border-color: #fca5a5; }
   </style>
 </head>
 <body>
@@ -1099,45 +1209,45 @@
     <div id="tab-progrev" class="hidden">
 
       <!-- Flow Visual Guide -->
-      <div class="card p-4 mb-6 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <div class="card progrev-flow-card p-4 mb-6">
         <h3 class="font-semibold text-gray-800 mb-3">📊 Progrev ketma-ketligi</h3>
-        <div class="flex flex-wrap items-center gap-2 text-sm">
-          <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full">1. Tabrik</span>
-          <span class="text-gray-400">→</span>
-          <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">2. Feedback savoli</span>
-          <span class="text-gray-400">→</span>
-          <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full">3. Ha: Kurs haqida</span>
-          <span class="text-gray-400">→</span>
-          <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full">4. Sales Pitch</span>
-          <span class="text-gray-400">→</span>
-          <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full">5. Soft Attack</span>
+        <div class="progrev-flow-track">
+          <span class="progrev-flow-pill flow-green">1. Tabrik</span>
+          <span class="progrev-flow-arrow">→</span>
+          <span class="progrev-flow-pill flow-blue">2. Feedback savoli</span>
+          <span class="progrev-flow-arrow">→</span>
+          <span class="progrev-flow-pill flow-purple">3. Ha: Kurs haqida</span>
+          <span class="progrev-flow-arrow">→</span>
+          <span class="progrev-flow-pill flow-orange">4. Sales Pitch</span>
+          <span class="progrev-flow-arrow">→</span>
+          <span class="progrev-flow-pill flow-red">5. Soft Attack</span>
         </div>
         <p class="text-xs text-gray-500 mt-2">Yo'q javobida: Sabab so'rash → Follow-up → (ixtiyoriy) Chegirmali taklif</p>
       </div>
 
       <!-- Universal Progrev Formatter -->
-      <div class="card p-4 mb-4 border-l-4 border-indigo-400">
+      <div class="card progrev-editor-card p-4 mb-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <h3 class="font-semibold text-gray-800 text-sm">✍️ Progrev matn formatlash</h3>
           <p id="progrevActiveEditorLabel" class="text-xs text-gray-500">Maydon tanlanmagan</p>
         </div>
-        <div class="flex flex-wrap gap-1">
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('b')" title="Bold"><b>B</b></button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('i')" title="Italic"><i>I</i></button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('u')" title="Underline"><u>U</u></button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('s')" title="Strike"><s>S</s></button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('spoiler')" title="Spoiler">🙈</button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('blockquote')" title="Quote">❝ Quote</button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('blockquote_expand')" title="Expandable quote (bosganda ochiladi)">📖 Expand Quote</button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('code')" title="Code">{ }</button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('link')" title="Link">🔗</button>
-          <button class="btn btn-secondary btn-sm" onclick="applyProgrevFormat('emoji')" title="Custom emoji">✨</button>
+        <div class="format-toolbar">
+          <button class="format-btn" onclick="applyProgrevFormat('b')" title="Bold"><b>B</b></button>
+          <button class="format-btn" onclick="applyProgrevFormat('i')" title="Italic"><i>I</i></button>
+          <button class="format-btn" onclick="applyProgrevFormat('u')" title="Underline"><u>U</u></button>
+          <button class="format-btn" onclick="applyProgrevFormat('s')" title="Strike"><s>S</s></button>
+          <button class="format-btn" onclick="applyProgrevFormat('spoiler')" title="Spoiler">🙈</button>
+          <button class="format-btn wide" onclick="applyProgrevFormat('blockquote')" title="Quote">❝ Quote</button>
+          <button class="format-btn wide" onclick="applyProgrevFormat('blockquote_expand')" title="Expandable quote (bosganda ochiladi)">📖 Expand Quote</button>
+          <button class="format-btn" onclick="applyProgrevFormat('code')" title="Code">{ }</button>
+          <button class="format-btn" onclick="applyProgrevFormat('link')" title="Link">🔗</button>
+          <button class="format-btn" onclick="applyProgrevFormat('emoji')" title="Custom emoji">✨</button>
         </div>
         <p class="text-xs text-gray-400 mt-2">Qaysi maydonga yozayotgan bo'lsangiz, tugma o'sha maydonga ishlaydi. `Expand Quote` Telegramda bosilganda ochiladi.</p>
-        <div class="mt-3 pt-3 border-t border-gray-100">
-          <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="emoji-bank-shell">
+          <div class="emoji-bank-head">
             <p class="text-xs text-gray-500">Custom emoji bank (Progrev)</p>
-            <button onclick="loadCustomEmojiLibrary(true)" class="btn btn-secondary btn-sm">🔄</button>
+            <button onclick="loadCustomEmojiLibrary(true)" class="emoji-bank-refresh" title="Emoji bankni yangilash">🔄</button>
           </div>
           <div id="emojiBankProgrevCount" class="text-xs text-gray-500 mb-2">0 ta emoji</div>
           <div id="emojiBankProgrevList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -2824,16 +2934,16 @@ function renderCustomEmojiBankInto(listId, countId, compact = false) {
     }
 
     if (compact) {
-      const removeBtn = `<button type="button" class="px-2 py-1 rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs"
+      const removeBtn = `<button type="button" class="emoji-trash-btn"
              onclick="removeEmojiFromLibrary('${isUnicode ? 'unicode' : 'custom'}', '${escapeJsString(isUnicode ? unicodeChar : emojiId)}', event)" title="Emoji o'chirish">🗑</button>`;
       return `
-        <div class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2">
-          <button type="button" class="rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-2 py-2 w-full"
+        <div class="emoji-chip">
+          <button type="button" class="emoji-main-btn"
             onclick="${isUnicode ? `insertUnicodeEmojiFromLibrary('${escapeJsString(unicodeChar)}')` : `insertCustomEmojiFromLibrary('${emojiId}')`}"
             title="${escapeHtml(isUnicode ? emojiChar : emojiId)}">
             <div class="flex items-center gap-2 justify-center">
               ${previewHtml}
-              <span class="text-sm">${escapeHtml(emojiChar)}</span>
+              <span class="text-sm font-semibold text-gray-700">${escapeHtml(emojiChar)}</span>
             </div>
           </button>
           <div class="mt-2 flex justify-end">${removeBtn}</div>
