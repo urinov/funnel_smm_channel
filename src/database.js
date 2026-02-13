@@ -507,6 +507,67 @@ export async function initDatabase() {
       console.log('CustDev migration skipped or already done');
     }
 
+    // ============ UTM/SOURCE TRACKING MIGRATIONS ============
+    const sourceTrackingMigrations = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS source VARCHAR(100)`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100)`,
+      `ALTER TABLE user_funnels ADD COLUMN IF NOT EXISTS source VARCHAR(100)`
+    ];
+
+    for (const sql of sourceTrackingMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
+    // ============ LESSON DELIVERIES TABLE (Inactivity Reminders) ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lesson_deliveries (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        funnel_id INTEGER,
+        lesson_number INTEGER NOT NULL,
+        delivered_at TIMESTAMP DEFAULT NOW(),
+        watched_at TIMESTAMP,
+        reminder_1_sent BOOLEAN DEFAULT FALSE,
+        reminder_2_sent BOOLEAN DEFAULT FALSE
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_lesson_deliveries_unwatched ON lesson_deliveries(telegram_id, watched_at) WHERE watched_at IS NULL`);
+    } catch (e) {}
+
+    // ============ REFERRAL SYSTEM MIGRATIONS ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS referrals (
+        id SERIAL PRIMARY KEY,
+        referrer_telegram_id BIGINT NOT NULL,
+        referred_telegram_id BIGINT NOT NULL UNIQUE,
+        referral_code VARCHAR(20) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW(),
+        qualified_at TIMESTAMP
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_telegram_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code)`);
+    } catch (e) {}
+
+    const referralMigrations = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_count INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_discount_used BOOLEAN DEFAULT FALSE`
+    ];
+
+    for (const sql of referralMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
     // ============ END MIGRATIONS ============
 
     console.log('Tables created');
@@ -599,6 +660,32 @@ async function seedDefaultData(client) {
       await client.query('INSERT INTO bot_messages (key, text) VALUES ($1, $2)', [key, text]);
     }
   }
+
+  // Seed inactivity reminder messages
+  const inactivityReminderKeys = ['inactivity_reminder_1', 'inactivity_reminder_2'];
+  for (const key of inactivityReminderKeys) {
+    const { rows: existing } = await client.query('SELECT 1 FROM bot_messages WHERE key = $1', [key]);
+    if (existing.length === 0) {
+      let text = '';
+      if (key === 'inactivity_reminder_1') text = '👋 Hey! Darsni hali ko\'rmadingizmi? Davom eting, siz zo\'rsiz!';
+      if (key === 'inactivity_reminder_2') text = '📚 Dars sizni kutmoqda! Nimaga to\'xtab qoldingiz? Davom eting!';
+      await client.query('INSERT INTO bot_messages (key, text) VALUES ($1, $2)', [key, text]);
+    }
+  }
+
+  // Seed referral system settings
+  const referralSettings = [
+    { key: 'referral_enabled', value: 'true' },
+    { key: 'referral_required_count', value: '3' },
+    { key: 'referral_discount_percent', value: '50' },
+    { key: 'inactivity_reminder_enabled', value: 'true' }
+  ];
+  for (const setting of referralSettings) {
+    const { rows: existing } = await client.query('SELECT 1 FROM settings WHERE key = $1', [setting.key]);
+    if (existing.length === 0) {
+      await client.query('INSERT INTO settings (key, value) VALUES ($1, $2)', [setting.key, setting.value]);
+    }
+  }
 }
 
 export async function getUser(telegramId) {
@@ -606,15 +693,16 @@ export async function getUser(telegramId) {
   return rows[0] || null;
 }
 
-export async function createUser(telegramId, username, fullName) {
+export async function createUser(telegramId, username, fullName, source = null) {
   const { rows } = await pool.query(`
-    INSERT INTO users (telegram_id, username, full_name)
-    VALUES ($1, $2, $3)
+    INSERT INTO users (telegram_id, username, full_name, source)
+    VALUES ($1, $2, $3, $4)
     ON CONFLICT (telegram_id) DO UPDATE SET
       username = COALESCE(EXCLUDED.username, users.username),
+      source = COALESCE(users.source, EXCLUDED.source),
       last_activity = NOW()
     RETURNING *
-  `, [telegramId, username, fullName]);
+  `, [telegramId, username, fullName, source]);
   return rows[0];
 }
 
@@ -1825,15 +1913,16 @@ export async function getUserActiveFunnel(telegramId) {
 }
 
 // Start user in funnel
-export async function startUserInFunnel(telegramId, funnelId) {
+export async function startUserInFunnel(telegramId, funnelId, source = null) {
   const { rows } = await pool.query(`
-    INSERT INTO user_funnels (telegram_id, funnel_id, current_lesson, custdev_step, status)
-    VALUES ($1, $2, 0, 0, 'active')
+    INSERT INTO user_funnels (telegram_id, funnel_id, current_lesson, custdev_step, status, source)
+    VALUES ($1, $2, 0, 0, 'active', $3)
     ON CONFLICT (telegram_id, funnel_id) DO UPDATE SET
       status = 'active',
+      source = COALESCE(user_funnels.source, EXCLUDED.source),
       started_at = NOW()
     RETURNING *
-  `, [telegramId, funnelId]);
+  `, [telegramId, funnelId, source]);
   return rows[0];
 }
 
@@ -2224,4 +2313,238 @@ export async function getAllDashboardSettings() {
   }
 
   return result;
+}
+
+// ============ SOURCE/UTM TRACKING FUNCTIONS ============
+
+export async function getSourceStats() {
+  const { rows } = await pool.query(`
+    SELECT
+      COALESCE(source, 'direct') as source,
+      COUNT(*)::int as total_users,
+      COUNT(*) FILTER (WHERE is_paid = true)::int as paid_users,
+      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE)::int as today_users
+    FROM users
+    GROUP BY source
+    ORDER BY total_users DESC
+  `);
+  return rows;
+}
+
+export async function getUsersBySource(source, limit = 100, offset = 0) {
+  const { rows } = await pool.query(`
+    SELECT * FROM users
+    WHERE source = $1
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
+  `, [source, limit, offset]);
+  return rows;
+}
+
+// ============ LESSON DELIVERY TRACKING (Inactivity Reminders) ============
+
+export async function trackLessonDelivery(telegramId, funnelId, lessonNumber) {
+  const { rows } = await pool.query(`
+    INSERT INTO lesson_deliveries (telegram_id, funnel_id, lesson_number)
+    VALUES ($1, $2, $3)
+    RETURNING *
+  `, [telegramId, funnelId, lessonNumber]);
+  return rows[0];
+}
+
+export async function markLessonWatched(telegramId, funnelId, lessonNumber) {
+  await pool.query(`
+    UPDATE lesson_deliveries
+    SET watched_at = NOW()
+    WHERE telegram_id = $1
+      AND (funnel_id = $2 OR ($2 IS NULL AND funnel_id IS NULL))
+      AND lesson_number = $3
+      AND watched_at IS NULL
+  `, [telegramId, funnelId, lessonNumber]);
+}
+
+export async function getUnwatchedLessons(minutesAgo, reminderNumber) {
+  const reminderColumn = reminderNumber === 1 ? 'reminder_1_sent' : 'reminder_2_sent';
+
+  const { rows } = await pool.query(`
+    SELECT ld.*, u.full_name, u.username
+    FROM lesson_deliveries ld
+    JOIN users u ON ld.telegram_id = u.telegram_id
+    WHERE ld.watched_at IS NULL
+      AND ld.${reminderColumn} = FALSE
+      AND ld.delivered_at <= NOW() - INTERVAL '1 minute' * $1
+      AND u.is_blocked = FALSE
+    ORDER BY ld.delivered_at ASC
+    LIMIT 100
+  `, [minutesAgo]);
+  return rows;
+}
+
+export async function markLessonReminder1Sent(deliveryId) {
+  await pool.query(`
+    UPDATE lesson_deliveries SET reminder_1_sent = TRUE WHERE id = $1
+  `, [deliveryId]);
+}
+
+export async function markLessonReminder2Sent(deliveryId) {
+  await pool.query(`
+    UPDATE lesson_deliveries SET reminder_2_sent = TRUE WHERE id = $1
+  `, [deliveryId]);
+}
+
+export async function getInactivityReminderStats() {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(*)::int as total_deliveries,
+      COUNT(*) FILTER (WHERE watched_at IS NOT NULL)::int as watched,
+      COUNT(*) FILTER (WHERE reminder_1_sent = TRUE)::int as reminder_1_sent,
+      COUNT(*) FILTER (WHERE reminder_2_sent = TRUE)::int as reminder_2_sent,
+      COUNT(*) FILTER (WHERE reminder_1_sent = TRUE AND watched_at IS NOT NULL)::int as watched_after_reminder
+    FROM lesson_deliveries
+    WHERE delivered_at >= NOW() - INTERVAL '7 days'
+  `);
+  return rows[0];
+}
+
+// ============ REFERRAL SYSTEM FUNCTIONS ============
+
+export async function generateReferralCode(telegramId) {
+  // Check if user already has a code
+  const { rows: existing } = await pool.query(
+    'SELECT referral_code FROM users WHERE telegram_id = $1',
+    [telegramId]
+  );
+
+  if (existing[0]?.referral_code) {
+    return existing[0].referral_code;
+  }
+
+  // Generate new code
+  const last6 = String(telegramId).slice(-6);
+  const random4 = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const code = `REF${last6}${random4}`;
+
+  await pool.query(
+    'UPDATE users SET referral_code = $1 WHERE telegram_id = $2',
+    [code, telegramId]
+  );
+
+  return code;
+}
+
+export async function getUserByReferralCode(code) {
+  const { rows } = await pool.query(
+    'SELECT * FROM users WHERE referral_code = $1',
+    [code]
+  );
+  return rows[0] || null;
+}
+
+export async function createReferral(referrerTelegramId, referredTelegramId, referralCode) {
+  try {
+    const { rows } = await pool.query(`
+      INSERT INTO referrals (referrer_telegram_id, referred_telegram_id, referral_code)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (referred_telegram_id) DO NOTHING
+      RETURNING *
+    `, [referrerTelegramId, referredTelegramId, referralCode]);
+    return rows[0] || null;
+  } catch (e) {
+    console.log('Referral already exists or error:', e.message);
+    return null;
+  }
+}
+
+export async function qualifyReferral(referredTelegramId) {
+  // Mark the referral as qualified
+  const { rows } = await pool.query(`
+    UPDATE referrals
+    SET status = 'qualified', qualified_at = NOW()
+    WHERE referred_telegram_id = $1 AND status = 'pending'
+    RETURNING referrer_telegram_id
+  `, [referredTelegramId]);
+
+  if (rows[0]) {
+    // Increment the referrer's count
+    await pool.query(`
+      UPDATE users
+      SET referral_count = referral_count + 1
+      WHERE telegram_id = $1
+    `, [rows[0].referrer_telegram_id]);
+
+    return rows[0].referrer_telegram_id;
+  }
+  return null;
+}
+
+export async function getReferralStats(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(*)::int as total,
+      COUNT(*) FILTER (WHERE status = 'qualified')::int as qualified,
+      COUNT(*) FILTER (WHERE status = 'pending')::int as pending
+    FROM referrals
+    WHERE referrer_telegram_id = $1
+  `, [telegramId]);
+  return rows[0] || { total: 0, qualified: 0, pending: 0 };
+}
+
+export async function getReferrerOf(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT u.* FROM users u
+    JOIN referrals r ON r.referrer_telegram_id = u.telegram_id
+    WHERE r.referred_telegram_id = $1
+  `, [telegramId]);
+  return rows[0] || null;
+}
+
+export async function checkReferralDiscount(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT
+      u.referral_count,
+      u.referral_discount_used,
+      s.value as required_count
+    FROM users u
+    CROSS JOIN (SELECT value FROM settings WHERE key = 'referral_required_count') s
+    WHERE u.telegram_id = $1
+  `, [telegramId]);
+
+  if (!rows[0]) return false;
+
+  const requiredCount = parseInt(rows[0].required_count) || 3;
+  return rows[0].referral_count >= requiredCount && !rows[0].referral_discount_used;
+}
+
+export async function markReferralDiscountUsed(telegramId) {
+  await pool.query(`
+    UPDATE users SET referral_discount_used = TRUE WHERE telegram_id = $1
+  `, [telegramId]);
+}
+
+export async function getReferralLeaderboard(limit = 10) {
+  const { rows } = await pool.query(`
+    SELECT
+      u.telegram_id,
+      u.username,
+      u.full_name,
+      u.referral_count,
+      u.referral_discount_used
+    FROM users u
+    WHERE u.referral_count > 0
+    ORDER BY u.referral_count DESC
+    LIMIT $1
+  `, [limit]);
+  return rows;
+}
+
+export async function getGlobalReferralStats() {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(DISTINCT referrer_telegram_id)::int as total_referrers,
+      COUNT(*)::int as total_referrals,
+      COUNT(*) FILTER (WHERE status = 'qualified')::int as qualified_referrals,
+      (SELECT COUNT(*)::int FROM users WHERE referral_discount_used = TRUE) as discounts_used
+    FROM referrals
+  `);
+  return rows[0];
 }

@@ -747,6 +747,25 @@
         </div>
       </div>
 
+      <!-- Source & Referral Stats Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Traffic Sources -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">📍 Trafik manbalari</h3>
+          <div id="sourceStatsContainer">
+            <div class="text-center text-gray-400 py-4">Yuklanmoqda...</div>
+          </div>
+        </div>
+
+        <!-- Referral Stats -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">🔗 Referal tizimi</h3>
+          <div id="referralStatsContainer">
+            <div class="text-center text-gray-400 py-4">Yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Bottom Row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Users -->
@@ -1679,6 +1698,48 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               <span class="text-lg">💠</span>
               <span class="font-medium">Click</span>
             </label>
+          </div>
+        </div>
+
+        <!-- Inactivity Reminders -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">⏰ Dars eslatmalari</h3>
+          <p class="text-xs text-gray-500 mb-4">Darsni ko'rmagan userlarga avtomatik eslatma yuborish</p>
+          <div class="space-y-4">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+              <input type="checkbox" id="settingInactivityEnabled" class="w-5 h-5 accent-orange-600">
+              <span class="font-medium">Eslatmalarni yoqish</span>
+            </label>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">1-eslatma matni (1 soatdan keyin)</label>
+              <textarea id="settingInactivityReminder1" class="input min-h-[60px]" placeholder="Hey! Darsni hali ko'rmadingizmi?"></textarea>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">2-eslatma matni (3 soatdan keyin)</label>
+              <textarea id="settingInactivityReminder2" class="input min-h-[60px]" placeholder="Dars sizni kutmoqda!"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Referral System -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">🔗 Referal tizimi</h3>
+          <p class="text-xs text-gray-500 mb-4">Userlar do'stlarini taklif qilib chegirma olishlari mumkin</p>
+          <div class="space-y-4">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+              <input type="checkbox" id="settingReferralEnabled" class="w-5 h-5 accent-green-600">
+              <span class="font-medium">Referal tizimini yoqish</span>
+            </label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm text-gray-600 mb-1 block">Kerakli referallar soni</label>
+                <input type="number" id="settingReferralCount" class="input" value="3" min="1">
+              </div>
+              <div>
+                <label class="text-sm text-gray-600 mb-1 block">Chegirma foizi (%)</label>
+                <input type="number" id="settingReferralDiscount" class="input" value="50" min="1" max="100">
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2676,6 +2737,16 @@ async function loadSettingsForm() {
     if (data.price_6m) document.getElementById('settingPrice6m').value = Math.round(data.price_6m / 100);
     if (data.price_12m) document.getElementById('settingPrice12m').value = Math.round(data.price_12m / 100);
 
+    // Inactivity reminder settings
+    document.getElementById('settingInactivityEnabled').checked = data.inactivity_reminder_enabled === 'true';
+    document.getElementById('settingInactivityReminder1').value = data.inactivity_reminder_1 || '';
+    document.getElementById('settingInactivityReminder2').value = data.inactivity_reminder_2 || '';
+
+    // Referral system settings
+    document.getElementById('settingReferralEnabled').checked = data.referral_enabled === 'true';
+    document.getElementById('settingReferralCount').value = data.referral_required_count || 3;
+    document.getElementById('settingReferralDiscount').value = data.referral_discount_percent || 50;
+
   } catch(e) { console.error('loadSettingsForm error:', e); }
 }
 
@@ -2705,7 +2776,107 @@ async function loadStats() {
     document.getElementById('paidUsersCount').textContent = stats.paidUsers || 0;
     document.getElementById('completedUsersCount').textContent = stats.completedUsers || 0;
 
+    // Load source and referral stats
+    loadSourceStats();
+    loadReferralStats();
+
   } catch(e) { console.error('loadStats error:', e); }
+}
+
+async function loadSourceStats() {
+  try {
+    const data = await (await fetch('/api/analytics/sources', { headers: { Authorization: auth } })).json();
+    const container = document.getElementById('sourceStatsContainer');
+
+    if (!data.sources || data.sources.length === 0) {
+      container.innerHTML = '<div class="text-center text-gray-400 py-4">Hozircha ma\'lumot yo\'q</div>';
+      return;
+    }
+
+    const total = data.sources.reduce((sum, s) => sum + s.total_users, 0);
+
+    container.innerHTML = '<div class="space-y-3">' + data.sources.map(source => {
+      const percent = total > 0 ? Math.round((source.total_users / total) * 100) : 0;
+      const sourceName = source.source === 'direct' ? '🌐 Direct (havolasiz)' :
+                         source.source === 'instagram' ? '📸 Instagram' :
+                         source.source === 'telegram' ? '📱 Telegram' :
+                         source.source === 'facebook' ? '👤 Facebook' :
+                         source.source === 'youtube' ? '🎬 YouTube' :
+                         source.source === 'tiktok' ? '🎵 TikTok' :
+                         '🔗 ' + source.source;
+
+      return `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-sm truncate">${sourceName}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-gray-400">${source.paid_users} to'lagan</span>
+            <span class="text-sm font-medium">${source.total_users}</span>
+            <span class="text-xs text-gray-400">(${percent}%)</span>
+          </div>
+        </div>
+        <div class="w-full bg-gray-100 rounded-full h-2">
+          <div class="bg-indigo-500 h-2 rounded-full" style="width: ${percent}%"></div>
+        </div>
+      `;
+    }).join('') + '</div>';
+
+  } catch(e) {
+    console.error('loadSourceStats error:', e);
+    document.getElementById('sourceStatsContainer').innerHTML = '<div class="text-center text-red-400 py-4">Xatolik</div>';
+  }
+}
+
+async function loadReferralStats() {
+  try {
+    const data = await (await fetch('/api/analytics/referrals', { headers: { Authorization: auth } })).json();
+    const container = document.getElementById('referralStatsContainer');
+
+    const stats = data.stats || { total_referrers: 0, total_referrals: 0, qualified_referrals: 0, discounts_used: 0 };
+    const leaderboard = data.leaderboard || [];
+
+    let html = `
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-2xl font-bold text-indigo-600">${stats.total_referrers}</p>
+          <p class="text-xs text-gray-500">Taklif qilganlar</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-2xl font-bold text-green-600">${stats.qualified_referrals}</p>
+          <p class="text-xs text-gray-500">Faol referallar</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-2xl font-bold text-blue-600">${stats.total_referrals}</p>
+          <p class="text-xs text-gray-500">Jami referallar</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-2xl font-bold text-orange-600">${stats.discounts_used}</p>
+          <p class="text-xs text-gray-500">Chegirma olganlar</p>
+        </div>
+      </div>
+    `;
+
+    if (leaderboard.length > 0) {
+      html += `
+        <p class="text-sm font-medium text-gray-600 mb-2">🏆 Top referalchilar:</p>
+        <div class="space-y-2">
+          ${leaderboard.slice(0, 5).map((u, i) => `
+            <div class="flex items-center justify-between text-sm">
+              <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1) + '.'} ${u.full_name || u.username || u.telegram_id}</span>
+              <span class="font-medium text-indigo-600">${u.referral_count} ta</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+
+  } catch(e) {
+    console.error('loadReferralStats error:', e);
+    document.getElementById('referralStatsContainer').innerHTML = '<div class="text-center text-red-400 py-4">Xatolik</div>';
+  }
 }
 
 function renderTodayStats() {
@@ -5412,8 +5583,16 @@ async function saveSettings() {
         require_subscription_before_lesson: parseInt(document.getElementById('settingRequireSub').value) || 0,
         payme_enabled: document.getElementById('settingPayme').checked,
         click_enabled: document.getElementById('settingClick').checked,
-        price_1m: parseInt(document.getElementById('settingPrice1m').value) * 100 || null
+        price_1m: parseInt(document.getElementById('settingPrice1m').value) * 100 || null,
         // 3/6/12 month prices are auto-calculated on server with discounts
+        // Inactivity reminder settings
+        inactivity_reminder_enabled: document.getElementById('settingInactivityEnabled').checked ? 'true' : 'false',
+        inactivity_reminder_1: document.getElementById('settingInactivityReminder1').value,
+        inactivity_reminder_2: document.getElementById('settingInactivityReminder2').value,
+        // Referral system settings
+        referral_enabled: document.getElementById('settingReferralEnabled').checked ? 'true' : 'false',
+        referral_required_count: document.getElementById('settingReferralCount').value,
+        referral_discount_percent: document.getElementById('settingReferralDiscount').value
       })
     });
 

@@ -157,7 +157,7 @@ async function checkSubscriptionReminders() {
 async function checkExpiredSubscriptions() {
   try {
     const expired = await db.getExpiredSubscriptions();
-    
+
     for (const sub of expired) {
       try {
         await handleExpiredSubscription(sub);
@@ -168,6 +168,64 @@ async function checkExpiredSubscriptions() {
     }
   } catch (e) {
     console.error('checkExpiredSubscriptions error:', e);
+  }
+}
+
+// ==================== CHECK UNWATCHED LESSONS (Inactivity Reminders) ====================
+async function checkUnwatchedLessons() {
+  try {
+    // Check if feature is enabled
+    const enabled = await db.getSetting('inactivity_reminder_enabled');
+    if (enabled !== 'true') return;
+
+    // 1-eslatma: 60 daqiqadan keyin (1 soat)
+    const unwatched1h = await db.getUnwatchedLessons(60, 1);
+    for (const delivery of unwatched1h) {
+      try {
+        const reminderText = await db.getBotMessage('inactivity_reminder_1') ||
+          "👋 Hey! Darsni hali ko'rmadingizmi? Davom eting, siz zo'rsiz!";
+
+        await bot.telegram.sendMessage(delivery.telegram_id, reminderText, {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[
+              { text: "▶️ Davom etish", callback_data: `resume_lesson_${delivery.funnel_id}_${delivery.lesson_number}` }
+            ]]
+          }
+        });
+        await db.markLessonReminder1Sent(delivery.id);
+        console.log(`Sent 1h inactivity reminder to ${delivery.telegram_id} for lesson ${delivery.lesson_number}`);
+      } catch (e) {
+        console.error(`1h reminder error for ${delivery.telegram_id}:`, e.message);
+        // Still mark as sent to avoid spam
+        await db.markLessonReminder1Sent(delivery.id);
+      }
+    }
+
+    // 2-eslatma: 180 daqiqadan keyin (3 soat)
+    const unwatched3h = await db.getUnwatchedLessons(180, 2);
+    for (const delivery of unwatched3h) {
+      try {
+        const reminderText = await db.getBotMessage('inactivity_reminder_2') ||
+          "📚 Dars sizni kutmoqda! Nimaga to'xtab qoldingiz? Davom eting!";
+
+        await bot.telegram.sendMessage(delivery.telegram_id, reminderText, {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[
+              { text: "▶️ Davom etish", callback_data: `resume_lesson_${delivery.funnel_id}_${delivery.lesson_number}` }
+            ]]
+          }
+        });
+        await db.markLessonReminder2Sent(delivery.id);
+        console.log(`Sent 3h inactivity reminder to ${delivery.telegram_id} for lesson ${delivery.lesson_number}`);
+      } catch (e) {
+        console.error(`3h reminder error for ${delivery.telegram_id}:`, e.message);
+        await db.markLessonReminder2Sent(delivery.id);
+      }
+    }
+  } catch (e) {
+    console.error('checkUnwatchedLessons error:', e);
   }
 }
 
@@ -197,6 +255,11 @@ export function startScheduler() {
     checkExpiredSubscriptions();
   });
 
+  // Har 10 daqiqada dars ko'rmagan userlarga eslatma yuborish
+  cron.schedule('*/10 * * * *', () => {
+    checkUnwatchedLessons();
+  });
+
   // Har kuni 23:00 da adminlarga kunlik to'liq otchot
   cron.schedule('0 23 * * *', () => {
     console.log('Running daily admin report...');
@@ -207,7 +270,8 @@ export function startScheduler() {
   console.log('   - Scheduled messages: every minute');
   console.log('   - Subscription reminders: daily at 9:00');
   console.log('   - Expired subscriptions: every 5 minutes');
+  console.log('   - Inactivity reminders: every 10 minutes');
   console.log(`   - Daily admin report: 23:00 (${REPORT_TIMEZONE})`);
 }
 
-export { processScheduledMessages, checkSubscriptionReminders, checkExpiredSubscriptions, sendDailyAdminReport };
+export { processScheduledMessages, checkSubscriptionReminders, checkExpiredSubscriptions, checkUnwatchedLessons, sendDailyAdminReport };

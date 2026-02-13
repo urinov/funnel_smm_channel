@@ -473,42 +473,133 @@ bot.command('stats', async (ctx) => {
   );
 });
 
+// Referral system - /myref command
+bot.command('myref', async (ctx) => {
+  try {
+    const telegramId = ctx.from.id;
+    const user = await db.getUser(telegramId);
+    if (!user) {
+      return ctx.reply('Avval /start buyrug\'ini bosing.');
+    }
+
+    // Check if referral system is enabled
+    const enabled = await db.getSetting('referral_enabled');
+    if (enabled !== 'true') {
+      return ctx.reply('Referal tizimi hozircha faol emas.');
+    }
+
+    // Generate or get existing referral code
+    const code = await db.generateReferralCode(telegramId);
+    const stats = await db.getReferralStats(telegramId);
+    const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+    const discountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+
+    const botInfo = await bot.telegram.getMe();
+    const refLink = `https://t.me/${botInfo.username}?start=ref_${code}`;
+
+    let statusText = '';
+    if (stats.qualified >= requiredCount && !user.referral_discount_used) {
+      statusText = `\n\n🎊 <b>Tabriklaymiz!</b> Siz ${discountPercent}% chegirma oldingiz!\nTo'lov sahifasida chegirmani qo'llashingiz mumkin.`;
+    } else if (user.referral_discount_used) {
+      statusText = `\n\n✅ Siz chegirmadan foydalangansiz.`;
+    } else {
+      const remaining = requiredCount - stats.qualified;
+      statusText = `\n\n💡 Yana ${remaining} ta faol odam olib keling va ${discountPercent}% chegirma oling!`;
+    }
+
+    await ctx.reply(
+      `🔗 <b>Sizning referal havolangiz:</b>\n<code>${refLink}</code>\n\n` +
+      `📊 <b>Statistika:</b>\n` +
+      `├ Jami taklif qilganlar: ${stats.total}\n` +
+      `├ Faol (dars ko'rgan): ${stats.qualified}\n` +
+      `└ Kutilmoqda: ${stats.pending}\n` +
+      statusText,
+      { parse_mode: 'HTML' }
+    );
+  } catch (e) {
+    console.error('myref error:', e);
+    await ctx.reply('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+  }
+});
+
 bot.start(async (ctx) => {
   try {
     const tgUser = ctx.from;
     const telegramId = tgUser.id;
-    
-    // Parse deep link - t.me/bot?start=SLUG
-    const startPayload = ctx.startPayload; // e.g., "test", "smm-pro"
-    
+
+    // Parse deep link - t.me/bot?start=PAYLOAD
+    // Formats:
+    //   - "funnel-slug" - just funnel
+    //   - "funnel-slug_source" - funnel + source (instagram, telegram, etc.)
+    //   - "_source" - default funnel + source
+    //   - "ref_CODE" - referral link
+    const startPayload = ctx.startPayload;
+
+    let funnelSlug = null;
+    let source = null;
+    let referralCode = null;
+
+    if (startPayload && startPayload.length > 0) {
+      // Check if it's a referral link
+      if (startPayload.startsWith('ref_')) {
+        referralCode = startPayload.replace('ref_', '');
+        console.log('🔗 Referral code detected:', referralCode);
+      } else {
+        // Parse funnel_source format
+        const lastUnderscore = startPayload.lastIndexOf('_');
+        if (lastUnderscore > 0) {
+          // Has underscore - split into funnel and source
+          funnelSlug = startPayload.substring(0, lastUnderscore);
+          source = startPayload.substring(lastUnderscore + 1);
+          if (funnelSlug === '') funnelSlug = null; // "_source" format
+        } else if (startPayload.startsWith('_')) {
+          // Just source, no funnel
+          source = startPayload.substring(1);
+        } else {
+          // Just funnel slug, no source
+          funnelSlug = startPayload;
+        }
+        console.log('🎯 Deep link parsed - funnel:', funnelSlug, 'source:', source);
+      }
+    }
+
     // Find funnel by slug or get default
     let funnel = null;
-    if (startPayload && startPayload.length > 0) {
-      funnel = await db.getFunnelBySlug(startPayload);
-      console.log('🎯 Deep link funnel:', startPayload, funnel ? '✅ Found' : '❌ Not found');
+    if (funnelSlug) {
+      funnel = await db.getFunnelBySlug(funnelSlug);
+      console.log('🎯 Deep link funnel:', funnelSlug, funnel ? '✅ Found' : '❌ Not found');
     }
-    
+
     // If no funnel found by slug, get default
     if (!funnel) {
       funnel = await db.getDefaultFunnel();
       console.log('🎯 Using default funnel:', funnel?.name);
     }
-    
+
     // If still no funnel, fallback to old behavior
     if (!funnel) {
       console.log('⚠️ No funnels configured, using legacy mode');
-      return handleLegacyStart(ctx, telegramId, tgUser);
+      return handleLegacyStart(ctx, telegramId, tgUser, source, referralCode);
     }
-    
+
     let user = await db.getUser(telegramId);
 
     if (!user) {
-      user = await db.createUser(telegramId, tgUser.username, null);
+      user = await db.createUser(telegramId, tgUser.username, null, source);
       await maybeNotifyUserMilestone(tgUser);
-      
+
+      // Handle referral if code provided
+      if (referralCode) {
+        const referrer = await db.getUserByReferralCode(referralCode);
+        if (referrer && referrer.telegram_id !== telegramId) {
+          await db.createReferral(referrer.telegram_id, telegramId, referralCode);
+          console.log('👥 Referral created:', referrer.telegram_id, '->', telegramId);
+        }
+      }
+
       // Start user in this funnel
-      await db.startUserInFunnel(telegramId, funnel.id);
-      console.log('👤 New user started in funnel:', funnel.name);
+      await db.startUserInFunnel(telegramId, funnel.id, source);
+      console.log('👤 New user started in funnel:', funnel.name, 'source:', source);
       
       const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
       await ctx.reply(welcome, { parse_mode: 'HTML' });
@@ -523,8 +614,8 @@ bot.start(async (ctx) => {
     const userFunnel = await db.getUserActiveFunnel(telegramId);
     if (!userFunnel || userFunnel.funnel_id !== funnel.id) {
       // Start user in new funnel
-      await db.startUserInFunnel(telegramId, funnel.id);
-      console.log('🔄 User switched to funnel:', funnel.name);
+      await db.startUserInFunnel(telegramId, funnel.id, source);
+      console.log('🔄 User switched to funnel:', funnel.name, 'source:', source);
       
       await ctx.reply(`🎯 Yangi kursga xush kelibsiz: ${funnel.name}\n\nDarslar tez orada boshlanadi!`, { parse_mode: 'HTML' });
       await delay(1000);
@@ -558,12 +649,21 @@ bot.start(async (ctx) => {
 });
 
 // Legacy start handler (for backward compatibility)
-async function handleLegacyStart(ctx, telegramId, tgUser) {
+async function handleLegacyStart(ctx, telegramId, tgUser, source = null, referralCode = null) {
   let user = await db.getUser(telegramId);
 
   if (!user) {
-    user = await db.createUser(telegramId, tgUser.username, null);
+    user = await db.createUser(telegramId, tgUser.username, null, source);
     await maybeNotifyUserMilestone(tgUser);
+
+    // Handle referral if code provided
+    if (referralCode) {
+      const referrer = await db.getUserByReferralCode(referralCode);
+      if (referrer && referrer.telegram_id !== telegramId) {
+        await db.createReferral(referrer.telegram_id, telegramId, referralCode);
+        console.log('👥 Referral created (legacy):', referrer.telegram_id, '->', telegramId);
+      }
+    }
     const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
     await ctx.reply(welcome, { parse_mode: 'HTML' });
     await delay(500);
@@ -633,6 +733,13 @@ async function sendFunnelLesson(telegramId, funnelId, lessonNumber, opts = {}) {
     if (!opts.replay) {
       await db.updateUser(telegramId, { current_lesson: lessonNumber, funnel_step: lessonNumber });
       await db.updateUserFunnelProgress(telegramId, funnelId, lessonNumber, 0);
+
+      // Track lesson delivery for inactivity reminders
+      try {
+        await db.trackLessonDelivery(telegramId, funnelId, lessonNumber);
+      } catch (e) {
+        console.log('Track lesson delivery error:', e.message);
+      }
     }
     
     // Show watched button if enabled
@@ -896,10 +1003,45 @@ bot.action(/^watched_funnel_(\d+)_(\d+)$/, async (ctx) => {
     const funnelId = parseInt(ctx.match[1]);
     const lessonNumber = parseInt(ctx.match[2]);
     const telegramId = ctx.from.id;
-    
+
     await ctx.answerCbQuery('Ajoyib!');
     await ctx.editMessageReplyMarkup(undefined);
-    
+
+    // Mark lesson as watched for inactivity reminders
+    try {
+      await db.markLessonWatched(telegramId, funnelId, lessonNumber);
+    } catch (e) {
+      console.log('Mark lesson watched error:', e.message);
+    }
+
+    // Qualify referral if this is the first lesson (user becomes active)
+    if (lessonNumber === 1) {
+      try {
+        const referrerTgId = await db.qualifyReferral(telegramId);
+        if (referrerTgId) {
+          // Notify referrer
+          const newCount = (await db.getReferralStats(referrerTgId)).qualified;
+          const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+          const remaining = requiredCount - newCount;
+
+          if (remaining > 0) {
+            await bot.telegram.sendMessage(referrerTgId,
+              `🎉 Sizning taklif qilgan odam birinchi darsni ko'rdi!\n\n` +
+              `📊 ${newCount}/${requiredCount} - chegirmaga ${remaining} ta qoldi!`
+            ).catch(e => console.log('Notify referrer error:', e.message));
+          } else {
+            await bot.telegram.sendMessage(referrerTgId,
+              `🎊 Tabriklaymiz! Siz ${requiredCount} ta odamni taklif qildingiz!\n\n` +
+              `🎁 Endi 50% chegirma bilan sotib olishingiz mumkin!\n\n` +
+              `/myref - batafsil`
+            ).catch(e => console.log('Notify referrer error:', e.message));
+          }
+        }
+      } catch (e) {
+        console.log('Qualify referral error:', e.message);
+      }
+    }
+
     // Get funnel info
     const funnel = await db.getFunnelById(funnelId);
     if (!funnel) {
@@ -1801,15 +1943,166 @@ export async function sendSalesPitch(telegramId, extraDiscount = 0) {
     text = `🎁 <b>MAXSUS ${extraDiscount}% CHEGIRMA!</b>\n\n` + text;
   }
 
+  // Check for referral discount eligibility
+  let referralButton = null;
+  const referralEnabled = await db.getSetting('referral_enabled');
+  if (referralEnabled === 'true' && extraDiscount === 0) {
+    const canGetDiscount = await db.checkReferralDiscount(telegramId);
+    const referralDiscountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+    const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+    const stats = await db.getReferralStats(telegramId);
+
+    if (canGetDiscount) {
+      referralButton = [Markup.button.callback(
+        `🎁 ${referralDiscountPercent}% chegirma bilan sotib olish!`,
+        `referral_discount_apply`
+      )];
+      text = `🎊 <b>TABRIKLAYMIZ!</b>\nSiz ${requiredCount} ta odamni taklif qildingiz va ${referralDiscountPercent}% chegirma oldingiz!\n\n` + text;
+    } else {
+      const remaining = requiredCount - stats.qualified;
+      referralButton = [Markup.button.callback(
+        `🔗 ${referralDiscountPercent}% chegirma olish (${stats.qualified}/${requiredCount})`,
+        `show_referral_info`
+      )];
+    }
+  }
+
+  const allButtons = [
+    ...planButtons,
+    ...(referralButton ? [referralButton] : []),
+    [Markup.button.callback('❓ Savolim bor', 'question')]
+  ];
+
   await bot.telegram.sendMessage(telegramId, text + plansInfo, {
     parse_mode: 'HTML',
-    ...Markup.inlineKeyboard([
-      ...planButtons,
-      [Markup.button.callback('❓ Savolim bor', 'question')]
-    ])
+    ...Markup.inlineKeyboard(allButtons)
   });
   await db.updateUser(telegramId, { funnel_step: 10 });
 }
+
+// Show referral info when user doesn't have enough referrals
+bot.action('show_referral_info', async (ctx) => {
+  await ctx.answerCbQuery();
+  const telegramId = ctx.from.id;
+
+  const code = await db.generateReferralCode(telegramId);
+  const stats = await db.getReferralStats(telegramId);
+  const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+  const discountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+
+  const botInfo = await bot.telegram.getMe();
+  const refLink = `https://t.me/${botInfo.username}?start=ref_${code}`;
+
+  const remaining = requiredCount - stats.qualified;
+
+  await ctx.editMessageText(
+    `🔗 <b>Referal chegirma tizimi</b>\n\n` +
+    `${requiredCount} ta yangi odam olib keling va ${discountPercent}% chegirma oling!\n\n` +
+    `📊 <b>Hozirgi holat:</b>\n` +
+    `├ Jami taklif qilganlar: ${stats.total}\n` +
+    `├ Faol (dars ko'rgan): ${stats.qualified}\n` +
+    `└ Yana kerak: ${remaining}\n\n` +
+    `🔗 <b>Sizning havolangiz:</b>\n` +
+    `<code>${refLink}</code>\n\n` +
+    `👆 Havolani nusxalab do'stlaringizga yuboring!`,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback('⬅️ Orqaga', 'back_to_plans')]
+      ])
+    }
+  );
+});
+
+// Apply referral discount - show plan selection with discount
+bot.action('referral_discount_apply', async (ctx) => {
+  await ctx.answerCbQuery();
+  const telegramId = ctx.from.id;
+
+  const canGetDiscount = await db.checkReferralDiscount(telegramId);
+  if (!canGetDiscount) {
+    return ctx.reply('❌ Afsuski, siz chegirmaga ega emassiz.');
+  }
+
+  const discountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+  const plans = await db.getSubscriptionPlans(true);
+
+  const planButtons = plans.map(plan => {
+    const discountedPrice = Math.round(plan.price * (100 - discountPercent) / 100);
+    const totalDiscount = discountPercent + (plan.discount_percent || 0);
+    const label = `${plan.name} - ${formatMoney(discountedPrice)} (-${totalDiscount}%)`;
+    return [Markup.button.callback(label, `ref_discount_plan_${plan.id}`)];
+  });
+
+  await ctx.editMessageText(
+    `🎁 <b>${discountPercent}% REFERAL CHEGIRMASI!</b>\n\n` +
+    `Obuna turini tanlang:`,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        ...planButtons,
+        [Markup.button.callback('⬅️ Orqaga', 'back_to_plans')]
+      ])
+    }
+  );
+});
+
+// Handle referral discount plan selection
+bot.action(/^ref_discount_plan_(.+)$/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const planId = ctx.match[1];
+  const telegramId = ctx.from.id;
+
+  const canGetDiscount = await db.checkReferralDiscount(telegramId);
+  if (!canGetDiscount) {
+    return ctx.reply('❌ Afsuski, siz chegirmaga ega emassiz.');
+  }
+
+  const plan = await db.getSubscriptionPlan(planId);
+  if (!plan) {
+    return ctx.reply('❌ Bunday obuna turi topilmadi');
+  }
+
+  const discountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+  const discountedPrice = Math.round(plan.price * (100 - discountPercent) / 100);
+
+  const orderId = ('REF' + Date.now() + telegramId).slice(0, 20);
+  await db.createPayment(orderId, telegramId, discountedPrice, planId);
+
+  // Mark referral discount as used
+  await db.markReferralDiscountUsed(telegramId);
+
+  const paymeUrl = BASE_URL + '/payme/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
+  const clickUrl = BASE_URL + '/click/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
+
+  const paymeEnabledStr = await db.getSetting('payme_enabled') || await db.getBotMessage('payme_enabled');
+  const clickEnabledStr = await db.getSetting('click_enabled') || await db.getBotMessage('click_enabled');
+
+  const paymeEnabled = paymeEnabledStr !== 'false' && paymeEnabledStr !== false;
+  const clickEnabled = clickEnabledStr !== 'false' && clickEnabledStr !== false;
+
+  const paymentButtons = [];
+  if (paymeEnabled) paymentButtons.push(Markup.button.url('💳 Payme', paymeUrl));
+  if (clickEnabled) paymentButtons.push(Markup.button.url('💠 Click', clickUrl));
+
+  if (paymentButtons.length === 0) {
+    return ctx.reply('❌ Hozircha to\'lov tizimlari mavjud emas.');
+  }
+
+  const text = `🎁 <b>${plan.name} obuna (${discountPercent}% referal chegirma!)</b>\n\n` +
+    `💰 Asl narx: <s>${formatMoney(plan.price)}</s>\n` +
+    `🔥 Chegirmali narx: <b>${formatMoney(discountedPrice)}</b>\n` +
+    `📅 Muddat: <b>${plan.duration_days} kun</b>\n\n` +
+    `To'lov usulini tanlang:`;
+
+  await ctx.editMessageText(text, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard([
+      paymentButtons,
+      [Markup.button.callback('⬅️ Orqaga', 'back_to_plans')]
+    ])
+  });
+});
 
 // Handle discounted plan selection (special offer)
 bot.action(/^discount_plan_(\d+)_(.+)$/, async (ctx) => {
@@ -2098,6 +2391,23 @@ bot.action(/^resume_l:(\d+)$/, async (ctx) => {
   } catch (e) {
     console.error('Resume lesson error:', e);
     await ctx.reply('Xatolik. Birozdan keyin urinib ko\'ring.');
+  }
+});
+
+// Resume lesson from inactivity reminder
+bot.action(/^resume_lesson_(\d+)_(\d+)$/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery('Darsni yuklayapman...');
+    await ctx.editMessageReplyMarkup(undefined);
+    const telegramId = ctx.from.id;
+    const funnelId = parseInt(ctx.match[1]);
+    const lessonNumber = parseInt(ctx.match[2]);
+
+    // Replay the lesson
+    await sendFunnelLesson(telegramId, funnelId, lessonNumber, { replay: true });
+  } catch (e) {
+    console.error('Resume lesson from reminder error:', e);
+    await ctx.reply('Xatolik. /continue buyrug\'ini bosing.');
   }
 });
 

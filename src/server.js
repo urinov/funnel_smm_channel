@@ -1361,6 +1361,56 @@ app.get('/api/analytics/buyers', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ SOURCE/UTM ANALYTICS API ============
+app.get('/api/analytics/sources', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const sources = await db.getSourceStats();
+    res.json({ sources });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ REFERRAL ANALYTICS API ============
+app.get('/api/analytics/referrals', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const globalStats = await db.getGlobalReferralStats();
+    const leaderboard = await db.getReferralLeaderboard(20);
+    res.json({ stats: globalStats, leaderboard });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/referrals/:telegramId', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const telegramId = parseInt(req.params.telegramId);
+    const stats = await db.getReferralStats(telegramId);
+    const user = await db.getUser(telegramId);
+    res.json({
+      ...stats,
+      referral_code: user?.referral_code,
+      referral_discount_used: user?.referral_discount_used
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ INACTIVITY REMINDER ANALYTICS API ============
+app.get('/api/analytics/inactivity', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const stats = await db.getInactivityReminderStats();
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ APP SETTINGS API ============
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
