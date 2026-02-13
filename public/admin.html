@@ -1862,14 +1862,6 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
         <p class="text-xs text-gray-400 mt-1">Faqat lotin harflari, raqamlar va _ ishlatiladi</p>
       </div>
 
-      <!-- Funnel Selection -->
-      <div>
-        <label class="text-sm font-medium text-gray-700 mb-2 block">Funnel (ixtiyoriy):</label>
-        <select id="sourceFunnelSelect" class="input" onchange="generateSourceLink()">
-          <option value="">Default funnel</option>
-        </select>
-      </div>
-
       <!-- Generated Link -->
       <div id="generatedLinkContainer" class="hidden">
         <label class="text-sm font-medium text-gray-700 mb-2 block">Tayyor havola:</label>
@@ -5131,9 +5123,9 @@ function renderCustDevCharts() {
 // ========== MODALS ==========
 function openModal(id) {
   document.getElementById(id).classList.remove('hidden');
-  // Load funnels for source link modal
+  // Load bot username for source link modal
   if (id === 'sourceLinkModal') {
-    loadFunnelsForSourceLink();
+    loadBotUsername();
   }
 }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -5141,25 +5133,14 @@ function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 // ========== SOURCE LINK GENERATOR ==========
 let botUsername = '';
 
-async function loadFunnelsForSourceLink() {
+async function loadBotUsername() {
   try {
-    // Get bot username
     if (!botUsername) {
       const botInfo = await (await fetch('/api/bot-info', { headers: { Authorization: auth } })).json();
       botUsername = botInfo.username || 'your_bot';
     }
-
-    // Load funnels
-    const funnels = await (await fetch('/api/funnels', { headers: { Authorization: auth } })).json();
-    const select = document.getElementById('sourceFunnelSelect');
-    select.innerHTML = '<option value="">Default funnel</option>';
-    funnels.forEach(f => {
-      if (f.is_active) {
-        select.innerHTML += `<option value="${f.slug}">${f.name}${f.is_default ? ' (default)' : ''}</option>`;
-      }
-    });
   } catch(e) {
-    console.error('loadFunnelsForSourceLink error:', e);
+    console.error('loadBotUsername error:', e);
   }
 }
 
@@ -5170,7 +5151,6 @@ function setSourceName(name) {
 
 function generateSourceLink() {
   const sourceName = document.getElementById('sourceNameInput').value.trim();
-  const funnelSlug = document.getElementById('sourceFunnelSelect').value;
   const container = document.getElementById('generatedLinkContainer');
   const linkInput = document.getElementById('generatedSourceLink');
 
@@ -5182,15 +5162,7 @@ function generateSourceLink() {
     return;
   }
 
-  // Build start parameter: FUNNEL_SOURCE or just SOURCE
-  let startParam = '';
-  if (funnelSlug) {
-    startParam = `${funnelSlug}_${cleanSource}`;
-  } else {
-    startParam = `_${cleanSource}`; // underscore prefix for default funnel
-  }
-
-  const link = `https://t.me/${botUsername || 'your_bot'}?start=${startParam}`;
+  const link = `https://t.me/${botUsername || 'your_bot'}?start=_${cleanSource}`;
   linkInput.value = link;
   container.classList.remove('hidden');
   document.getElementById('sourceLinkCopied').style.display = 'none';
