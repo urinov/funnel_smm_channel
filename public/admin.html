@@ -1661,6 +1661,19 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               <input type="number" id="settingRequireSub" class="input" value="0" min="0">
             </div>
           </div>
+
+          <!-- Subscription bypass settings -->
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" id="settingSubBypassEnabled" class="w-4 h-4 rounded">
+              <label class="text-sm text-gray-700">Obuna tekshiruvi o'tkazib yuborish</label>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Agar foydalanuvchi bir necha marta urinib ko'rsa va o'xshamasa, keyingi darsga o'tkazib yuborish</p>
+            <div class="flex items-center gap-2">
+              <input type="number" id="settingSubBypassAttempts" class="input w-20" value="3" min="1" max="10">
+              <span class="text-sm text-gray-600">ta urinishdan keyin o'tkazish</span>
+            </div>
+          </div>
         </div>
 
         <!-- Pricing -->
@@ -2808,6 +2821,10 @@ async function loadSettingsForm() {
     document.getElementById('settingFreeChannel').value = data.free_channel_id || '';
     document.getElementById('settingFreeChannelLink').value = data.free_channel_link || '';
     document.getElementById('settingRequireSub').value = data.require_subscription_before_lesson || 0;
+
+    // Subscription bypass settings
+    document.getElementById('settingSubBypassEnabled').checked = data.subscription_bypass_enabled === 'true';
+    document.getElementById('settingSubBypassAttempts').value = data.subscription_bypass_attempts || 3;
 
     // Payment settings - FIXED: load saved values
     document.getElementById('settingPayme').checked = data.payme_enabled !== false;
@@ -5755,6 +5772,8 @@ async function saveSettings() {
         free_channel_id: document.getElementById('settingFreeChannel').value,
         free_channel_link: document.getElementById('settingFreeChannelLink').value,
         require_subscription_before_lesson: parseInt(document.getElementById('settingRequireSub').value) || 0,
+        subscription_bypass_enabled: document.getElementById('settingSubBypassEnabled').checked ? 'true' : 'false',
+        subscription_bypass_attempts: parseInt(document.getElementById('settingSubBypassAttempts').value) || 3,
         payme_enabled: document.getElementById('settingPayme').checked,
         click_enabled: document.getElementById('settingClick').checked,
         price_1m: parseInt(document.getElementById('settingPrice1m').value) * 100 || null,

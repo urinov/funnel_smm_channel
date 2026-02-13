@@ -1724,6 +1724,8 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.free_channel_id !== undefined) await db.updateBotMessage('free_channel_id', data.free_channel_id);
     if (data.free_channel_link !== undefined) await db.updateBotMessage('free_channel_link', data.free_channel_link);
     if (data.require_subscription_before_lesson !== undefined) await db.updateBotMessage('require_subscription_before_lesson', String(data.require_subscription_before_lesson));
+    if (data.subscription_bypass_enabled !== undefined) await db.updateBotMessage('subscription_bypass_enabled', String(data.subscription_bypass_enabled));
+    if (data.subscription_bypass_attempts !== undefined) await db.updateBotMessage('subscription_bypass_attempts', String(data.subscription_bypass_attempts));
 
     // Payment settings
     if (data.payme_enabled !== undefined) await db.updateBotMessage('payme_enabled', String(data.payme_enabled));

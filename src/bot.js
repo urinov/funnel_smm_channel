@@ -1437,30 +1437,31 @@ Obuna bo'lgandan keyin "✅ Obuna bo'ldim" tugmasini bosing.`;
 bot.action(/^check_subscription_?(\d*)$/, async (ctx) => {
   const telegramId = ctx.from.id;
   const user = await db.getUser(telegramId);
-  
+
   // Get next lesson from callback or user data
   let nextLesson = ctx.match[1] ? parseInt(ctx.match[1]) : (user?.pending_lesson || 3);
-  
+
   const isSubscribed = await checkFreeChannelSubscription(telegramId);
-  
+
   if (isSubscribed) {
     await ctx.answerCbQuery('✅ Rahmat! Obuna tasdiqlandi!');
     await ctx.editMessageReplyMarkup(undefined);
-    
+
     // Update user and continue to next lesson
-    await db.updateUser(telegramId, { 
-      waiting_subscription: false, 
+    await db.updateUser(telegramId, {
+      waiting_subscription: false,
       subscribed_free_channel: true,
-      pending_lesson: null 
+      pending_lesson: null,
+      subscription_check_attempts: 0
     });
-    
+
     await ctx.reply('🎉 Ajoyib! Endi davom etamiz...');
     await delay(1000);
-    
+
     // Continue with CustDev or send lesson
     const prevLesson = nextLesson - 1;
     const questions = await db.getCustDevQuestionsForLesson(prevLesson);
-    
+
     if (questions && questions.length > 0) {
       // Has CustDev questions for previous lesson
       await startCustDev(telegramId, prevLesson);
@@ -1469,7 +1470,46 @@ bot.action(/^check_subscription_?(\d*)$/, async (ctx) => {
       await sendLesson(telegramId, nextLesson);
     }
   } else {
-    await ctx.answerCbQuery('❌ Siz hali obuna bo\'lmagansiz! Avval kanalga obuna bo\'ling.', { show_alert: true });
+    // Increment failed attempts
+    const attempts = (user?.subscription_check_attempts || 0) + 1;
+    await db.updateUser(telegramId, { subscription_check_attempts: attempts });
+
+    // Check if bypass is enabled and max attempts reached
+    const bypassEnabled = (await db.getBotMessage('subscription_bypass_enabled')) === 'true';
+    const maxAttempts = parseInt(await db.getBotMessage('subscription_bypass_attempts')) || 3;
+
+    if (bypassEnabled && attempts >= maxAttempts) {
+      // Allow user to skip subscription
+      await ctx.answerCbQuery('⚠️ Obuna tasdiqlanmadi, lekin davom etishingiz mumkin.', { show_alert: true });
+      await ctx.editMessageReplyMarkup(undefined);
+
+      await db.updateUser(telegramId, {
+        waiting_subscription: false,
+        subscribed_free_channel: false,
+        pending_lesson: null,
+        subscription_check_attempts: 0,
+        subscription_bypassed: true
+      });
+
+      await ctx.reply('⏭️ Davom etamiz...');
+      await delay(1000);
+
+      const prevLesson = nextLesson - 1;
+      const questions = await db.getCustDevQuestionsForLesson(prevLesson);
+
+      if (questions && questions.length > 0) {
+        await startCustDev(telegramId, prevLesson);
+      } else {
+        await sendLesson(telegramId, nextLesson);
+      }
+    } else {
+      const remainingAttempts = bypassEnabled ? maxAttempts - attempts : null;
+      let message = '❌ Siz hali obuna bo\'lmagansiz! Avval kanalga obuna bo\'ling.';
+      if (bypassEnabled && remainingAttempts > 0) {
+        message += `\n(Yana ${remainingAttempts} ta urinish qoldi)`;
+      }
+      await ctx.answerCbQuery(message, { show_alert: true });
+    }
   }
 });
 

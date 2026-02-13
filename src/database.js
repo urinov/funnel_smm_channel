@@ -570,6 +570,18 @@ export async function initDatabase() {
       } catch (e) {}
     }
 
+    // ============ SUBSCRIPTION BYPASS MIGRATIONS ============
+    const subscriptionBypassMigrations = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_check_attempts INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_bypassed BOOLEAN DEFAULT FALSE`
+    ];
+
+    for (const sql of subscriptionBypassMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
     // ============ END MIGRATIONS ============
 
     console.log('Tables created');
