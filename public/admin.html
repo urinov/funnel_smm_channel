@@ -5054,7 +5054,7 @@ async function deleteUser(telegramId, userName) {
       allUsers = allUsers.filter(u => u.telegram_id !== telegramId);
       // Re-render
       applyUserFilters();
-      loadDashboardStats();
+      loadStats();
     } else {
       showToast('Xatolik: ' + (data.error || 'Noma\'lum xatolik'), 'error');
     }
