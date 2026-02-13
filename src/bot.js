@@ -1934,6 +1934,9 @@ export async function sendSalesPitch(telegramId, extraDiscount = 0) {
   const user = await db.getUser(telegramId);
   const plans = await db.getSubscriptionPlans(true);
 
+  // Track when user first sees sales pitch (for referral offer timing)
+  await db.setSalesPitchSeenAt(telegramId);
+
   let text = await db.getBotMessage('sales_pitch') || '🎓 <b>SMM PRO KURSGA TAKLIF!</b>\n\nObuna turini tanlang:';
   text = await replaceVars(text, user);
 
@@ -1979,28 +1982,21 @@ export async function sendSalesPitch(telegramId, extraDiscount = 0) {
     text = `🎁 <b>MAXSUS ${extraDiscount}% CHEGIRMA!</b>\n\n` + text;
   }
 
-  // Check for referral discount eligibility
+  // Check for referral discount eligibility - only show if user has ALREADY qualified
   let referralButton = null;
   const referralEnabled = await db.getSetting('referral_enabled');
   if (referralEnabled === 'true' && extraDiscount === 0) {
     const canGetDiscount = await db.checkReferralDiscount(telegramId);
-    const referralDiscountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
-    const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
-    const stats = await db.getReferralStats(telegramId);
-
     if (canGetDiscount) {
+      const referralDiscountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+      const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
       referralButton = [Markup.button.callback(
         `🎁 ${referralDiscountPercent}% chegirma bilan sotib olish!`,
         `referral_discount_apply`
       )];
       text = `🎊 <b>TABRIKLAYMIZ!</b>\nSiz ${requiredCount} ta odamni taklif qildingiz va ${referralDiscountPercent}% chegirma oldingiz!\n\n⚠️ <i>Bu chegirma faqat bir marta amal qiladi!</i>\n\n` + text;
-    } else {
-      const remaining = requiredCount - stats.qualified;
-      referralButton = [Markup.button.callback(
-        `🔗 ${referralDiscountPercent}% chegirma olish (${stats.qualified}/${requiredCount})`,
-        `show_referral_info`
-      )];
     }
+    // Note: Referral offer is sent separately after 24h if user doesn't pay
   }
 
   const allButtons = [
@@ -2139,6 +2135,58 @@ bot.action(/^ref_discount_plan_(.+)$/, async (ctx) => {
       [Markup.button.callback('⬅️ Orqaga', 'back_to_plans')]
     ])
   });
+});
+
+// Check my referrals - show referral statistics (from referral offer message)
+bot.action('check_my_referrals', async (ctx) => {
+  await ctx.answerCbQuery();
+  const telegramId = ctx.from.id;
+
+  const code = await db.generateReferralCode(telegramId);
+  const stats = await db.getReferralStats(telegramId);
+  const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+  const discountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+
+  const botInfo = await bot.telegram.getMe();
+  const refLink = `https://t.me/${botInfo.username}?start=ref_${code}`;
+
+  const remaining = Math.max(0, requiredCount - stats.qualified);
+  const canGetDiscount = await db.checkReferralDiscount(telegramId);
+
+  let statusText = '';
+  if (canGetDiscount) {
+    statusText = `\n\n🎉 <b>Tabriklaymiz! Siz ${discountPercent}% chegirmaga ega bo'ldingiz!</b>\n` +
+      `"Sotib olish" tugmasini bosing va chegirmali narxda obuna bo'ling!`;
+  } else {
+    statusText = `\n\n⏳ Chegirma uchun yana <b>${remaining}</b> ta faol odam kerak.`;
+  }
+
+  const buttons = [];
+  if (canGetDiscount) {
+    buttons.push([Markup.button.callback(`🎁 ${discountPercent}% chegirma bilan sotib olish!`, 'referral_discount_apply')]);
+  }
+  buttons.push([Markup.button.callback('💳 Oddiy narxda sotib olish', 'buy_now')]);
+
+  await ctx.reply(
+    `📊 <b>Sizning referal statistikangiz</b>\n\n` +
+    `├ Jami taklif qilganlar: <b>${stats.total}</b>\n` +
+    `├ Faol (dars ko'rgan): <b>${stats.qualified}</b>\n` +
+    `└ Chegirma uchun kerak: <b>${requiredCount}</b>\n` +
+    statusText + `\n\n` +
+    `🔗 <b>Sizning havolangiz:</b>\n` +
+    `<code>${refLink}</code>`,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard(buttons)
+    }
+  );
+});
+
+// Buy now button - show payment options (from referral offer message)
+bot.action('buy_now', async (ctx) => {
+  await ctx.answerCbQuery();
+  const telegramId = ctx.from.id;
+  await sendSalesPitch(telegramId);
 });
 
 // Handle discounted plan selection (special offer)

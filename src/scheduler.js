@@ -229,6 +229,73 @@ async function checkUnwatchedLessons() {
   }
 }
 
+// ==================== REFERRAL OFFER (24h after sales pitch) ====================
+async function sendReferralOffers() {
+  try {
+    const enabled = await db.getSetting('referral_enabled');
+    if (enabled !== 'true') return;
+
+    const referralOfferEnabled = await db.getSetting('referral_offer_enabled');
+    if (referralOfferEnabled === 'false') return;
+
+    const hoursDelay = parseInt(await db.getSetting('referral_offer_delay_hours') || '24');
+    const users = await db.getUsersForReferralOffer(hoursDelay);
+
+    if (users.length === 0) return;
+
+    const discountPercent = parseInt(await db.getSetting('referral_discount_percent') || '50');
+    const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+
+    let offerMessage = await db.getBotMessage('referral_offer_message');
+    if (!offerMessage) {
+      offerMessage = `🎁 <b>Sizga maxsus taklif!</b>\n\n` +
+        `Hozirgi tariflarni <b>${discountPercent}% chegirmada</b> olishingiz mumkin!\n\n` +
+        `Buning uchun <b>${requiredCount} ta do'stingizni</b> quyidagi referal havolangiz orqali chaqiring.\n\n` +
+        `Ular botdan ro'yxatdan o'tib, birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉`;
+    }
+
+    const botInfo = await bot.telegram.getMe();
+
+    for (const user of users) {
+      try {
+        // Generate referral code for user
+        const code = await db.generateReferralCode(user.telegram_id);
+        const refLink = `https://t.me/${botInfo.username}?start=ref_${code}`;
+
+        const personalMessage = offerMessage
+          .replace(/\{\{ism\}\}/gi, user.full_name?.split(' ')[0] || "do'st")
+          .replace(/\{\{chegirma\}\}/gi, discountPercent)
+          .replace(/\{\{kerakli_odam\}\}/gi, requiredCount);
+
+        await bot.telegram.sendMessage(user.telegram_id,
+          personalMessage + `\n\n🔗 <b>Sizning referal havolangiz:</b>\n<code>${refLink}</code>`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '📊 Statistikam', callback_data: 'check_my_referrals' }],
+                [{ text: '💳 Sotib olish', callback_data: 'buy_now' }]
+              ]
+            }
+          }
+        );
+
+        await db.markReferralOfferSent(user.telegram_id);
+        console.log(`Referral offer sent to ${user.telegram_id}`);
+
+        // Small delay between messages
+        await new Promise(r => setTimeout(r, 500));
+      } catch (e) {
+        console.error(`Referral offer error for ${user.telegram_id}:`, e.message);
+        // Still mark as sent to avoid spam
+        await db.markReferralOfferSent(user.telegram_id);
+      }
+    }
+  } catch (e) {
+    console.error('sendReferralOffers error:', e);
+  }
+}
+
 // ==================== START SCHEDULER ====================
 export function startScheduler() {
   console.log('🕐 Starting scheduler...');
@@ -260,6 +327,12 @@ export function startScheduler() {
     checkUnwatchedLessons();
   });
 
+  // Har soatda referral takliflarini tekshirish (24 soatdan keyin)
+  cron.schedule('0 * * * *', () => {
+    console.log('Running referral offers check...');
+    sendReferralOffers();
+  });
+
   // Har kuni 23:00 da adminlarga kunlik to'liq otchot
   cron.schedule('0 23 * * *', () => {
     console.log('Running daily admin report...');
@@ -271,7 +344,8 @@ export function startScheduler() {
   console.log('   - Subscription reminders: daily at 9:00');
   console.log('   - Expired subscriptions: every 5 minutes');
   console.log('   - Inactivity reminders: every 10 minutes');
+  console.log('   - Referral offers: every hour');
   console.log(`   - Daily admin report: 23:00 (${REPORT_TIMEZONE})`);
 }
 
-export { processScheduledMessages, checkSubscriptionReminders, checkExpiredSubscriptions, checkUnwatchedLessons, sendDailyAdminReport };
+export { processScheduledMessages, checkSubscriptionReminders, checkExpiredSubscriptions, checkUnwatchedLessons, sendDailyAdminReport, sendReferralOffers };

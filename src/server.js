@@ -1810,6 +1810,11 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.referral_required_count !== undefined) await db.setSetting('referral_required_count', String(data.referral_required_count));
     if (data.referral_discount_percent !== undefined) await db.setSetting('referral_discount_percent', String(data.referral_discount_percent));
 
+    // Referral offer settings (24h after sales pitch)
+    if (data.referral_offer_enabled !== undefined) await db.setSetting('referral_offer_enabled', String(data.referral_offer_enabled));
+    if (data.referral_offer_delay_hours !== undefined) await db.setSetting('referral_offer_delay_hours', String(data.referral_offer_delay_hours));
+    if (data.referral_offer_message !== undefined) await db.updateBotMessage('referral_offer_message', data.referral_offer_message);
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

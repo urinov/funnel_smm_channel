@@ -559,7 +559,9 @@ export async function initDatabase() {
     const referralMigrations = [
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_count INTEGER DEFAULT 0`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_discount_used BOOLEAN DEFAULT FALSE`
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_discount_used BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_offer_sent BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS sales_pitch_seen_at TIMESTAMP`
     ];
 
     for (const sql of referralMigrations) {
@@ -2556,4 +2558,34 @@ export async function getGlobalReferralStats() {
     FROM referrals
   `);
   return rows[0];
+}
+
+// Get users eligible for referral offer (24h after seeing sales pitch, not paid, not sent offer yet)
+export async function getUsersForReferralOffer(hoursAfterPitch = 24) {
+  const { rows } = await pool.query(`
+    SELECT telegram_id, full_name, username
+    FROM users
+    WHERE is_paid = FALSE
+      AND is_blocked = FALSE
+      AND referral_offer_sent = FALSE
+      AND sales_pitch_seen_at IS NOT NULL
+      AND sales_pitch_seen_at < NOW() - INTERVAL '${hoursAfterPitch} hours'
+      AND funnel_step >= 8
+    LIMIT 50
+  `);
+  return rows;
+}
+
+// Mark referral offer as sent
+export async function markReferralOfferSent(telegramId) {
+  await pool.query(`
+    UPDATE users SET referral_offer_sent = TRUE WHERE telegram_id = $1
+  `, [telegramId]);
+}
+
+// Set sales pitch seen timestamp
+export async function setSalesPitchSeenAt(telegramId) {
+  await pool.query(`
+    UPDATE users SET sales_pitch_seen_at = NOW() WHERE telegram_id = $1 AND sales_pitch_seen_at IS NULL
+  `, [telegramId]);
 }
