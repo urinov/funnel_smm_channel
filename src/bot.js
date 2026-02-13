@@ -973,6 +973,33 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
     await ctx.answerCbQuery('Ajoyib!');
     await ctx.editMessageReplyMarkup(undefined);
 
+    // Qualify referral if this is the first lesson (user becomes active)
+    if (lessonNumber === 1) {
+      try {
+        const referrerTgId = await db.qualifyReferral(telegramId);
+        if (referrerTgId) {
+          const newCount = (await db.getReferralStats(referrerTgId)).qualified;
+          const requiredCount = parseInt(await db.getSetting('referral_required_count') || '3');
+          const remaining = requiredCount - newCount;
+
+          if (remaining > 0) {
+            await bot.telegram.sendMessage(referrerTgId,
+              `🎉 Sizning taklif qilgan odam birinchi darsni ko'rdi!\n\n` +
+              `📊 ${newCount}/${requiredCount} - chegirmaga ${remaining} ta qoldi!`
+            ).catch(e => console.log('Notify referrer error:', e.message));
+          } else {
+            await bot.telegram.sendMessage(referrerTgId,
+              `🎊 Tabriklaymiz! Siz ${requiredCount} ta odamni taklif qildingiz!\n\n` +
+              `🎁 Endi 50% chegirma bilan sotib olishingiz mumkin!\n\n` +
+              `/myref - batafsil`
+            ).catch(e => console.log('Notify referrer error:', e.message));
+          }
+        }
+      } catch (e) {
+        console.log('Qualify referral error:', e.message);
+      }
+    }
+
     if (lessonNumber < totalLessons) {
       // Check if subscription required before next lesson
       const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
