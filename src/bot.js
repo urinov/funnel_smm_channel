@@ -499,12 +499,12 @@ bot.command('myref', async (ctx) => {
 
     let statusText = '';
     if (stats.qualified >= requiredCount && !user.referral_discount_used) {
-      statusText = `\n\n🎊 <b>Tabriklaymiz!</b> Siz ${discountPercent}% chegirma oldingiz!\nTo'lov sahifasida chegirmani qo'llashingiz mumkin.`;
+      statusText = `\n\n🎊 <b>Tabriklaymiz!</b> Siz ${discountPercent}% chegirma oldingiz!\n⚠️ <i>Bu chegirma faqat bir marta amal qiladi!</i>\nTo'lov sahifasida chegirmani qo'llashingiz mumkin.`;
     } else if (user.referral_discount_used) {
-      statusText = `\n\n✅ Siz chegirmadan foydalangansiz.`;
+      statusText = `\n\n✅ Siz chegirmadan allaqachon foydalangansiz.`;
     } else {
       const remaining = requiredCount - stats.qualified;
-      statusText = `\n\n💡 Yana ${remaining} ta faol odam olib keling va ${discountPercent}% chegirma oling!`;
+      statusText = `\n\n💡 Yana ${remaining} ta faol odam olib keling va ${discountPercent}% chegirma oling!\n<i>(Chegirma bir martalik)</i>`;
     }
 
     await ctx.reply(
@@ -1993,7 +1993,7 @@ export async function sendSalesPitch(telegramId, extraDiscount = 0) {
         `🎁 ${referralDiscountPercent}% chegirma bilan sotib olish!`,
         `referral_discount_apply`
       )];
-      text = `🎊 <b>TABRIKLAYMIZ!</b>\nSiz ${requiredCount} ta odamni taklif qildingiz va ${referralDiscountPercent}% chegirma oldingiz!\n\n` + text;
+      text = `🎊 <b>TABRIKLAYMIZ!</b>\nSiz ${requiredCount} ta odamni taklif qildingiz va ${referralDiscountPercent}% chegirma oldingiz!\n\n⚠️ <i>Bu chegirma faqat bir marta amal qiladi!</i>\n\n` + text;
     } else {
       const remaining = requiredCount - stats.qualified;
       referralButton = [Markup.button.callback(
@@ -2072,6 +2072,7 @@ bot.action('referral_discount_apply', async (ctx) => {
 
   await ctx.editMessageText(
     `🎁 <b>${discountPercent}% REFERAL CHEGIRMASI!</b>\n\n` +
+    `⚠️ <i>Bu chegirma faqat bir marta amal qiladi!</i>\n\n` +
     `Obuna turini tanlang:`,
     {
       parse_mode: 'HTML',
