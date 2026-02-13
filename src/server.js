@@ -1781,6 +1781,16 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.feedback_special_offer !== undefined) await db.setSetting('feedback_special_offer', data.feedback_special_offer);
     if (data.feedback_special_offer_enabled !== undefined) await db.setSetting('feedback_special_offer_enabled', String(data.feedback_special_offer_enabled));
 
+    // Inactivity reminder settings
+    if (data.inactivity_reminder_enabled !== undefined) await db.setSetting('inactivity_reminder_enabled', String(data.inactivity_reminder_enabled));
+    if (data.inactivity_reminder_1 !== undefined) await db.setSetting('inactivity_reminder_1', data.inactivity_reminder_1);
+    if (data.inactivity_reminder_2 !== undefined) await db.setSetting('inactivity_reminder_2', data.inactivity_reminder_2);
+
+    // Referral system settings
+    if (data.referral_enabled !== undefined) await db.setSetting('referral_enabled', String(data.referral_enabled));
+    if (data.referral_required_count !== undefined) await db.setSetting('referral_required_count', String(data.referral_required_count));
+    if (data.referral_discount_percent !== undefined) await db.setSetting('referral_discount_percent', String(data.referral_discount_percent));
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

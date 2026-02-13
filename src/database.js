@@ -670,14 +670,14 @@ async function seedDefaultData(client) {
   `);
   console.log('Inactivity reminder messages seeded');
 
-  // Seed referral system settings - use ON CONFLICT to ensure they're always created
+  // Seed referral system settings - write to app_settings (used by getSetting)
   await client.query(`
-    INSERT INTO settings (key, value) VALUES
+    INSERT INTO app_settings (key, value) VALUES
       ('referral_enabled', 'true'),
       ('referral_required_count', '3'),
       ('referral_discount_percent', '50'),
       ('inactivity_reminder_enabled', 'true')
-    ON CONFLICT (key) DO NOTHING
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
   `);
   console.log('Referral and inactivity settings seeded');
 }
