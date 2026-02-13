@@ -2503,19 +2503,25 @@ export async function getReferrerOf(telegramId) {
 }
 
 export async function checkReferralDiscount(telegramId) {
-  const { rows } = await pool.query(`
-    SELECT
-      u.referral_count,
-      u.referral_discount_used
-    FROM users u
-    WHERE u.telegram_id = $1
+  // Get user's discount_used status
+  const { rows: userRows } = await pool.query(`
+    SELECT referral_discount_used FROM users WHERE telegram_id = $1
   `, [telegramId]);
 
-  if (!rows[0]) return false;
+  if (!userRows[0]) return false;
+  if (userRows[0].referral_discount_used) return false;
 
-  // Get required count from app_settings (where getSetting reads from)
+  // Count qualified referrals directly from referrals table (more reliable)
+  const { rows: refRows } = await pool.query(`
+    SELECT COUNT(*)::int as qualified_count
+    FROM referrals
+    WHERE referrer_telegram_id = $1 AND status = 'qualified'
+  `, [telegramId]);
+
+  const qualifiedCount = refRows[0]?.qualified_count || 0;
   const requiredCount = parseInt(await getSetting('referral_required_count')) || 3;
-  return rows[0].referral_count >= requiredCount && !rows[0].referral_discount_used;
+
+  return qualifiedCount >= requiredCount;
 }
 
 export async function markReferralDiscountUsed(telegramId) {
