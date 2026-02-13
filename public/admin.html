@@ -751,7 +751,10 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Traffic Sources -->
         <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">📍 Trafik manbalari</h3>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800">📍 Trafik manbalari</h3>
+            <button onclick="openModal('sourceLinkModal')" class="text-sm text-indigo-600 font-medium hover:text-indigo-800">+ Link yaratish</button>
+          </div>
           <div id="sourceStatsContainer">
             <div class="text-center text-gray-400 py-4">Yuklanmoqda...</div>
           </div>
@@ -1829,6 +1832,66 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
 
   </aside>
 
+</div>
+
+<!-- Source Link Generator Modal -->
+<div id="sourceLinkModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="modal-content mx-4 p-6 max-w-md w-full">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-gray-800">🔗 Trafik linki yaratish</h3>
+      <button onclick="closeModal('sourceLinkModal')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">✕</button>
+    </div>
+
+    <div class="space-y-4">
+      <!-- Quick Source Buttons -->
+      <div>
+        <label class="text-sm font-medium text-gray-700 mb-2 block">Tezkor tanlash:</label>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setSourceName('instagram')" class="px-3 py-1.5 text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90">📸 Instagram</button>
+          <button onclick="setSourceName('telegram')" class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:opacity-90">📱 Telegram</button>
+          <button onclick="setSourceName('facebook')" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:opacity-90">👤 Facebook</button>
+          <button onclick="setSourceName('youtube')" class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:opacity-90">🎬 YouTube</button>
+          <button onclick="setSourceName('tiktok')" class="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-lg hover:opacity-90">🎵 TikTok</button>
+        </div>
+      </div>
+
+      <!-- Custom Source Input -->
+      <div>
+        <label class="text-sm font-medium text-gray-700 mb-2 block">Yoki o'zingiz yozing:</label>
+        <input type="text" id="sourceNameInput" class="input" placeholder="Masalan: instagram, telegram_kanal, reklama1..." oninput="generateSourceLink()">
+        <p class="text-xs text-gray-400 mt-1">Faqat lotin harflari, raqamlar va _ ishlatiladi</p>
+      </div>
+
+      <!-- Funnel Selection -->
+      <div>
+        <label class="text-sm font-medium text-gray-700 mb-2 block">Funnel (ixtiyoriy):</label>
+        <select id="sourceFunnelSelect" class="input" onchange="generateSourceLink()">
+          <option value="">Default funnel</option>
+        </select>
+      </div>
+
+      <!-- Generated Link -->
+      <div id="generatedLinkContainer" class="hidden">
+        <label class="text-sm font-medium text-gray-700 mb-2 block">Tayyor havola:</label>
+        <div class="flex gap-2">
+          <input type="text" id="generatedSourceLink" class="input font-mono text-sm flex-1" readonly>
+          <button onclick="copySourceLink()" class="btn btn-primary px-4">📋</button>
+        </div>
+        <p class="text-xs text-green-600 mt-2" id="sourceLinkCopied" style="display:none">✓ Nusxalandi!</p>
+      </div>
+
+      <!-- Instructions -->
+      <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+        <p class="font-medium mb-2">📝 Qanday ishlaydi:</p>
+        <ol class="list-decimal list-inside space-y-1 text-xs">
+          <li>Manba nomini tanlang yoki yozing</li>
+          <li>Havolani nusxalang</li>
+          <li>Reklama yoki postda shu havolani qo'ying</li>
+          <li>Dashboard'da statistikani kuzating</li>
+        </ol>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Broadcast Modal (Advanced) -->
@@ -5066,8 +5129,82 @@ function renderCustDevCharts() {
 }
 
 // ========== MODALS ==========
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+  // Load funnels for source link modal
+  if (id === 'sourceLinkModal') {
+    loadFunnelsForSourceLink();
+  }
+}
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ========== SOURCE LINK GENERATOR ==========
+let botUsername = '';
+
+async function loadFunnelsForSourceLink() {
+  try {
+    // Get bot username
+    if (!botUsername) {
+      const botInfo = await (await fetch('/api/bot-info', { headers: { Authorization: auth } })).json();
+      botUsername = botInfo.username || 'your_bot';
+    }
+
+    // Load funnels
+    const funnels = await (await fetch('/api/funnels', { headers: { Authorization: auth } })).json();
+    const select = document.getElementById('sourceFunnelSelect');
+    select.innerHTML = '<option value="">Default funnel</option>';
+    funnels.forEach(f => {
+      if (f.is_active) {
+        select.innerHTML += `<option value="${f.slug}">${f.name}${f.is_default ? ' (default)' : ''}</option>`;
+      }
+    });
+  } catch(e) {
+    console.error('loadFunnelsForSourceLink error:', e);
+  }
+}
+
+function setSourceName(name) {
+  document.getElementById('sourceNameInput').value = name;
+  generateSourceLink();
+}
+
+function generateSourceLink() {
+  const sourceName = document.getElementById('sourceNameInput').value.trim();
+  const funnelSlug = document.getElementById('sourceFunnelSelect').value;
+  const container = document.getElementById('generatedLinkContainer');
+  const linkInput = document.getElementById('generatedSourceLink');
+
+  // Clean source name: only allow letters, numbers, underscore
+  const cleanSource = sourceName.toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+  if (!cleanSource) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  // Build start parameter: FUNNEL_SOURCE or just SOURCE
+  let startParam = '';
+  if (funnelSlug) {
+    startParam = `${funnelSlug}_${cleanSource}`;
+  } else {
+    startParam = `_${cleanSource}`; // underscore prefix for default funnel
+  }
+
+  const link = `https://t.me/${botUsername || 'your_bot'}?start=${startParam}`;
+  linkInput.value = link;
+  container.classList.remove('hidden');
+  document.getElementById('sourceLinkCopied').style.display = 'none';
+}
+
+function copySourceLink() {
+  const linkInput = document.getElementById('generatedSourceLink');
+  linkInput.select();
+  document.execCommand('copy');
+  document.getElementById('sourceLinkCopied').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('sourceLinkCopied').style.display = 'none';
+  }, 2000);
+}
 
 // ========== DELETE USER ==========
 async function deleteUser(telegramId, userName) {

@@ -326,6 +326,16 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/bot-info', authMiddleware, async (req, res) => {
+  try {
+    const { bot } = await import('./bot.js');
+    const botInfo = await bot.telegram.getMe();
+    res.json({ username: botInfo.username, id: botInfo.id, first_name: botInfo.first_name });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const { getAllActiveUsers } = await import('./database.js');
