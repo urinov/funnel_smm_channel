@@ -5044,7 +5044,7 @@ async function deleteUser(telegramId, userName) {
   try {
     const res = await fetch(`/api/users/${telegramId}`, {
       method: 'DELETE',
-      headers: { 'Authorization': 'Basic ' + btoa(adminUser + ':' + adminPass) }
+      headers: { Authorization: auth }
     });
 
     const data = await res.json();
