@@ -610,6 +610,15 @@ bot.start(async (ctx) => {
       return;
     }
 
+    // Handle referral for existing users too (if not already referred)
+    if (referralCode) {
+      const referrer = await db.getUserByReferralCode(referralCode);
+      if (referrer && referrer.telegram_id !== telegramId) {
+        await db.createReferral(referrer.telegram_id, telegramId, referralCode);
+        console.log('👥 Referral created (existing user):', referrer.telegram_id, '->', telegramId);
+      }
+    }
+
     // Check if user clicked different funnel link
     const userFunnel = await db.getUserActiveFunnel(telegramId);
     if (!userFunnel || userFunnel.funnel_id !== funnel.id) {
