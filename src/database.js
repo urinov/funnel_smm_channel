@@ -723,6 +723,17 @@ export async function deleteUser(telegramId) {
   await pool.query('DELETE FROM scheduled_messages WHERE telegram_id = $1', [telegramId]);
   await pool.query('DELETE FROM subscriptions WHERE telegram_id = $1', [telegramId]);
   await pool.query('DELETE FROM payments WHERE telegram_id = $1', [telegramId]);
+  await pool.query('DELETE FROM user_funnels WHERE telegram_id = $1', [telegramId]);
+  await pool.query('DELETE FROM lesson_deliveries WHERE telegram_id = $1', [telegramId]);
+  // Delete referrals where this user is the referred person
+  await pool.query('DELETE FROM referrals WHERE referred_telegram_id = $1', [telegramId]);
+  // Update referral counts for referrers who referred this user
+  await pool.query(`
+    UPDATE users SET referral_count = referral_count - 1
+    WHERE telegram_id IN (SELECT referrer_telegram_id FROM referrals WHERE referred_telegram_id = $1)
+    AND referral_count > 0
+  `, [telegramId]);
+  // Finally delete the user
   await pool.query('DELETE FROM users WHERE telegram_id = $1', [telegramId]);
 }
 

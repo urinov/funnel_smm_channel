@@ -2475,7 +2475,10 @@ function renderFilteredUsers(filtered) {
       </td>
       <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
       <td class="px-5 py-4">
-        <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm">👁</button>
+        <div class="flex gap-1">
+          <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm" title="Ko'rish">👁</button>
+          <button onclick="event.stopPropagation(); deleteUser(${u.telegram_id}, '${(u.full_name || u.username || 'User').replace(/'/g, "\\'")}')" class="btn btn-sm bg-red-50 text-red-600 hover:bg-red-100" title="O'chirish">🗑️</button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -5031,6 +5034,34 @@ function renderCustDevCharts() {
 // ========== MODALS ==========
 function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ========== DELETE USER ==========
+async function deleteUser(telegramId, userName) {
+  if (!confirm(`"${userName}" ni o'chirmoqchimisiz?\n\nBu foydalanuvchining barcha ma'lumotlari o'chiriladi:\n- To'lovlar\n- Obunalar\n- Dars javoblari\n- Referral ma'lumotlari\n\nBu amalni qaytarib bo'lmaydi!`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/users/${telegramId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Basic ' + btoa(adminUser + ':' + adminPass) }
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('Foydalanuvchi o\'chirildi', 'success');
+      // Remove from local array
+      allUsers = allUsers.filter(u => u.telegram_id !== telegramId);
+      // Re-render
+      applyUserFilters();
+      loadDashboardStats();
+    } else {
+      showToast('Xatolik: ' + (data.error || 'Noma\'lum xatolik'), 'error');
+    }
+  } catch (e) {
+    showToast('Xatolik: ' + e.message, 'error');
+  }
+}
 
 // ========== USER DETAIL ==========
 async function openUserDetail(telegramId) {

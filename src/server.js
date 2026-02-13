@@ -347,6 +347,25 @@ app.get('/api/users/:telegramId', authMiddleware, async (req, res) => {
   }
 });
 
+// Delete user and all related data
+app.delete('/api/users/:telegramId', authMiddleware, async (req, res) => {
+  try {
+    const { deleteUser, getUser } = await import('./database.js');
+    const telegramId = parseInt(req.params.telegramId);
+
+    const user = await getUser(telegramId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await deleteUser(telegramId);
+    console.log(`🗑️ User deleted: ${telegramId} (${user.username || user.full_name})`);
+
+    res.json({ success: true, message: 'User and all related data deleted' });
+  } catch (e) {
+    console.error('Delete user error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/conversations', authMiddleware, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 200;
