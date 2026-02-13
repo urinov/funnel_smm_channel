@@ -225,6 +225,12 @@ async function handleClickCallback(req, res) {
     await db.updateUser(payment.telegram_id, { is_paid: true, funnel_step: 11 });
     await db.cancelPendingMessages(payment.telegram_id, 'soft_attack');
 
+    // Mark referral discount as used if this was a referral payment
+    if (orderId.startsWith('REF')) {
+      await db.markReferralDiscountUsed(payment.telegram_id);
+      console.log('Referral discount marked as used for:', payment.telegram_id);
+    }
+
     // Create one-time invite link
     const { createInviteLink } = await import('../bot.js');
     const inviteLink = await createInviteLink(payment.telegram_id, 1); // 1 day validity

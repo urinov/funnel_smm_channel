@@ -2106,8 +2106,8 @@ bot.action(/^ref_discount_plan_(.+)$/, async (ctx) => {
   const orderId = ('REF' + Date.now() + telegramId).slice(0, 20);
   await db.createPayment(orderId, telegramId, discountedPrice, planId);
 
-  // Mark referral discount as used
-  await db.markReferralDiscountUsed(telegramId);
+  // NOTE: markReferralDiscountUsed is called in payment webhook when payment is confirmed
+  // This allows user to retry if payment fails
 
   const paymeUrl = BASE_URL + '/payme/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
   const clickUrl = BASE_URL + '/click/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
