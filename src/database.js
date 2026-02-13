@@ -661,31 +661,25 @@ async function seedDefaultData(client) {
     }
   }
 
-  // Seed inactivity reminder messages
-  const inactivityReminderKeys = ['inactivity_reminder_1', 'inactivity_reminder_2'];
-  for (const key of inactivityReminderKeys) {
-    const { rows: existing } = await client.query('SELECT 1 FROM bot_messages WHERE key = $1', [key]);
-    if (existing.length === 0) {
-      let text = '';
-      if (key === 'inactivity_reminder_1') text = '👋 Hey! Darsni hali ko\'rmadingizmi? Davom eting, siz zo\'rsiz!';
-      if (key === 'inactivity_reminder_2') text = '📚 Dars sizni kutmoqda! Nimaga to\'xtab qoldingiz? Davom eting!';
-      await client.query('INSERT INTO bot_messages (key, text) VALUES ($1, $2)', [key, text]);
-    }
-  }
+  // Seed inactivity reminder messages - use ON CONFLICT to ensure they're always created
+  await client.query(`
+    INSERT INTO bot_messages (key, text) VALUES
+      ('inactivity_reminder_1', '👋 Hey! Darsni hali ko''rmadingizmi? Davom eting, siz zo''rsiz!'),
+      ('inactivity_reminder_2', '📚 Dars sizni kutmoqda! Nimaga to''xtab qoldingiz? Davom eting!')
+    ON CONFLICT (key) DO NOTHING
+  `);
+  console.log('Inactivity reminder messages seeded');
 
-  // Seed referral system settings
-  const referralSettings = [
-    { key: 'referral_enabled', value: 'true' },
-    { key: 'referral_required_count', value: '3' },
-    { key: 'referral_discount_percent', value: '50' },
-    { key: 'inactivity_reminder_enabled', value: 'true' }
-  ];
-  for (const setting of referralSettings) {
-    const { rows: existing } = await client.query('SELECT 1 FROM settings WHERE key = $1', [setting.key]);
-    if (existing.length === 0) {
-      await client.query('INSERT INTO settings (key, value) VALUES ($1, $2)', [setting.key, setting.value]);
-    }
-  }
+  // Seed referral system settings - use ON CONFLICT to ensure they're always created
+  await client.query(`
+    INSERT INTO settings (key, value) VALUES
+      ('referral_enabled', 'true'),
+      ('referral_required_count', '3'),
+      ('referral_discount_percent', '50'),
+      ('inactivity_reminder_enabled', 'true')
+    ON CONFLICT (key) DO NOTHING
+  `);
+  console.log('Referral and inactivity settings seeded');
 }
 
 export async function getUser(telegramId) {
