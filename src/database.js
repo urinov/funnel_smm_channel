@@ -2506,16 +2506,15 @@ export async function checkReferralDiscount(telegramId) {
   const { rows } = await pool.query(`
     SELECT
       u.referral_count,
-      u.referral_discount_used,
-      s.value as required_count
+      u.referral_discount_used
     FROM users u
-    CROSS JOIN (SELECT value FROM settings WHERE key = 'referral_required_count') s
     WHERE u.telegram_id = $1
   `, [telegramId]);
 
   if (!rows[0]) return false;
 
-  const requiredCount = parseInt(rows[0].required_count) || 3;
+  // Get required count from app_settings (where getSetting reads from)
+  const requiredCount = parseInt(await getSetting('referral_required_count')) || 3;
   return rows[0].referral_count >= requiredCount && !rows[0].referral_discount_used;
 }
 
