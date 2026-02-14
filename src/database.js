@@ -1256,20 +1256,39 @@ export async function getPaymentAnalytics() {
   };
 }
 
-export async function getDailySubscribers() {
-  const { rows: daily } = await pool.query(`
-    SELECT DATE(created_at) as date, COUNT(*) as count
-    FROM users WHERE created_at > NOW() - INTERVAL '30 days'
-    GROUP BY DATE(created_at) ORDER BY date DESC
-  `);
+export async function getDailySubscribers(days = 30) {
+  // Get daily new users and paid users for the analytics chart
+  const { rows } = await pool.query(`
+    WITH dates AS (
+      SELECT generate_series(
+        CURRENT_DATE - $1::int,
+        CURRENT_DATE,
+        '1 day'::interval
+      )::date as date
+    ),
+    daily_users AS (
+      SELECT DATE(created_at) as date, COUNT(*)::int as new_users
+      FROM users
+      WHERE created_at >= CURRENT_DATE - $1::int
+      GROUP BY DATE(created_at)
+    ),
+    daily_paid AS (
+      SELECT DATE(p.created_at) as date, COUNT(DISTINCT p.telegram_id)::int as new_paid
+      FROM payments p
+      WHERE p.state = 'performed' AND p.created_at >= CURRENT_DATE - $1::int
+      GROUP BY DATE(p.created_at)
+    )
+    SELECT
+      d.date,
+      COALESCE(u.new_users, 0) as new_users,
+      COALESCE(p.new_paid, 0) as new_paid
+    FROM dates d
+    LEFT JOIN daily_users u ON d.date = u.date
+    LEFT JOIN daily_paid p ON d.date = p.date
+    ORDER BY d.date ASC
+  `, [days]);
 
-  const { rows: monthly } = await pool.query(`
-    SELECT TO_CHAR(created_at, 'YYYY-MM') as month, COUNT(*) as count
-    FROM users WHERE created_at > NOW() - INTERVAL '12 months'
-    GROUP BY TO_CHAR(created_at, 'YYYY-MM') ORDER BY month DESC
-  `);
-
-  return { daily, monthly };
+  return rows;
 }
 
 export async function getFullStats() {
@@ -1737,15 +1756,30 @@ export async function getRevenueByPeriod(days = 30) {
   const safeDays = Math.min(Math.max(parseInt(days) || 30, 1), 365);
 
   const { rows } = await pool.query(`
+    WITH dates AS (
+      SELECT generate_series(
+        CURRENT_DATE - $1::int,
+        CURRENT_DATE,
+        '1 day'::interval
+      )::date as date
+    ),
+    daily_revenue AS (
+      SELECT
+        DATE(created_at) as date,
+        SUM(amount)::bigint as revenue,
+        COUNT(*)::int as transactions
+      FROM payments
+      WHERE state = 'performed'
+        AND created_at >= CURRENT_DATE - $1::int
+      GROUP BY DATE(created_at)
+    )
     SELECT
-      DATE(created_at) as date,
-      SUM(amount) as revenue,
-      COUNT(*) as transactions
-    FROM payments
-    WHERE state = 'performed'
-      AND created_at >= NOW() - $1::integer * INTERVAL '1 day'
-    GROUP BY DATE(created_at)
-    ORDER BY date
+      d.date,
+      COALESCE(r.revenue, 0) as revenue,
+      COALESCE(r.transactions, 0) as transactions
+    FROM dates d
+    LEFT JOIN daily_revenue r ON d.date = r.date
+    ORDER BY d.date ASC
   `, [safeDays]);
   return rows;
 }

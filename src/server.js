@@ -1257,7 +1257,8 @@ app.get('/api/payments/buyer-analytics', authMiddleware, async (req, res) => {
 app.get('/api/subscribers/daily', authMiddleware, async (req, res) => {
   try {
     const { getDailySubscribers } = await import('./database.js');
-    const data = await getDailySubscribers();
+    const days = parseInt(req.query.days) || 30;
+    const data = await getDailySubscribers(days);
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
