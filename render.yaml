@@ -54,4 +54,3 @@ databases:
     plan: free
     databaseName: funnel_bot
     user: funnel_bot_user
-q

@@ -3166,3 +3166,12 @@ export async function getPromoCodeStats(promoCodeId) {
   `, [promoCodeId]);
   return rows[0];
 }
+
+// Delete from legacy settings table (to prevent overriding bot_messages)
+export async function deleteLegacySetting(key) {
+  try {
+    await pool.query('DELETE FROM settings WHERE key = $1', [key]);
+  } catch (e) {
+    // Ignore errors - table might not exist
+  }
+}
