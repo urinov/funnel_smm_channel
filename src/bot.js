@@ -1147,16 +1147,42 @@ bot.action(/^watched_funnel_(\d+)_(\d+)$/, async (ctx) => {
     console.log('👆 Funnel watched:', funnelId, 'lesson', lessonNumber, '/', totalLessons);
     
     if (lessonNumber < totalLessons) {
-      // Check if subscription required before next lesson (funnel specific)
-      const requireSubLesson = funnel.require_subscription_before_lesson || 0;
+      // Check if subscription required before next lesson
+      // First check funnel-specific setting, then fall back to global setting
+      let requireSubLesson = funnel.require_subscription_before_lesson || 0;
+      if (requireSubLesson === 0) {
+        // Fall back to global setting from dashboard
+        requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 0;
+      }
+
+      // Get channel ID from funnel or global settings
+      let channelId = funnel.free_channel_id;
+      if (!channelId) {
+        channelId = await db.getBotMessage('free_channel_id');
+      }
+
       const nextLesson = lessonNumber + 1;
-      
-      if (requireSubLesson > 0 && nextLesson === requireSubLesson && funnel.free_channel_id) {
-        const isSubscribed = await checkFunnelChannelSubscription(telegramId, funnel);
-        
-        if (!isSubscribed) {
-          await askForFunnelSubscription(telegramId, funnel, nextLesson);
-          return;
+
+      console.log(`🔍 Subscription check: requireSubLesson=${requireSubLesson}, nextLesson=${nextLesson}, channelId=${channelId}`);
+
+      if (requireSubLesson > 0 && nextLesson === requireSubLesson && channelId) {
+        // Check if user already marked as subscribed
+        const user = await db.getUser(telegramId);
+        if (user?.subscribed_free_channel) {
+          console.log(`✅ User ${telegramId} already marked as subscribed`);
+        } else {
+          const isSubscribed = await checkFreeChannelSubscription(telegramId);
+
+          if (isSubscribed) {
+            // Already subscribed - mark and continue
+            await db.updateUser(telegramId, { subscribed_free_channel: true });
+            await bot.telegram.sendMessage(telegramId, '🎉 Kanalimizga obuna bo\'lganingiz uchun rahmat! Davom etamiz...', { parse_mode: 'HTML' });
+            await delay(1500);
+          } else {
+            // Not subscribed - ask for subscription
+            await askForSubscription(telegramId, nextLesson);
+            return;
+          }
         }
       }
       
