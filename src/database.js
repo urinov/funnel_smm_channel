@@ -399,6 +399,59 @@ export async function initDatabase() {
       }
     }
     
+    // ============ AUDIT LOG TABLE ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP DEFAULT NOW(),
+        action VARCHAR(100) NOT NULL,
+        user_identifier VARCHAR(255),
+        target_identifier VARCHAR(255),
+        details JSONB,
+        ip_address VARCHAR(45),
+        user_agent TEXT
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_identifier)`);
+    } catch (e) {}
+
+    // ============ PROMO CODES TABLE ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS promo_codes (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        discount_percent INTEGER NOT NULL CHECK (discount_percent > 0 AND discount_percent <= 100),
+        max_uses INTEGER DEFAULT NULL,
+        current_uses INTEGER DEFAULT 0,
+        valid_from TIMESTAMP DEFAULT NOW(),
+        valid_until TIMESTAMP,
+        min_plan VARCHAR(20),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS promo_code_uses (
+        id SERIAL PRIMARY KEY,
+        promo_code_id INTEGER REFERENCES promo_codes(id),
+        telegram_id BIGINT NOT NULL,
+        payment_id INTEGER,
+        discount_amount INTEGER,
+        used_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_promo_codes_code ON promo_codes(code)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_promo_code_uses_telegram ON promo_code_uses(telegram_id)`);
+    } catch (e) {}
+
     // User table migrations
     const userMigrations = [
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS waiting_feedback BOOLEAN DEFAULT FALSE`,
@@ -582,6 +635,61 @@ export async function initDatabase() {
       } catch (e) {}
     }
 
+    // ============ PERFORMANCE INDEXES ============
+    const indexMigrations = [
+      // Users table indexes
+      `CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_users_is_paid ON users(is_paid)`,
+      `CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_users_source ON users(source)`,
+      `CREATE INDEX IF NOT EXISTS idx_users_is_blocked ON users(is_blocked)`,
+
+      // Payments table indexes
+      `CREATE INDEX IF NOT EXISTS idx_payments_telegram_id ON payments(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_payments_state ON payments(state)`,
+      `CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at)`,
+
+      // Subscriptions table indexes
+      `CREATE INDEX IF NOT EXISTS idx_subscriptions_telegram_id ON subscriptions(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_subscriptions_is_active ON subscriptions(is_active)`,
+      `CREATE INDEX IF NOT EXISTS idx_subscriptions_end_date ON subscriptions(end_date)`,
+      `CREATE INDEX IF NOT EXISTS idx_subscriptions_active_end ON subscriptions(is_active, end_date)`,
+
+      // Referrals table indexes
+      `CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_referrals_referred ON referrals(referred_telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code)`,
+
+      // User funnels table indexes
+      `CREATE INDEX IF NOT EXISTS idx_user_funnels_telegram_id ON user_funnels(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_funnels_funnel_id ON user_funnels(funnel_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_funnels_status ON user_funnels(status)`,
+
+      // Messages table indexes
+      `CREATE INDEX IF NOT EXISTS idx_user_messages_telegram_id ON user_messages(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_messages_created_at ON user_messages(created_at)`,
+
+      // Lesson deliveries indexes
+      `CREATE INDEX IF NOT EXISTS idx_lesson_deliveries_telegram_id ON lesson_deliveries(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_lesson_deliveries_watched ON lesson_deliveries(watched_at)`,
+
+      // Scheduled messages indexes
+      `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_telegram_id ON scheduled_messages(telegram_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_send_at ON scheduled_messages(send_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_scheduled_messages_sent ON scheduled_messages(sent)`
+    ];
+
+    console.log('Creating performance indexes...');
+    for (const sql of indexMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {
+        // Index might already exist, that's fine
+      }
+    }
+    console.log('Indexes created');
+
     // ============ END MIGRATIONS ============
 
     console.log('Tables created');
@@ -719,13 +827,88 @@ export async function getTotalUsersCount() {
   return rows[0]?.count || 0;
 }
 
+// Whitelist of allowed fields for updateUser - security protection
+const ALLOWED_USER_UPDATE_FIELDS = new Set([
+  // Profile fields
+  'full_name', 'phone', 'username',
+  // CustDev data
+  'age_group', 'occupation', 'income_level', 'main_problem',
+  'previous_courses', 'budget_range', 'goal',
+  // Progress tracking
+  'funnel_step', 'current_lesson', 'custdev_step',
+  // State flags
+  'waiting_feedback', 'waiting_subscription', 'subscribed_free_channel',
+  'pending_lesson', 'feedback_given', 'feedback_type',
+  // Referral system
+  'referral_code', 'referral_count', 'referral_discount_used',
+  'referral_offer_sent', 'sales_pitch_seen_at',
+  // Subscription bypass
+  'subscription_check_attempts', 'subscription_bypassed',
+  // Traffic tracking
+  'source', 'utm_campaign'
+]);
+
+// Protected fields that require special functions to update
+const PROTECTED_USER_FIELDS = new Set([
+  'is_paid', 'is_blocked', 'is_admin', 'telegram_id', 'id', 'created_at'
+]);
+
 export async function updateUser(telegramId, data) {
-  const fields = Object.keys(data);
-  const values = Object.values(data);
-  const setClause = fields.map((f, i) => f + ' = $' + (i + 2)).join(', ');
+  // Filter only allowed fields
+  const safeData = {};
+  const rejectedFields = [];
+
+  for (const [key, value] of Object.entries(data)) {
+    if (ALLOWED_USER_UPDATE_FIELDS.has(key)) {
+      safeData[key] = value;
+    } else if (PROTECTED_USER_FIELDS.has(key)) {
+      rejectedFields.push(key);
+      console.warn(`⚠️ Attempted to update protected field "${key}" for user ${telegramId}`);
+    } else {
+      rejectedFields.push(key);
+      console.warn(`⚠️ Unknown field "${key}" rejected for user ${telegramId}`);
+    }
+  }
+
+  if (rejectedFields.length > 0) {
+    console.warn(`🛡️ Security: Rejected fields for user ${telegramId}:`, rejectedFields);
+  }
+
+  const fields = Object.keys(safeData);
+  if (fields.length === 0) {
+    console.warn(`⚠️ No valid fields to update for user ${telegramId}`);
+    return null;
+  }
+
+  const values = Object.values(safeData);
+  const setClause = fields.map((f, i) => `"${f}" = $${i + 2}`).join(', ');
 
   const { rows } = await pool.query(
-    'UPDATE users SET ' + setClause + ', last_activity = NOW() WHERE telegram_id = $1 RETURNING *',
+    `UPDATE users SET ${setClause}, last_activity = NOW() WHERE telegram_id = $1 RETURNING *`,
+    [telegramId, ...values]
+  );
+  return rows[0];
+}
+
+// Special function for admin-only updates (is_paid, is_blocked)
+export async function updateUserAdmin(telegramId, data) {
+  const allowedAdminFields = ['is_paid', 'is_blocked'];
+  const safeData = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    if (allowedAdminFields.includes(key)) {
+      safeData[key] = value;
+    }
+  }
+
+  const fields = Object.keys(safeData);
+  if (fields.length === 0) return null;
+
+  const values = Object.values(safeData);
+  const setClause = fields.map((f, i) => `"${f}" = $${i + 2}`).join(', ');
+
+  const { rows } = await pool.query(
+    `UPDATE users SET ${setClause} WHERE telegram_id = $1 RETURNING *`,
     [telegramId, ...values]
   );
   return rows[0];
@@ -1198,30 +1381,60 @@ export async function extendSubscription(telegramId, planId, additionalDays) {
   return null;
 }
 
+// Whitelist of allowed reminder columns for security
+const ALLOWED_REMINDER_COLUMNS = {
+  '10d': 'reminder_sent_10d',
+  '5d': 'reminder_sent_5d',
+  '3d': 'reminder_sent_3d',
+  '1d': 'reminder_sent_1d'
+};
+
 export async function getExpiringSubscriptions(daysRemaining) {
-  // Determine which reminder column to check
-  let reminderColumn;
-  if (daysRemaining === 10) reminderColumn = 'reminder_sent_10d';
-  else if (daysRemaining === 5) reminderColumn = 'reminder_sent_5d';
-  else if (daysRemaining === 3) reminderColumn = 'reminder_sent_3d';
-  else reminderColumn = 'reminder_sent_1d';
-  
+  // Map days to reminder column with whitelist validation
+  const reminderMap = { 10: '10d', 5: '5d', 3: '3d', 1: '1d' };
+  const reminderKey = reminderMap[daysRemaining] || '1d';
+  const reminderColumn = ALLOWED_REMINDER_COLUMNS[reminderKey];
+
+  if (!reminderColumn) {
+    console.error('Invalid reminder column requested:', daysRemaining);
+    return [];
+  }
+
+  // Use CASE WHEN for safe column selection instead of interpolation
   const { rows } = await pool.query(`
     SELECT s.*, u.full_name, u.username
     FROM subscriptions s
     JOIN users u ON s.telegram_id = u.telegram_id
-    WHERE s.is_active = true 
+    WHERE s.is_active = true
       AND s.end_date > NOW()
       AND DATE(s.end_date) = CURRENT_DATE + $1 * INTERVAL '1 day'
-      AND ${reminderColumn} = false
-  `, [daysRemaining]);
+      AND CASE
+        WHEN $2 = '10d' THEN s.reminder_sent_10d
+        WHEN $2 = '5d' THEN s.reminder_sent_5d
+        WHEN $2 = '3d' THEN s.reminder_sent_3d
+        ELSE s.reminder_sent_1d
+      END = false
+  `, [daysRemaining, reminderKey]);
   return rows;
 }
 
 export async function markReminderSent(subscriptionId, reminderType) {
-  // reminderType: '10d', '5d', '3d', or '1d'
-  const column = 'reminder_sent_' + reminderType;
-  await pool.query(`UPDATE subscriptions SET ${column} = true WHERE id = $1`, [subscriptionId]);
+  // Whitelist validation for reminderType
+  const column = ALLOWED_REMINDER_COLUMNS[reminderType];
+  if (!column) {
+    console.error('Invalid reminder type:', reminderType);
+    return;
+  }
+
+  // Use CASE for safe column update
+  await pool.query(`
+    UPDATE subscriptions SET
+      reminder_sent_10d = CASE WHEN $2 = '10d' THEN true ELSE reminder_sent_10d END,
+      reminder_sent_5d = CASE WHEN $2 = '5d' THEN true ELSE reminder_sent_5d END,
+      reminder_sent_3d = CASE WHEN $2 = '3d' THEN true ELSE reminder_sent_3d END,
+      reminder_sent_1d = CASE WHEN $2 = '1d' THEN true ELSE reminder_sent_1d END
+    WHERE id = $1
+  `, [subscriptionId, reminderType]);
 }
 
 export async function getExpiredSubscriptions() {
@@ -1517,17 +1730,20 @@ export async function getFunnelAnalytics() {
 }
 
 export async function getRevenueByPeriod(days = 30) {
+  // Validate and sanitize days parameter
+  const safeDays = Math.min(Math.max(parseInt(days) || 30, 1), 365);
+
   const { rows } = await pool.query(`
-    SELECT 
+    SELECT
       DATE(created_at) as date,
       SUM(amount) as revenue,
       COUNT(*) as transactions
     FROM payments
-    WHERE state = 'performed' 
-      AND created_at >= NOW() - INTERVAL '${days} days'
+    WHERE state = 'performed'
+      AND created_at >= NOW() - $1::integer * INTERVAL '1 day'
     GROUP BY DATE(created_at)
     ORDER BY date
-  `);
+  `, [safeDays]);
   return rows;
 }
 
@@ -2382,19 +2598,23 @@ export async function markLessonWatched(telegramId, funnelId, lessonNumber) {
 }
 
 export async function getUnwatchedLessons(minutesAgo, reminderNumber) {
-  const reminderColumn = reminderNumber === 1 ? 'reminder_1_sent' : 'reminder_2_sent';
+  // Validate reminderNumber (only 1 or 2 allowed)
+  const safeReminderNumber = reminderNumber === 1 ? 1 : 2;
 
   const { rows } = await pool.query(`
     SELECT ld.*, u.full_name, u.username
     FROM lesson_deliveries ld
     JOIN users u ON ld.telegram_id = u.telegram_id
     WHERE ld.watched_at IS NULL
-      AND ld.${reminderColumn} = FALSE
+      AND CASE
+        WHEN $2 = 1 THEN ld.reminder_1_sent
+        ELSE ld.reminder_2_sent
+      END = FALSE
       AND ld.delivered_at <= NOW() - INTERVAL '1 minute' * $1
       AND u.is_blocked = FALSE
     ORDER BY ld.delivered_at ASC
     LIMIT 100
-  `, [minutesAgo]);
+  `, [minutesAgo, safeReminderNumber]);
   return rows;
 }
 
@@ -2544,6 +2764,65 @@ export async function markReferralDiscountUsed(telegramId) {
   `, [telegramId]);
 }
 
+/**
+ * Atomic function to claim referral discount - prevents race condition
+ * Returns: { success: boolean, discountPercent: number, error?: string }
+ */
+export async function claimReferralDiscount(telegramId) {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Lock the user row for update to prevent race condition
+    const { rows: userRows } = await client.query(`
+      SELECT referral_discount_used FROM users WHERE telegram_id = $1 FOR UPDATE
+    `, [telegramId]);
+
+    if (!userRows[0]) {
+      await client.query('ROLLBACK');
+      return { success: false, error: 'User not found' };
+    }
+
+    if (userRows[0].referral_discount_used) {
+      await client.query('ROLLBACK');
+      return { success: false, error: 'Discount already used' };
+    }
+
+    // Count qualified referrals
+    const { rows: refRows } = await client.query(`
+      SELECT COUNT(*)::int as qualified_count
+      FROM referrals
+      WHERE referrer_telegram_id = $1 AND status = 'qualified'
+    `, [telegramId]);
+
+    const qualifiedCount = refRows[0]?.qualified_count || 0;
+    const requiredCount = parseInt(await getSetting('referral_required_count')) || 3;
+
+    if (qualifiedCount < requiredCount) {
+      await client.query('ROLLBACK');
+      return { success: false, error: 'Not enough referrals' };
+    }
+
+    // Mark discount as used atomically
+    await client.query(`
+      UPDATE users SET referral_discount_used = TRUE WHERE telegram_id = $1
+    `, [telegramId]);
+
+    await client.query('COMMIT');
+
+    const discountPercent = parseInt(await getSetting('referral_discount_percent')) || 50;
+
+    return { success: true, discountPercent };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    console.error('claimReferralDiscount error:', e.message);
+    return { success: false, error: 'Database error' };
+  } finally {
+    client.release();
+  }
+}
+
 export async function getReferralLeaderboard(limit = 10) {
   const { rows } = await pool.query(`
     SELECT
@@ -2574,6 +2853,9 @@ export async function getGlobalReferralStats() {
 
 // Get users eligible for referral offer (24h after seeing sales pitch, not paid, not sent offer yet)
 export async function getUsersForReferralOffer(hoursAfterPitch = 24) {
+  // Validate and sanitize hours parameter
+  const safeHours = Math.min(Math.max(parseInt(hoursAfterPitch) || 24, 1), 168); // 1 hour to 7 days
+
   const { rows } = await pool.query(`
     SELECT telegram_id, full_name, username
     FROM users
@@ -2581,10 +2863,10 @@ export async function getUsersForReferralOffer(hoursAfterPitch = 24) {
       AND is_blocked = FALSE
       AND referral_offer_sent = FALSE
       AND sales_pitch_seen_at IS NOT NULL
-      AND sales_pitch_seen_at < NOW() - INTERVAL '${hoursAfterPitch} hours'
+      AND sales_pitch_seen_at < NOW() - $1::integer * INTERVAL '1 hour'
       AND funnel_step >= 8
     LIMIT 50
-  `);
+  `, [safeHours]);
   return rows;
 }
 
@@ -2600,4 +2882,218 @@ export async function setSalesPitchSeenAt(telegramId) {
   await pool.query(`
     UPDATE users SET sales_pitch_seen_at = NOW() WHERE telegram_id = $1 AND sales_pitch_seen_at IS NULL
   `, [telegramId]);
+}
+
+// ============ AUDIT LOG FUNCTIONS ============
+
+export async function saveAuditLogs(entries) {
+  if (!entries || entries.length === 0) return;
+
+  const values = [];
+  const placeholders = [];
+  let paramIndex = 1;
+
+  for (const entry of entries) {
+    placeholders.push(`($${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++})`);
+    values.push(
+      entry.timestamp || new Date().toISOString(),
+      entry.action || 'UNKNOWN',
+      entry.user || null,
+      entry.target || null,
+      JSON.stringify(entry.details || {}),
+      entry.ip || null,
+      entry.userAgent || null
+    );
+  }
+
+  await pool.query(`
+    INSERT INTO audit_log (timestamp, action, user_identifier, target_identifier, details, ip_address, user_agent)
+    VALUES ${placeholders.join(', ')}
+  `, values);
+}
+
+export async function getAuditLogs(filters = {}) {
+  const { action, user, target, limit = 100, offset = 0, startDate, endDate } = filters;
+
+  let query = 'SELECT * FROM audit_log WHERE 1=1';
+  const params = [];
+  let paramIndex = 1;
+
+  if (action) {
+    query += ` AND action = $${paramIndex++}`;
+    params.push(action);
+  }
+
+  if (user) {
+    query += ` AND user_identifier = $${paramIndex++}`;
+    params.push(user);
+  }
+
+  if (target) {
+    query += ` AND target_identifier = $${paramIndex++}`;
+    params.push(target);
+  }
+
+  if (startDate) {
+    query += ` AND timestamp >= $${paramIndex++}`;
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    query += ` AND timestamp <= $${paramIndex++}`;
+    params.push(endDate);
+  }
+
+  query += ` ORDER BY timestamp DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+  params.push(Math.min(limit, 1000), offset);
+
+  const { rows } = await pool.query(query, params);
+  return rows;
+}
+
+// ============ PROMO CODE FUNCTIONS ============
+
+export async function createPromoCode(data) {
+  const { code, discountPercent, maxUses, validFrom, validUntil, minPlan, createdBy } = data;
+
+  const { rows } = await pool.query(`
+    INSERT INTO promo_codes (code, discount_percent, max_uses, valid_from, valid_until, min_plan, created_by)
+    VALUES (UPPER($1), $2, $3, $4, $5, $6, $7)
+    RETURNING *
+  `, [code, discountPercent, maxUses, validFrom, validUntil, minPlan, createdBy]);
+
+  return rows[0];
+}
+
+export async function getPromoCode(code) {
+  const { rows } = await pool.query(`
+    SELECT * FROM promo_codes WHERE UPPER(code) = UPPER($1)
+  `, [code]);
+  return rows[0] || null;
+}
+
+export async function validatePromoCode(code, telegramId, planId = null) {
+  const promo = await getPromoCode(code);
+
+  if (!promo) {
+    return { valid: false, error: 'Promo kod topilmadi' };
+  }
+
+  if (!promo.is_active) {
+    return { valid: false, error: 'Bu promo kod faol emas' };
+  }
+
+  const now = new Date();
+
+  if (promo.valid_from && new Date(promo.valid_from) > now) {
+    return { valid: false, error: 'Bu promo kod hali boshlanmagan' };
+  }
+
+  if (promo.valid_until && new Date(promo.valid_until) < now) {
+    return { valid: false, error: 'Bu promo kod muddati tugagan' };
+  }
+
+  if (promo.max_uses && promo.current_uses >= promo.max_uses) {
+    return { valid: false, error: 'Bu promo kod limiti tugagan' };
+  }
+
+  // Check if user already used this promo code
+  const { rows: uses } = await pool.query(`
+    SELECT id FROM promo_code_uses WHERE promo_code_id = $1 AND telegram_id = $2
+  `, [promo.id, telegramId]);
+
+  if (uses.length > 0) {
+    return { valid: false, error: 'Siz bu promo kodni allaqachon ishlatgansiz' };
+  }
+
+  // Check minimum plan requirement
+  if (promo.min_plan && planId) {
+    const planOrder = { '1month': 1, '3month': 2, '6month': 3, '1year': 4 };
+    if ((planOrder[planId] || 0) < (planOrder[promo.min_plan] || 0)) {
+      return { valid: false, error: `Bu promo kod faqat ${promo.min_plan} va undan yuqori tariflar uchun` };
+    }
+  }
+
+  return {
+    valid: true,
+    promoCode: promo,
+    discountPercent: promo.discount_percent
+  };
+}
+
+export async function usePromoCode(promoCodeId, telegramId, paymentId, discountAmount) {
+  // Start transaction
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Record the use
+    await client.query(`
+      INSERT INTO promo_code_uses (promo_code_id, telegram_id, payment_id, discount_amount)
+      VALUES ($1, $2, $3, $4)
+    `, [promoCodeId, telegramId, paymentId, discountAmount]);
+
+    // Increment current_uses
+    await client.query(`
+      UPDATE promo_codes SET current_uses = current_uses + 1 WHERE id = $1
+    `, [promoCodeId]);
+
+    await client.query('COMMIT');
+    return true;
+  } catch (e) {
+    await client.query('ROLLBACK');
+    console.error('usePromoCode error:', e.message);
+    return false;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getAllPromoCodes(includeInactive = false) {
+  const query = includeInactive
+    ? 'SELECT * FROM promo_codes ORDER BY created_at DESC'
+    : 'SELECT * FROM promo_codes WHERE is_active = TRUE ORDER BY created_at DESC';
+
+  const { rows } = await pool.query(query);
+  return rows;
+}
+
+export async function updatePromoCode(promoCodeId, data) {
+  const allowedFields = ['discount_percent', 'max_uses', 'valid_from', 'valid_until', 'min_plan', 'is_active'];
+  const updates = [];
+  const values = [promoCodeId];
+  let paramIndex = 2;
+
+  for (const [key, value] of Object.entries(data)) {
+    if (allowedFields.includes(key)) {
+      updates.push(`${key} = $${paramIndex++}`);
+      values.push(value);
+    }
+  }
+
+  if (updates.length === 0) return null;
+
+  const { rows } = await pool.query(`
+    UPDATE promo_codes SET ${updates.join(', ')} WHERE id = $1 RETURNING *
+  `, values);
+
+  return rows[0];
+}
+
+export async function deletePromoCode(promoCodeId) {
+  // Soft delete - just deactivate
+  await pool.query('UPDATE promo_codes SET is_active = FALSE WHERE id = $1', [promoCodeId]);
+}
+
+export async function getPromoCodeStats(promoCodeId) {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(*)::int as total_uses,
+      SUM(discount_amount)::bigint as total_discount_given,
+      MIN(used_at) as first_used,
+      MAX(used_at) as last_used
+    FROM promo_code_uses
+    WHERE promo_code_id = $1
+  `, [promoCodeId]);
+  return rows[0];
 }

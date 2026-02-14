@@ -225,10 +225,15 @@ async function handleClickCallback(req, res) {
     await db.updateUser(payment.telegram_id, { is_paid: true, funnel_step: 11 });
     await db.cancelPendingMessages(payment.telegram_id, 'soft_attack');
 
-    // Mark referral discount as used if this was a referral payment
+    // Mark referral discount as used if this was a referral payment (atomic to prevent race condition)
     if (orderId.startsWith('REF')) {
-      await db.markReferralDiscountUsed(payment.telegram_id);
-      console.log('Referral discount marked as used for:', payment.telegram_id);
+      const claimResult = await db.claimReferralDiscount(payment.telegram_id);
+      if (claimResult.success) {
+        console.log('Referral discount claimed atomically for:', payment.telegram_id);
+      } else {
+        // Discount was already used (possibly by concurrent payment) - log but continue
+        console.log('Referral discount claim result for', payment.telegram_id, ':', claimResult.error);
+      }
     }
 
     // Create one-time invite link

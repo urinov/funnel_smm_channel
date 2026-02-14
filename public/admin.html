@@ -516,6 +516,7 @@
       <div class="sidebar-item" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
       <div class="sidebar-item" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
       <div class="sidebar-item" data-tab="renewal" title="Uzaytirish"><span>🔁</span><span class="sidebar-label">Uzaytirish</span></div>
+      <div class="sidebar-item" data-tab="promo" title="Promo kodlar"><span>🎟️</span><span class="sidebar-label">Promo kodlar</span></div>
       <div class="sidebar-item" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
     </nav>
 
@@ -1633,6 +1634,86 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         </div>
 
         <button onclick="saveRenewalSettings()" class="btn btn-primary mt-5">💾 Uzaytirish sozlamalarini saqlash</button>
+      </div>
+    </div>
+
+    <!-- Promo Codes Tab -->
+    <div id="tab-promo" class="hidden">
+      <div class="card p-5 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-semibold text-gray-800">🎟️ Promo kodlar</h3>
+          <button onclick="showCreatePromoModal()" class="btn btn-primary btn-sm">+ Yangi kod</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500 border-b">
+                <th class="pb-3">Kod</th>
+                <th class="pb-3">Chegirma</th>
+                <th class="pb-3">Ishlatilgan</th>
+                <th class="pb-3">Limit</th>
+                <th class="pb-3">Amal qilish</th>
+                <th class="pb-3">Holat</th>
+                <th class="pb-3"></th>
+              </tr>
+            </thead>
+            <tbody id="promoCodesTable">
+              <tr><td colspan="7" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Promo Modal -->
+    <div id="promoModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <h3 class="font-semibold text-lg mb-4">🎟️ Yangi promo kod</h3>
+
+        <div class="space-y-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Kod *</label>
+            <input type="text" id="promoCode" class="input uppercase" placeholder="YANGIOBUNA50" maxlength="20">
+          </div>
+
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Chegirma foizi *</label>
+            <input type="number" id="promoDiscount" class="input" placeholder="50" min="1" max="100">
+          </div>
+
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Maksimal ishlatish soni (bo'sh = cheksiz)</label>
+            <input type="number" id="promoMaxUses" class="input" placeholder="100" min="1">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Boshlanish sanasi</label>
+              <input type="date" id="promoValidFrom" class="input">
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Tugash sanasi</label>
+              <input type="date" id="promoValidUntil" class="input">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Minimal tarif</label>
+            <select id="promoMinPlan" class="input">
+              <option value="">Barcha tariflar</option>
+              <option value="1month">1 oylik</option>
+              <option value="3month">3 oylik</option>
+              <option value="6month">6 oylik</option>
+              <option value="1year">12 oylik</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button onclick="closePromoModal()" class="btn btn-secondary flex-1">Bekor qilish</button>
+          <button onclick="createPromoCode()" class="btn btn-primary flex-1">Yaratish</button>
+        </div>
       </div>
     </div>
 
@@ -2859,9 +2940,124 @@ async function loadSettingsForm() {
   } catch(e) { console.error('loadSettingsForm error:', e); }
 }
 
+// ========== PROMO CODES ==========
+let promoCodes = [];
+
+async function loadPromoCodes() {
+  try {
+    promoCodes = await (await fetch('/api/promo-codes', { headers: { Authorization: auth } })).json();
+    renderPromoCodes();
+  } catch(e) {
+    console.error('loadPromoCodes error:', e);
+  }
+}
+
+function renderPromoCodes() {
+  const tbody = document.getElementById('promoCodesTable');
+  if (!promoCodes || promoCodes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-400">Promo kodlar yo\'q</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = promoCodes.map(p => {
+    const isActive = p.is_active;
+    const isExpired = p.valid_until && new Date(p.valid_until) < new Date();
+    const limitReached = p.max_uses && p.current_uses >= p.max_uses;
+
+    let status = 'badge-green';
+    let statusText = 'Faol';
+    if (!isActive) { status = 'badge-gray'; statusText = 'O\'chirilgan'; }
+    else if (isExpired) { status = 'badge-red'; statusText = 'Muddati o\'tgan'; }
+    else if (limitReached) { status = 'badge-orange'; statusText = 'Limit tugagan'; }
+
+    const validUntil = p.valid_until ? new Date(p.valid_until).toLocaleDateString('uz') : 'Cheksiz';
+
+    return `
+      <tr class="table-row">
+        <td class="py-3 font-mono font-semibold">${p.code}</td>
+        <td class="py-3">${p.discount_percent}%</td>
+        <td class="py-3">${p.current_uses || 0}</td>
+        <td class="py-3">${p.max_uses || '∞'}</td>
+        <td class="py-3">${validUntil}</td>
+        <td class="py-3"><span class="badge ${status}">${statusText}</span></td>
+        <td class="py-3">
+          <button onclick="togglePromoCode(${p.id}, ${!p.is_active})" class="text-sm ${p.is_active ? 'text-red-500' : 'text-green-500'} hover:underline">
+            ${p.is_active ? "O'chirish" : 'Yoqish'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function showCreatePromoModal() {
+  document.getElementById('promoModal').classList.remove('hidden');
+  document.getElementById('promoModal').classList.add('flex');
+  document.getElementById('promoCode').value = '';
+  document.getElementById('promoDiscount').value = '';
+  document.getElementById('promoMaxUses').value = '';
+  document.getElementById('promoValidFrom').value = '';
+  document.getElementById('promoValidUntil').value = '';
+  document.getElementById('promoMinPlan').value = '';
+}
+
+function closePromoModal() {
+  document.getElementById('promoModal').classList.add('hidden');
+  document.getElementById('promoModal').classList.remove('flex');
+}
+
+async function createPromoCode() {
+  const code = document.getElementById('promoCode').value.trim().toUpperCase();
+  const discountPercent = parseInt(document.getElementById('promoDiscount').value);
+  const maxUses = document.getElementById('promoMaxUses').value ? parseInt(document.getElementById('promoMaxUses').value) : null;
+  const validFrom = document.getElementById('promoValidFrom').value || null;
+  const validUntil = document.getElementById('promoValidUntil').value || null;
+  const minPlan = document.getElementById('promoMinPlan').value || null;
+
+  if (!code || !discountPercent) {
+    return alert('Kod va chegirma foizini kiriting');
+  }
+
+  if (discountPercent < 1 || discountPercent > 100) {
+    return alert('Chegirma 1-100% orasida bo\'lishi kerak');
+  }
+
+  try {
+    const res = await fetch('/api/promo-codes', {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, discountPercent, maxUses, validFrom, validUntil, minPlan })
+    });
+
+    const data = await res.json();
+    if (data.error) {
+      return alert('Xatolik: ' + data.error);
+    }
+
+    closePromoModal();
+    await loadPromoCodes();
+    alert('Promo kod yaratildi!');
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
+}
+
+async function togglePromoCode(id, isActive) {
+  try {
+    await fetch('/api/promo-codes/' + id, {
+      method: 'PUT',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: isActive })
+    });
+    await loadPromoCodes();
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
+}
+
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadCustomEmojiLibrary(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary()]);
+  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadCustomEmojiLibrary(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary(), loadPromoCodes()]);
   renderCharts();
   renderTodayStats();
 }

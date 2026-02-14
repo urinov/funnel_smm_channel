@@ -20,6 +20,73 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// ============ RATE LIMITING ============
+const rateLimitStore = new Map();
+
+function createRateLimiter(options = {}) {
+  const {
+    windowMs = 60 * 1000,  // 1 minute window
+    maxRequests = 100,      // max requests per window
+    message = 'Too many requests, please try again later',
+    keyGenerator = (req) => req.ip || req.headers['x-forwarded-for'] || 'unknown'
+  } = options;
+
+  return (req, res, next) => {
+    const key = keyGenerator(req);
+    const now = Date.now();
+
+    if (!rateLimitStore.has(key)) {
+      rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+      return next();
+    }
+
+    const record = rateLimitStore.get(key);
+
+    if (now > record.resetTime) {
+      record.count = 1;
+      record.resetTime = now + windowMs;
+      return next();
+    }
+
+    if (record.count >= maxRequests) {
+      res.set('Retry-After', Math.ceil((record.resetTime - now) / 1000));
+      return res.status(429).json({ error: message });
+    }
+
+    record.count++;
+    next();
+  };
+}
+
+// Clean up old rate limit records every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime + 60000) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// Different rate limits for different endpoints
+const apiRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 100,
+  message: 'Too many API requests'
+});
+
+const authRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  maxRequests: 10,            // Only 10 auth attempts per 15 min
+  message: 'Too many authentication attempts'
+});
+
+const paymentRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 30,
+  message: 'Too many payment requests'
+});
 const ADMIN_IDS = (process.env.ADMIN_IDS || '')
   .split(',')
   .map((id) => parseInt(id.trim(), 10))
@@ -121,6 +188,13 @@ function tryTelegramWebAppAuth(req) {
   };
 }
 
+// Apply rate limiting to all API routes
+app.use('/api', apiRateLimiter);
+
+// Apply stricter rate limiting to payment endpoints
+app.use('/payme', paymentRateLimiter);
+app.use('/click', paymentRateLimiter);
+
 const authMiddleware = (req, res, next) => {
   const tgAuth = tryTelegramWebAppAuth(req);
   if (tgAuth.ok) {
@@ -130,6 +204,22 @@ const authMiddleware = (req, res, next) => {
     return next();
   }
   if (!tgAuth.skip) {
+    // Apply auth rate limiting on failed attempts
+    const key = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const authKey = `auth_${key}`;
+    const now = Date.now();
+
+    if (!rateLimitStore.has(authKey)) {
+      rateLimitStore.set(authKey, { count: 1, resetTime: now + 15 * 60 * 1000 });
+    } else {
+      const record = rateLimitStore.get(authKey);
+      if (now <= record.resetTime) {
+        record.count++;
+        if (record.count > 10) {
+          return res.status(429).json({ error: 'Too many failed auth attempts. Try again later.' });
+        }
+      }
+    }
     return res.status(tgAuth.status || 401).json({ error: tgAuth.error || 'Unauthorized' });
   }
 
@@ -142,6 +232,22 @@ const authMiddleware = (req, res, next) => {
   const [user, pass] = decoded.split(':');
 
   if (user !== process.env.ADMIN_USER || pass !== process.env.ADMIN_PASS) {
+    // Track failed Basic auth attempts
+    const key = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const authKey = `auth_${key}`;
+    const now = Date.now();
+
+    if (!rateLimitStore.has(authKey)) {
+      rateLimitStore.set(authKey, { count: 1, resetTime: now + 15 * 60 * 1000 });
+    } else {
+      const record = rateLimitStore.get(authKey);
+      if (now <= record.resetTime) {
+        record.count++;
+        if (record.count > 10) {
+          return res.status(429).json({ error: 'Too many failed auth attempts. Try again later.' });
+        }
+      }
+    }
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
@@ -1941,6 +2047,126 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
     }
 
     res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ PROMO CODES API ============
+
+// Get all promo codes
+app.get('/api/promo-codes', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const codes = await db.getAllPromoCodes(true);
+    res.json(codes);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create promo code
+app.post('/api/promo-codes', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const { code, discountPercent, maxUses, validFrom, validUntil, minPlan } = req.body;
+
+    if (!code || !discountPercent) {
+      return res.status(400).json({ error: 'code va discountPercent majburiy' });
+    }
+
+    if (discountPercent < 1 || discountPercent > 100) {
+      return res.status(400).json({ error: 'discountPercent 1-100 orasida bo\'lishi kerak' });
+    }
+
+    const promo = await db.createPromoCode({
+      code,
+      discountPercent,
+      maxUses: maxUses || null,
+      validFrom: validFrom || null,
+      validUntil: validUntil || null,
+      minPlan: minPlan || null,
+      createdBy: req.adminUser
+    });
+
+    res.json(promo);
+  } catch (e) {
+    if (e.message.includes('duplicate key')) {
+      return res.status(400).json({ error: 'Bu kod allaqachon mavjud' });
+    }
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Validate promo code (for testing)
+app.post('/api/promo-codes/validate', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const { code, telegramId, planId } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: 'code majburiy' });
+    }
+
+    const result = await db.validatePromoCode(code, telegramId || 0, planId);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Update promo code
+app.put('/api/promo-codes/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const updated = await db.updatePromoCode(req.params.id, req.body);
+    if (!updated) {
+      return res.status(404).json({ error: 'Promo kod topilmadi' });
+    }
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete (deactivate) promo code
+app.delete('/api/promo-codes/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.deletePromoCode(req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get promo code stats
+app.get('/api/promo-codes/:id/stats', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const stats = await db.getPromoCodeStats(req.params.id);
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ AUDIT LOG API ============
+
+app.get('/api/audit-logs', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const { action, user, target, limit, offset, startDate, endDate } = req.query;
+    const logs = await db.getAuditLogs({
+      action,
+      user,
+      target,
+      limit: parseInt(limit) || 100,
+      offset: parseInt(offset) || 0,
+      startDate,
+      endDate
+    });
+    res.json(logs);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
