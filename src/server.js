@@ -1827,11 +1827,23 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     const db = await import('./database.js');
     const data = req.body;
 
-    // Channel settings
+    // Channel settings - update both bot_messages AND default funnel
     if (data.premium_channel_id !== undefined) await db.updateBotMessage('premium_channel_id', data.premium_channel_id);
-    if (data.free_channel_id !== undefined) await db.updateBotMessage('free_channel_id', data.free_channel_id);
-    if (data.free_channel_link !== undefined) await db.updateBotMessage('free_channel_link', data.free_channel_link);
-    if (data.require_subscription_before_lesson !== undefined) await db.updateBotMessage('require_subscription_before_lesson', String(data.require_subscription_before_lesson));
+    if (data.free_channel_id !== undefined) {
+      await db.updateBotMessage('free_channel_id', data.free_channel_id);
+      // Also update default funnel
+      await db.syncChannelSettingsToFunnel(data.free_channel_id, null, null);
+    }
+    if (data.free_channel_link !== undefined) {
+      await db.updateBotMessage('free_channel_link', data.free_channel_link);
+      // Also update default funnel
+      await db.syncChannelSettingsToFunnel(null, data.free_channel_link, null);
+    }
+    if (data.require_subscription_before_lesson !== undefined) {
+      await db.updateBotMessage('require_subscription_before_lesson', String(data.require_subscription_before_lesson));
+      // Also update default funnel
+      await db.syncChannelSettingsToFunnel(null, null, parseInt(data.require_subscription_before_lesson) || 0);
+    }
     if (data.subscription_bypass_enabled !== undefined) await db.updateBotMessage('subscription_bypass_enabled', String(data.subscription_bypass_enabled));
     if (data.subscription_bypass_attempts !== undefined) await db.updateBotMessage('subscription_bypass_attempts', String(data.subscription_bypass_attempts));
 

@@ -2312,6 +2312,35 @@ export async function getFunnelRevenue(funnelId) {
   return rows[0] || { total: 0 };
 }
 
+// Sync channel settings from dashboard to default funnel
+export async function syncChannelSettingsToFunnel(freeChannelId, freeChannelLink, requireSubLesson) {
+  const updates = [];
+  const values = [];
+  let paramIndex = 1;
+
+  if (freeChannelId !== null && freeChannelId !== undefined) {
+    updates.push(`free_channel_id = $${paramIndex++}`);
+    values.push(freeChannelId);
+  }
+  if (freeChannelLink !== null && freeChannelLink !== undefined) {
+    updates.push(`free_channel_link = $${paramIndex++}`);
+    values.push(freeChannelLink);
+  }
+  if (requireSubLesson !== null && requireSubLesson !== undefined) {
+    updates.push(`require_subscription_before_lesson = $${paramIndex++}`);
+    values.push(requireSubLesson);
+  }
+
+  if (updates.length === 0) return;
+
+  // Update default funnel (is_default = true)
+  await pool.query(`
+    UPDATE funnels SET ${updates.join(', ')} WHERE is_default = true
+  `, values);
+
+  console.log('Synced channel settings to default funnel:', { freeChannelId, freeChannelLink, requireSubLesson });
+}
+
 // Get funnel users with pagination
 export async function getFunnelUsers(funnelId, { page = 1, limit = 20, status = null }) {
   const offset = (page - 1) * limit;
