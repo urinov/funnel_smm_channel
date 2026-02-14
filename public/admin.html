@@ -82,6 +82,7 @@
     .badge-yellow { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #b45309; }
     .badge-red { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #b91c1c; }
     .badge-gray { background: #f3f4f6; color: #6b7280; }
+    .badge-purple { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7c3aed; }
 
     /* Button */
     .btn { padding: 10px 20px; border-radius: 14px; font-weight: 600; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: 1px solid rgba(255,255,255,0.4); background: var(--glass-strong); backdrop-filter: blur(12px); }
@@ -508,15 +509,18 @@
 
     <nav class="flex flex-col gap-2 flex-1 w-full px-3">
       <div class="sidebar-item active" data-tab="overview" title="Umumiy"><span>📊</span><span class="sidebar-label">Umumiy</span></div>
+      <div class="sidebar-item" data-tab="analytics" title="Analitika"><span>📈</span><span class="sidebar-label">Analitika</span></div>
       <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar"><span>👥</span><span class="sidebar-label">Foydalanuvchilar</span></div>
       <div class="sidebar-item" data-tab="conversations" title="Suhbatlar"><span>💬</span><span class="sidebar-label">Suhbatlar</span></div>
       <div class="sidebar-item" data-tab="payments" title="To'lovlar"><span>💳</span><span class="sidebar-label">To'lovlar</span></div>
+      <div class="sidebar-item" data-tab="referrals" title="Referallar"><span>🔗</span><span class="sidebar-label">Referallar</span></div>
       <div class="sidebar-item" data-tab="lessons" title="Darslar"><span>📚</span><span class="sidebar-label">Darslar</span></div>
       <div class="sidebar-item" data-tab="library" title="Kutubxona"><span>📖</span><span class="sidebar-label">Kutubxona</span></div>
       <div class="sidebar-item" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
       <div class="sidebar-item" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
       <div class="sidebar-item" data-tab="renewal" title="Uzaytirish"><span>🔁</span><span class="sidebar-label">Uzaytirish</span></div>
       <div class="sidebar-item" data-tab="promo" title="Promo kodlar"><span>🎟️</span><span class="sidebar-label">Promo kodlar</span></div>
+      <div class="sidebar-item" data-tab="audit" title="Audit Log"><span>📋</span><span class="sidebar-label">Audit Log</span></div>
       <div class="sidebar-item" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
     </nav>
 
@@ -556,13 +560,29 @@
           <span class="text-2xl mb-2">📝</span>
           <span class="text-xs text-gray-600">CustDev</span>
         </div>
+        <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('analytics'); toggleMobileMenu();">
+          <span class="text-2xl mb-2">📈</span>
+          <span class="text-xs text-gray-600">Analitika</span>
+        </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('conversations'); toggleMobileMenu();">
           <span class="text-2xl mb-2">💬</span>
           <span class="text-xs text-gray-600">Suhbatlar</span>
         </div>
+        <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('referrals'); toggleMobileMenu();">
+          <span class="text-2xl mb-2">🔗</span>
+          <span class="text-xs text-gray-600">Referallar</span>
+        </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('renewal'); toggleMobileMenu();">
           <span class="text-2xl mb-2">🔁</span>
           <span class="text-xs text-gray-600">Uzaytirish</span>
+        </div>
+        <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('promo'); toggleMobileMenu();">
+          <span class="text-2xl mb-2">🎟️</span>
+          <span class="text-xs text-gray-600">Promokod</span>
+        </div>
+        <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('audit'); toggleMobileMenu();">
+          <span class="text-2xl mb-2">📋</span>
+          <span class="text-xs text-gray-600">Audit Log</span>
         </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('settings'); toggleMobileMenu();">
           <span class="text-2xl mb-2">⚙️</span>
@@ -1494,6 +1514,12 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
     <!-- CustDev Tab -->
     <div id="tab-custdev" class="hidden">
+      <!-- CustDev Header with Export -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <h2 class="text-xl font-bold text-gray-800">CustDev ma'lumotlari</h2>
+        <button onclick="exportCustDevAnswers()" class="btn btn-secondary">📥 Javoblarni eksport qilish (CSV)</button>
+      </div>
+
       <!-- CustDev Overview Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="card p-5">
@@ -1713,6 +1739,203 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         <div class="flex gap-3 mt-6">
           <button onclick="closePromoModal()" class="btn btn-secondary flex-1">Bekor qilish</button>
           <button onclick="createPromoCode()" class="btn btn-primary flex-1">Yaratish</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="tab-analytics" class="hidden">
+      <!-- Revenue & Growth Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (so'nggi 30 kun)</h3>
+          <div class="chart-container"><canvas id="analyticsRevenueChart"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">📈 Obunalar o'sishi</h3>
+          <div class="chart-container"><canvas id="analyticsSubscribersChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Source Analytics -->
+      <div class="card p-5 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🌐 Trafik manbalari</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <canvas id="sourcesPieChart" height="250"></canvas>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-gray-500 border-b">
+                  <th class="pb-3">Manba</th>
+                  <th class="pb-3">Userlar</th>
+                  <th class="pb-3">To'lagan</th>
+                  <th class="pb-3">Konversiya</th>
+                </tr>
+              </thead>
+              <tbody id="sourcesTable">
+                <tr><td colspan="4" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buyer Journey Analytics -->
+      <div class="card p-5 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🛒 Xaridor statistikasi</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div class="text-center p-4 bg-blue-50 rounded-xl">
+            <div class="text-2xl font-bold text-blue-600" id="buyerAvgLesson">-</div>
+            <div class="text-xs text-gray-500">Jami xaridorlar</div>
+          </div>
+          <div class="text-center p-4 bg-green-50 rounded-xl">
+            <div class="text-2xl font-bold text-green-600" id="buyerAvgDays">-</div>
+            <div class="text-xs text-gray-500">O'rtacha kun (sotib olish)</div>
+          </div>
+          <div class="text-center p-4 bg-purple-50 rounded-xl">
+            <div class="text-2xl font-bold text-purple-600" id="buyerConversion">-</div>
+            <div class="text-xs text-gray-500">Konversiya</div>
+          </div>
+          <div class="text-center p-4 bg-orange-50 rounded-xl">
+            <div class="text-2xl font-bold text-orange-600" id="buyerAvgCheck">-</div>
+            <div class="text-xs text-gray-500">Eng tez xarid</div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mb-2">Xaridorlar yosh guruhi bo'yicha:</p>
+        <div class="chart-container h-[150px]"><canvas id="buyerFunnelChart"></canvas></div>
+      </div>
+
+      <!-- Inactivity Stats -->
+      <div class="card p-5">
+        <h3 class="font-semibold text-gray-800 mb-4">⏰ Faolsizlik eslatmalari</h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="text-center p-4 bg-gray-50 rounded-xl">
+            <div class="text-2xl font-bold text-gray-700" id="inactTotalDeliveries">-</div>
+            <div class="text-xs text-gray-500">Yuborilgan darslar</div>
+          </div>
+          <div class="text-center p-4 bg-green-50 rounded-xl">
+            <div class="text-2xl font-bold text-green-600" id="inactWatched">-</div>
+            <div class="text-xs text-gray-500">Ko'rilgan</div>
+          </div>
+          <div class="text-center p-4 bg-yellow-50 rounded-xl">
+            <div class="text-2xl font-bold text-yellow-600" id="inactReminder1">-</div>
+            <div class="text-xs text-gray-500">1-eslatma</div>
+          </div>
+          <div class="text-center p-4 bg-orange-50 rounded-xl">
+            <div class="text-2xl font-bold text-orange-600" id="inactReminder2">-</div>
+            <div class="text-xs text-gray-500">2-eslatma</div>
+          </div>
+          <div class="text-center p-4 bg-blue-50 rounded-xl">
+            <div class="text-2xl font-bold text-blue-600" id="inactWatchedAfter">-</div>
+            <div class="text-xs text-gray-500">Eslatmadan keyin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referrals Tab -->
+    <div id="tab-referrals" class="hidden">
+      <!-- Referral Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-blue-600" id="refTotalReferrals">-</div>
+          <div class="text-sm text-gray-500">Jami referallar</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-green-600" id="refQualified">-</div>
+          <div class="text-sm text-gray-500">Faol (qualified)</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-purple-600" id="refDiscountsUsed">-</div>
+          <div class="text-sm text-gray-500">Chegirma olgan</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-orange-600" id="refActiveReferrers">-</div>
+          <div class="text-sm text-gray-500">Faol referrerlar</div>
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="card p-5 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🏆 Top Referrerlar</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500 border-b">
+                <th class="pb-3">#</th>
+                <th class="pb-3">Foydalanuvchi</th>
+                <th class="pb-3">Taklif qilgan</th>
+                <th class="pb-3">Chegirma</th>
+              </tr>
+            </thead>
+            <tbody id="referralLeaderboard">
+              <tr><td colspan="4" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Invite Links -->
+      <div class="card p-5">
+        <h3 class="font-semibold text-gray-800 mb-4">🔗 Taklifnoma linklari</h3>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="text-center p-3 bg-blue-50 rounded-xl">
+            <div class="text-xl font-bold text-blue-600" id="inviteTotal">-</div>
+            <div class="text-xs text-gray-500">Jami yaratilgan</div>
+          </div>
+          <div class="text-center p-3 bg-green-50 rounded-xl">
+            <div class="text-xl font-bold text-green-600" id="inviteUsed">-</div>
+            <div class="text-xs text-gray-500">Ishlatilgan</div>
+          </div>
+          <div class="text-center p-3 bg-gray-50 rounded-xl">
+            <div class="text-xl font-bold text-gray-600" id="inviteUnused">-</div>
+            <div class="text-xs text-gray-500">Ishlatilmagan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Log Tab -->
+    <div id="tab-audit" class="hidden">
+      <div class="card p-5">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+          <h3 class="font-semibold text-gray-800">📋 Audit Log (Tekshiruv jurnali)</h3>
+          <div class="flex gap-2 flex-wrap">
+            <select id="auditActionFilter" class="input w-40" onchange="loadAuditLogs()">
+              <option value="">Barcha harakatlar</option>
+              <option value="PAYMENT_COMPLETED">To'lovlar</option>
+              <option value="USER_CREATED">Yangi userlar</option>
+              <option value="SETTINGS_CHANGED">Sozlamalar</option>
+              <option value="SECURITY_">Xavfsizlik</option>
+            </select>
+            <input type="date" id="auditDateFilter" class="input w-40" onchange="loadAuditLogs()">
+            <button onclick="exportAuditLogs()" class="btn btn-secondary btn-sm">📥 Export</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500 border-b">
+                <th class="pb-3">Vaqt</th>
+                <th class="pb-3">Harakat</th>
+                <th class="pb-3">Foydalanuvchi</th>
+                <th class="pb-3">Maqsad</th>
+                <th class="pb-3">Tafsilotlar</th>
+              </tr>
+            </thead>
+            <tbody id="auditLogsTable">
+              <tr><td colspan="5" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-center mt-4 gap-2">
+          <button onclick="loadAuditLogs(auditOffset - 50)" class="btn btn-secondary btn-sm" id="auditPrevBtn" disabled>← Oldingi</button>
+          <span class="px-4 py-2 text-sm text-gray-500" id="auditPageInfo">1-50</span>
+          <button onclick="loadAuditLogs(auditOffset + 50)" class="btn btn-secondary btn-sm" id="auditNextBtn">Keyingi →</button>
         </div>
       </div>
     </div>
@@ -2891,6 +3114,9 @@ function showTab(tab) {
   }
   if (tab === 'renewal') loadRenewalSettings();
   if (tab === 'settings') loadSettingsForm();
+  if (tab === 'analytics') loadAnalyticsData();
+  if (tab === 'referrals') loadReferralData();
+  if (tab === 'audit') loadAuditLogs();
 }
 
 async function loadSettingsForm() {
@@ -5991,6 +6217,453 @@ async function saveSettings() {
 
     alert('✅ Sozlamalar saqlandi!');
   } catch(e) { alert('Xatolik: ' + e.message); }
+}
+
+// ========== ANALYTICS TAB ==========
+let analyticsCharts = {};
+let auditOffset = 0;
+
+async function loadAnalyticsData() {
+  try {
+    // Load all analytics data in parallel
+    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData] = await Promise.all([
+      fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/subscribers/daily?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    // Render revenue chart
+    renderAnalyticsRevenueChart(revenueData);
+
+    // Render subscribers chart
+    renderSubscribersChart(subscribersData);
+
+    // Render sources table and pie chart
+    renderSourcesAnalytics(sourcesData);
+
+    // Render buyer journey stats
+    renderBuyerAnalytics(buyerData);
+
+    // Render inactivity stats
+    renderInactivityStats(inactivityData);
+
+  } catch(e) {
+    console.error('loadAnalyticsData error:', e);
+  }
+}
+
+function renderAnalyticsRevenueChart(data) {
+  const ctx = document.getElementById('analyticsRevenueChart');
+  if (!ctx) return;
+
+  if (analyticsCharts.revenue) {
+    analyticsCharts.revenue.destroy();
+  }
+
+  const labels = data.map(d => {
+    const date = new Date(d.date);
+    return date.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' });
+  });
+
+  const values = data.map(d => Math.round((d.revenue || 0) / 100));
+
+  analyticsCharts.revenue = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Daromad',
+        data: values,
+        borderColor: '#5b7cfa',
+        backgroundColor: 'rgba(91, 124, 250, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => v.toLocaleString() + " so'm" }
+        }
+      }
+    }
+  });
+}
+
+function renderSubscribersChart(data) {
+  const ctx = document.getElementById('analyticsSubscribersChart');
+  if (!ctx) return;
+
+  if (analyticsCharts.subscribers) {
+    analyticsCharts.subscribers.destroy();
+  }
+
+  const labels = data.map(d => {
+    const date = new Date(d.date);
+    return date.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' });
+  });
+
+  const newUsers = data.map(d => d.new_users || 0);
+  const paidUsers = data.map(d => d.new_paid || 0);
+
+  analyticsCharts.subscribers = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Yangi userlar',
+          data: newUsers,
+          backgroundColor: 'rgba(91, 124, 250, 0.7)',
+          borderRadius: 4
+        },
+        {
+          label: "To'lagan",
+          data: paidUsers,
+          backgroundColor: 'rgba(34, 197, 94, 0.7)',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function renderSourcesAnalytics(data) {
+  const tableBody = document.getElementById('sourcesTable');
+  const ctx = document.getElementById('sourcesPieChart');
+
+  if (!data.sources || data.sources.length === 0) {
+    if (tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">Ma\'lumot yo\'q</td></tr>';
+    return;
+  }
+
+  // Render table
+  if (tableBody) {
+    tableBody.innerHTML = data.sources.map(s => {
+      const conv = s.total_users > 0 ? Math.round((s.paid_users / s.total_users) * 100) : 0;
+      const sourceName = getSourceName(s.source);
+      return `
+        <tr class="border-b border-gray-100">
+          <td class="py-3">${sourceName}</td>
+          <td class="py-3 font-medium">${s.total_users}</td>
+          <td class="py-3 text-green-600">${s.paid_users}</td>
+          <td class="py-3"><span class="badge ${conv > 10 ? 'badge-green' : conv > 5 ? 'badge-yellow' : 'badge-gray'}">${conv}%</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Render pie chart
+  if (ctx) {
+    if (analyticsCharts.sources) {
+      analyticsCharts.sources.destroy();
+    }
+
+    const colors = ['#5b7cfa', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+
+    analyticsCharts.sources = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: data.sources.map(s => getSourceName(s.source)),
+        datasets: [{
+          data: data.sources.map(s => s.total_users),
+          backgroundColor: colors.slice(0, data.sources.length),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right' }
+        }
+      }
+    });
+  }
+}
+
+function getSourceName(source) {
+  const names = {
+    'direct': '🌐 Direct',
+    'instagram': '📸 Instagram',
+    'telegram': '📱 Telegram',
+    'facebook': '👤 Facebook',
+    'youtube': '🎬 YouTube',
+    'tiktok': '🎵 TikTok'
+  };
+  return names[source] || ('🔗 ' + source);
+}
+
+function renderBuyerAnalytics(data) {
+  // Total buyers
+  document.getElementById('buyerAvgLesson').textContent = data.totalBuyers || '0';
+
+  // avgTimeToPurchase is in milliseconds, convert to days
+  const avgDays = data.avgTimeToPurchase ? (data.avgTimeToPurchase / (1000 * 60 * 60 * 24)).toFixed(1) : '-';
+  document.getElementById('buyerAvgDays').textContent = avgDays;
+
+  // Conversion rate
+  document.getElementById('buyerConversion').textContent = data.conversionRate ? data.conversionRate.toFixed(1) + '%' : '0%';
+
+  // Fastest purchase in days
+  const fastestDays = data.fastestPurchase ? (data.fastestPurchase / (1000 * 60 * 60 * 24)).toFixed(1) : '-';
+  document.getElementById('buyerAvgCheck').textContent = fastestDays + ' kun';
+
+  // Render buyer demographics chart (by age group)
+  const ctx = document.getElementById('buyerFunnelChart');
+  if (ctx) {
+    if (analyticsCharts.buyerFunnel) {
+      analyticsCharts.buyerFunnel.destroy();
+    }
+
+    const ageData = data.buyersByAge || {};
+    const hasAgeData = Object.keys(ageData).length > 0;
+
+    if (hasAgeData) {
+      analyticsCharts.buyerFunnel = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(ageData),
+          datasets: [{
+            label: 'Xaridorlar soni',
+            data: Object.values(ageData),
+            backgroundColor: ['#5b7cfa', '#8b5cf6', '#f59e0b', '#22c55e', '#ef4444'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true } }
+        }
+      });
+    }
+  }
+}
+
+function renderInactivityStats(data) {
+  document.getElementById('inactTotalDeliveries').textContent = data.total_deliveries || '-';
+  document.getElementById('inactWatched').textContent = data.watched || '-';
+  document.getElementById('inactReminder1').textContent = data.reminder_1_sent || '-';
+  document.getElementById('inactReminder2').textContent = data.reminder_2_sent || '-';
+  document.getElementById('inactWatchedAfter').textContent = data.watched_after_reminder || '-';
+}
+
+// ========== REFERRALS TAB ==========
+async function loadReferralData() {
+  try {
+    const [referralData, inviteData] = await Promise.all([
+      fetch('/api/analytics/referrals', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/invite-links', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    // Render referral stats
+    const stats = referralData.stats || {};
+    document.getElementById('refTotalReferrals').textContent = stats.total_referrals || 0;
+    document.getElementById('refQualified').textContent = stats.qualified_referrals || 0;
+    document.getElementById('refDiscountsUsed').textContent = stats.discounts_used || 0;
+    document.getElementById('refActiveReferrers').textContent = stats.total_referrers || 0;
+
+    // Render leaderboard
+    const leaderboard = referralData.leaderboard || [];
+    const tbody = document.getElementById('referralLeaderboard');
+    if (leaderboard.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">Hozircha referallar yo\'q</td></tr>';
+    } else {
+      tbody.innerHTML = leaderboard.map((u, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+        const discount = u.referral_discount_used ? '<span class="badge badge-green">Oldi</span>' : '<span class="badge badge-gray">-</span>';
+        return `
+          <tr class="border-b border-gray-100">
+            <td class="py-3 font-medium">${medal}</td>
+            <td class="py-3">${escapeHtml(u.full_name || u.username || u.telegram_id)}</td>
+            <td class="py-3 text-center font-bold text-indigo-600">${u.referral_count}</td>
+            <td class="py-3">${discount}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Render invite links stats
+    const links = inviteData.links || [];
+    const totalLinks = links.length;
+    const usedLinks = links.filter(l => l.is_used).length;
+    document.getElementById('inviteTotal').textContent = totalLinks;
+    document.getElementById('inviteUsed').textContent = usedLinks;
+    document.getElementById('inviteUnused').textContent = totalLinks - usedLinks;
+
+  } catch(e) {
+    console.error('loadReferralData error:', e);
+  }
+}
+
+// ========== AUDIT LOG TAB ==========
+async function loadAuditLogs(offset = 0) {
+  auditOffset = Math.max(0, offset);
+
+  try {
+    const action = document.getElementById('auditActionFilter').value;
+    const date = document.getElementById('auditDateFilter').value;
+
+    let url = `/api/audit-logs?limit=50&offset=${auditOffset}`;
+    if (action) url += '&action=' + encodeURIComponent(action);
+    if (date) url += '&startDate=' + date + '&endDate=' + date;
+
+    const logs = await fetch(url, { headers: { Authorization: auth } }).then(r => r.json());
+
+    const tbody = document.getElementById('auditLogsTable');
+
+    if (!logs || logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">Log topilmadi</td></tr>';
+      document.getElementById('auditPrevBtn').disabled = true;
+      document.getElementById('auditNextBtn').disabled = true;
+      document.getElementById('auditPageInfo').textContent = '0';
+      return;
+    }
+
+    tbody.innerHTML = logs.map(log => {
+      const time = new Date(log.timestamp).toLocaleString('uz-UZ', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+      });
+      const actionBadge = getAuditActionBadge(log.action);
+      const details = log.details ? JSON.stringify(log.details).slice(0, 50) : '-';
+
+      return `
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+          <td class="py-3 text-xs text-gray-500">${time}</td>
+          <td class="py-3">${actionBadge}</td>
+          <td class="py-3 text-sm">${escapeHtml(log.user || '-')}</td>
+          <td class="py-3 text-sm">${escapeHtml(log.target || '-')}</td>
+          <td class="py-3 text-xs text-gray-400 truncate max-w-[200px]">${escapeHtml(details)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Update pagination
+    document.getElementById('auditPrevBtn').disabled = auditOffset === 0;
+    document.getElementById('auditNextBtn').disabled = logs.length < 50;
+    document.getElementById('auditPageInfo').textContent = `${auditOffset + 1}-${auditOffset + logs.length}`;
+
+  } catch(e) {
+    console.error('loadAuditLogs error:', e);
+    document.getElementById('auditLogsTable').innerHTML = '<tr><td colspan="5" class="py-4 text-center text-red-400">Xatolik yuz berdi</td></tr>';
+  }
+}
+
+function getAuditActionBadge(action) {
+  const badges = {
+    'PAYMENT_COMPLETED': '<span class="badge badge-green">To\'lov</span>',
+    'PAYMENT_CREATED': '<span class="badge badge-blue">To\'lov yaratildi</span>',
+    'PAYMENT_FAILED': '<span class="badge badge-red">To\'lov xato</span>',
+    'USER_CREATED': '<span class="badge badge-blue">Yangi user</span>',
+    'USER_UPDATED': '<span class="badge badge-yellow">User yangilandi</span>',
+    'SETTINGS_CHANGED': '<span class="badge badge-orange">Sozlama</span>',
+    'SECURITY_SUSPICIOUS': '<span class="badge badge-red">Xavfsizlik</span>',
+    'SECURITY_RATE_LIMIT': '<span class="badge badge-orange">Rate limit</span>',
+    'SUBSCRIPTION_CREATED': '<span class="badge badge-green">Obuna</span>',
+    'REFERRAL_CREATED': '<span class="badge badge-blue">Referal</span>',
+    'BROADCAST_SENT': '<span class="badge badge-purple">Xabar</span>'
+  };
+  return badges[action] || `<span class="badge badge-gray">${action}</span>`;
+}
+
+async function exportCustDevAnswers() {
+  try {
+    const answers = await fetch('/api/custdev/answers', { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (!answers || answers.length === 0) {
+      alert('Eksport qilish uchun javob topilmadi');
+      return;
+    }
+
+    // Get all unique question IDs
+    const questions = [...new Set(answers.map(a => a.question_id))];
+
+    // Get question texts
+    const questionsData = await fetch('/api/custdev', { headers: { Authorization: auth } }).then(r => r.json());
+    const questionMap = {};
+    questionsData.forEach(q => { questionMap[q.id] = q.question; });
+
+    // Build CSV with user info and their answers
+    const userAnswers = {};
+    answers.forEach(a => {
+      if (!userAnswers[a.telegram_id]) {
+        userAnswers[a.telegram_id] = { telegram_id: a.telegram_id };
+      }
+      userAnswers[a.telegram_id]['q_' + a.question_id] = a.answer;
+    });
+
+    const headers = ['Telegram ID', ...questions.map(qId => questionMap[qId] || 'Savol ' + qId)];
+    const rows = Object.values(userAnswers).map(u => {
+      return [u.telegram_id, ...questions.map(qId => u['q_' + qId] || '')];
+    });
+
+    const csv = [headers.join(','), ...rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'custdev_answers_' + new Date().toISOString().split('T')[0] + '.csv';
+    link.click();
+
+  } catch(e) {
+    console.error('exportCustDevAnswers error:', e);
+    alert('Eksport xatosi: ' + e.message);
+  }
+}
+
+async function exportAuditLogs() {
+  try {
+    const action = document.getElementById('auditActionFilter').value;
+    const date = document.getElementById('auditDateFilter').value;
+
+    let url = '/api/audit-logs?limit=10000';
+    if (action) url += '&action=' + encodeURIComponent(action);
+    if (date) url += '&startDate=' + date + '&endDate=' + date;
+
+    const logs = await fetch(url, { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (!logs || logs.length === 0) {
+      alert('Eksport qilish uchun log topilmadi');
+      return;
+    }
+
+    // Convert to CSV
+    const headers = ['Vaqt', 'Harakat', 'Foydalanuvchi', 'Maqsad', 'Tafsilotlar'];
+    const rows = logs.map(log => [
+      log.timestamp,
+      log.action,
+      log.user || '',
+      log.target || '',
+      log.details ? JSON.stringify(log.details) : ''
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'audit_logs_' + new Date().toISOString().split('T')[0] + '.csv';
+    link.click();
+
+  } catch(e) {
+    console.error('exportAuditLogs error:', e);
+    alert('Eksport xatosi: ' + e.message);
+  }
 }
 
 // ========== HELPERS ==========
