@@ -1055,11 +1055,11 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
     }
 
     if (lessonNumber < totalLessons) {
-      // Check if subscription required before next lesson
+      // Value means: ask subscription AFTER this lesson number
       const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
-      const nextLesson = lessonNumber + 1;
       
-      if (nextLesson === requireSubLesson) {
+      if (requireSubLesson > 0 && lessonNumber === requireSubLesson) {
+        const nextLesson = lessonNumber + 1;
         // Check subscription status
         const isSubscribed = await checkFreeChannelSubscription(telegramId);
         
@@ -1146,7 +1146,7 @@ bot.action(/^watched_funnel_(\d+)_(\d+)$/, async (ctx) => {
     console.log('👆 Funnel watched:', funnelId, 'lesson', lessonNumber, '/', totalLessons);
     
     if (lessonNumber < totalLessons) {
-      // Check if subscription required before next lesson
+      // Value means: ask subscription AFTER this lesson number
       // First check funnel-specific setting, then fall back to global setting
       let requireSubLesson = funnel.require_subscription_before_lesson || 0;
       if (requireSubLesson === 0) {
@@ -1162,9 +1162,9 @@ bot.action(/^watched_funnel_(\d+)_(\d+)$/, async (ctx) => {
 
       const nextLesson = lessonNumber + 1;
 
-      console.log(`🔍 Subscription check: requireSubLesson=${requireSubLesson}, nextLesson=${nextLesson}, channelId=${channelId}`);
+      console.log(`🔍 Subscription check: requireSubLesson=${requireSubLesson}, currentLesson=${lessonNumber}, nextLesson=${nextLesson}, channelId=${channelId}`);
 
-      if (requireSubLesson > 0 && nextLesson === requireSubLesson && channelId) {
+      if (requireSubLesson > 0 && lessonNumber === requireSubLesson && channelId) {
         // Check if user already marked as subscribed
         const user = await db.getUser(telegramId);
         if (user?.subscribed_free_channel) {
@@ -1653,16 +1653,16 @@ async function scheduleNextLesson(telegramId) {
     return;
   }
 
-  // ============ CHECK SUBSCRIPTION BEFORE LESSON 3 ============
+  // ============ CHECK SUBSCRIPTION AFTER CONFIGURED LESSON ============
   const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
   
-  if (next === requireSubLesson && !user.subscribed_free_channel) {
+  if (requireSubLesson > 0 && next === (requireSubLesson + 1) && !user.subscribed_free_channel) {
     // Check if already subscribed
     const isSubscribed = await checkFreeChannelSubscription(telegramId);
     
     if (!isSubscribed) {
       // Ask for subscription
-      await askForSubscription(telegramId);
+      await askForSubscription(telegramId, next);
       return; // Don't continue until subscribed
     } else {
       // Already subscribed, mark it
