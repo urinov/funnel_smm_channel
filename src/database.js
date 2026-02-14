@@ -2861,16 +2861,18 @@ export async function claimReferralDiscount(telegramId) {
 }
 
 export async function getReferralLeaderboard(limit = 10) {
+  // Query from referrals table to get accurate counts
   const { rows } = await pool.query(`
     SELECT
-      u.telegram_id,
+      r.referrer_telegram_id as telegram_id,
       u.username,
       u.full_name,
-      u.referral_count,
+      COUNT(r.id)::int as referral_count,
       u.referral_discount_used
-    FROM users u
-    WHERE u.referral_count > 0
-    ORDER BY u.referral_count DESC
+    FROM referrals r
+    JOIN users u ON r.referrer_telegram_id = u.telegram_id
+    GROUP BY r.referrer_telegram_id, u.username, u.full_name, u.referral_discount_used
+    ORDER BY referral_count DESC
     LIMIT $1
   `, [limit]);
   return rows;

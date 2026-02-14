@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import * as db from '../database.js';
 import { bot } from '../bot.js';
+import { logAudit, AuditEvents } from '../utils/security.js';
 
 const router = Router();
 
@@ -221,6 +222,9 @@ async function handlePaymeRequest(req, res) {
           console.error('Error marking promo code as used:', e.message);
         }
       }
+
+      // Log payment completion
+      logAudit(AuditEvents.paymentCompleted(payment.telegram_id, payment.order_id, payment.amount, 'payme'));
 
       // Create one-time invite link
       const { createInviteLink } = await import('../bot.js');

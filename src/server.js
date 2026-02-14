@@ -13,6 +13,7 @@ import { bot, sendBroadcast, setupAdminWebAppMenu } from './bot.js';
 import paymeRouter from './payments/payme.js';
 import clickRouter from './payments/click.js';
 import { startScheduler } from './scheduler.js';
+import { logAudit, AuditEvents, flushAuditLog } from './utils/security.js';
 
 dotenv.config();
 
@@ -1934,6 +1935,10 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.referral_offer_delay_hours !== undefined) await db.setSetting('referral_offer_delay_hours', String(data.referral_offer_delay_hours));
     if (data.referral_offer_message !== undefined) await db.updateBotMessage('referral_offer_message', data.referral_offer_message);
 
+    // Log settings change
+    const changedSettings = Object.keys(data).filter(k => data[k] !== undefined);
+    logAudit(AuditEvents.settingsChanged('admin', changedSettings.join(', '), '-', 'updated'));
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -2189,6 +2194,16 @@ async function start() {
     }
 
     startScheduler();
+
+    // Periodic audit log flush (every 30 seconds)
+    setInterval(async () => {
+      try {
+        const db = await import('./database.js');
+        await flushAuditLog(db.saveAuditLogs);
+      } catch (e) {
+        console.error('Audit log flush error:', e.message);
+      }
+    }, 30000);
 
     app.listen(port, async () => {
       console.log('Server listening on port ' + port);

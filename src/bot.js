@@ -1,5 +1,6 @@
 import { Telegraf, Markup } from 'telegraf';
 import * as db from './database.js';
+import { logAudit, AuditEvents } from './utils/security.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BASE_URL = process.env.BASE_URL;
@@ -586,6 +587,7 @@ bot.start(async (ctx) => {
 
     if (!user) {
       user = await db.createUser(telegramId, tgUser.username, null, source);
+      logAudit(AuditEvents.userCreated(telegramId, source || 'direct'));
       await maybeNotifyUserMilestone(tgUser);
 
       // Handle referral if code provided
@@ -593,6 +595,7 @@ bot.start(async (ctx) => {
         const referrer = await db.getUserByReferralCode(referralCode);
         if (referrer && referrer.telegram_id !== telegramId) {
           await db.createReferral(referrer.telegram_id, telegramId, referralCode);
+          logAudit(AuditEvents.referralCreated(referrer.telegram_id, telegramId));
           console.log('👥 Referral created:', referrer.telegram_id, '->', telegramId);
         }
       }
@@ -663,6 +666,7 @@ async function handleLegacyStart(ctx, telegramId, tgUser, source = null, referra
 
   if (!user) {
     user = await db.createUser(telegramId, tgUser.username, null, source);
+    logAudit(AuditEvents.userCreated(telegramId, source || 'direct'));
     await maybeNotifyUserMilestone(tgUser);
 
     // Handle referral if code provided
@@ -670,6 +674,7 @@ async function handleLegacyStart(ctx, telegramId, tgUser, source = null, referra
       const referrer = await db.getUserByReferralCode(referralCode);
       if (referrer && referrer.telegram_id !== telegramId) {
         await db.createReferral(referrer.telegram_id, telegramId, referralCode);
+        logAudit(AuditEvents.referralCreated(referrer.telegram_id, telegramId));
         console.log('👥 Referral created (legacy):', referrer.telegram_id, '->', telegramId);
       }
     }
