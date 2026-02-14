@@ -854,6 +854,56 @@ bot.on('text', async (ctx, next) => {
       return;
     }
 
+    // Check if waiting for promo code
+    if (user.waiting_promo_code) {
+      const promoCode = text.trim().toUpperCase();
+      await db.updateUser(telegramId, { waiting_promo_code: false });
+
+      // Validate promo code
+      const validation = await db.validatePromoCode(promoCode, telegramId);
+
+      if (!validation.valid) {
+        await ctx.reply(
+          `❌ <b>${validation.error}</b>\n\nQaytadan urinib ko'ring yoki oddiy narxda sotib oling.`,
+          { parse_mode: 'HTML' }
+        );
+        await delay(1000);
+        await sendSalesPitch(telegramId);
+        return;
+      }
+
+      // Promo code is valid - show plans with discount
+      const discountPercent = validation.discountPercent;
+      const plans = await db.getSubscriptionPlans(true);
+
+      let message = `✅ <b>Promo kod qabul qilindi!</b>\n\n` +
+        `🎟️ Kod: <code>${promoCode}</code>\n` +
+        `🎁 Chegirma: <b>${discountPercent}%</b>\n\n` +
+        `📋 Obuna turini tanlang:\n\n`;
+
+      const planButtons = plans.map(plan => {
+        const discountedPrice = Math.round(plan.price * (100 - discountPercent) / 100);
+        const originalPrice = formatMoney(plan.price);
+        const finalPrice = formatMoney(discountedPrice);
+
+        message += `• ${plan.name}: <s>${originalPrice}</s> → <b>${finalPrice}</b>\n`;
+
+        return [Markup.button.callback(
+          `${plan.name} - ${finalPrice}`,
+          `promo_plan_${promoCode}_${plan.id}`
+        )];
+      });
+
+      planButtons.push([Markup.button.callback('❌ Bekor qilish', 'cancel_promo')]);
+
+      await ctx.reply(message, {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard(planButtons)
+      });
+
+      return;
+    }
+
     const step = user.custdev_step;
 
     if (step === -1) {
@@ -2042,6 +2092,7 @@ export async function sendSalesPitch(telegramId, extraDiscount = 0) {
   const allButtons = [
     ...planButtons,
     ...(referralButton ? [referralButton] : []),
+    [Markup.button.callback('🎟️ Promo kod kiritish', 'enter_promo_code')],
     [Markup.button.callback('❓ Savolim bor', 'question')]
   ];
 
@@ -2051,6 +2102,110 @@ export async function sendSalesPitch(telegramId, extraDiscount = 0) {
   });
   await db.updateUser(telegramId, { funnel_step: 10 });
 }
+
+// ============ PROMO CODE HANDLERS ============
+
+// Enter promo code button handler
+bot.action('enter_promo_code', async (ctx) => {
+  await ctx.answerCbQuery();
+  const telegramId = ctx.from.id;
+
+  await db.updateUser(telegramId, { waiting_promo_code: true });
+
+  await ctx.reply(
+    '🎟️ <b>Promo kodni kiriting:</b>\n\n' +
+    'Agar sizda promo kod bo\'lsa, uni pastga yozing.\n' +
+    '<i>Bekor qilish uchun /cancel buyrug\'ini yuboring.</i>',
+    { parse_mode: 'HTML' }
+  );
+});
+
+// Cancel promo code input
+bot.command('cancel', async (ctx) => {
+  const telegramId = ctx.from.id;
+  const user = await db.getUser(telegramId);
+
+  if (user?.waiting_promo_code) {
+    await db.updateUser(telegramId, { waiting_promo_code: false });
+    await ctx.reply('❌ Bekor qilindi.');
+    await sendSalesPitch(telegramId);
+  }
+});
+
+// Handle promo code with plan selection
+bot.action(/^promo_plan_(.+)_(.+)$/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const promoCode = ctx.match[1];
+  const planId = ctx.match[2];
+  const telegramId = ctx.from.id;
+
+  // Validate promo code again
+  const validation = await db.validatePromoCode(promoCode, telegramId, planId);
+  if (!validation.valid) {
+    return ctx.reply('❌ ' + validation.error);
+  }
+
+  const plan = await db.getSubscriptionPlan(planId);
+  if (!plan) {
+    return ctx.reply('❌ Bunday obuna turi topilmadi');
+  }
+
+  const discountPercent = validation.discountPercent;
+  const discountedPrice = Math.round(plan.price * (100 - discountPercent) / 100);
+
+  // Create payment with promo code prefix
+  const orderId = ('PRM' + Date.now() + telegramId).slice(0, 20);
+  await db.createPayment(orderId, telegramId, discountedPrice, planId);
+
+  // Store promo code info in payment for later use
+  await db.pool.query(`
+    UPDATE payments SET metadata = jsonb_set(COALESCE(metadata, '{}'), '{promo_code}', $1::jsonb)
+    WHERE order_id = $2
+  `, [JSON.stringify({ code: promoCode, discount_percent: discountPercent, promo_id: validation.promoCode.id }), orderId]);
+
+  const paymeUrl = BASE_URL + '/payme/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
+  const clickUrl = BASE_URL + '/click/api/checkout-url?order_id=' + orderId + '&amount=' + discountedPrice + '&plan=' + planId + '&discount=' + discountPercent + '&redirect=1';
+
+  const paymeEnabledStr = await db.getSetting('payme_enabled') || await db.getBotMessage('payme_enabled');
+  const clickEnabledStr = await db.getSetting('click_enabled') || await db.getBotMessage('click_enabled');
+
+  const paymeEnabled = paymeEnabledStr !== 'false' && paymeEnabledStr !== false;
+  const clickEnabled = clickEnabledStr !== 'false' && clickEnabledStr !== false;
+
+  const paymentButtons = [];
+  if (paymeEnabled) paymentButtons.push(Markup.button.url('💳 Payme', paymeUrl));
+  if (clickEnabled) paymentButtons.push(Markup.button.url('💠 Click', clickUrl));
+
+  if (paymentButtons.length === 0) {
+    return ctx.reply('❌ Hozircha to\'lov tizimlari mavjud emas.');
+  }
+
+  const originalPrice = formatMoney(plan.price);
+  const finalPrice = formatMoney(discountedPrice);
+  const savedAmount = formatMoney(plan.price - discountedPrice);
+
+  await ctx.reply(
+    `🎟️ <b>Promo kod qo'llanildi!</b>\n\n` +
+    `📦 Obuna: <b>${plan.name}</b>\n` +
+    `💰 Asl narx: <s>${originalPrice}</s>\n` +
+    `🎁 Chegirma: <b>${discountPercent}%</b>\n` +
+    `✅ Yakuniy narx: <b>${finalPrice}</b>\n` +
+    `💵 Tejamingiz: <b>${savedAmount}</b>\n\n` +
+    `To'lov usulini tanlang:`,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([paymentButtons])
+    }
+  );
+});
+
+// Cancel promo code and go back to regular prices
+bot.action('cancel_promo', async (ctx) => {
+  await ctx.answerCbQuery('Bekor qilindi');
+  await ctx.deleteMessage();
+  const telegramId = ctx.from.id;
+  await sendSalesPitch(telegramId);
+});
 
 // Show referral info when user doesn't have enough referrals
 bot.action('show_referral_info', async (ctx) => {

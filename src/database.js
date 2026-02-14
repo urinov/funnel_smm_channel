@@ -626,7 +626,10 @@ export async function initDatabase() {
     // ============ SUBSCRIPTION BYPASS MIGRATIONS ============
     const subscriptionBypassMigrations = [
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_check_attempts INTEGER DEFAULT 0`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_bypassed BOOLEAN DEFAULT FALSE`
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_bypassed BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS waiting_promo_code BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'`,
+      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS plan_id VARCHAR(20)`
     ];
 
     for (const sql of subscriptionBypassMigrations) {
@@ -838,7 +841,7 @@ const ALLOWED_USER_UPDATE_FIELDS = new Set([
   'funnel_step', 'current_lesson', 'custdev_step',
   // State flags
   'waiting_feedback', 'waiting_subscription', 'subscribed_free_channel',
-  'pending_lesson', 'feedback_given', 'feedback_type',
+  'pending_lesson', 'feedback_given', 'feedback_type', 'waiting_promo_code',
   // Referral system
   'referral_code', 'referral_count', 'referral_discount_used',
   'referral_offer_sent', 'sales_pitch_seen_at',

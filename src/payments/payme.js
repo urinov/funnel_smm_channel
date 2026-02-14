@@ -211,6 +211,17 @@ async function handlePaymeRequest(req, res) {
         }
       }
 
+      // Mark promo code as used if this was a promo payment
+      if (payment.order_id.startsWith('PRM') && payment.metadata?.promo_code) {
+        try {
+          const promoInfo = payment.metadata.promo_code;
+          await db.usePromoCode(promoInfo.promo_id, payment.telegram_id, payment.id, payment.amount);
+          console.log('Promo code used:', promoInfo.code, 'for user:', payment.telegram_id);
+        } catch (e) {
+          console.error('Error marking promo code as used:', e.message);
+        }
+      }
+
       // Create one-time invite link
       const { createInviteLink } = await import('../bot.js');
       const inviteLink = await createInviteLink(payment.telegram_id, 1); // 1 day validity
