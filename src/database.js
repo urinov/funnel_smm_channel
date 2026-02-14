@@ -628,6 +628,7 @@ export async function initDatabase() {
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_check_attempts INTEGER DEFAULT 0`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_bypassed BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS waiting_promo_code BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_asked_at TIMESTAMP`,
       `ALTER TABLE payments ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'`,
       `ALTER TABLE payments ADD COLUMN IF NOT EXISTS plan_id VARCHAR(20)`
     ];
@@ -846,7 +847,7 @@ const ALLOWED_USER_UPDATE_FIELDS = new Set([
   'referral_code', 'referral_count', 'referral_discount_used',
   'referral_offer_sent', 'sales_pitch_seen_at',
   // Subscription bypass
-  'subscription_check_attempts', 'subscription_bypassed',
+  'subscription_check_attempts', 'subscription_bypassed', 'subscription_asked_at',
   // Traffic tracking
   'source', 'utm_campaign'
 ]);

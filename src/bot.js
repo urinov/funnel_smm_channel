@@ -1442,7 +1442,7 @@ const FREE_CHANNEL_ID = process.env.FREE_CHANNEL_ID; // Bepul kanal ID
 
 async function checkFreeChannelSubscription(telegramId) {
   // Get free channel ID from dashboard (bot_messages) or env
-  const channelId = await db.getBotMessage('free_channel_id') || FREE_CHANNEL_ID;
+  let channelId = await db.getBotMessage('free_channel_id') || FREE_CHANNEL_ID;
 
   console.log(`🔍 Checking subscription: user=${telegramId}, channel=${channelId}`);
 
@@ -1451,22 +1451,49 @@ async function checkFreeChannelSubscription(telegramId) {
     return true; // Agar kanal ID yo'q bo'lsa, tekshirmasdan o'tkazib yuboramiz
   }
 
+  // Ensure channel ID is in correct format
+  // It should be a number (negative for channels/groups)
+  if (typeof channelId === 'string') {
+    channelId = channelId.trim();
+    // If it's a username like @channel, keep as is
+    // If it's a number string, convert to number
+    if (/^-?\d+$/.test(channelId)) {
+      channelId = parseInt(channelId);
+    }
+  }
+
   try {
     const member = await bot.telegram.getChatMember(channelId, telegramId);
-    const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
+    console.log(`📢 getChatMember result for ${telegramId}:`, JSON.stringify(member));
+
+    // 'left' means user was never in channel or left
+    // 'kicked' means user was banned
+    // 'restricted' could still have access
+    const isSubscribed = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
     console.log(`📢 Subscription check for ${telegramId} in ${channelId}: ${isSubscribed ? '✅ Subscribed' : '❌ Not subscribed'} (status: ${member.status})`);
     return isSubscribed;
   } catch (e) {
     console.error(`❌ Subscription check error for user ${telegramId} in channel ${channelId}:`, e.message);
-    console.error('💡 Possible causes: 1) Bot is not admin in channel, 2) Wrong channel ID, 3) Channel is private');
-    return false;
+    console.error('Full error:', e);
+
+    // If error is "user not found" or similar, user is not subscribed
+    if (e.message.includes('user not found') || e.message.includes('USER_NOT_PARTICIPANT')) {
+      console.log('💡 User is not a participant of the channel');
+      return false;
+    }
+
+    // For other errors (bot not admin, wrong channel ID), log but allow user to continue
+    // to prevent blocking users due to configuration issues
+    console.error('💡 Possible causes: 1) Bot is not admin in channel, 2) Wrong channel ID format, 3) Channel is private');
+    console.error('⚠️ Allowing user to continue due to configuration error');
+    return true; // Changed: allow user to continue if there's a config error
   }
 }
 
 async function askForSubscription(telegramId, nextLesson = 3) {
   const channelLink = await db.getBotMessage('free_channel_link') || 'https://t.me/your_channel';
-  
-  const msg = await db.getBotMessage('subscribe_required') || 
+
+  const msg = await db.getBotMessage('subscribe_required') ||
 `🔒 <b>${nextLesson}-darsga o'tish uchun kanalimizga obuna bo'ling!</b>
 
 Kanalda siz uchun foydali:
@@ -1483,9 +1510,13 @@ Obuna bo'lgandan keyin "✅ Obuna bo'ldim" tugmasini bosing.`;
       [Markup.button.callback('✅ Obuna bo\'ldim', 'check_subscription_' + nextLesson)]
     ])
   });
-  
-  // Mark user as waiting for subscription
-  await db.updateUser(telegramId, { waiting_subscription: true, pending_lesson: nextLesson });
+
+  // Mark user as waiting for subscription with timestamp
+  await db.updateUser(telegramId, {
+    waiting_subscription: true,
+    pending_lesson: nextLesson,
+    subscription_asked_at: new Date().toISOString()
+  });
 }
 
 // Check subscription button handler
@@ -1502,16 +1533,34 @@ bot.action(/^check_subscription_?(\d*)$/, async (ctx) => {
     await ctx.answerCbQuery('✅ Rahmat! Obuna tasdiqlandi!');
     await ctx.editMessageReplyMarkup(undefined);
 
+    // Calculate subscription time
+    let celebrationMsg = '🎉 Ajoyib! Obuna uchun rahmat!';
+    if (user?.subscription_asked_at) {
+      const askedAt = new Date(user.subscription_asked_at);
+      const now = new Date();
+      const seconds = Math.round((now - askedAt) / 1000);
+
+      if (seconds < 60) {
+        celebrationMsg = `🚀 Vooow! Atigi ${seconds} soniyada obuna bo'ldingiz! Barakalla! 🎉`;
+      } else if (seconds < 300) {
+        const mins = Math.floor(seconds / 60);
+        celebrationMsg = `✨ Zo'r! ${mins} daqiqada obuna bo'ldingiz! Rahmat! 🎉`;
+      } else {
+        celebrationMsg = '🎉 Kanalimizga obuna bo\'lganingiz uchun katta rahmat!';
+      }
+    }
+
     // Update user and continue to next lesson
     await db.updateUser(telegramId, {
       waiting_subscription: false,
       subscribed_free_channel: true,
       pending_lesson: null,
-      subscription_check_attempts: 0
+      subscription_check_attempts: 0,
+      subscription_asked_at: null
     });
 
-    await ctx.reply('🎉 Ajoyib! Endi davom etamiz...');
-    await delay(1000);
+    await ctx.reply(celebrationMsg + '\n\nEndi davom etamiz...');
+    await delay(1500);
 
     // Continue with CustDev or send lesson
     const prevLesson = nextLesson - 1;
