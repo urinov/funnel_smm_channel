@@ -1826,6 +1826,11 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
   try {
     const db = await import('./database.js');
     const data = req.body;
+    const postedKeys = Object.keys(data || {});
+    for (const key of postedKeys) {
+      await db.deleteLegacySetting(key);
+      await db.deleteAppSetting(key);
+    }
 
     // Channel settings - update both bot_messages AND default funnel
     // Also delete from legacy settings table to prevent overriding

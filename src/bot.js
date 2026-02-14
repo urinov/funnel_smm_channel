@@ -154,8 +154,7 @@ async function getSubscriptionPrice() {
 
 // Create one-time invite link for premium channel
 export async function createInviteLink(telegramId, daysValid = 1, subscriptionId = null) {
-  // Try dashboard setting first, then env var
-  const channelId = await db.getSetting('premium_channel_id') || PREMIUM_CHANNEL_ID || await db.getBotMessage('premium_channel_id');
+  const channelId = await db.getBotMessage('premium_channel_id') || await db.getSetting('premium_channel_id') || PREMIUM_CHANNEL_ID;
   
   if (!channelId) {
     console.log('❌ PREMIUM_CHANNEL_ID not set (check Dashboard > Kanal sozlamalari)');
@@ -186,7 +185,7 @@ export async function createInviteLink(telegramId, daysValid = 1, subscriptionId
 
 // Kick user from channel (when subscription expires)
 export async function kickFromChannel(telegramId) {
-  const channelId = await db.getSetting('premium_channel_id') || PREMIUM_CHANNEL_ID || await db.getBotMessage('premium_channel_id');
+  const channelId = await db.getBotMessage('premium_channel_id') || await db.getSetting('premium_channel_id') || PREMIUM_CHANNEL_ID;
   
   if (!channelId) {
     console.log('❌ Cannot kick - channel ID not set');
@@ -1207,10 +1206,11 @@ bot.action(/^watched_funnel_(\d+)_(\d+)$/, async (ctx) => {
 
 // Check funnel specific channel subscription
 async function checkFunnelChannelSubscription(telegramId, funnel) {
-  if (!funnel.free_channel_id) return true;
+  const channelId = funnel.free_channel_id || await db.getBotMessage('free_channel_id') || FREE_CHANNEL_ID;
+  if (!channelId) return true;
   
   try {
-    const member = await bot.telegram.getChatMember(funnel.free_channel_id, telegramId);
+    const member = await bot.telegram.getChatMember(channelId, telegramId);
     return ['creator', 'administrator', 'member'].includes(member.status);
   } catch (e) {
     console.log('checkFunnelChannelSubscription error:', e.message);
@@ -1220,7 +1220,7 @@ async function checkFunnelChannelSubscription(telegramId, funnel) {
 
 // Ask for funnel subscription
 async function askForFunnelSubscription(telegramId, funnel, pendingLesson) {
-  const channelLink = funnel.free_channel_link || 'https://t.me/channel';
+  const channelLink = funnel.free_channel_link || await db.getBotMessage('free_channel_link') || 'https://t.me/channel';
   const msg = `📢 Davom etish uchun kanalimizga obuna bo'ling!\n\nObuna bo'lgach "Tekshirish" tugmasini bosing.`;
   
   await db.updateUser(telegramId, { pending_lesson: pendingLesson, waiting_subscription: true });

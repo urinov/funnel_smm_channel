@@ -1707,14 +1707,22 @@ export async function getAllSettings() {
 // ============ CHANNEL SETTINGS ============
 export async function getChannelSettings() {
   return {
-    channel_id: await getSetting('premium_channel_id') || process.env.PREMIUM_CHANNEL_ID || '',
-    channel_link: await getSetting('premium_channel_link') || ''
+    channel_id: await getBotMessage('premium_channel_id') || await getSetting('premium_channel_id') || process.env.PREMIUM_CHANNEL_ID || '',
+    channel_link: await getBotMessage('premium_channel_link') || await getSetting('premium_channel_link') || ''
   };
 }
 
 export async function updateChannelSettings(channelId, channelLink) {
-  if (channelId) await setSetting('premium_channel_id', channelId);
-  if (channelLink) await setSetting('premium_channel_link', channelLink);
+  if (channelId !== undefined) {
+    await updateBotMessage('premium_channel_id', channelId || '');
+    await deleteLegacySetting('premium_channel_id');
+    await deleteAppSetting('premium_channel_id');
+  }
+  if (channelLink !== undefined) {
+    await updateBotMessage('premium_channel_link', channelLink || '');
+    await deleteLegacySetting('premium_channel_link');
+    await deleteAppSetting('premium_channel_link');
+  }
 }
 
 // ============ ENHANCED ANALYTICS ============
@@ -2572,6 +2580,20 @@ export async function getAllDashboardSettings() {
     result[row.key] = row.value;
   }
 
+  // For these keys, bot_messages is the source of truth (dashboard POST /api/settings saves here)
+  const botPriorityKeys = new Set([
+    'premium_channel_id',
+    'free_channel_id',
+    'free_channel_link',
+    'premium_channel_link',
+    'require_subscription_before_lesson'
+  ]);
+  for (const row of botMessages) {
+    if (botPriorityKeys.has(row.key)) {
+      result[row.key] = row.value;
+    }
+  }
+
   // Add pitch_media values (if not already set in bot_messages)
   if (pitchMedia[0]) {
     if (!result.pitch_media_type && pitchMedia[0].media_type) {
@@ -3173,5 +3195,13 @@ export async function deleteLegacySetting(key) {
     await pool.query('DELETE FROM settings WHERE key = $1', [key]);
   } catch (e) {
     // Ignore errors - table might not exist
+  }
+}
+
+export async function deleteAppSetting(key) {
+  try {
+    await pool.query('DELETE FROM app_settings WHERE key = $1', [key]);
+  } catch (e) {
+    // Ignore errors
   }
 }
