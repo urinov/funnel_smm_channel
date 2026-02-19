@@ -952,7 +952,29 @@ export async function deleteUser(telegramId) {
 }
 
 export async function getAllActiveUsers() {
-  const { rows } = await pool.query('SELECT * FROM users WHERE is_blocked = FALSE ORDER BY created_at DESC');
+  const { rows } = await pool.query(`
+    SELECT
+      u.*,
+      (
+        u.is_paid = TRUE
+        OR EXISTS (
+          SELECT 1
+          FROM payments p
+          WHERE p.telegram_id = u.telegram_id
+            AND p.state = ANY($1)
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM subscriptions s
+          WHERE s.telegram_id = u.telegram_id
+            AND s.is_active = TRUE
+            AND s.end_date > NOW()
+        )
+      ) AS is_paid
+    FROM users u
+    WHERE u.is_blocked = FALSE
+    ORDER BY u.created_at DESC
+  `, [SUCCESS_PAYMENT_STATES]);
   return rows;
 }
 
