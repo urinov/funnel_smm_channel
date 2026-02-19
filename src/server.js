@@ -2137,7 +2137,7 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
 app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
   try {
     const { type, text, media_id, button, buttons } = req.body;
-    const { getLatestPendingPaymentForUser, getUserByTelegramId } = await import('./database.js');
+    const { getLatestPendingPaymentForUser, getUser } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     const adminId = process.env.ADMIN_IDS?.split(',')?.[0]?.trim();
@@ -2147,7 +2147,7 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
 
     const adminNumericId = Number(adminId);
     const adminUser = Number.isFinite(adminNumericId)
-      ? await getUserByTelegramId(adminNumericId)
+      ? await getUser(adminNumericId)
       : null;
     const pendingPayment = Number.isFinite(adminNumericId)
       ? await getLatestPendingPaymentForUser(adminNumericId)
