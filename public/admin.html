@@ -1747,6 +1747,14 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
     <!-- Analytics Tab -->
     <div id="tab-analytics" class="hidden">
+      <div class="card p-4 mb-4 flex items-center justify-between gap-3">
+        <div>
+          <div class="font-semibold text-gray-800">Analitika ko'rinishi</div>
+          <div class="text-xs text-gray-500">Soddalashtirilgan rejimda faqat eng muhim bloklar ko'rinadi</div>
+        </div>
+        <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🧹 Soddalashtirish</button>
+      </div>
+
       <!-- Funnel Diagnostics -->
       <div class="card p-5 mb-6">
         <div class="flex items-center justify-between gap-3 mb-4">
@@ -1839,8 +1847,63 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         </div>
       </div>
 
+      <!-- Payment Friction Diagnostics -->
+      <div class="card p-5 mb-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <h3 class="font-semibold text-gray-800">💳 To'lov Friksiya Diagnostikasi</h3>
+          <button onclick="prepareStuckPaymentsBroadcast()" class="btn btn-secondary btn-sm">Stuck payments follow-up</button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="p-3 bg-indigo-50 rounded-xl">
+            <div class="text-xs text-gray-500">Pitch -> Checkout</div>
+            <div class="text-lg font-bold text-indigo-600" id="payDiagPitchToCheckout">-</div>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-xl">
+            <div class="text-xs text-gray-500">Checkout -> Prepare</div>
+            <div class="text-lg font-bold text-blue-600" id="payDiagCheckoutToPrepared">-</div>
+          </div>
+          <div class="p-3 bg-green-50 rounded-xl">
+            <div class="text-xs text-gray-500">Prepare -> Complete</div>
+            <div class="text-lg font-bold text-green-600" id="payDiagPreparedToCompleted">-</div>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl">
+            <div class="text-xs text-gray-500">Stuck to'lovlar</div>
+            <div class="text-lg font-bold text-amber-600" id="payDiagStuckCount">-</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-sm font-semibold text-gray-700 mb-2">To'lov usuli bo'yicha conversion</div>
+            <div id="payDiagMethods" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Asosiy tavsiya</div>
+            <div id="payDiagNextAction" class="text-sm text-gray-700">Yuklanmoqda...</div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500 border-b">
+                <th class="py-2">User</th>
+                <th class="py-2">Buyurtma</th>
+                <th class="py-2">Holat</th>
+                <th class="py-2">Usul</th>
+                <th class="py-2">Qachondan beri</th>
+              </tr>
+            </thead>
+            <tbody id="payDiagStuckTable">
+              <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Revenue & Growth Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 analytics-advanced">
         <div class="card p-5">
           <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (so'nggi 30 kun)</h3>
           <div class="chart-container"><canvas id="analyticsRevenueChart"></canvas></div>
@@ -1852,7 +1915,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
       </div>
 
       <!-- Source Analytics -->
-      <div class="card p-5 mb-6">
+      <div class="card p-5 mb-6 analytics-advanced">
         <h3 class="font-semibold text-gray-800 mb-4">🌐 Trafik manbalari</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
@@ -1877,7 +1940,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
       </div>
 
       <!-- Buyer Journey Analytics -->
-      <div class="card p-5 mb-6">
+      <div class="card p-5 mb-6 analytics-advanced">
         <h3 class="font-semibold text-gray-800 mb-4">🛒 Xaridor statistikasi</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div class="text-center p-4 bg-blue-50 rounded-xl">
@@ -1902,7 +1965,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
       </div>
 
       <!-- Inactivity Stats -->
-      <div class="card p-5">
+      <div class="card p-5 analytics-advanced">
         <h3 class="font-semibold text-gray-800 mb-4">⏰ Faolsizlik eslatmalari</h3>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div class="text-center p-4 bg-gray-50 rounded-xl">
@@ -3213,7 +3276,10 @@ function showTab(tab) {
   }
   if (tab === 'renewal') loadRenewalSettings();
   if (tab === 'settings') loadSettingsForm();
-  if (tab === 'analytics') loadAnalyticsData();
+  if (tab === 'analytics') {
+    applyAnalyticsViewPreference();
+    loadAnalyticsData();
+  }
   if (tab === 'referrals') loadReferralData();
   if (tab === 'audit') loadAuditLogs();
 }
@@ -6338,18 +6404,38 @@ async function saveSettings() {
 let analyticsCharts = {};
 let auditOffset = 0;
 let latestSegmentDiagnostics = null;
+let latestPaymentFrictionDiagnostics = null;
+let analyticsSimpleView = localStorage.getItem('analyticsSimpleView') !== 'false';
+
+function applyAnalyticsViewPreference() {
+  document.querySelectorAll('.analytics-advanced').forEach((el) => {
+    el.classList.toggle('hidden', analyticsSimpleView);
+  });
+
+  const btn = document.getElementById('analyticsViewToggle');
+  if (btn) {
+    btn.textContent = analyticsSimpleView ? '🔎 Batafsil ko\'rsatish' : '🧹 Soddalashtirish';
+  }
+}
+
+function toggleAnalyticsView() {
+  analyticsSimpleView = !analyticsSimpleView;
+  localStorage.setItem('analyticsSimpleView', analyticsSimpleView ? 'true' : 'false');
+  applyAnalyticsViewPreference();
+}
 
 async function loadAnalyticsData() {
   try {
     // Load all analytics data in parallel
-    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData] = await Promise.all([
+    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData, paymentFrictionData] = await Promise.all([
       fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/subscribers/daily?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/funnel-diagnostics', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/segments?limit=100', { headers: { Authorization: auth } }).then(r => r.json())
+      fetch('/api/analytics/segments?limit=100', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/payment-friction?limit=100', { headers: { Authorization: auth } }).then(r => r.json())
     ]);
 
     // Render revenue chart
@@ -6372,6 +6458,9 @@ async function loadAnalyticsData() {
 
     // Render segment diagnostics
     renderSegmentDiagnostics(segmentDiagData);
+
+    // Render payment friction diagnostics
+    renderPaymentFrictionDiagnostics(paymentFrictionData);
 
   } catch(e) {
     console.error('loadAnalyticsData error:', e);
@@ -6715,6 +6804,94 @@ function prepareHighIntentBroadcast() {
   const textArea = document.getElementById('broadcastText');
   if (textArea && !textArea.value.trim()) {
     textArea.value = "Assalomu alaykum {{ism}}! Siz uchun maxsus taklif bor.\n\nBugun to'lov qilsangiz, bonus darslar ham qo'shib beramiz. Savol bo'lsa shu yerga yozing.";
+    updatePreview();
+  }
+
+  updateSelectedUsersList();
+  updateRecipientCount();
+}
+
+function renderPaymentFrictionDiagnostics(data) {
+  latestPaymentFrictionDiagnostics = data || null;
+
+  const summary = data?.summary || {};
+  const methods = Array.isArray(data?.methods) ? data.methods : [];
+  const stuck = Array.isArray(data?.stuckPayments) ? data.stuckPayments : [];
+
+  const pitchToCheckout = document.getElementById('payDiagPitchToCheckout');
+  const checkoutToPrepared = document.getElementById('payDiagCheckoutToPrepared');
+  const preparedToCompleted = document.getElementById('payDiagPreparedToCompleted');
+  const stuckCount = document.getElementById('payDiagStuckCount');
+  const methodWrap = document.getElementById('payDiagMethods');
+  const nextAction = document.getElementById('payDiagNextAction');
+  const stuckTable = document.getElementById('payDiagStuckTable');
+
+  if (pitchToCheckout) pitchToCheckout.textContent = `${summary.pitchToCheckout ?? 0}%`;
+  if (checkoutToPrepared) checkoutToPrepared.textContent = `${summary.checkoutToPrepared ?? 0}%`;
+  if (preparedToCompleted) preparedToCompleted.textContent = `${summary.preparedToCompleted ?? 0}%`;
+  if (stuckCount) stuckCount.textContent = `${stuck.length}`;
+  if (nextAction) nextAction.textContent = data?.nextAction || '-';
+
+  if (methodWrap) {
+    if (!methods.length) {
+      methodWrap.innerHTML = '<div class="text-gray-400">Ma\'lumot yo\'q</div>';
+    } else {
+      methodWrap.innerHTML = methods.map((m) => `
+        <div class="flex items-center justify-between gap-2 py-1 border-b border-gray-100 last:border-b-0">
+          <span class="text-gray-700">${escapeHtml((m.payment_method || '-').toUpperCase())}</span>
+          <span class="text-xs text-gray-500">${m.completed_orders}/${m.total_orders} (${m.conversion}%)</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  if (stuckTable) {
+    if (!stuck.length) {
+      stuckTable.innerHTML = '<tr><td colspan="5" class="py-3 text-center text-gray-400">Stuck to\'lov topilmadi</td></tr>';
+    } else {
+      stuckTable.innerHTML = stuck.slice(0, 30).map((p) => {
+        const ageMin = Math.max(0, Math.floor((p.age_seconds || 0) / 60));
+        return `
+          <tr class="border-b border-gray-100">
+            <td class="py-2">
+              <div class="font-medium text-gray-800">${escapeHtml(p.full_name || p.username || String(p.telegram_id))}</div>
+              <div class="text-xs text-gray-400">ID: ${p.telegram_id}</div>
+            </td>
+            <td class="py-2">${escapeHtml(p.order_id || '-')}</td>
+            <td class="py-2">${escapeHtml(p.state || '-')}</td>
+            <td class="py-2">${escapeHtml((p.payment_method || 'unknown').toUpperCase())}</td>
+            <td class="py-2">${ageMin} daqiqa</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function prepareStuckPaymentsBroadcast() {
+  const stuck = latestPaymentFrictionDiagnostics?.stuckPayments || [];
+  if (!Array.isArray(stuck) || stuck.length === 0) {
+    alert("Stuck to'lov userlari topilmadi");
+    return;
+  }
+
+  openBroadcastModal();
+  document.getElementById('broadcastTarget').value = 'specific';
+  toggleUserSelect();
+
+  selectedBroadcastUsers.clear();
+  const uniq = new Set();
+  stuck.forEach((p) => {
+    const id = Number(p.telegram_id);
+    if (Number.isFinite(id) && !uniq.has(id)) {
+      uniq.add(id);
+      if (uniq.size <= 100) selectedBroadcastUsers.add(id);
+    }
+  });
+
+  const textArea = document.getElementById('broadcastText');
+  if (textArea && !textArea.value.trim()) {
+    textArea.value = "Assalomu alaykum {{ism}}! To'lov jarayoni oxirigacha bormagan ko'rinadi.\n\nQulay bo'lsa hozir yakunlab qo'ying, savol bo'lsa shu yerga yozing.";
     updatePreview();
   }
 

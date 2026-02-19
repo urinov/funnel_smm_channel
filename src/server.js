@@ -1558,6 +1558,17 @@ app.get('/api/analytics/segments', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/analytics/payment-friction', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const limit = parseInt(req.query.limit) || 50;
+    const data = await db.getPaymentFrictionDiagnostics(limit);
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ REFERRAL ANALYTICS API ============
 app.get('/api/analytics/referrals', authMiddleware, async (req, res) => {
   try {

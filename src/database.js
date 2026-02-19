@@ -1321,6 +1321,117 @@ export async function getPaymentAnalytics() {
   };
 }
 
+export async function getPaymentFrictionDiagnostics(limit = 50) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 200);
+  const pendingStates = ['new', 'pending', 'created', '1'];
+
+  const { rows: summaryRows } = await pool.query(`
+    WITH base AS (
+      SELECT
+        (
+          SELECT COUNT(*)::int
+          FROM users u
+          WHERE u.is_blocked = FALSE
+            AND (u.sales_pitch_seen_at IS NOT NULL OR COALESCE(u.funnel_step, 0) >= 9)
+        ) AS pitch_users,
+        (
+          SELECT COUNT(DISTINCT p.telegram_id)::int
+          FROM payments p
+        ) AS checkout_users,
+        (
+          SELECT COUNT(DISTINCT p.telegram_id)::int
+          FROM payments p
+          WHERE p.transaction_id IS NOT NULL
+             OR p.state NOT IN ('new')
+        ) AS prepared_users,
+        (
+          SELECT COUNT(DISTINCT p.telegram_id)::int
+          FROM payments p
+          WHERE p.state = ANY($1)
+        ) AS completed_users
+    )
+    SELECT * FROM base
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const summary = summaryRows[0] || {};
+  const pitchUsers = parseInt(summary.pitch_users) || 0;
+  const checkoutUsers = parseInt(summary.checkout_users) || 0;
+  const preparedUsers = parseInt(summary.prepared_users) || 0;
+  const completedUsers = parseInt(summary.completed_users) || 0;
+
+  const pct = (part, whole) => (whole > 0 ? Math.round((part * 1000) / whole) / 10 : 0);
+
+  const { rows: methodRows } = await pool.query(`
+    SELECT
+      COALESCE(p.payment_method, 'unknown') AS payment_method,
+      COUNT(*)::int AS total_orders,
+      COUNT(*) FILTER (WHERE p.state = ANY($1))::int AS completed_orders,
+      COUNT(*) FILTER (WHERE p.state = ANY($2))::int AS pending_orders
+    FROM payments p
+    GROUP BY COALESCE(p.payment_method, 'unknown')
+    ORDER BY total_orders DESC
+  `, [SUCCESS_PAYMENT_STATES, pendingStates]);
+
+  const methods = methodRows
+    .filter((r) => r.payment_method !== 'unknown')
+    .map((r) => {
+      const total = parseInt(r.total_orders) || 0;
+      const completed = parseInt(r.completed_orders) || 0;
+      const pending = parseInt(r.pending_orders) || 0;
+      return {
+        payment_method: r.payment_method,
+        total_orders: total,
+        completed_orders: completed,
+        pending_orders: pending,
+        conversion: pct(completed, total)
+      };
+    });
+
+  const { rows: stuckRows } = await pool.query(`
+    SELECT
+      p.order_id,
+      p.telegram_id,
+      p.amount,
+      p.state,
+      p.payment_method,
+      p.created_at,
+      u.full_name,
+      u.username,
+      EXTRACT(EPOCH FROM (NOW() - p.created_at))::int AS age_seconds
+    FROM payments p
+    LEFT JOIN users u ON u.telegram_id = p.telegram_id
+    WHERE p.state = ANY($1)
+      AND p.created_at < NOW() - INTERVAL '15 minutes'
+    ORDER BY p.created_at ASC
+    LIMIT $2
+  `, [pendingStates, safeLimit]);
+
+  const biggestMethodDrop = methods
+    .slice()
+    .sort((a, b) => (a.conversion - b.conversion) || (b.total_orders - a.total_orders))[0] || null;
+
+  let nextAction = "Checkoutni ochib to'lamagan userlarga 15-30 daqiqa ichida reminder yuboring.";
+  if (biggestMethodDrop && biggestMethodDrop.conversion < 35) {
+    nextAction = `${biggestMethodDrop.payment_method.toUpperCase()} conversion past (${biggestMethodDrop.conversion}%). Shu metod uchun alohida reminder va ishonch kontenti qo'shing.`;
+  }
+
+  return {
+    summary: {
+      pitchUsers,
+      checkoutUsers,
+      preparedUsers,
+      completedUsers,
+      pitchToCheckout: pct(checkoutUsers, pitchUsers),
+      checkoutToPrepared: pct(preparedUsers, checkoutUsers),
+      preparedToCompleted: pct(completedUsers, preparedUsers),
+      checkoutToCompleted: pct(completedUsers, checkoutUsers)
+    },
+    methods,
+    stuckPayments: stuckRows,
+    nextAction
+  };
+}
+
 export async function getDailySubscribers(days = 30) {
   // Get daily new users and paid users for the analytics chart
   const { rows } = await pool.query(`
