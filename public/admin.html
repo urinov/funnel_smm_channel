@@ -367,12 +367,50 @@
     .diag-progress-fill.lesson { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
     .diag-progress-fill.activity { background: linear-gradient(90deg, #22c55e, #16a34a); }
     .diag-progress-fill.method { background: linear-gradient(90deg, #f59e0b, #f97316); }
+    .diag-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .diag-section-title h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+    .diag-muted { font-size: 12px; color: #64748b; }
+    .diag-surface {
+      background: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(245,248,255,0.7));
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    .diag-chart-wrap { height: 230px; }
+    .diag-table-scroll { max-height: 440px; overflow: auto; border-radius: 14px; border: 1px solid rgba(148,163,184,0.18); }
+    .diag-table-scroll table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: rgba(248,250,252,0.95);
+      backdrop-filter: blur(6px);
+    }
+    .diag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid rgba(148,163,184,0.24);
+      background: rgba(255,255,255,0.8);
+      color: #475569;
+    }
 
     @media (max-width: 768px) {
       .diag-list-label { font-size: 12px; }
       .diag-list-meta { font-size: 10px; }
       #tab-analytics .overflow-x-auto { overflow-x: auto !important; }
       #tab-analytics table { min-width: 620px; }
+      .diag-chart-wrap { height: 180px; }
+      .diag-table-scroll { max-height: 360px; }
     }
 
     /* Conversations */
@@ -1784,9 +1822,9 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
       <!-- Funnel Diagnostics -->
       <div class="card p-5 mb-6">
-        <div class="flex items-center justify-between gap-3 mb-4">
-          <h3 class="font-semibold text-gray-800">🧭 Funnel Diagnostika</h3>
-          <div class="text-xs text-gray-500">Qayerda yiqilyapti va nima qilish kerak</div>
+        <div class="diag-section-title">
+          <h3 class="text-gray-800">🧭 Funnel Diagnostika</h3>
+          <div class="diag-muted">Qayerda yiqilyapti va nima qilish kerak</div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
@@ -1808,20 +1846,26 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
         </div>
 
-        <div class="overflow-x-auto mb-4">
-          <table class="w-full text-sm responsive-table">
-            <thead>
-              <tr class="text-left text-gray-500 border-b">
-                <th class="pb-2">Bosqich</th>
-                <th class="pb-2">User</th>
-                <th class="pb-2">Prev dan</th>
-                <th class="pb-2">Start dan</th>
-              </tr>
-            </thead>
-            <tbody id="diagFunnelTable">
-              <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
-            </tbody>
-          </table>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+          <div class="diag-surface p-3">
+            <div class="text-xs font-semibold text-gray-600 mb-2">Bosqichlar oqimi</div>
+            <div class="diag-chart-wrap"><canvas id="diagFunnelChart"></canvas></div>
+          </div>
+          <div class="diag-table-scroll">
+            <table class="w-full text-sm responsive-table">
+              <thead>
+                <tr class="text-left text-gray-500 border-b">
+                  <th class="pb-2 px-3">Bosqich</th>
+                  <th class="pb-2 px-3">User</th>
+                  <th class="pb-2 px-3">Prev dan</th>
+                  <th class="pb-2 px-3">Start dan</th>
+                </tr>
+              </thead>
+              <tbody id="diagFunnelTable">
+                <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div id="diagAlerts" class="space-y-2">
@@ -1831,8 +1875,8 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
       <!-- Segment Diagnostics -->
       <div class="card p-5 mb-6">
-        <div class="flex items-center justify-between gap-3 mb-4">
-          <h3 class="font-semibold text-gray-800">🎯 Segment Diagnostika</h3>
+        <div class="diag-section-title">
+          <h3 class="text-gray-800">🎯 Segment Diagnostika</h3>
           <button onclick="prepareHighIntentBroadcast()" class="btn btn-secondary btn-sm">High-intent follow-up</button>
         </div>
 
@@ -1851,12 +1895,17 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-semibold text-gray-700">High-intent (to'lamagan) userlar</div>
-            <div class="text-xs text-gray-500" id="highIntentCount">0 ta</div>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div class="diag-surface p-3 xl:col-span-1">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Segmentlar taqqoslanishi</div>
+            <div class="diag-chart-wrap"><canvas id="segmentMixChart"></canvas></div>
           </div>
-          <div class="overflow-x-auto">
+          <div class="xl:col-span-2">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-sm font-semibold text-gray-700">High-intent (to'lamagan) userlar</div>
+              <div class="diag-chip" id="highIntentCount">0 ta</div>
+            </div>
+            <div class="diag-table-scroll">
             <table class="w-full text-sm responsive-table">
               <thead>
                 <tr class="text-left text-gray-500 border-b">
@@ -1871,13 +1920,14 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               </tbody>
             </table>
           </div>
+          </div>
         </div>
       </div>
 
       <!-- Payment Friction Diagnostics -->
       <div class="card p-5 mb-6">
-        <div class="flex items-center justify-between gap-3 mb-4">
-          <h3 class="font-semibold text-gray-800">💳 To'lov Friksiya Diagnostikasi</h3>
+        <div class="diag-section-title">
+          <h3 class="text-gray-800">💳 To'lov Friksiya Diagnostikasi</h3>
           <button onclick="prepareStuckPaymentsBroadcast()" class="btn btn-secondary btn-sm">Stuck payments follow-up</button>
         </div>
 
@@ -1901,25 +1951,26 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div class="bg-gray-50 rounded-xl p-3">
+          <div class="diag-surface rounded-xl p-3">
             <div class="text-sm font-semibold text-gray-700 mb-2">To'lov usuli bo'yicha conversion</div>
+            <div class="diag-chart-wrap mb-3"><canvas id="payMethodChart"></canvas></div>
             <div id="payDiagMethods" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
           </div>
-          <div class="bg-gray-50 rounded-xl p-3">
+          <div class="diag-surface rounded-xl p-3">
             <div class="text-sm font-semibold text-gray-700 mb-2">Asosiy tavsiya</div>
             <div id="payDiagNextAction" class="text-sm text-gray-700">Yuklanmoqda...</div>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="diag-table-scroll">
           <table class="w-full text-sm responsive-table">
             <thead>
               <tr class="text-left text-gray-500 border-b">
-                <th class="py-2">User</th>
-                <th class="py-2">Buyurtma</th>
-                <th class="py-2">Holat</th>
-                <th class="py-2">Usul</th>
-                <th class="py-2">Qachondan beri</th>
+                <th class="py-2 px-3">User</th>
+                <th class="py-2 px-3">Buyurtma</th>
+                <th class="py-2 px-3">Holat</th>
+                <th class="py-2 px-3">Usul</th>
+                <th class="py-2 px-3">Qachondan beri</th>
               </tr>
             </thead>
             <tbody id="payDiagStuckTable">
@@ -6759,6 +6810,105 @@ function renderInactivityStats(data) {
   document.getElementById('inactWatchedAfter').textContent = data.watched_after_reminder || '-';
 }
 
+function renderDiagFunnelChart(stages) {
+  const ctx = document.getElementById('diagFunnelChart');
+  if (!ctx) return;
+  if (analyticsCharts.diagFunnel) analyticsCharts.diagFunnel.destroy();
+  if (!Array.isArray(stages) || stages.length === 0) return;
+
+  analyticsCharts.diagFunnel = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: stages.map((s) => s.label),
+      datasets: [{
+        label: 'Userlar',
+        data: stages.map((s) => s.count || 0),
+        backgroundColor: 'rgba(91,124,250,0.75)',
+        borderRadius: 8,
+        maxBarThickness: 42
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } },
+        x: { ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderSegmentMixChart(data) {
+  const ctx = document.getElementById('segmentMixChart');
+  if (!ctx) return;
+  if (analyticsCharts.segmentMix) analyticsCharts.segmentMix.destroy();
+
+  const sources = Array.isArray(data?.sources) ? data.sources : [];
+  const lessons = Array.isArray(data?.lessons) ? data.lessons : [];
+  const activity = Array.isArray(data?.activity) ? data.activity : [];
+  const buckets = [
+    { label: 'Manba', value: sources.length ? Math.max(...sources.map((x) => Number(x.conversion) || 0)) : 0 },
+    { label: 'Dars', value: lessons.length ? Math.max(...lessons.map((x) => Number(x.conversion) || 0)) : 0 },
+    { label: 'Aktivlik', value: activity.length ? Math.max(...activity.map((x) => Number(x.conversion) || 0)) : 0 }
+  ];
+
+  analyticsCharts.segmentMix = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: buckets.map((b) => b.label),
+      datasets: [{
+        label: 'Top CR',
+        data: buckets.map((b) => b.value),
+        borderColor: '#7e5cff',
+        backgroundColor: 'rgba(126,92,255,0.18)',
+        pointBackgroundColor: '#5b7cfa',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          beginAtZero: true,
+          suggestedMax: 100,
+          ticks: { stepSize: 20, backdropColor: 'transparent' }
+        }
+      }
+    }
+  });
+}
+
+function renderPayMethodChart(methods) {
+  const ctx = document.getElementById('payMethodChart');
+  if (!ctx) return;
+  if (analyticsCharts.payMethods) analyticsCharts.payMethods.destroy();
+
+  const rows = Array.isArray(methods) ? methods : [];
+  if (!rows.length) return;
+  analyticsCharts.payMethods = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: rows.map((m) => (m.payment_method || 'unknown').toUpperCase()),
+      datasets: [{
+        data: rows.map((m) => Number(m.conversion) || 0),
+        backgroundColor: ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } }
+      }
+    }
+  });
+}
+
 function renderFunnelDiagnostics(data) {
   const summary = data?.summary || {};
   const stages = Array.isArray(data?.stages) ? data.stages : [];
@@ -6780,6 +6930,7 @@ function renderFunnelDiagnostics(data) {
   }
   if (stuckEl) stuckEl.textContent = summary.pitchWithoutCheckout ?? 0;
   if (nextActionEl) nextActionEl.textContent = data?.nextAction || '-';
+  renderDiagFunnelChart(stages);
 
   if (tableBody) {
     if (!stages.length) {
@@ -6787,10 +6938,10 @@ function renderFunnelDiagnostics(data) {
     } else {
       tableBody.innerHTML = stages.map((s) => `
         <tr class="border-b border-gray-100">
-          <td class="py-2">${s.label}</td>
-          <td class="py-2 font-semibold">${s.count}</td>
-          <td class="py-2">${(s.fromPrev ?? 0)}%</td>
-          <td class="py-2">${(s.fromStart ?? 0)}%</td>
+          <td class="py-2 px-3" data-label="Bosqich">${s.label}</td>
+          <td class="py-2 px-3 font-semibold" data-label="User">${s.count}</td>
+          <td class="py-2 px-3" data-label="Prev dan">${(s.fromPrev ?? 0)}%</td>
+          <td class="py-2 px-3" data-label="Start dan">${(s.fromStart ?? 0)}%</td>
         </tr>
       `).join('');
     }
@@ -6844,6 +6995,7 @@ function renderSegmentDiagnostics(data) {
   if (sourceList) sourceList.innerHTML = renderSimpleList(data?.sources, 'source');
   if (lessonList) lessonList.innerHTML = renderSimpleList(data?.lessons, 'lesson');
   if (activityList) activityList.innerHTML = renderSimpleList(data?.activity, 'activity');
+  renderSegmentMixChart(data);
 
   const highIntent = Array.isArray(data?.highIntent) ? data.highIntent : [];
   if (highIntentCount) highIntentCount.textContent = `${highIntent.length} ta`;
@@ -6852,7 +7004,8 @@ function renderSegmentDiagnostics(data) {
     if (highIntent.length === 0) {
       highIntentTable.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-gray-400">High-intent user topilmadi</td></tr>';
     } else {
-      highIntentTable.innerHTML = highIntent.slice(0, 30).map((u) => {
+      const topRows = highIntent.slice(0, 20);
+      highIntentTable.innerHTML = topRows.map((u) => {
         const signal = [];
         if (u.sales_pitch_seen_at) signal.push('Pitch');
         if ((u.current_lesson || 0) >= 3) signal.push('3+ dars');
@@ -6868,7 +7021,9 @@ function renderSegmentDiagnostics(data) {
             <td class="py-2" data-label="Oxirgi aktivlik">${u.last_activity ? fmtDateTime(u.last_activity) : '-'}</td>
           </tr>
         `;
-      }).join('');
+      }).join('') + (highIntent.length > topRows.length
+        ? `<tr><td colspan="4" class="py-3 text-center text-xs text-gray-500">Yana ${highIntent.length - topRows.length} ta user bor</td></tr>`
+        : '');
     }
   }
 }
@@ -6920,6 +7075,7 @@ function renderPaymentFrictionDiagnostics(data) {
   if (preparedToCompleted) preparedToCompleted.textContent = `${summary.preparedToCompleted ?? 0}%`;
   if (stuckCount) stuckCount.textContent = `${stuck.length}`;
   if (nextAction) nextAction.textContent = data?.nextAction || '-';
+  renderPayMethodChart(methods);
 
   if (methodWrap) {
     if (!methods.length) {
@@ -6943,7 +7099,8 @@ function renderPaymentFrictionDiagnostics(data) {
     if (!stuck.length) {
       stuckTable.innerHTML = '<tr><td colspan="5" class="py-3 text-center text-gray-400">Stuck to\'lov topilmadi</td></tr>';
     } else {
-      stuckTable.innerHTML = stuck.slice(0, 30).map((p) => {
+      const topRows = stuck.slice(0, 20);
+      stuckTable.innerHTML = topRows.map((p) => {
         const ageMin = Math.max(0, Math.floor((p.age_seconds || 0) / 60));
         return `
           <tr class="border-b border-gray-100">
@@ -6952,12 +7109,14 @@ function renderPaymentFrictionDiagnostics(data) {
               <div class="text-xs text-gray-400">ID: ${p.telegram_id}</div>
             </td>
             <td class="py-2" data-label="Buyurtma">${escapeHtml(p.order_id || '-')}</td>
-            <td class="py-2" data-label="Holat">${escapeHtml(p.state || '-')}</td>
-            <td class="py-2" data-label="Usul">${escapeHtml((p.payment_method || 'unknown').toUpperCase())}</td>
+            <td class="py-2" data-label="Holat"><span class="diag-chip">${escapeHtml(p.state || '-')}</span></td>
+            <td class="py-2" data-label="Usul"><span class="diag-chip">${escapeHtml((p.payment_method || 'unknown').toUpperCase())}</span></td>
             <td class="py-2" data-label="Qachondan beri">${ageMin} daqiqa</td>
           </tr>
         `;
-      }).join('');
+      }).join('') + (stuck.length > topRows.length
+        ? `<tr><td colspan="5" class="py-3 text-center text-xs text-gray-500">Yana ${stuck.length - topRows.length} ta stuck buyurtma bor</td></tr>`
+        : '');
     }
   }
 }
