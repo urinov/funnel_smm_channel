@@ -428,6 +428,24 @@
     .rx-kpi .label { font-size: 11px; color: #5f7e81; font-weight: 600; }
     .rx-kpi .value { font-size: 24px; font-weight: 800; color: #103639; line-height: 1.1; }
     .rx-kpi .hint { font-size: 11px; color: #6f8b8e; }
+    .rx-action-btn {
+      margin-top: 8px;
+      border: 1px solid #c6dedd;
+      background: rgba(255,255,255,0.85);
+      color: #204447;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .rx-action-btn:hover { transform: translateY(-1px); background: #ffffff; }
+    .rx-action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
     .rx-kpi.mint { background: linear-gradient(145deg, #ecfff8, #dcf8ef); }
     .rx-kpi.blue { background: linear-gradient(145deg, #eef6ff, #dfefff); }
     .rx-kpi.pink { background: linear-gradient(145deg, #fff1f4, #ffe6ed); }
@@ -1872,16 +1890,19 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
             <div class="label">Umumiy CR</div>
             <div class="value" id="diagOverallCR">-</div>
             <div class="hint">Funnel natijasi</div>
+            <button class="rx-action-btn" onclick="toggleAnalyticsView()">Batafsil ko'rish</button>
           </div>
           <div class="rx-kpi pink">
             <div class="label">Eng katta yo'qotish</div>
             <div class="value text-[18px] sm:text-[20px]" id="diagBiggestDrop">-</div>
             <div class="hint">Aynan qaysi bosqichda</div>
+            <button id="diagActionHighIntentBtn" class="rx-action-btn" onclick="prepareHighIntentBroadcast()" disabled>High-intent follow-up</button>
           </div>
           <div class="rx-kpi sun">
             <div class="label">Pitchdan checkoutsiz</div>
             <div class="value" id="diagStuckUsers">-</div>
             <div class="hint" id="diagNextAction">-</div>
+            <button id="diagActionStuckBtn" class="rx-action-btn" onclick="prepareStuckPaymentsBroadcast()" disabled>Stuck payments follow-up</button>
           </div>
         </div>
 
@@ -7015,6 +7036,7 @@ function renderSegmentDiagnostics(data) {
   const activityList = document.getElementById('segmentActivityList');
   const highIntentTable = document.getElementById('highIntentTable');
   const highIntentCount = document.getElementById('highIntentCount');
+  const highIntentActionBtn = document.getElementById('diagActionHighIntentBtn');
 
   const renderSimpleList = (rows, toneClass) => {
     if (!Array.isArray(rows) || rows.length === 0) return '<div class="text-gray-400">Ma\'lumot yo\'q</div>';
@@ -7038,6 +7060,12 @@ function renderSegmentDiagnostics(data) {
 
   const highIntent = Array.isArray(data?.highIntent) ? data.highIntent : [];
   if (highIntentCount) highIntentCount.textContent = `${highIntent.length} ta`;
+  if (highIntentActionBtn) {
+    highIntentActionBtn.disabled = highIntent.length === 0;
+    highIntentActionBtn.textContent = highIntent.length > 0
+      ? `High-intent follow-up (${Math.min(highIntent.length, 100)})`
+      : 'High-intent yo\'q';
+  }
 
   if (highIntentTable) {
     if (highIntent.length === 0) {
@@ -7108,12 +7136,19 @@ function renderPaymentFrictionDiagnostics(data) {
   const methodWrap = document.getElementById('payDiagMethods');
   const nextAction = document.getElementById('payDiagNextAction');
   const stuckTable = document.getElementById('payDiagStuckTable');
+  const stuckActionBtn = document.getElementById('diagActionStuckBtn');
 
   if (pitchToCheckout) pitchToCheckout.textContent = `${summary.pitchToCheckout ?? 0}%`;
   if (checkoutToPrepared) checkoutToPrepared.textContent = `${summary.checkoutToPrepared ?? 0}%`;
   if (preparedToCompleted) preparedToCompleted.textContent = `${summary.preparedToCompleted ?? 0}%`;
   if (stuckCount) stuckCount.textContent = `${stuck.length}`;
   if (nextAction) nextAction.textContent = data?.nextAction || '-';
+  if (stuckActionBtn) {
+    stuckActionBtn.disabled = stuck.length === 0;
+    stuckActionBtn.textContent = stuck.length > 0
+      ? `Stuck follow-up (${Math.min(stuck.length, 100)})`
+      : 'Stuck to\'lov yo\'q';
+  }
   renderPayMethodChart(methods);
 
   if (methodWrap) {
