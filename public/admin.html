@@ -1098,10 +1098,11 @@
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reja</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tizim</th>
+                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium kanal</th>
               </tr>
             </thead>
             <tbody id="paymentsTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
             </tbody>
           </table>
         </div>
@@ -3454,7 +3455,7 @@ function renderTodayStats() {
 
   // Calculate today's payments
   const todayPayments = allPayments.filter(p => {
-    if (!p.created_at || p.state !== 'performed') return false;
+    if (!p.created_at || p.status !== 'completed') return false;
     return p.created_at.split('T')[0] === todayStr;
   });
   const todayPaymentsEl = document.getElementById('todayPayments');
@@ -4679,7 +4680,7 @@ function renderPayments() {
   }
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
     return;
   }
 
@@ -4689,6 +4690,13 @@ function renderPayments() {
     else if (p.status === 'pending') statusBadge = '<span class="badge badge-yellow">Jarayonda</span>';
     else if (p.status === 'cancelled' || p.status === 'failed') statusBadge = '<span class="badge badge-red">Bekor</span>';
     else statusBadge = `<span class="badge badge-gray">${p.status || '-'}</span>`;
+
+    let channelStatus = '<span class="text-gray-400">-</span>';
+    if (p.status === 'completed') {
+      channelStatus = p.joined_premium_channel
+        ? '<span class="badge badge-green">Qo\'shilgan</span>'
+        : '<span class="badge badge-orange">Qo\'shilmagan</span>';
+    }
 
     return `
       <tr class="table-row">
@@ -4701,6 +4709,7 @@ function renderPayments() {
         <td class="px-5 py-4"><span class="badge badge-blue">${p.plan || '-'}</span></td>
         <td class="px-5 py-4">${statusBadge}</td>
         <td class="px-5 py-4 text-gray-500">${p.payment_system || '-'}</td>
+        <td class="px-5 py-4">${channelStatus}</td>
       </tr>
     `;
   }).join('');

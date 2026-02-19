@@ -6,6 +6,8 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+const SUCCESS_PAYMENT_STATES = ['performed', '2'];
+
 export async function initDatabase() {
   const client = await pool.connect();
   try {
@@ -1194,12 +1196,13 @@ export async function getAllPayments() {
     SELECT p.*, u.full_name, u.username,
       p.plan_id as plan,
       CASE
-        WHEN p.state = 'performed' THEN 'completed'
-        WHEN p.state = 'created' THEN 'pending'
-        WHEN p.state = 'cancelled' THEN 'cancelled'
+        WHEN p.state IN ('performed', '2') THEN 'completed'
+        WHEN p.state IN ('new', 'pending', 'created', '1') THEN 'pending'
+        WHEN p.state IN ('cancelled', '-1', '-2') THEN 'cancelled'
         ELSE p.state
       END as status,
-      COALESCE(p.payment_method, 'unknown') as payment_system
+      COALESCE(p.payment_method, 'unknown') as payment_system,
+      COALESCE(u.joined_premium_channel, false) as joined_premium_channel
     FROM payments p
     LEFT JOIN users u ON p.telegram_id = u.telegram_id
     ORDER BY p.created_at DESC
@@ -1211,50 +1214,50 @@ export async function getAllPayments() {
 export async function getPaymentAnalytics() {
   const { rows: daily } = await pool.query(`
     SELECT DATE(created_at) as date, COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND created_at > NOW() - INTERVAL '30 days'
+    FROM payments WHERE state = ANY($1) AND created_at > NOW() - INTERVAL '30 days'
     GROUP BY DATE(created_at) ORDER BY date DESC
-  `);
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: monthly } = await pool.query(`
     SELECT TO_CHAR(created_at, 'YYYY-MM') as month, COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND created_at > NOW() - INTERVAL '12 months'
+    FROM payments WHERE state = ANY($1) AND created_at > NOW() - INTERVAL '12 months'
     GROUP BY TO_CHAR(created_at, 'YYYY-MM') ORDER BY month DESC
-  `);
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: today } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND DATE(created_at) = CURRENT_DATE
-  `);
+    FROM payments WHERE state = ANY($1) AND DATE(created_at) = CURRENT_DATE
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: week } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND created_at > NOW() - INTERVAL '7 days'
-  `);
+    FROM payments WHERE state = ANY($1) AND created_at > NOW() - INTERVAL '7 days'
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: month } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND created_at > NOW() - INTERVAL '30 days'
-  `);
+    FROM payments WHERE state = ANY($1) AND created_at > NOW() - INTERVAL '30 days'
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: year } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND created_at > NOW() - INTERVAL '365 days'
-  `);
+    FROM payments WHERE state = ANY($1) AND created_at > NOW() - INTERVAL '365 days'
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: total } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed'
-  `);
+    FROM payments WHERE state = ANY($1)
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: payme } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND payment_method = 'payme'
-  `);
+    FROM payments WHERE state = ANY($1) AND payment_method = 'payme'
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: click } = await pool.query(`
     SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as amount
-    FROM payments WHERE state = 'performed' AND payment_method = 'click'
-  `);
+    FROM payments WHERE state = ANY($1) AND payment_method = 'click'
+  `, [SUCCESS_PAYMENT_STATES]);
 
   return {
     daily,
@@ -1288,7 +1291,7 @@ export async function getDailySubscribers(days = 30) {
     daily_paid AS (
       SELECT DATE(p.created_at) as date, COUNT(DISTINCT p.telegram_id)::int as new_paid
       FROM payments p
-      WHERE p.state = 'performed' AND p.created_at >= CURRENT_DATE - $1::int
+      WHERE p.state = ANY($2) AND p.created_at >= CURRENT_DATE - $1::int
       GROUP BY DATE(p.created_at)
     )
     SELECT
@@ -1299,7 +1302,7 @@ export async function getDailySubscribers(days = 30) {
     LEFT JOIN daily_users u ON d.date = u.date
     LEFT JOIN daily_paid p ON d.date = p.date
     ORDER BY d.date ASC
-  `, [days]);
+  `, [days, SUCCESS_PAYMENT_STATES]);
 
   return rows;
 }
@@ -1308,12 +1311,19 @@ export async function getFullStats() {
   const { rows: userStats } = await pool.query(`
     SELECT
       COUNT(*) as total_users,
-      COUNT(*) FILTER (WHERE is_paid = TRUE) as paid_users,
+      GREATEST(
+        COUNT(*) FILTER (WHERE is_paid = TRUE),
+        (
+          SELECT COUNT(DISTINCT telegram_id)
+          FROM payments
+          WHERE state = ANY($1)
+        )
+      ) as paid_users,
       COUNT(*) FILTER (WHERE is_paid = FALSE) as active_users,
       COUNT(*) FILTER (WHERE current_lesson >= (SELECT COUNT(*) FROM lessons)) as completed_users,
       COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) as today_users
     FROM users WHERE is_blocked = FALSE
-  `);
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: paymentStats } = await pool.query(`
     SELECT
@@ -1323,8 +1333,8 @@ export async function getFullStats() {
         EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE) AND
         EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
       ), 0) as monthly_revenue
-    FROM payments WHERE state = 'performed'
-  `);
+    FROM payments WHERE state = ANY($1)
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: funnelStats } = await pool.query(`
     SELECT funnel_step, COUNT(*) as count
@@ -1561,9 +1571,9 @@ export async function getBuyerAnalytics() {
         u.income_level
       FROM payments p
       JOIN users u ON p.telegram_id = u.telegram_id
-      WHERE p.state = 'performed'
+      WHERE p.state = ANY($1)
       ORDER BY p.created_at DESC
-    `);
+    `, [SUCCESS_PAYMENT_STATES]);
     
     // Get total users for conversion rate
     const { rows: totalUsersResult } = await pool.query('SELECT COUNT(*) as count FROM users');
@@ -1970,8 +1980,8 @@ export async function getDailyReportStats() {
       COUNT(*) AS successful_payments_today,
       COALESCE(SUM(amount), 0) AS revenue_today
     FROM payments
-    WHERE state = 'performed' AND DATE(created_at) = CURRENT_DATE
-  `);
+    WHERE state = ANY($1) AND DATE(created_at) = CURRENT_DATE
+  `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: subscriptionRows } = await pool.query(`
     SELECT COUNT(*) AS new_subscriptions_today
@@ -2346,8 +2356,8 @@ export async function getFunnelRevenue(funnelId) {
     SELECT COALESCE(SUM(p.amount), 0) as total
     FROM payments p
     JOIN user_funnels uf ON uf.telegram_id = p.telegram_id
-    WHERE uf.funnel_id = $1 AND p.state = 'performed'
-  `, [funnelId]);
+    WHERE uf.funnel_id = $1 AND p.state = ANY($2)
+  `, [funnelId, SUCCESS_PAYMENT_STATES]);
   return rows[0] || { total: 0 };
 }
 
@@ -2427,10 +2437,10 @@ export async function getFunnelPayments(funnelId) {
     FROM payments p
     JOIN users u ON u.telegram_id = p.telegram_id
     JOIN user_funnels uf ON uf.telegram_id = p.telegram_id AND uf.funnel_id = $1
-    WHERE p.state = 'performed'
+    WHERE p.state = ANY($2)
     ORDER BY p.created_at DESC
     LIMIT 100
-  `, [funnelId]);
+  `, [funnelId, SUCCESS_PAYMENT_STATES]);
   return rows;
 }
 
