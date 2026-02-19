@@ -404,6 +404,50 @@ bot.use(async (ctx, next) => {
   return next();
 });
 
+// ============ PREMIUM CHANNEL JOIN/LEAVE TRACKING ============
+bot.on('chat_member', async (ctx) => {
+  try {
+    const update = ctx.update.chat_member;
+    if (!update) return;
+
+    const chat = update.chat;
+    const newMember = update.new_chat_member;
+    const userId = newMember.user?.id;
+
+    if (!userId) return;
+
+    // Get premium channel ID from settings
+    const channelSettings = await db.getChannelSettings();
+    const premiumChannelId = channelSettings.channel_id || PREMIUM_CHANNEL_ID;
+
+    if (!premiumChannelId) return;
+
+    // Check if this is the premium channel
+    const chatIdStr = String(chat.id);
+    const premiumIdStr = String(premiumChannelId).replace(/^@/, '');
+    if (chatIdStr !== premiumIdStr && chat.username !== premiumIdStr) return;
+
+    const oldStatus = update.old_chat_member?.status;
+    const newStatus = newMember.status;
+
+    // User joined the channel
+    if (['member', 'administrator', 'creator'].includes(newStatus) &&
+        ['left', 'kicked', 'restricted'].includes(oldStatus)) {
+      console.log(`📢 User ${userId} joined premium channel`);
+      await db.markUserJoinedPremiumChannel(userId);
+    }
+
+    // User left the channel
+    if (['left', 'kicked'].includes(newStatus) &&
+        ['member', 'administrator', 'creator', 'restricted'].includes(oldStatus)) {
+      console.log(`📢 User ${userId} left premium channel`);
+      await db.markUserLeftPremiumChannel(userId);
+    }
+  } catch (e) {
+    console.error('Chat member update error:', e.message);
+  }
+});
+
 bot.command('admin', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return ctx.reply('Admin huquqi yoq');
   const webAppUrl = BASE_URL ? `${BASE_URL.replace(/\/+$/, '')}/admin.html` : null;

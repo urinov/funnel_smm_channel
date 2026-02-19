@@ -639,6 +639,18 @@ export async function initDatabase() {
       } catch (e) {}
     }
 
+    // ============ CHANNEL JOIN TRACKING MIGRATIONS ============
+    const channelJoinMigrations = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS joined_premium_channel BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS joined_premium_channel_at TIMESTAMP`
+    ];
+
+    for (const sql of channelJoinMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
     // ============ PERFORMANCE INDEXES ============
     const indexMigrations = [
       // Users table indexes
@@ -1682,6 +1694,25 @@ export async function getUsersWithInviteLinks() {
     ORDER BY il.created_at DESC
   `);
   return rows;
+}
+
+// ============ CHANNEL JOIN TRACKING ============
+export async function markUserJoinedPremiumChannel(telegramId) {
+  await pool.query(`
+    UPDATE users
+    SET joined_premium_channel = true, joined_premium_channel_at = NOW()
+    WHERE telegram_id = $1
+  `, [telegramId]);
+
+  // Also mark the invite link as used
+  await markInviteLinkUsed(telegramId);
+}
+
+export async function markUserLeftPremiumChannel(telegramId) {
+  await pool.query(`
+    UPDATE users SET joined_premium_channel = false
+    WHERE telegram_id = $1
+  `, [telegramId]);
 }
 
 // ============ APP SETTINGS FUNCTIONS ============
