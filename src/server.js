@@ -2033,7 +2033,7 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
   try {
     const { target, type, text, media_id, button, buttons, user_ids, lesson_from, lesson_to } = req.body;
-    const { getAllActiveUsers, getLatestPendingPaymentForUser } = await import('./database.js');
+    const { getAllActiveUsers, getLatestPendingPaymentForUser, getSubscriptionPlan, createPayment } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     let users = [];
@@ -2062,10 +2062,20 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
     const fallbackButtons = button && button.text && button.url ? [button] : [];
     const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
     const baseUrl = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/+$/, '') : '';
+    const usesCheckoutPlaceholders = buttonDefs.some((b) => {
+      const u = String(b?.url || '').toLowerCase();
+      return u.includes('{{payme_checkout_url}}') || u.includes('{{click_checkout_url}}');
+    });
+    const defaultPlan = usesCheckoutPlaceholders ? await getSubscriptionPlan('1month') : null;
 
     for (const user of users) {
       try {
-        const pendingPayment = await getLatestPendingPaymentForUser(user.telegram_id);
+        let pendingPayment = await getLatestPendingPaymentForUser(user.telegram_id);
+        if (!pendingPayment && usesCheckoutPlaceholders && defaultPlan?.price) {
+          const autoOrderId = (`ADM${user.telegram_id}${Date.now().toString().slice(-7)}`).slice(0, 20);
+          await createPayment(autoOrderId, user.telegram_id, defaultPlan.price, defaultPlan.id || '1month');
+          pendingPayment = await getLatestPendingPaymentForUser(user.telegram_id);
+        }
         const paymeCheckoutUrl = (baseUrl && pendingPayment)
           ? `${baseUrl}/payme/api/checkout-url?order_id=${encodeURIComponent(pendingPayment.order_id)}&amount=${pendingPayment.amount}&plan=${encodeURIComponent(pendingPayment.plan_id || '1month')}&redirect=1`
           : '';
@@ -2092,6 +2102,7 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
               .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
               .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
               .replace(/\{\{phone\}\}/gi, user.phone || '')
+              .replace(/\{\{telefon\}\}/gi, user.phone || '')
               .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
               .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
               .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl);
@@ -2137,7 +2148,7 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
 app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
   try {
     const { type, text, media_id, button, buttons } = req.body;
-    const { getLatestPendingPaymentForUser, getUser } = await import('./database.js');
+    const { getLatestPendingPaymentForUser, getUser, getSubscriptionPlan, createPayment } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     const adminId = process.env.ADMIN_IDS?.split(',')?.[0]?.trim();
@@ -2149,9 +2160,23 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
     const adminUser = Number.isFinite(adminNumericId)
       ? await getUser(adminNumericId)
       : null;
-    const pendingPayment = Number.isFinite(adminNumericId)
+    let pendingPayment = Number.isFinite(adminNumericId)
       ? await getLatestPendingPaymentForUser(adminNumericId)
       : null;
+    const fallbackButtons = button && button.text && button.url ? [button] : [];
+    const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
+    const usesCheckoutPlaceholders = buttonDefs.some((b) => {
+      const u = String(b?.url || '').toLowerCase();
+      return u.includes('{{payme_checkout_url}}') || u.includes('{{click_checkout_url}}');
+    });
+    if (!pendingPayment && Number.isFinite(adminNumericId) && usesCheckoutPlaceholders) {
+      const defaultPlan = await getSubscriptionPlan('1month');
+      if (defaultPlan?.price) {
+        const autoOrderId = (`ADM${adminNumericId}${Date.now().toString().slice(-7)}`).slice(0, 20);
+        await createPayment(autoOrderId, adminNumericId, defaultPlan.price, defaultPlan.id || '1month');
+        pendingPayment = await getLatestPendingPaymentForUser(adminNumericId);
+      }
+    }
     const baseUrl = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/+$/, '') : '';
     const paymeCheckoutUrl = (baseUrl && pendingPayment)
       ? `${baseUrl}/payme/api/checkout-url?order_id=${encodeURIComponent(pendingPayment.order_id)}&amount=${pendingPayment.amount}&plan=${encodeURIComponent(pendingPayment.plan_id || '1month')}&redirect=1`
@@ -2176,8 +2201,6 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
       .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl)
       .replace(/\{\{dars\}\}/gi, '3');
 
-    const fallbackButtons = button && button.text && button.url ? [button] : [];
-    const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
     const mappedButtons = buttonDefs
       .map((b) => {
         const btnText = String(b?.text || '').trim();
