@@ -1875,7 +1875,11 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <div class="rx-title">Welcome back, Admin</div>
           <div class="rx-subtitle">Asosiy metrikalar, conversion va qayerda yo‘qotayotganingiz bitta oynada</div>
         </div>
-        <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🔎 Batafsil ko'rsatish</button>
+        <div class="flex items-center gap-2">
+          <button id="analyticsPeriod7" onclick="setAnalyticsPeriod(7)" class="tab text-xs">7 kun</button>
+          <button id="analyticsPeriod30" onclick="setAnalyticsPeriod(30)" class="tab text-xs">30 kun</button>
+          <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🔎 Batafsil ko'rsatish</button>
+        </div>
       </div>
 
       <!-- Funnel Diagnostics -->
@@ -2043,11 +2047,11 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
       <!-- Revenue & Growth Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 analytics-advanced">
         <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (so'nggi 30 kun)</h3>
+          <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (<span id="analyticsRevenuePeriodLabel">so'nggi 30 kun</span>)</h3>
           <div class="chart-container"><canvas id="analyticsRevenueChart"></canvas></div>
         </div>
         <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">📈 Obunalar o'sishi</h3>
+          <h3 class="font-semibold text-gray-800 mb-4">📈 Obunalar o'sishi (<span id="analyticsSubsPeriodLabel">so'nggi 30 kun</span>)</h3>
           <div class="chart-container"><canvas id="analyticsSubscribersChart"></canvas></div>
         </div>
       </div>
@@ -6600,6 +6604,29 @@ let auditOffset = 0;
 let latestSegmentDiagnostics = null;
 let latestPaymentFrictionDiagnostics = null;
 let analyticsSimpleView = localStorage.getItem('analyticsSimpleView') !== 'false';
+let analyticsPeriodDays = parseInt(localStorage.getItem('analyticsPeriodDays') || '30', 10);
+if (![7, 30].includes(analyticsPeriodDays)) analyticsPeriodDays = 30;
+
+function updateAnalyticsPeriodUi() {
+  const btn7 = document.getElementById('analyticsPeriod7');
+  const btn30 = document.getElementById('analyticsPeriod30');
+  const periodText = analyticsPeriodDays === 7 ? "so'nggi 7 kun" : "so'nggi 30 kun";
+  if (btn7) btn7.classList.toggle('active', analyticsPeriodDays === 7);
+  if (btn30) btn30.classList.toggle('active', analyticsPeriodDays === 30);
+  const revLabel = document.getElementById('analyticsRevenuePeriodLabel');
+  const subLabel = document.getElementById('analyticsSubsPeriodLabel');
+  if (revLabel) revLabel.textContent = periodText;
+  if (subLabel) subLabel.textContent = periodText;
+}
+
+function setAnalyticsPeriod(days) {
+  const normalized = Number(days) === 7 ? 7 : 30;
+  if (analyticsPeriodDays === normalized) return;
+  analyticsPeriodDays = normalized;
+  localStorage.setItem('analyticsPeriodDays', String(analyticsPeriodDays));
+  updateAnalyticsPeriodUi();
+  loadAnalyticsData();
+}
 
 function applyAnalyticsViewPreference() {
   document.querySelectorAll('.analytics-advanced').forEach((el) => {
@@ -6620,10 +6647,11 @@ function toggleAnalyticsView() {
 
 async function loadAnalyticsData() {
   try {
+    updateAnalyticsPeriodUi();
     // Load all analytics data in parallel
     const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData, paymentFrictionData] = await Promise.all([
-      fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/subscribers/daily?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch(`/api/analytics/revenue?days=${analyticsPeriodDays}`, { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch(`/api/subscribers/daily?days=${analyticsPeriodDays}`, { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()),
