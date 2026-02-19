@@ -3280,7 +3280,7 @@ async function previewBroadcast() {
 
   try {
     const buttons = collectBroadcastButtons();
-    await fetch('/api/broadcast/test', {
+    const res = await fetch('/api/broadcast/test', {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3291,6 +3291,10 @@ async function previewBroadcast() {
         buttons
       })
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || 'Test xabar yuborilmadi');
+    }
     alert('✅ Test xabar yuborildi (o\'zingizga)');
   } catch (e) {
     alert('Xatolik: ' + e.message);

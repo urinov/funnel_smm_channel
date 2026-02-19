@@ -2140,7 +2140,10 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
     const { getLatestPendingPaymentForUser, getUserByTelegramId } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
-    const adminId = process.env.ADMIN_IDS.split(',')[0].trim();
+    const adminId = process.env.ADMIN_IDS?.split(',')?.[0]?.trim();
+    if (!adminId) {
+      return res.status(400).json({ error: 'ADMIN_IDS sozlanmagan (env)' });
+    }
 
     const adminNumericId = Number(adminId);
     const adminUser = Number.isFinite(adminNumericId)
@@ -2209,7 +2212,11 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
 
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const msg = String(e?.message || 'Noma\'lum xatolik');
+    if (msg.includes('chat not found') || msg.includes('bot was blocked by the user')) {
+      return res.status(400).json({ error: 'Bot sizga test yubora olmadi. Botga kirib /start bosing, keyin qayta urinib ko\'ring.' });
+    }
+    res.status(500).json({ error: msg });
   }
 });
 
