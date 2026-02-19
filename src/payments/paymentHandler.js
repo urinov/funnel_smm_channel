@@ -86,7 +86,7 @@ export async function handleExpiredSubscription(subscription) {
     await db.deactivateSubscription(subscription.id);
 
     // Update user status
-    await db.updateUser(telegramId, { is_paid: false });
+    await db.updateUserAdmin(telegramId, { is_paid: false });
 
     // Kick from channel (dynamic import to avoid circular dependency)
     try {

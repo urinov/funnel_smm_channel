@@ -223,7 +223,8 @@ async function handleClickCallback(req, res) {
     }
 
     // Activate user
-    await db.updateUser(payment.telegram_id, { is_paid: true, funnel_step: 11 });
+    await db.updateUserAdmin(payment.telegram_id, { is_paid: true });
+    await db.updateUser(payment.telegram_id, { funnel_step: 11 });
     await db.cancelPendingMessages(payment.telegram_id, 'soft_attack');
 
     // Mark referral discount as used if this was a referral payment (atomic to prevent race condition)

@@ -1349,7 +1349,7 @@ export async function createSubscription(telegramId, planId, amount, paymentMeth
     RETURNING *
   `, [user?.id, telegramId, planId, startDate, endDate, amount, paymentMethod, paymentId]);
 
-  await updateUser(telegramId, { is_paid: true });
+  await updateUserAdmin(telegramId, { is_paid: true });
   return rows[0] || null;
 }
 

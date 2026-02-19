@@ -483,6 +483,34 @@ app.delete('/api/users/:telegramId', authMiddleware, async (req, res) => {
   }
 });
 
+// Update user status (is_paid, is_blocked)
+app.patch('/api/users/:telegramId', authMiddleware, async (req, res) => {
+  try {
+    const { updateUserAdmin, getUser } = await import('./database.js');
+    const telegramId = parseInt(req.params.telegramId);
+    const { is_paid, is_blocked } = req.body;
+
+    const user = await getUser(telegramId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const updates = {};
+    if (typeof is_paid === 'boolean') updates.is_paid = is_paid;
+    if (typeof is_blocked === 'boolean') updates.is_blocked = is_blocked;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const updatedUser = await updateUserAdmin(telegramId, updates);
+    console.log(`📝 User ${telegramId} updated:`, updates);
+
+    res.json(updatedUser);
+  } catch (e) {
+    console.error('Update user error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/conversations', authMiddleware, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 200;
