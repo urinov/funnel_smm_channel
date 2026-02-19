@@ -978,6 +978,33 @@ export async function getAllActiveUsers() {
   return rows;
 }
 
+// Admin users list (includes blocked users too, so paid users are never hidden in UI)
+export async function getAllUsersForAdmin() {
+  const { rows } = await pool.query(`
+    SELECT
+      u.*,
+      (
+        u.is_paid = TRUE
+        OR EXISTS (
+          SELECT 1
+          FROM payments p
+          WHERE p.telegram_id = u.telegram_id
+            AND p.state = ANY($1)
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM subscriptions s
+          WHERE s.telegram_id = u.telegram_id
+            AND s.is_active = TRUE
+            AND s.end_date > NOW()
+        )
+      ) AS is_paid
+    FROM users u
+    ORDER BY u.created_at DESC
+  `, [SUCCESS_PAYMENT_STATES]);
+  return rows;
+}
+
 export async function getLesson(lessonNumber) {
   const { rows } = await pool.query('SELECT * FROM lessons WHERE lesson_number = $1 AND is_active = TRUE', [lessonNumber]);
   return rows[0] || null;

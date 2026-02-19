@@ -445,8 +445,8 @@ app.get('/api/bot-info', authMiddleware, async (req, res) => {
 
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
-    const { getAllActiveUsers } = await import('./database.js');
-    const users = await getAllActiveUsers();
+    const { getAllUsersForAdmin } = await import('./database.js');
+    const users = await getAllUsersForAdmin();
     res.json(users);
   } catch (e) {
     res.status(500).json({ error: e.message });
