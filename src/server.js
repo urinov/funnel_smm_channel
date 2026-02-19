@@ -2137,14 +2137,40 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
 app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
   try {
     const { type, text, media_id, button, buttons } = req.body;
+    const { getLatestPendingPaymentForUser, getUserByTelegramId } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     const adminId = process.env.ADMIN_IDS.split(',')[0].trim();
 
+    const adminNumericId = Number(adminId);
+    const adminUser = Number.isFinite(adminNumericId)
+      ? await getUserByTelegramId(adminNumericId)
+      : null;
+    const pendingPayment = Number.isFinite(adminNumericId)
+      ? await getLatestPendingPaymentForUser(adminNumericId)
+      : null;
+    const baseUrl = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/+$/, '') : '';
+    const paymeCheckoutUrl = (baseUrl && pendingPayment)
+      ? `${baseUrl}/payme/api/checkout-url?order_id=${encodeURIComponent(pendingPayment.order_id)}&amount=${pendingPayment.amount}&plan=${encodeURIComponent(pendingPayment.plan_id || '1month')}&redirect=1`
+      : '';
+    const clickCheckoutUrl = (baseUrl && pendingPayment)
+      ? `${baseUrl}/click/api/checkout-url?order_id=${encodeURIComponent(pendingPayment.order_id)}&amount=${pendingPayment.amount}&plan=${encodeURIComponent(pendingPayment.plan_id || '1month')}&redirect=1`
+      : '';
+
+    const sampleTg = Number.isFinite(adminNumericId) ? String(adminNumericId) : '000000000';
+    const sampleName = adminUser?.full_name || 'Test Foydalanuvchi';
+    const sampleFirstName = sampleName.split(' ')[0] || 'Test';
+    const samplePhone = adminUser?.phone || '+998901234567';
+    const sampleUsername = adminUser?.username ? '@' + adminUser.username : '@testuser';
+
     const personalizedText = (text || '')
-      .replace(/\{\{fio\}\}/gi, 'Test Foydalanuvchi')
-      .replace(/\{\{ism\}\}/gi, 'Test')
-      .replace(/\{\{telefon\}\}/gi, '+998901234567')
+      .replace(/\{\{fio\}\}/gi, sampleName)
+      .replace(/\{\{ism\}\}/gi, sampleFirstName)
+      .replace(/\{\{telefon\}\}/gi, samplePhone)
+      .replace(/\{\{username\}\}/gi, sampleUsername)
+      .replace(/\{\{tg\}\}/gi, sampleTg)
+      .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
+      .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl)
       .replace(/\{\{dars\}\}/gi, '3');
 
     const fallbackButtons = button && button.text && button.url ? [button] : [];
@@ -2152,9 +2178,18 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
     const mappedButtons = buttonDefs
       .map((b) => {
         const btnText = String(b?.text || '').trim();
-        const btnUrl = String(b?.url || '').trim();
-        if (!btnText || !btnUrl) return null;
-        return Markup.button.url(btnText, btnUrl);
+        const rawUrl = String(b?.url || '').trim();
+        if (!btnText || !rawUrl) return null;
+        const mappedUrl = rawUrl
+          .replace(/\{\{tg\}\}/gi, sampleTg)
+          .replace(/\{\{username\}\}/gi, sampleUsername)
+          .replace(/\{\{phone\}\}/gi, samplePhone)
+          .replace(/\{\{telefon\}\}/gi, samplePhone)
+          .replace(/\{\{ism\}\}/gi, sampleFirstName)
+          .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
+          .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl);
+        if (!mappedUrl || mappedUrl.includes('{{')) return null;
+        return Markup.button.url(btnText, mappedUrl);
       })
       .filter(Boolean);
 

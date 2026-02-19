@@ -356,6 +356,25 @@
     .funnel-count { font-size: 14px; font-weight: 700; color: #fff; }
     .funnel-pct { font-size: 10px; color: rgba(255,255,255,0.8); }
 
+    .diag-list-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px solid rgba(148,163,184,0.2); }
+    .diag-list-row:last-child { border-bottom: 0; }
+    .diag-list-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .diag-list-label { font-size: 13px; color: #334155; font-weight: 600; }
+    .diag-list-meta { font-size: 11px; color: #64748b; white-space: nowrap; }
+    .diag-progress { width: 100%; height: 6px; border-radius: 999px; background: rgba(148,163,184,0.24); overflow: hidden; }
+    .diag-progress-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
+    .diag-progress-fill.source { background: linear-gradient(90deg, #5b7cfa, #7e5cff); }
+    .diag-progress-fill.lesson { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+    .diag-progress-fill.activity { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .diag-progress-fill.method { background: linear-gradient(90deg, #f59e0b, #f97316); }
+
+    @media (max-width: 768px) {
+      .diag-list-label { font-size: 12px; }
+      .diag-list-meta { font-size: 10px; }
+      #tab-analytics .overflow-x-auto { overflow-x: auto !important; }
+      #tab-analytics table { min-width: 620px; }
+    }
+
     /* Conversations */
     .conv-users-list { max-height: 72vh; overflow-y: auto; }
     .conv-user-item { width: 100%; text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(15,23,42,0.06); transition: background 0.18s ease; }
@@ -1790,7 +1809,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         </div>
 
         <div class="overflow-x-auto mb-4">
-          <table class="w-full text-sm">
+          <table class="w-full text-sm responsive-table">
             <thead>
               <tr class="text-left text-gray-500 border-b">
                 <th class="pb-2">Bosqich</th>
@@ -1838,7 +1857,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
             <div class="text-xs text-gray-500" id="highIntentCount">0 ta</div>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm responsive-table">
               <thead>
                 <tr class="text-left text-gray-500 border-b">
                   <th class="py-2">User</th>
@@ -1893,7 +1912,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full text-sm responsive-table">
             <thead>
               <tr class="text-left text-gray-500 border-b">
                 <th class="py-2">User</th>
@@ -6803,19 +6822,24 @@ function renderSegmentDiagnostics(data) {
   const highIntentTable = document.getElementById('highIntentTable');
   const highIntentCount = document.getElementById('highIntentCount');
 
-  const renderSimpleList = (rows) => {
+  const renderSimpleList = (rows, toneClass) => {
     if (!Array.isArray(rows) || rows.length === 0) return '<div class="text-gray-400">Ma\'lumot yo\'q</div>';
-    return rows.map((r) => `
-      <div class="flex items-center justify-between gap-2 py-1 border-b border-gray-100 last:border-b-0">
-        <span class="text-gray-700">${escapeHtml(String(r.segment || '-'))}</span>
-        <span class="text-xs text-gray-500">${r.paid_users}/${r.total_users} (${r.conversion}%)</span>
+    return rows.slice(0, 8).map((r) => `
+      <div class="diag-list-row">
+        <div class="diag-list-head">
+          <span class="diag-list-label">${escapeHtml(String(r.segment || '-'))}</span>
+          <span class="diag-list-meta">${r.paid_users}/${r.total_users} (${r.conversion}%)</span>
+        </div>
+        <div class="diag-progress">
+          <div class="diag-progress-fill ${toneClass}" style="width:${Math.max(0, Math.min(100, Number(r.conversion) || 0))}%"></div>
+        </div>
       </div>
     `).join('');
   };
 
-  if (sourceList) sourceList.innerHTML = renderSimpleList(data?.sources);
-  if (lessonList) lessonList.innerHTML = renderSimpleList(data?.lessons);
-  if (activityList) activityList.innerHTML = renderSimpleList(data?.activity);
+  if (sourceList) sourceList.innerHTML = renderSimpleList(data?.sources, 'source');
+  if (lessonList) lessonList.innerHTML = renderSimpleList(data?.lessons, 'lesson');
+  if (activityList) activityList.innerHTML = renderSimpleList(data?.activity, 'activity');
 
   const highIntent = Array.isArray(data?.highIntent) ? data.highIntent : [];
   if (highIntentCount) highIntentCount.textContent = `${highIntent.length} ta`;
@@ -6831,13 +6855,13 @@ function renderSegmentDiagnostics(data) {
         if ((u.score || 0) >= 4) signal.push('Yuqori');
         return `
           <tr class="border-b border-gray-100">
-            <td class="py-2">
+            <td class="py-2" data-label="User">
               <div class="font-medium text-gray-800">${escapeHtml(u.full_name || u.username || String(u.telegram_id))}</div>
               <div class="text-xs text-gray-400">ID: ${u.telegram_id}</div>
             </td>
-            <td class="py-2">${u.current_lesson || 0}</td>
-            <td class="py-2">${escapeHtml(signal.join(', ') || '-')}</td>
-            <td class="py-2">${u.last_activity ? fmtDateTime(u.last_activity) : '-'}</td>
+            <td class="py-2" data-label="Dars">${u.current_lesson || 0}</td>
+            <td class="py-2" data-label="Signal">${escapeHtml(signal.join(', ') || '-')}</td>
+            <td class="py-2" data-label="Oxirgi aktivlik">${u.last_activity ? fmtDateTime(u.last_activity) : '-'}</td>
           </tr>
         `;
       }).join('');
@@ -6898,9 +6922,14 @@ function renderPaymentFrictionDiagnostics(data) {
       methodWrap.innerHTML = '<div class="text-gray-400">Ma\'lumot yo\'q</div>';
     } else {
       methodWrap.innerHTML = methods.map((m) => `
-        <div class="flex items-center justify-between gap-2 py-1 border-b border-gray-100 last:border-b-0">
-          <span class="text-gray-700">${escapeHtml((m.payment_method || '-').toUpperCase())}</span>
-          <span class="text-xs text-gray-500">${m.completed_orders}/${m.total_orders} (${m.conversion}%)</span>
+        <div class="diag-list-row">
+          <div class="diag-list-head">
+            <span class="diag-list-label">${escapeHtml((m.payment_method || '-').toUpperCase())}</span>
+            <span class="diag-list-meta">${m.completed_orders}/${m.total_orders} (${m.conversion}%)</span>
+          </div>
+          <div class="diag-progress">
+            <div class="diag-progress-fill method" style="width:${Math.max(0, Math.min(100, Number(m.conversion) || 0))}%"></div>
+          </div>
         </div>
       `).join('');
     }
@@ -6914,14 +6943,14 @@ function renderPaymentFrictionDiagnostics(data) {
         const ageMin = Math.max(0, Math.floor((p.age_seconds || 0) / 60));
         return `
           <tr class="border-b border-gray-100">
-            <td class="py-2">
+            <td class="py-2" data-label="User">
               <div class="font-medium text-gray-800">${escapeHtml(p.full_name || p.username || String(p.telegram_id))}</div>
               <div class="text-xs text-gray-400">ID: ${p.telegram_id}</div>
             </td>
-            <td class="py-2">${escapeHtml(p.order_id || '-')}</td>
-            <td class="py-2">${escapeHtml(p.state || '-')}</td>
-            <td class="py-2">${escapeHtml((p.payment_method || 'unknown').toUpperCase())}</td>
-            <td class="py-2">${ageMin} daqiqa</td>
+            <td class="py-2" data-label="Buyurtma">${escapeHtml(p.order_id || '-')}</td>
+            <td class="py-2" data-label="Holat">${escapeHtml(p.state || '-')}</td>
+            <td class="py-2" data-label="Usul">${escapeHtml((p.payment_method || 'unknown').toUpperCase())}</td>
+            <td class="py-2" data-label="Qachondan beri">${ageMin} daqiqa</td>
           </tr>
         `;
       }).join('');
