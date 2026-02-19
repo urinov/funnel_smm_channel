@@ -2263,7 +2263,9 @@ async function start() {
       if (process.env.BASE_URL) {
         try {
           const webhookUrl = process.env.BASE_URL + '/telegram/webhook';
-          await bot.telegram.setWebhook(webhookUrl);
+          await bot.telegram.setWebhook(webhookUrl, {
+            allowed_updates: ['message', 'callback_query', 'chat_member']
+          });
           console.log('Webhook set: ' + webhookUrl);
         } catch (e) {
           console.error('setWebhook error', e);
