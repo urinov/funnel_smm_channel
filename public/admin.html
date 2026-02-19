@@ -1747,6 +1747,53 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
     <!-- Analytics Tab -->
     <div id="tab-analytics" class="hidden">
+      <!-- Funnel Diagnostics -->
+      <div class="card p-5 mb-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <h3 class="font-semibold text-gray-800">🧭 Funnel Diagnostika</h3>
+          <div class="text-xs text-gray-500">Qayerda yiqilyapti va nima qilish kerak</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+          <div class="p-3 bg-indigo-50 rounded-xl">
+            <div class="text-xs text-gray-500">Umumiy CR</div>
+            <div class="text-xl font-bold text-indigo-600" id="diagOverallCR">-</div>
+          </div>
+          <div class="p-3 bg-red-50 rounded-xl">
+            <div class="text-xs text-gray-500">Eng katta yo'qotish</div>
+            <div class="text-sm font-semibold text-red-600" id="diagBiggestDrop">-</div>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl">
+            <div class="text-xs text-gray-500">Pitchdan checkoutsiz</div>
+            <div class="text-xl font-bold text-amber-600" id="diagStuckUsers">-</div>
+          </div>
+          <div class="p-3 bg-green-50 rounded-xl">
+            <div class="text-xs text-gray-500">Asosiy tavsiya</div>
+            <div class="text-sm font-semibold text-green-700" id="diagNextAction">-</div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto mb-4">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500 border-b">
+                <th class="pb-2">Bosqich</th>
+                <th class="pb-2">User</th>
+                <th class="pb-2">Prev dan</th>
+                <th class="pb-2">Start dan</th>
+              </tr>
+            </thead>
+            <tbody id="diagFunnelTable">
+              <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="diagAlerts" class="space-y-2">
+          <div class="text-sm text-gray-400">Diagnostika yuklanmoqda...</div>
+        </div>
+      </div>
+
       <!-- Revenue & Growth Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card p-5">
@@ -6249,12 +6296,13 @@ let auditOffset = 0;
 async function loadAnalyticsData() {
   try {
     // Load all analytics data in parallel
-    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData] = await Promise.all([
+    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData] = await Promise.all([
       fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/subscribers/daily?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json())
+      fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/funnel-diagnostics', { headers: { Authorization: auth } }).then(r => r.json())
     ]);
 
     // Render revenue chart
@@ -6271,6 +6319,9 @@ async function loadAnalyticsData() {
 
     // Render inactivity stats
     renderInactivityStats(inactivityData);
+
+    // Render funnel diagnostics
+    renderFunnelDiagnostics(funnelDiagData);
 
   } catch(e) {
     console.error('loadAnalyticsData error:', e);
@@ -6484,6 +6535,64 @@ function renderInactivityStats(data) {
   document.getElementById('inactReminder1').textContent = data.reminder_1_sent || '-';
   document.getElementById('inactReminder2').textContent = data.reminder_2_sent || '-';
   document.getElementById('inactWatchedAfter').textContent = data.watched_after_reminder || '-';
+}
+
+function renderFunnelDiagnostics(data) {
+  const summary = data?.summary || {};
+  const stages = Array.isArray(data?.stages) ? data.stages : [];
+  const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
+  const biggestDrop = data?.biggestDrop || null;
+
+  const overallCrEl = document.getElementById('diagOverallCR');
+  const biggestDropEl = document.getElementById('diagBiggestDrop');
+  const stuckEl = document.getElementById('diagStuckUsers');
+  const nextActionEl = document.getElementById('diagNextAction');
+  const tableBody = document.getElementById('diagFunnelTable');
+  const alertsWrap = document.getElementById('diagAlerts');
+
+  if (overallCrEl) overallCrEl.textContent = (summary.overallConversion ?? 0) + '%';
+  if (biggestDropEl) {
+    biggestDropEl.textContent = biggestDrop
+      ? `${biggestDrop.from} -> ${biggestDrop.to} (${biggestDrop.dropCount} user)`
+      : '-';
+  }
+  if (stuckEl) stuckEl.textContent = summary.pitchWithoutCheckout ?? 0;
+  if (nextActionEl) nextActionEl.textContent = data?.nextAction || '-';
+
+  if (tableBody) {
+    if (!stages.length) {
+      tableBody.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-gray-400">Ma\'lumot yo\'q</td></tr>';
+    } else {
+      tableBody.innerHTML = stages.map((s) => `
+        <tr class="border-b border-gray-100">
+          <td class="py-2">${s.label}</td>
+          <td class="py-2 font-semibold">${s.count}</td>
+          <td class="py-2">${(s.fromPrev ?? 0)}%</td>
+          <td class="py-2">${(s.fromStart ?? 0)}%</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  if (alertsWrap) {
+    if (!alerts.length) {
+      alertsWrap.innerHTML = '<div class="text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">Hozircha kritik signal yo\'q.</div>';
+    } else {
+      alertsWrap.innerHTML = alerts.map((a) => {
+        const tone = a.level === 'high'
+          ? 'bg-red-50 border-red-100 text-red-700'
+          : a.level === 'medium'
+            ? 'bg-amber-50 border-amber-100 text-amber-700'
+            : 'bg-blue-50 border-blue-100 text-blue-700';
+        return `
+          <div class="border rounded-lg px-3 py-2 ${tone}">
+            <div class="font-semibold text-sm">${a.title}</div>
+            <div class="text-xs mt-1">${a.detail}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
 }
 
 // ========== REFERRALS TAB ==========

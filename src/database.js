@@ -1850,6 +1850,140 @@ export async function getFunnelAnalytics() {
   return steps;
 }
 
+export async function getFunnelDiagnostics() {
+  const { rows } = await pool.query(`
+    WITH base AS (
+      SELECT
+        (SELECT COUNT(*)::int FROM users u WHERE u.is_blocked = FALSE) AS total_users,
+        (
+          SELECT COUNT(*)::int
+          FROM users u
+          WHERE u.is_blocked = FALSE
+            AND (COALESCE(u.current_lesson, 0) > 0 OR COALESCE(u.funnel_step, 0) >= 1)
+        ) AS started_users,
+        (
+          SELECT COUNT(*)::int
+          FROM users u
+          WHERE u.is_blocked = FALSE
+            AND COALESCE(u.current_lesson, 0) >= 1
+        ) AS lesson1_users,
+        (
+          SELECT COUNT(*)::int
+          FROM users u
+          WHERE u.is_blocked = FALSE
+            AND (u.sales_pitch_seen_at IS NOT NULL OR COALESCE(u.funnel_step, 0) >= 9)
+        ) AS pitch_users,
+        (
+          SELECT COUNT(DISTINCT p.telegram_id)::int
+          FROM payments p
+        ) AS checkout_users,
+        (
+          SELECT COUNT(DISTINCT p.telegram_id)::int
+          FROM payments p
+          WHERE p.state = ANY($1)
+        ) AS paid_users,
+        (
+          SELECT COUNT(*)::int
+          FROM users u
+          WHERE u.is_blocked = FALSE
+            AND (u.sales_pitch_seen_at IS NOT NULL OR COALESCE(u.funnel_step, 0) >= 9)
+            AND NOT EXISTS (
+              SELECT 1 FROM payments p WHERE p.telegram_id = u.telegram_id
+            )
+        ) AS pitch_without_checkout
+    )
+    SELECT * FROM base
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const raw = rows[0] || {};
+  const totalUsers = parseInt(raw.total_users) || 0;
+  const startedUsers = parseInt(raw.started_users) || 0;
+  const lesson1Users = parseInt(raw.lesson1_users) || 0;
+  const pitchUsers = parseInt(raw.pitch_users) || 0;
+  const checkoutUsers = parseInt(raw.checkout_users) || 0;
+  const paidUsers = parseInt(raw.paid_users) || 0;
+  const pitchWithoutCheckout = parseInt(raw.pitch_without_checkout) || 0;
+
+  const pct = (part, whole) => (whole > 0 ? (part * 100) / whole : 0);
+  const round1 = (n) => Math.round((n || 0) * 10) / 10;
+
+  const stages = [
+    { key: 'registered', label: "Ro'yxatdan o'tgan", count: totalUsers, fromPrev: 100, fromStart: 100 },
+    { key: 'started', label: 'Darsni boshlagan', count: startedUsers, fromPrev: round1(pct(startedUsers, totalUsers)), fromStart: round1(pct(startedUsers, totalUsers)) },
+    { key: 'lesson1', label: '1-darsga yetgan', count: lesson1Users, fromPrev: round1(pct(lesson1Users, startedUsers)), fromStart: round1(pct(lesson1Users, totalUsers)) },
+    { key: 'pitch', label: "Pitch ko'rgan", count: pitchUsers, fromPrev: round1(pct(pitchUsers, lesson1Users)), fromStart: round1(pct(pitchUsers, totalUsers)) },
+    { key: 'checkout', label: 'Checkout ochgan', count: checkoutUsers, fromPrev: round1(pct(checkoutUsers, pitchUsers)), fromStart: round1(pct(checkoutUsers, totalUsers)) },
+    { key: 'paid', label: "To'lov qilgan", count: paidUsers, fromPrev: round1(pct(paidUsers, checkoutUsers)), fromStart: round1(pct(paidUsers, totalUsers)) }
+  ];
+
+  const dropPairs = [];
+  for (let i = 1; i < stages.length; i++) {
+    const prev = stages[i - 1];
+    const cur = stages[i];
+    dropPairs.push({
+      from: prev.label,
+      to: cur.label,
+      dropCount: Math.max(0, prev.count - cur.count),
+      dropPercent: round1(100 - (cur.fromPrev || 0))
+    });
+  }
+  dropPairs.sort((a, b) => b.dropCount - a.dropCount);
+  const biggestDrop = dropPairs[0] || null;
+
+  const alerts = [];
+  const overallCr = round1(pct(paidUsers, totalUsers));
+  if (overallCr < 1) {
+    alerts.push({
+      level: 'high',
+      title: 'Umumiy konversiya juda past',
+      detail: `Hozirgi CR: ${overallCr}% (maqsad: kamida 2-3%).`
+    });
+  }
+  if (pitchUsers > 0 && round1(pct(checkoutUsers, pitchUsers)) < 20) {
+    alerts.push({
+      level: 'medium',
+      title: 'Pitchdan checkoutga o‘tish past',
+      detail: "Pitch ko'rganlarning checkoutga o'tishi sust. CTA va taklifni kuchaytiring."
+    });
+  }
+  if (checkoutUsers > 0 && round1(pct(paidUsers, checkoutUsers)) < 35) {
+    alerts.push({
+      level: 'medium',
+      title: 'Checkoutdan to‘lovga o‘tish past',
+      detail: "To'lov sahifasi friksiya yoki ishonch kontenti zaif bo'lishi mumkin."
+    });
+  }
+  if (pitchWithoutCheckout > 0) {
+    alerts.push({
+      level: 'low',
+      title: 'Pitch ko‘rib, checkout ochmaganlar bor',
+      detail: `${pitchWithoutCheckout} userga 6-12 soat ichida follow-up xabar yuborish kerak.`
+    });
+  }
+
+  let nextAction = "Pitch ko'rgan, checkout ochmagan userlarga avtomatik follow-up yoqing.";
+  if (biggestDrop?.from === "Checkout ochgan" && biggestDrop?.to === "To'lov qilgan") {
+    nextAction = "Checkout -> to'lov bosqichida yo'qotish katta. To'lov usuli friksiyasini tekshiring va 1-click reminder yuboring.";
+  } else if (biggestDrop?.from === "Pitch ko'rgan" && biggestDrop?.to === 'Checkout ochgan') {
+    nextAction = "Pitch CTA zaif. Taklif matni, urg'u va muddatli bonusni kuchaytirib A/B test qiling.";
+  } else if (biggestDrop?.from === "Darsni boshlagan" && biggestDrop?.to === '1-darsga yetgan') {
+    nextAction = "Birinchi darsni tugatish past. Welcome ketma-ketligi va birinchi 24 soat engagementni kuchaytiring.";
+  }
+
+  return {
+    summary: {
+      totalUsers,
+      paidUsers,
+      overallConversion: overallCr,
+      pitchWithoutCheckout
+    },
+    stages,
+    biggestDrop,
+    alerts,
+    nextAction
+  };
+}
+
 export async function getRevenueByPeriod(days = 30) {
   // Validate and sanitize days parameter
   const safeDays = Math.min(Math.max(parseInt(days) || 30, 1), 365);

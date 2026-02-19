@@ -1495,6 +1495,16 @@ app.get('/api/analytics/funnel', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/analytics/funnel-diagnostics', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const diagnostics = await db.getFunnelDiagnostics();
+    res.json(diagnostics);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/analytics/revenue', authMiddleware, async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
