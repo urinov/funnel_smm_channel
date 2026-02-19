@@ -403,6 +403,46 @@
       background: rgba(255,255,255,0.8);
       color: #475569;
     }
+    .ref-analytics { --rx-bg: #eef7f6; --rx-card: #f8fffe; --rx-border: #d7ebe8; --rx-ink: #123234; --rx-muted: #638082; }
+    .ref-analytics .card {
+      background: var(--rx-card);
+      border: 1px solid var(--rx-border);
+      box-shadow: 0 10px 24px rgba(18,50,52,0.06);
+    }
+    .ref-analytics .diag-section-title h3 { color: var(--rx-ink); }
+    .ref-analytics .diag-muted { color: var(--rx-muted); }
+    .ref-analytics .diag-surface {
+      background: linear-gradient(145deg, #fbfffe, #f2fbfa);
+      border-color: #d5ebe7;
+    }
+    .rx-kpi {
+      border-radius: 18px;
+      border: 1px solid #d5ebe7;
+      background: linear-gradient(145deg, #f6fffe, #edf9f8);
+      padding: 14px;
+      min-height: 92px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .rx-kpi .label { font-size: 11px; color: #5f7e81; font-weight: 600; }
+    .rx-kpi .value { font-size: 24px; font-weight: 800; color: #103639; line-height: 1.1; }
+    .rx-kpi .hint { font-size: 11px; color: #6f8b8e; }
+    .rx-kpi.mint { background: linear-gradient(145deg, #ecfff8, #dcf8ef); }
+    .rx-kpi.blue { background: linear-gradient(145deg, #eef6ff, #dfefff); }
+    .rx-kpi.pink { background: linear-gradient(145deg, #fff1f4, #ffe6ed); }
+    .rx-kpi.sun { background: linear-gradient(145deg, #fff9ea, #fff2d1); }
+    .rx-grid-2 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; }
+    .rx-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .rx-title { font-size: 20px; font-weight: 800; color: #123234; letter-spacing: -0.02em; }
+    .rx-subtitle { font-size: 12px; color: #6d8a8d; }
+    @media (max-width: 1100px) {
+      .rx-grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .rx-grid-3 { grid-template-columns: 1fr; }
+      .rx-kpi .value { font-size: 20px; }
+    }
 
     @media (max-width: 768px) {
       .diag-list-label { font-size: 12px; }
@@ -1811,13 +1851,13 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
     </div>
 
     <!-- Analytics Tab -->
-    <div id="tab-analytics" class="hidden">
-      <div class="card p-4 mb-4 flex items-center justify-between gap-3">
+    <div id="tab-analytics" class="hidden ref-analytics">
+      <div class="card p-5 mb-4 flex items-center justify-between gap-3">
         <div>
-          <div class="font-semibold text-gray-800">Analitika ko'rinishi</div>
-          <div class="text-xs text-gray-500">Soddalashtirilgan rejimda faqat eng muhim bloklar ko'rinadi</div>
+          <div class="rx-title">Welcome back, Admin</div>
+          <div class="rx-subtitle">Asosiy metrikalar, conversion va qayerda yo‘qotayotganingiz bitta oynada</div>
         </div>
-        <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🧹 Soddalashtirish</button>
+        <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🔎 Batafsil ko'rsatish</button>
       </div>
 
       <!-- Funnel Diagnostics -->
@@ -1827,26 +1867,25 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <div class="diag-muted">Qayerda yiqilyapti va nima qilish kerak</div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-          <div class="p-3 bg-indigo-50 rounded-xl">
-            <div class="text-xs text-gray-500">Umumiy CR</div>
-            <div class="text-xl font-bold text-indigo-600" id="diagOverallCR">-</div>
+        <div class="rx-grid-3 mb-4">
+          <div class="rx-kpi mint">
+            <div class="label">Umumiy CR</div>
+            <div class="value" id="diagOverallCR">-</div>
+            <div class="hint">Funnel natijasi</div>
           </div>
-          <div class="p-3 bg-red-50 rounded-xl">
-            <div class="text-xs text-gray-500">Eng katta yo'qotish</div>
-            <div class="text-sm font-semibold text-red-600" id="diagBiggestDrop">-</div>
+          <div class="rx-kpi pink">
+            <div class="label">Eng katta yo'qotish</div>
+            <div class="value text-[18px] sm:text-[20px]" id="diagBiggestDrop">-</div>
+            <div class="hint">Aynan qaysi bosqichda</div>
           </div>
-          <div class="p-3 bg-amber-50 rounded-xl">
-            <div class="text-xs text-gray-500">Pitchdan checkoutsiz</div>
-            <div class="text-xl font-bold text-amber-600" id="diagStuckUsers">-</div>
-          </div>
-          <div class="p-3 bg-green-50 rounded-xl">
-            <div class="text-xs text-gray-500">Asosiy tavsiya</div>
-            <div class="text-sm font-semibold text-green-700" id="diagNextAction">-</div>
+          <div class="rx-kpi sun">
+            <div class="label">Pitchdan checkoutsiz</div>
+            <div class="value" id="diagStuckUsers">-</div>
+            <div class="hint" id="diagNextAction">-</div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+        <div class="rx-grid-2 mb-4">
           <div class="diag-surface p-3">
             <div class="text-xs font-semibold text-gray-600 mb-2">Bosqichlar oqimi</div>
             <div class="diag-chart-wrap"><canvas id="diagFunnelChart"></canvas></div>
@@ -1868,7 +1907,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
         </div>
 
-        <div id="diagAlerts" class="space-y-2">
+        <div id="diagAlerts" class="space-y-2 analytics-advanced">
           <div class="text-sm text-gray-400">Diagnostika yuklanmoqda...</div>
         </div>
       </div>
@@ -1895,7 +1934,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div class="rx-grid-2">
           <div class="diag-surface p-3 xl:col-span-1">
             <div class="text-sm font-semibold text-gray-700 mb-2">Segmentlar taqqoslanishi</div>
             <div class="diag-chart-wrap"><canvas id="segmentMixChart"></canvas></div>
