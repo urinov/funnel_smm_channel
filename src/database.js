@@ -1177,6 +1177,45 @@ export async function scheduleMessage(telegramId, messageType, scheduledAt, data
   `, [telegramId, messageType, scheduledAt, JSON.stringify(data)]);
 }
 
+export async function getPaymentFollowupConfig() {
+  const enabled = (await getSetting('payment_followup_enabled')) !== 'false';
+  const delay1 = parseInt(await getSetting('payment_followup_delay_1m') || '20') || 20;
+  const delay2 = parseInt(await getSetting('payment_followup_delay_2m') || '120') || 120;
+  const delay3 = parseInt(await getSetting('payment_followup_delay_3m') || '1440') || 1440;
+
+  const text1 = await getBotMessage('payment_followup_text_1') ||
+    "Assalomu alaykum {{ism}}! To'lov jarayoni to'liq yakunlanmadi. Quyidagi tugma orqali davom eting.";
+  const text2 = await getBotMessage('payment_followup_text_2') ||
+    "Siz to'lovni boshlagansiz, lekin yakunlamagansiz. Savol bo'lsa yozing, yordam beramiz.";
+  const text3 = await getBotMessage('payment_followup_text_3') ||
+    "So'nggi eslatma: bugungi taklif hali amal qiladi. Istasangiz hozir yakunlab qo'ying.";
+
+  return {
+    enabled,
+    delays: [delay1, delay2, delay3],
+    texts: [text1, text2, text3]
+  };
+}
+
+export async function schedulePaymentFollowups(telegramId, orderId) {
+  const cfg = await getPaymentFollowupConfig();
+  if (!cfg.enabled) return;
+
+  await cancelPaymentReminders(telegramId, orderId);
+
+  const now = Date.now();
+  for (let i = 0; i < cfg.delays.length; i++) {
+    const delayMinutes = cfg.delays[i];
+    if (!Number.isFinite(delayMinutes) || delayMinutes <= 0) continue;
+    const scheduledAt = new Date(now + delayMinutes * 60 * 1000);
+    await scheduleMessage(telegramId, `payment_reminder_${i + 1}`, scheduledAt, {
+      order_id: orderId,
+      text: cfg.texts[i] || null,
+      step: i + 1
+    });
+  }
+}
+
 export async function getPendingMessages() {
   const { rows } = await pool.query(`
     SELECT * FROM scheduled_messages
@@ -1207,11 +1246,21 @@ export async function cancelPendingMessages(telegramId, messageType = null) {
 
 export async function createPayment(orderId, telegramId, amount, planId = '1month') {
   const user = await getUser(telegramId);
-  await pool.query(`
+  const { rows } = await pool.query(`
     INSERT INTO payments (order_id, telegram_id, user_id, amount, plan_id)
     VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT (order_id) DO NOTHING
+    RETURNING *
   `, [orderId, telegramId, user?.id, amount, planId]);
+  const created = rows[0] || null;
+  if (created) {
+    try {
+      await schedulePaymentFollowups(telegramId, orderId);
+    } catch (e) {
+      console.error('schedulePaymentFollowups error:', e.message);
+    }
+  }
+  return created;
 }
 
 export async function getPayment(orderId) {
@@ -1222,6 +1271,40 @@ export async function getPayment(orderId) {
 export async function getPaymentByOrderId(orderId) {
   const { rows } = await pool.query('SELECT * FROM payments WHERE order_id = $1', [orderId]);
   return rows[0] || null;
+}
+
+export async function getLatestPendingPaymentForUser(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT *
+    FROM payments
+    WHERE telegram_id = $1
+      AND state IN ('new', 'pending', 'created', '1')
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [telegramId]);
+  return rows[0] || null;
+}
+
+export async function cancelPaymentReminders(telegramId, orderId = null) {
+  if (orderId) {
+    await pool.query(`
+      UPDATE scheduled_messages
+      SET sent = TRUE
+      WHERE telegram_id = $1
+        AND sent = FALSE
+        AND message_type LIKE 'payment_reminder_%'
+        AND (data->>'order_id') = $2
+    `, [telegramId, orderId]);
+    return;
+  }
+
+  await pool.query(`
+    UPDATE scheduled_messages
+    SET sent = TRUE
+    WHERE telegram_id = $1
+      AND sent = FALSE
+      AND message_type LIKE 'payment_reminder_%'
+  `, [telegramId]);
 }
 
 export async function getPaymentByTransactionId(transactionId, paymentMethod) {

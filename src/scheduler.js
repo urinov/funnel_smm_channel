@@ -6,6 +6,7 @@ import { sendRenewalReminder, handleExpiredSubscription } from './payments/payme
 
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id.trim())).filter(Boolean);
 const REPORT_TIMEZONE = 'Asia/Tashkent';
+const BASE_URL = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/+$/, '') : '';
 
 function formatMoney(t) {
   return (Number(t || 0) / 100).toLocaleString('uz-UZ') + " so'm";
@@ -60,6 +61,49 @@ async function processScheduledMessages() {
         const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
 
         console.log(`Processing scheduled message: ${message_type} for ${telegram_id}`);
+
+        if (message_type.startsWith('payment_reminder_')) {
+          const orderId = parsedData?.order_id;
+          if (!orderId) {
+            await db.markScheduledMessageSent(msg.id);
+            continue;
+          }
+
+          const payment = await db.getPaymentByOrderId(orderId);
+          if (!payment || ['performed', '2', 'cancelled', '-1', '-2'].includes(String(payment.state))) {
+            await db.markScheduledMessageSent(msg.id);
+            continue;
+          }
+
+          const user = await db.getUser(telegram_id);
+          const userName = user?.full_name?.split(' ')[0] || "do'st";
+          const textTemplate = parsedData?.text || "To'lovni yakunlash uchun quyidagi tugmani bosing.";
+          const text = textTemplate
+            .replace(/\{\{ism\}\}/gi, userName)
+            .replace(/\{\{tg\}\}/gi, String(telegram_id));
+
+          const paymeUrl = BASE_URL
+            ? `${BASE_URL}/payme/api/checkout-url?order_id=${encodeURIComponent(orderId)}&amount=${payment.amount}&plan=${encodeURIComponent(payment.plan_id || '1month')}&redirect=1`
+            : null;
+          const clickUrl = BASE_URL
+            ? `${BASE_URL}/click/api/checkout-url?order_id=${encodeURIComponent(orderId)}&amount=${payment.amount}&plan=${encodeURIComponent(payment.plan_id || '1month')}&redirect=1`
+            : null;
+
+          const inlineKeyboard = [];
+          if (paymeUrl) inlineKeyboard.push({ text: "💳 Payme orqali to'lash", url: paymeUrl });
+          if (clickUrl) inlineKeyboard.push({ text: "💠 Click orqali to'lash", url: clickUrl });
+
+          await bot.telegram.sendMessage(telegram_id, text, {
+            parse_mode: 'HTML',
+            ...(inlineKeyboard.length > 0
+              ? { reply_markup: { inline_keyboard: [inlineKeyboard] } }
+              : {})
+          });
+
+          await db.markScheduledMessageSent(msg.id);
+          await new Promise(r => setTimeout(r, 100));
+          continue;
+        }
 
         switch (message_type) {
           case 'lesson':

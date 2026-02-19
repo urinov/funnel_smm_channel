@@ -2033,7 +2033,7 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
   try {
     const { target, type, text, media_id, button, buttons, user_ids, lesson_from, lesson_to } = req.body;
-    const { getAllActiveUsers } = await import('./database.js');
+    const { getAllActiveUsers, getLatestPendingPaymentForUser } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     let users = [];
@@ -2061,15 +2061,26 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
 
     const fallbackButtons = button && button.text && button.url ? [button] : [];
     const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
+    const baseUrl = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/+$/, '') : '';
 
     for (const user of users) {
       try {
+        const pendingPayment = await getLatestPendingPaymentForUser(user.telegram_id);
+        const paymeCheckoutUrl = (baseUrl && pendingPayment)
+          ? `${baseUrl}/payme/api/checkout-url?order_id=${encodeURIComponent(pendingPayment.order_id)}&amount=${pendingPayment.amount}&plan=${encodeURIComponent(pendingPayment.plan_id || '1month')}&redirect=1`
+          : '';
+        const clickCheckoutUrl = (baseUrl && pendingPayment)
+          ? `${baseUrl}/click/api/checkout-url?order_id=${encodeURIComponent(pendingPayment.order_id)}&amount=${pendingPayment.amount}&plan=${encodeURIComponent(pendingPayment.plan_id || '1month')}&redirect=1`
+          : '';
+
         const personalizedText = (text || '')
           .replace(/\{\{fio\}\}/gi, user.full_name || "do'st")
           .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
           .replace(/\{\{telefon\}\}/gi, user.phone || '')
           .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
           .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
+          .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
+          .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl)
           .replace(/\{\{dars\}\}/gi, String(user.current_lesson || 0));
 
         const mappedButtons = buttonDefs
@@ -2081,7 +2092,10 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
               .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
               .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
               .replace(/\{\{phone\}\}/gi, user.phone || '')
-              .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0]);
+              .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
+              .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
+              .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl);
+            if (!mappedUrl || mappedUrl.includes('{{')) return null;
             return Markup.button.url(btnText, mappedUrl);
           })
           .filter(Boolean);

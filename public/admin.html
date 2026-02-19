@@ -2500,7 +2500,7 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
               <input type="text" id="broadcastBtn2Url" class="input" placeholder="2-tugma URL ({{tg}} ishlatish mumkin)" oninput="updatePreview()">
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-1">Placeholderlar: {{tg}}, {{username}}, {{phone}}, {{ism}}</p>
+          <p class="text-xs text-gray-400 mt-1">Placeholderlar: {{tg}}, {{username}}, {{phone}}, {{ism}}, {{payme_checkout_url}}, {{click_checkout_url}}</p>
         </div>
 
         <!-- Preview -->
@@ -3215,11 +3215,10 @@ function collectBroadcastButtons() {
 }
 
 function prefillPaymentButtons() {
-  const base = window.location.origin;
   document.getElementById('broadcastBtnText').value = "💳 Payme orqali to'lash";
-  document.getElementById('broadcastBtnUrl').value = `${base}/pay/payme?tg={{tg}}`;
+  document.getElementById('broadcastBtnUrl').value = `{{payme_checkout_url}}`;
   document.getElementById('broadcastBtn2Text').value = "💠 Click orqali to'lash";
-  document.getElementById('broadcastBtn2Url').value = `${base}/pay/click?tg={{tg}}`;
+  document.getElementById('broadcastBtn2Url').value = `{{click_checkout_url}}`;
   updatePreview();
 }
 
