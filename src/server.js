@@ -2032,7 +2032,7 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 // ============ NEW: Enhanced Broadcast API ============
 app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
   try {
-    const { target, type, text, media_id, button, user_ids, lesson_from, lesson_to } = req.body;
+    const { target, type, text, media_id, button, buttons, user_ids, lesson_from, lesson_to } = req.body;
     const { getAllActiveUsers } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
@@ -2059,11 +2059,8 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
     let sent = 0;
     let failed = 0;
 
-    // Build inline keyboard if button provided
-    let keyboard = null;
-    if (button && button.text && button.url) {
-      keyboard = Markup.inlineKeyboard([[Markup.button.url(button.text, button.url)]]);
-    }
+    const fallbackButtons = button && button.text && button.url ? [button] : [];
+    const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
 
     for (const user of users) {
       try {
@@ -2071,8 +2068,25 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
           .replace(/\{\{fio\}\}/gi, user.full_name || "do'st")
           .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
           .replace(/\{\{telefon\}\}/gi, user.phone || '')
+          .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
+          .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
           .replace(/\{\{dars\}\}/gi, String(user.current_lesson || 0));
 
+        const mappedButtons = buttonDefs
+          .map((b) => {
+            const btnText = String(b?.text || '').trim();
+            const rawUrl = String(b?.url || '').trim();
+            if (!btnText || !rawUrl) return null;
+            const mappedUrl = rawUrl
+              .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
+              .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
+              .replace(/\{\{phone\}\}/gi, user.phone || '')
+              .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0]);
+            return Markup.button.url(btnText, mappedUrl);
+          })
+          .filter(Boolean);
+
+        const keyboard = mappedButtons.length > 0 ? Markup.inlineKeyboard([mappedButtons]) : null;
         const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
 
         if (type === 'video' && media_id) {
@@ -2108,7 +2122,7 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
 // Test broadcast (send to admin)
 app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
   try {
-    const { type, text, media_id, button } = req.body;
+    const { type, text, media_id, button, buttons } = req.body;
     const { Markup } = await import('telegraf');
 
     const adminId = process.env.ADMIN_IDS.split(',')[0].trim();
@@ -2119,10 +2133,18 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
       .replace(/\{\{telefon\}\}/gi, '+998901234567')
       .replace(/\{\{dars\}\}/gi, '3');
 
-    let keyboard = null;
-    if (button && button.text && button.url) {
-      keyboard = Markup.inlineKeyboard([[Markup.button.url(button.text, button.url)]]);
-    }
+    const fallbackButtons = button && button.text && button.url ? [button] : [];
+    const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
+    const mappedButtons = buttonDefs
+      .map((b) => {
+        const btnText = String(b?.text || '').trim();
+        const btnUrl = String(b?.url || '').trim();
+        if (!btnText || !btnUrl) return null;
+        return Markup.button.url(btnText, btnUrl);
+      })
+      .filter(Boolean);
+
+    const keyboard = mappedButtons.length > 0 ? Markup.inlineKeyboard([mappedButtons]) : null;
 
     const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
 

@@ -135,6 +135,14 @@
     .kpi-grid .kpi-card:nth-child(2) .stat-icon { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #16a34a; }
     .kpi-grid .kpi-card:nth-child(3) .stat-icon { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); color: #0284c7; }
     .kpi-grid .kpi-card:nth-child(4) .stat-icon { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #ea580c; }
+    .insight-card { animation: fadeUp 0.45s ease both; }
+    .insight-card:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(15,23,42,0.14); }
+    .insight-card:nth-of-type(2) { animation-delay: 0.05s; }
+    .insight-card:nth-of-type(3) { animation-delay: 0.1s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* Right panel (desktop) */
     .right-panel { background: rgba(255,255,255,0.45); border-left: 1px solid var(--glass-border); backdrop-filter: blur(18px); }
@@ -739,7 +747,7 @@
       </div>
 
       <!-- Subscriber Growth Chart -->
-      <div class="card p-5 mb-6">
+      <div class="card p-5 mb-6 insight-card">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <p class="text-gray-500 text-sm">Yangi obunachilar</p>
@@ -1143,7 +1151,7 @@
     <div id="tab-library" class="hidden">
 
       <!-- Media Library Section (Botga yuborilgan fayllar) -->
-      <div class="card p-5 mb-6">
+      <div class="card p-5 mb-6 insight-card">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <h3 class="font-semibold text-gray-800 text-lg">📁 Media kutubxonasi</h3>
@@ -1196,7 +1204,7 @@
       </div>
 
       <!-- Darslar kutubxonasi -->
-      <div class="card p-5 mb-6">
+      <div class="card p-5 mb-6 insight-card">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <h3 class="font-semibold text-gray-800 text-lg">📖 Darslar kutubxonasi</h3>
@@ -2476,13 +2484,23 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
           </div>
         </div>
 
-        <!-- Button -->
+        <!-- Buttons -->
         <div>
-          <label class="text-sm font-medium text-gray-700 mb-2 block">🔘 Tugma (ixtiyoriy)</label>
-          <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="broadcastBtnText" class="input" placeholder="Tugma matni" oninput="updatePreview()">
-            <input type="text" id="broadcastBtnUrl" class="input" placeholder="https://..." oninput="updatePreview()">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <label class="text-sm font-medium text-gray-700 block">🔘 Tugmalar (ixtiyoriy)</label>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="prefillPaymentButtons()">💳 To'lov tugmalarini qo'yish</button>
           </div>
+          <div class="space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="broadcastBtnText" class="input" placeholder="1-tugma matni (masalan: 💳 Payme)" oninput="updatePreview()">
+              <input type="text" id="broadcastBtnUrl" class="input" placeholder="1-tugma URL ({{tg}} ishlatish mumkin)" oninput="updatePreview()">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="broadcastBtn2Text" class="input" placeholder="2-tugma matni (masalan: 💠 Click)" oninput="updatePreview()">
+              <input type="text" id="broadcastBtn2Url" class="input" placeholder="2-tugma URL ({{tg}} ishlatish mumkin)" oninput="updatePreview()">
+            </div>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Placeholderlar: {{tg}}, {{username}}, {{phone}}, {{ism}}</p>
         </div>
 
         <!-- Preview -->
@@ -2491,9 +2509,14 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
           <div id="broadcastPreview" class="bg-indigo-600/20 rounded-lg p-3 text-white text-sm">
             <p class="text-gray-300 italic">Xabar matni bu yerda ko'rinadi...</p>
           </div>
-          <div id="previewButton" class="hidden mt-2">
+          <div id="previewButton" class="hidden mt-2 space-y-2">
             <div class="inline-block bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium">
-              <span id="previewBtnText">Tugma</span>
+              <span id="previewBtnText">Tugma 1</span>
+            </div>
+            <div id="previewButton2" class="hidden">
+              <div class="inline-block bg-indigo-500/80 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                <span id="previewBtn2Text">Tugma 2</span>
+              </div>
             </div>
           </div>
         </div>
@@ -3137,6 +3160,8 @@ function updatePreview() {
   const text = document.getElementById('broadcastText').value || '';
   const btnText = document.getElementById('broadcastBtnText').value;
   const btnUrl = document.getElementById('broadcastBtnUrl').value;
+  const btn2Text = document.getElementById('broadcastBtn2Text').value;
+  const btn2Url = document.getElementById('broadcastBtn2Url').value;
 
   // Update char count
   document.getElementById('charCount').textContent = text.length;
@@ -3159,12 +3184,43 @@ function updatePreview() {
 
   // Preview button
   const previewBtn = document.getElementById('previewButton');
+  const previewBtn2 = document.getElementById('previewButton2');
   if (btnText && btnUrl) {
     document.getElementById('previewBtnText').textContent = btnText;
     previewBtn.classList.remove('hidden');
+    if (btn2Text && btn2Url) {
+      document.getElementById('previewBtn2Text').textContent = btn2Text;
+      previewBtn2.classList.remove('hidden');
+    } else {
+      previewBtn2.classList.add('hidden');
+    }
   } else {
     previewBtn.classList.add('hidden');
+    previewBtn2.classList.add('hidden');
   }
+}
+
+function collectBroadcastButtons() {
+  const pairs = [
+    {
+      text: document.getElementById('broadcastBtnText')?.value?.trim(),
+      url: document.getElementById('broadcastBtnUrl')?.value?.trim()
+    },
+    {
+      text: document.getElementById('broadcastBtn2Text')?.value?.trim(),
+      url: document.getElementById('broadcastBtn2Url')?.value?.trim()
+    }
+  ];
+  return pairs.filter((b) => b.text && b.url);
+}
+
+function prefillPaymentButtons() {
+  const base = window.location.origin;
+  document.getElementById('broadcastBtnText').value = "💳 Payme orqali to'lash";
+  document.getElementById('broadcastBtnUrl').value = `${base}/pay/payme?tg={{tg}}`;
+  document.getElementById('broadcastBtn2Text').value = "💠 Click orqali to'lash";
+  document.getElementById('broadcastBtn2Url').value = `${base}/pay/click?tg={{tg}}`;
+  updatePreview();
 }
 
 function updateRecipientCount() {
@@ -3205,6 +3261,7 @@ async function previewBroadcast() {
   }
 
   try {
+    const buttons = collectBroadcastButtons();
     await fetch('/api/broadcast/test', {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
@@ -3212,10 +3269,8 @@ async function previewBroadcast() {
         text: text,
         type: document.getElementById('broadcastType').value,
         media_id: document.getElementById('broadcastMediaId').value,
-        button: {
-          text: document.getElementById('broadcastBtnText').value,
-          url: document.getElementById('broadcastBtnUrl').value
-        }
+        button: buttons[0] || null,
+        buttons
       })
     });
     alert('✅ Test xabar yuborildi (o\'zingizga)');
@@ -5887,6 +5942,8 @@ function openBroadcastModal() {
   document.getElementById('broadcastMediaId').value = '';
   document.getElementById('broadcastBtnText').value = '';
   document.getElementById('broadcastBtnUrl').value = '';
+  document.getElementById('broadcastBtn2Text').value = '';
+  document.getElementById('broadcastBtn2Url').value = '';
   document.getElementById('broadcastProgress')?.classList.add('hidden');
   document.getElementById('charCount').textContent = '0';
   toggleUserSelect();
@@ -5967,6 +6024,7 @@ async function sendBroadcast() {
   const mediaId = document.getElementById('broadcastMediaId').value;
   const btnText = document.getElementById('broadcastBtnText').value;
   const btnUrl = document.getElementById('broadcastBtnUrl').value;
+  const buttons = collectBroadcastButtons();
 
   if (!text.trim() && type === 'text') {
     alert('Xabar matni bo\'sh');
@@ -6013,6 +6071,7 @@ async function sendBroadcast() {
       text,
       media_id: mediaId || null,
       button: btnText && btnUrl ? { text: btnText, url: btnUrl } : null,
+      buttons,
       user_ids: target === 'specific' ? Array.from(selectedBroadcastUsers) : null,
       lesson_from: target === 'lesson' ? parseInt(document.getElementById('broadcastLessonFrom')?.value) || 0 : null,
       lesson_to: target === 'lesson' ? parseInt(document.getElementById('broadcastLessonTo')?.value) || 999 : null
@@ -6041,6 +6100,8 @@ async function sendBroadcast() {
         document.getElementById('broadcastMediaId').value = '';
         document.getElementById('broadcastBtnText').value = '';
         document.getElementById('broadcastBtnUrl').value = '';
+        document.getElementById('broadcastBtn2Text').value = '';
+        document.getElementById('broadcastBtn2Url').value = '';
         selectedBroadcastUsers.clear();
         updateRecipientCount();
       }, 500);
@@ -6806,6 +6867,7 @@ function prepareHighIntentBroadcast() {
     textArea.value = "Assalomu alaykum {{ism}}! Siz uchun maxsus taklif bor.\n\nBugun to'lov qilsangiz, bonus darslar ham qo'shib beramiz. Savol bo'lsa shu yerga yozing.";
     updatePreview();
   }
+  prefillPaymentButtons();
 
   updateSelectedUsersList();
   updateRecipientCount();
@@ -6894,6 +6956,7 @@ function prepareStuckPaymentsBroadcast() {
     textArea.value = "Assalomu alaykum {{ism}}! To'lov jarayoni oxirigacha bormagan ko'rinadi.\n\nQulay bo'lsa hozir yakunlab qo'ying, savol bo'lsa shu yerga yozing.";
     updatePreview();
   }
+  prefillPaymentButtons();
 
   updateSelectedUsersList();
   updateRecipientCount();
