@@ -2878,6 +2878,135 @@ export async function getSourceStats() {
   return rows;
 }
 
+export async function getSegmentDiagnostics(limit = 50) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 200);
+
+  const paidExpr = `
+    (
+      u.is_paid = TRUE
+      OR EXISTS (
+        SELECT 1 FROM payments p
+        WHERE p.telegram_id = u.telegram_id
+          AND p.state = ANY($1)
+      )
+      OR EXISTS (
+        SELECT 1 FROM subscriptions s
+        WHERE s.telegram_id = u.telegram_id
+          AND s.is_active = TRUE
+          AND s.end_date > NOW()
+      )
+    )
+  `;
+
+  const { rows: sourceRows } = await pool.query(`
+    SELECT
+      COALESCE(u.source, 'direct') AS segment,
+      COUNT(*)::int AS total_users,
+      COUNT(*) FILTER (WHERE ${paidExpr})::int AS paid_users
+    FROM users u
+    WHERE u.is_blocked = FALSE
+    GROUP BY COALESCE(u.source, 'direct')
+    ORDER BY total_users DESC
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const { rows: lessonRows } = await pool.query(`
+    WITH buckets AS (
+      SELECT
+        CASE
+          WHEN COALESCE(u.current_lesson, 0) = 0 THEN '0-dars'
+          WHEN COALESCE(u.current_lesson, 0) BETWEEN 1 AND 2 THEN '1-2 dars'
+          WHEN COALESCE(u.current_lesson, 0) BETWEEN 3 AND 4 THEN '3-4 dars'
+          ELSE '5+ dars'
+        END AS segment,
+        CASE
+          WHEN COALESCE(u.current_lesson, 0) = 0 THEN 0
+          WHEN COALESCE(u.current_lesson, 0) BETWEEN 1 AND 2 THEN 1
+          WHEN COALESCE(u.current_lesson, 0) BETWEEN 3 AND 4 THEN 2
+          ELSE 3
+        END AS sort_order,
+        u.telegram_id,
+        ${paidExpr} AS is_paid_effective
+      FROM users u
+      WHERE u.is_blocked = FALSE
+    )
+    SELECT
+      segment,
+      COUNT(*)::int AS total_users,
+      COUNT(*) FILTER (WHERE is_paid_effective)::int AS paid_users
+    FROM buckets
+    GROUP BY segment, sort_order
+    ORDER BY sort_order
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const { rows: activityRows } = await pool.query(`
+    WITH buckets AS (
+      SELECT
+        CASE
+          WHEN u.last_activity >= NOW() - INTERVAL '24 hours' THEN 'Oxirgi 24 soat'
+          WHEN u.last_activity >= NOW() - INTERVAL '7 days' THEN 'Oxirgi 7 kun'
+          ELSE '7 kundan eski'
+        END AS segment,
+        CASE
+          WHEN u.last_activity >= NOW() - INTERVAL '24 hours' THEN 0
+          WHEN u.last_activity >= NOW() - INTERVAL '7 days' THEN 1
+          ELSE 2
+        END AS sort_order,
+        u.telegram_id,
+        ${paidExpr} AS is_paid_effective
+      FROM users u
+      WHERE u.is_blocked = FALSE
+    )
+    SELECT
+      segment,
+      COUNT(*)::int AS total_users,
+      COUNT(*) FILTER (WHERE is_paid_effective)::int AS paid_users
+    FROM buckets
+    GROUP BY segment, sort_order
+    ORDER BY sort_order
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const { rows: highIntentRows } = await pool.query(`
+    SELECT
+      u.telegram_id,
+      u.full_name,
+      u.username,
+      u.phone,
+      u.current_lesson,
+      u.sales_pitch_seen_at,
+      u.last_activity,
+      (
+        CASE WHEN u.sales_pitch_seen_at IS NOT NULL OR COALESCE(u.funnel_step, 0) >= 9 THEN 2 ELSE 0 END +
+        CASE WHEN EXISTS (SELECT 1 FROM payments p WHERE p.telegram_id = u.telegram_id) THEN 2 ELSE 0 END +
+        CASE WHEN COALESCE(u.current_lesson, 0) >= 3 THEN 1 ELSE 0 END +
+        CASE WHEN u.last_activity >= NOW() - INTERVAL '48 hours' THEN 1 ELSE 0 END
+      ) AS score
+    FROM users u
+    WHERE u.is_blocked = FALSE
+      AND NOT (${paidExpr})
+      AND (
+        u.sales_pitch_seen_at IS NOT NULL
+        OR COALESCE(u.current_lesson, 0) >= 3
+        OR EXISTS (SELECT 1 FROM payments p WHERE p.telegram_id = u.telegram_id)
+      )
+    ORDER BY score DESC, u.last_activity DESC NULLS LAST, u.created_at DESC
+    LIMIT $2
+  `, [SUCCESS_PAYMENT_STATES, safeLimit]);
+
+  const withCr = (rows) => rows.map((r) => {
+    const total = parseInt(r.total_users) || 0;
+    const paid = parseInt(r.paid_users) || 0;
+    const conversion = total > 0 ? Math.round((paid * 1000) / total) / 10 : 0;
+    return { ...r, conversion };
+  });
+
+  return {
+    sources: withCr(sourceRows),
+    lessons: withCr(lessonRows),
+    activity: withCr(activityRows),
+    highIntent: highIntentRows
+  };
+}
+
 export async function getUsersBySource(source, limit = 100, offset = 0) {
   const { rows } = await pool.query(`
     SELECT * FROM users

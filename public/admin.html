@@ -1794,6 +1794,51 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         </div>
       </div>
 
+      <!-- Segment Diagnostics -->
+      <div class="card p-5 mb-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <h3 class="font-semibold text-gray-800">🎯 Segment Diagnostika</h3>
+          <button onclick="prepareHighIntentBroadcast()" class="btn btn-secondary btn-sm">High-intent follow-up</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Manba bo'yicha CR</div>
+            <div id="segmentSourceList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Dars bo'yicha CR</div>
+            <div id="segmentLessonList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-sm font-semibold text-gray-700 mb-2">Aktivlik bo'yicha CR</div>
+            <div id="segmentActivityList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold text-gray-700">High-intent (to'lamagan) userlar</div>
+            <div class="text-xs text-gray-500" id="highIntentCount">0 ta</div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-gray-500 border-b">
+                  <th class="py-2">User</th>
+                  <th class="py-2">Dars</th>
+                  <th class="py-2">Signal</th>
+                  <th class="py-2">Oxirgi aktivlik</th>
+                </tr>
+              </thead>
+              <tbody id="highIntentTable">
+                <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Revenue & Growth Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card p-5">
@@ -3082,7 +3127,7 @@ function updateRecipientCount() {
     const to = parseInt(document.getElementById('broadcastLessonTo')?.value) || 999;
     count = allUsers.filter(u => u.current_lesson >= from && u.current_lesson <= to).length;
   } else if (target === 'specific') {
-    count = selectedBroadcastUsers.length;
+    count = selectedBroadcastUsers.size;
   }
 
   document.getElementById('recipientCount').textContent = count;
@@ -6292,17 +6337,19 @@ async function saveSettings() {
 // ========== ANALYTICS TAB ==========
 let analyticsCharts = {};
 let auditOffset = 0;
+let latestSegmentDiagnostics = null;
 
 async function loadAnalyticsData() {
   try {
     // Load all analytics data in parallel
-    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData] = await Promise.all([
+    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData] = await Promise.all([
       fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/subscribers/daily?days=30', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
       fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/funnel-diagnostics', { headers: { Authorization: auth } }).then(r => r.json())
+      fetch('/api/analytics/funnel-diagnostics', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/segments?limit=100', { headers: { Authorization: auth } }).then(r => r.json())
     ]);
 
     // Render revenue chart
@@ -6322,6 +6369,9 @@ async function loadAnalyticsData() {
 
     // Render funnel diagnostics
     renderFunnelDiagnostics(funnelDiagData);
+
+    // Render segment diagnostics
+    renderSegmentDiagnostics(segmentDiagData);
 
   } catch(e) {
     console.error('loadAnalyticsData error:', e);
@@ -6593,6 +6643,83 @@ function renderFunnelDiagnostics(data) {
       }).join('');
     }
   }
+}
+
+function renderSegmentDiagnostics(data) {
+  latestSegmentDiagnostics = data || null;
+
+  const sourceList = document.getElementById('segmentSourceList');
+  const lessonList = document.getElementById('segmentLessonList');
+  const activityList = document.getElementById('segmentActivityList');
+  const highIntentTable = document.getElementById('highIntentTable');
+  const highIntentCount = document.getElementById('highIntentCount');
+
+  const renderSimpleList = (rows) => {
+    if (!Array.isArray(rows) || rows.length === 0) return '<div class="text-gray-400">Ma\'lumot yo\'q</div>';
+    return rows.map((r) => `
+      <div class="flex items-center justify-between gap-2 py-1 border-b border-gray-100 last:border-b-0">
+        <span class="text-gray-700">${escapeHtml(String(r.segment || '-'))}</span>
+        <span class="text-xs text-gray-500">${r.paid_users}/${r.total_users} (${r.conversion}%)</span>
+      </div>
+    `).join('');
+  };
+
+  if (sourceList) sourceList.innerHTML = renderSimpleList(data?.sources);
+  if (lessonList) lessonList.innerHTML = renderSimpleList(data?.lessons);
+  if (activityList) activityList.innerHTML = renderSimpleList(data?.activity);
+
+  const highIntent = Array.isArray(data?.highIntent) ? data.highIntent : [];
+  if (highIntentCount) highIntentCount.textContent = `${highIntent.length} ta`;
+
+  if (highIntentTable) {
+    if (highIntent.length === 0) {
+      highIntentTable.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-gray-400">High-intent user topilmadi</td></tr>';
+    } else {
+      highIntentTable.innerHTML = highIntent.slice(0, 30).map((u) => {
+        const signal = [];
+        if (u.sales_pitch_seen_at) signal.push('Pitch');
+        if ((u.current_lesson || 0) >= 3) signal.push('3+ dars');
+        if ((u.score || 0) >= 4) signal.push('Yuqori');
+        return `
+          <tr class="border-b border-gray-100">
+            <td class="py-2">
+              <div class="font-medium text-gray-800">${escapeHtml(u.full_name || u.username || String(u.telegram_id))}</div>
+              <div class="text-xs text-gray-400">ID: ${u.telegram_id}</div>
+            </td>
+            <td class="py-2">${u.current_lesson || 0}</td>
+            <td class="py-2">${escapeHtml(signal.join(', ') || '-')}</td>
+            <td class="py-2">${u.last_activity ? fmtDateTime(u.last_activity) : '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function prepareHighIntentBroadcast() {
+  const users = latestSegmentDiagnostics?.highIntent || [];
+  if (!Array.isArray(users) || users.length === 0) {
+    alert('High-intent user topilmadi');
+    return;
+  }
+
+  openBroadcastModal();
+  document.getElementById('broadcastTarget').value = 'specific';
+  toggleUserSelect();
+
+  selectedBroadcastUsers.clear();
+  users.slice(0, 100).forEach((u) => {
+    if (u?.telegram_id) selectedBroadcastUsers.add(Number(u.telegram_id));
+  });
+
+  const textArea = document.getElementById('broadcastText');
+  if (textArea && !textArea.value.trim()) {
+    textArea.value = "Assalomu alaykum {{ism}}! Siz uchun maxsus taklif bor.\n\nBugun to'lov qilsangiz, bonus darslar ham qo'shib beramiz. Savol bo'lsa shu yerga yozing.";
+    updatePreview();
+  }
+
+  updateSelectedUsersList();
+  updateRecipientCount();
 }
 
 // ========== REFERRALS TAB ==========
