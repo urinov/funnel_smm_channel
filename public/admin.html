@@ -4464,12 +4464,31 @@ initAuth();
 // Login
 document.getElementById('loginForm').onsubmit = async function(e) {
   e.preventDefault();
+  const loginError = document.getElementById('loginError');
+  loginError.classList.add('hidden');
+
   auth = 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('password').value);
   try {
     const r = await fetch('/api/stats', { headers: { Authorization: auth } });
-    if (r.ok) { localStorage.setItem('adminAuth', auth); showDashboard(); }
-    else document.getElementById('loginError').classList.remove('hidden');
-  } catch(e) { document.getElementById('loginError').classList.remove('hidden'); }
+    if (r.ok) {
+      localStorage.setItem('adminAuth', auth);
+      showDashboard();
+    } else {
+      const errorData = await r.json().catch(() => ({}));
+      if (r.status === 429) {
+        loginError.textContent = 'Ko\'p urinish. 15 daqiqa kuting.';
+      } else if (r.status === 401) {
+        loginError.textContent = 'Login yoki parol xato';
+      } else {
+        loginError.textContent = 'Server xatosi: ' + (errorData.error || r.status);
+      }
+      loginError.classList.remove('hidden');
+    }
+  } catch(err) {
+    loginError.textContent = 'Server bilan bog\'lanib bo\'lmadi';
+    loginError.classList.remove('hidden');
+    console.error('Login error:', err);
+  }
 };
 
 function showDashboard() {
