@@ -1,5 +1,5 @@
 // Theme Configuration - Funnel SMM Channel Admin
-// Controls the core theme settings for the application
+// Premium Dashboard Design System
 
 import type { Mode } from '@core/types'
 
@@ -18,13 +18,13 @@ export type Config = {
 const themeConfig: Config = {
   templateName: 'Funnel Admin',
   settingsCookieName: 'funnel-admin-settings',
-  mode: 'dark', // Default to dark mode for modern look
-  layoutPadding: 24,
+  mode: 'light', // Light mode for warm, professional look
+  layoutPadding: 32,
   compactContentWidth: 1440,
   disableRipple: false,
   sidebarWidth: 280,
   sidebarCollapsedWidth: 80,
-  headerHeight: 64,
+  headerHeight: 72,
 }
 
 export default themeConfig

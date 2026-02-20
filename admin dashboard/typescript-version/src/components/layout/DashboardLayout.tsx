@@ -9,13 +9,13 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import CommandPalette from './CommandPalette'
 
-const HEADER_HEIGHT = 64
+const HEADER_HEIGHT = 72
 const SIDEBAR_WIDTH = 280
 
-const LayoutRoot = styled(Box)(({ theme }) => ({
+const LayoutRoot = styled(Box)(() => ({
   display: 'flex',
   minHeight: '100vh',
-  backgroundColor: theme.palette.background.default,
+  backgroundColor: '#F8F6F3',
 }))
 
 const MainWrapper = styled(Box)(({ theme }) => ({
@@ -23,7 +23,7 @@ const MainWrapper = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   flex: 1,
   marginLeft: SIDEBAR_WIDTH,
-  transition: 'margin-left 200ms ease',
+  transition: 'margin-left 250ms ease',
 
   [theme.breakpoints.down('lg')]: {
     marginLeft: 0,
@@ -37,10 +37,14 @@ const ContentWrapper = styled(Box)(() => ({
 }))
 
 const Content = styled(Box)(({ theme }) => ({
-  padding: 24,
-  maxWidth: 1440,
+  padding: 32,
+  maxWidth: 1480,
   margin: '0 auto',
   width: '100%',
+
+  [theme.breakpoints.down('md')]: {
+    padding: 24,
+  },
 
   [theme.breakpoints.down('sm')]: {
     padding: 16,

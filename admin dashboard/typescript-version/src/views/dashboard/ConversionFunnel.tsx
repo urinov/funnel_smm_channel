@@ -3,12 +3,12 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
-import { styled } from '@mui/material/styles'
+import { styled, keyframes } from '@mui/material/styles'
 import { Users, BookOpen, FileText, Zap, CreditCard, TrendingDown } from 'lucide-react'
 
 import { Card } from '@/components/ui'
 
-interface FunnelStep {
+interface FunnelStepData {
   id: string
   label: string
   count: number
@@ -18,14 +18,14 @@ interface FunnelStep {
   color: string
 }
 
-const mockFunnelData: FunnelStep[] = [
+const mockFunnelData: FunnelStepData[] = [
   {
     id: 'start',
     label: 'Started Bot',
     count: 2847,
     percentage: 100,
     icon: <Users size={16} />,
-    color: '#6366F1',
+    color: '#E07A5F',
   },
   {
     id: 'lesson',
@@ -34,7 +34,7 @@ const mockFunnelData: FunnelStep[] = [
     percentage: 80,
     dropOff: 20,
     icon: <BookOpen size={16} />,
-    color: '#8B5CF6',
+    color: '#E8B931',
   },
   {
     id: 'custdev',
@@ -43,7 +43,7 @@ const mockFunnelData: FunnelStep[] = [
     percentage: 50,
     dropOff: 30,
     icon: <FileText size={16} />,
-    color: '#A855F7',
+    color: '#3B82F6',
   },
   {
     id: 'pitch',
@@ -52,7 +52,7 @@ const mockFunnelData: FunnelStep[] = [
     percentage: 30,
     dropOff: 20,
     icon: <Zap size={16} />,
-    color: '#D946EF',
+    color: '#8B5CF6',
   },
   {
     id: 'paid',
@@ -61,80 +61,97 @@ const mockFunnelData: FunnelStep[] = [
     percentage: 14.5,
     dropOff: 15.5,
     icon: <CreditCard size={16} />,
-    color: '#10B981',
+    color: '#22C55E',
   },
 ]
+
+const slideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`
 
 const FunnelContainer = styled(Box)(() => ({
   position: 'relative',
 }))
 
-const FunnelStep = styled(Box)<{ percentage: number; color: string }>(
-  ({ theme }) => ({
-    position: 'relative',
-    marginBottom: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-    cursor: 'pointer',
-    transition: 'all 200ms ease',
+const FunnelStep = styled(Box)<{ index: number }>(({ index }) => ({
+  position: 'relative',
+  marginBottom: 8,
+  borderRadius: 12,
+  overflow: 'hidden',
+  backgroundColor: 'rgba(0, 0, 0, 0.02)',
+  cursor: 'pointer',
+  transition: 'all 250ms ease',
+  opacity: 0,
+  animation: `${slideIn} 0.4s ease-out ${index * 80}ms forwards`,
 
-    '&:hover': {
-      transform: 'translateX(4px)',
-      '& .funnel-bar': {
-        opacity: 0.9,
-      },
+  '&:hover': {
+    transform: 'translateX(6px)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+    '& .funnel-bar': {
+      opacity: 1,
     },
+  },
 
-    '&:last-child': {
-      marginBottom: 0,
-    },
-  })
-)
+  '&:last-child': {
+    marginBottom: 0,
+  },
+}))
 
-const FunnelBar = styled(Box)<{ percentage: number; color: string }>(
-  ({ percentage, color }) => ({
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: `${percentage}%`,
-    backgroundColor: `${color}25`,
-    borderRight: `3px solid ${color}`,
-    transition: 'width 500ms ease, opacity 200ms ease',
-  })
-)
+const FunnelBar = styled(Box)<{ percentage: number; color: string }>(({ percentage, color }) => ({
+  position: 'absolute',
+  left: 0,
+  top: 0,
+  bottom: 0,
+  width: `${percentage}%`,
+  background: `linear-gradient(90deg, ${color}20 0%, ${color}10 100%)`,
+  borderRight: `3px solid ${color}`,
+  transition: 'width 600ms ease, opacity 200ms ease',
+  opacity: 0.85,
+}))
 
 const FunnelContent = styled(Box)(() => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
-  padding: '12px 16px',
+  gap: 14,
+  padding: '14px 18px',
   zIndex: 1,
 }))
 
 const IconWrapper = styled(Box)<{ color: string }>(({ color }) => ({
-  width: 32,
-  height: 32,
-  borderRadius: 8,
-  backgroundColor: `${color}20`,
+  width: 36,
+  height: 36,
+  borderRadius: 10,
+  background: `linear-gradient(135deg, ${color}25 0%, ${color}10 100%)`,
   color: color,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   flexShrink: 0,
+  transition: 'transform 200ms ease',
+
+  '.MuiBox-root:hover &': {
+    transform: 'scale(1.1)',
+  },
 }))
 
-const DropOffIndicator = styled(Box)(({ theme }) => ({
+const DropOffIndicator = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '4px 0',
-  color: theme.palette.error.main,
+  padding: '6px 0',
+  color: '#EF4444',
   fontSize: '0.6875rem',
   fontWeight: 600,
   gap: 4,
+  fontFamily: '"JetBrains Mono", monospace',
 }))
 
 export default function ConversionFunnel() {
@@ -149,15 +166,15 @@ export default function ConversionFunnel() {
           <Box key={step.id}>
             <Tooltip
               title={
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>
+                <Box sx={{ p: 0.5 }}>
+                  <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
                     {step.label}
                   </Typography>
-                  <Typography variant="caption">
+                  <Typography variant="caption" sx={{ display: 'block' }}>
                     {formatNumber(step.count)} users ({step.percentage}%)
                   </Typography>
                   {step.dropOff && (
-                    <Typography variant="caption" display="block" color="error.light">
+                    <Typography variant="caption" display="block" sx={{ color: '#EF4444', mt: 0.5 }}>
                       Drop-off: {step.dropOff}%
                     </Typography>
                   )}
@@ -166,7 +183,7 @@ export default function ConversionFunnel() {
               placement="left"
               arrow
             >
-              <FunnelStep percentage={step.percentage} color={step.color}>
+              <FunnelStep index={index}>
                 <FunnelBar
                   className="funnel-bar"
                   percentage={step.percentage}
@@ -175,18 +192,35 @@ export default function ConversionFunnel() {
                 <FunnelContent>
                   <IconWrapper color={step.color}>{step.icon}</IconWrapper>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={500} noWrap>
+                    <Typography
+                      sx={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#1A1A2E',
+                        fontFamily: '"Plus Jakarta Sans", sans-serif',
+                      }}
+                      noWrap
+                    >
                       {step.label}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      sx={{
+                        fontSize: '0.75rem',
+                        color: '#9CA3AF',
+                        fontWeight: 500,
+                      }}
+                    >
                       {step.percentage}% of total
                     </Typography>
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
                     <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      fontFamily='"JetBrains Mono", monospace'
+                      sx={{
+                        fontSize: '0.9375rem',
+                        fontWeight: 800,
+                        fontFamily: '"JetBrains Mono", monospace',
+                        color: '#1A1A2E',
+                      }}
                     >
                       {formatNumber(step.count)}
                     </Typography>
@@ -208,31 +242,55 @@ export default function ConversionFunnel() {
       <Box
         sx={{
           mt: 3,
-          pt: 2,
-          borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+          pt: 2.5,
+          borderTop: '1px solid rgba(0, 0, 0, 0.06)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            sx={{
+              fontSize: '0.75rem',
+              color: '#9CA3AF',
+              fontWeight: 500,
+              mb: 0.5,
+            }}
+          >
             Overall Conversion
           </Typography>
           <Typography
-            variant="h5"
-            fontWeight={700}
-            color="success.main"
-            fontFamily='"JetBrains Mono", monospace'
+            sx={{
+              fontSize: '1.5rem',
+              fontWeight: 800,
+              color: '#22C55E',
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              letterSpacing: '-0.02em',
+            }}
           >
             14.5%
           </Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            sx={{
+              fontSize: '0.75rem',
+              color: '#9CA3AF',
+              fontWeight: 500,
+              mb: 0.5,
+            }}
+          >
             vs Last Month
           </Typography>
-          <Typography variant="body2" fontWeight={600} color="success.main">
+          <Typography
+            sx={{
+              fontSize: '0.9375rem',
+              fontWeight: 700,
+              color: '#22C55E',
+              fontFamily: '"JetBrains Mono", monospace',
+            }}
+          >
             +2.3%
           </Typography>
         </Box>

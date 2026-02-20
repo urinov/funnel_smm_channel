@@ -8,12 +8,17 @@ import Typography from '@mui/material/Typography'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Skeleton from '@mui/material/Skeleton'
-import { styled, useTheme } from '@mui/material/styles'
+import { styled, keyframes } from '@mui/material/styles'
 import { TrendingUp } from 'lucide-react'
 
 import { Card } from '@/components/ui'
 
 const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`
 
 const ChartHeader = styled(Box)(() => ({
   display: 'flex',
@@ -27,39 +32,43 @@ const ChartHeader = styled(Box)(() => ({
 const TotalRevenue = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
+  gap: 14,
 }))
 
 const RevenueIcon = styled(Box)(() => ({
-  width: 48,
-  height: 48,
-  borderRadius: 12,
-  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  color: '#10B981',
+  width: 52,
+  height: 52,
+  borderRadius: 14,
+  background: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
+  color: '#FFFFFF',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
 }))
 
-const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-  borderRadius: 10,
+const StyledToggleButtonGroup = styled(ToggleButtonGroup)(() => ({
+  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+  borderRadius: 12,
   padding: 4,
 
   '& .MuiToggleButton-root': {
     border: 'none',
-    borderRadius: 8,
-    padding: '6px 16px',
+    borderRadius: 10,
+    padding: '8px 18px',
     textTransform: 'none',
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: '0.8125rem',
-    color: theme.palette.text.secondary,
+    color: '#6B7280',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    transition: 'all 200ms ease',
 
     '&.Mui-selected': {
-      backgroundColor: theme.palette.primary.main,
+      background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
       color: '#FFFFFF',
+      boxShadow: '0 2px 8px rgba(224, 122, 95, 0.3)',
       '&:hover': {
-        backgroundColor: theme.palette.primary.dark,
+        background: 'linear-gradient(135deg, #D4654A 0%, #D1A62C 100%)',
       },
     },
   },
@@ -91,7 +100,6 @@ const chartDataByPeriod: Record<Period, { categories: string[]; revenue: number[
 }
 
 export default function RevenueChart() {
-  const theme = useTheme()
   const [period, setPeriod] = useState<Period>('30d')
   const [loading, setLoading] = useState(false)
 
@@ -113,25 +121,34 @@ export default function RevenueChart() {
       type: 'area',
       toolbar: { show: false },
       zoom: { enabled: false },
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
       animations: {
         enabled: true,
         easing: 'easeinout',
-        speed: 500,
+        speed: 600,
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
       },
     },
-    colors: ['#6366F1', '#10B981'],
+    colors: ['#E07A5F', '#22C55E'],
     fill: {
       type: 'gradient',
       gradient: {
         shadeIntensity: 1,
-        opacityFrom: 0.4,
-        opacityTo: 0.1,
+        opacityFrom: 0.45,
+        opacityTo: 0.05,
         stops: [0, 90, 100],
       },
     },
     stroke: {
       curve: 'smooth',
-      width: 2,
+      width: 3,
     },
     dataLabels: {
       enabled: false,
@@ -142,50 +159,72 @@ export default function RevenueChart() {
       axisTicks: { show: false },
       labels: {
         style: {
-          colors: theme.palette.text.secondary,
+          colors: '#9CA3AF',
           fontSize: '12px',
+          fontFamily: '"Plus Jakarta Sans", sans-serif',
         },
       },
     },
     yaxis: [
       {
-        title: { text: 'Revenue (UZS)' },
+        title: {
+          text: 'Revenue (UZS)',
+          style: {
+            color: '#9CA3AF',
+            fontSize: '12px',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+          },
+        },
         labels: {
           formatter: (val) => `${(val / 1000000).toFixed(1)}M`,
           style: {
-            colors: theme.palette.text.secondary,
+            colors: '#9CA3AF',
             fontSize: '12px',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
           },
         },
       },
       {
         opposite: true,
-        title: { text: 'Subscriptions' },
+        title: {
+          text: 'Subscriptions',
+          style: {
+            color: '#9CA3AF',
+            fontSize: '12px',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+          },
+        },
         labels: {
           style: {
-            colors: theme.palette.text.secondary,
+            colors: '#9CA3AF',
             fontSize: '12px',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
           },
         },
       },
     ],
     grid: {
-      borderColor: theme.palette.divider,
+      borderColor: 'rgba(0, 0, 0, 0.06)',
       strokeDashArray: 4,
       xaxis: { lines: { show: false } },
     },
     legend: {
       position: 'top',
       horizontalAlign: 'right',
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 500,
       labels: {
-        colors: theme.palette.text.primary,
+        colors: '#1A1A2E',
       },
       markers: {
         radius: 4,
       },
     },
     tooltip: {
-      theme: theme.palette.mode,
+      theme: 'light',
+      style: {
+        fontFamily: '"Plus Jakarta Sans", sans-serif',
+      },
       y: [
         {
           formatter: (val) =>
@@ -212,16 +251,27 @@ export default function RevenueChart() {
       <ChartHeader>
         <TotalRevenue>
           <RevenueIcon>
-            <TrendingUp size={24} />
+            <TrendingUp size={26} />
           </RevenueIcon>
           <Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              sx={{
+                fontSize: '0.8125rem',
+                color: '#9CA3AF',
+                fontWeight: 500,
+                marginBottom: 0.5,
+              }}
+            >
               Total Revenue
             </Typography>
             <Typography
-              variant="h5"
-              fontWeight={700}
-              fontFamily='"JetBrains Mono", monospace'
+              sx={{
+                fontSize: '1.5rem',
+                fontWeight: 800,
+                fontFamily: '"Plus Jakarta Sans", sans-serif',
+                color: '#1A1A2E',
+                letterSpacing: '-0.02em',
+              }}
             >
               {new Intl.NumberFormat('uz-UZ', {
                 style: 'currency',
@@ -246,9 +296,18 @@ export default function RevenueChart() {
       </ChartHeader>
 
       {loading ? (
-        <Skeleton variant="rounded" height={300} />
+        <Skeleton
+          variant="rounded"
+          height={300}
+          sx={{ borderRadius: '12px' }}
+        />
       ) : (
-        <Box sx={{ height: 300 }}>
+        <Box
+          sx={{
+            height: 300,
+            animation: `${fadeIn} 0.4s ease-out`,
+          }}
+        >
           <ApexChart options={chartOptions} series={series} type="area" height="100%" />
         </Box>
       )}

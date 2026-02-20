@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import { styled } from '@mui/material/styles'
+import { styled, keyframes } from '@mui/material/styles'
 import {
   Users,
   UserCheck,
@@ -15,6 +15,7 @@ import {
   Clock,
   CreditCard,
   UserPlus,
+  Sparkles,
 } from 'lucide-react'
 
 import { StatCard } from '@/components/ui'
@@ -24,18 +25,78 @@ import RecentTransactions from './RecentTransactions'
 import ActionQueue from './ActionQueue'
 import ConversionFunnel from './ConversionFunnel'
 
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`
+
 const PageHeader = styled(Box)(() => ({
-  marginBottom: 32,
+  marginBottom: 40,
+  opacity: 0,
+  animation: `${fadeInUp} 0.5s ease-out forwards`,
+}))
+
+const WelcomeContainer = styled(Box)(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 16,
+  marginBottom: 8,
+}))
+
+const WelcomeIcon = styled(Box)(() => ({
+  width: 48,
+  height: 48,
+  borderRadius: 14,
+  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#FFFFFF',
+  boxShadow: '0 4px 16px rgba(224, 122, 95, 0.3)',
 }))
 
 const WelcomeText = styled(Typography)(() => ({
-  fontSize: '1.75rem',
-  fontWeight: 700,
-  marginBottom: 4,
-  background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+  fontSize: '2rem',
+  fontWeight: 800,
+  letterSpacing: '-0.02em',
+  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
+  fontFamily: '"Plus Jakarta Sans", sans-serif',
+}))
+
+const SubtitleText = styled(Typography)(() => ({
+  fontSize: '1rem',
+  color: '#6B7280',
+  fontWeight: 500,
+  paddingLeft: 64,
+}))
+
+const SectionTitle = styled(Typography)(() => ({
+  fontSize: '1.125rem',
+  fontWeight: 700,
+  color: '#1A1A2E',
+  marginBottom: 20,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  fontFamily: '"Plus Jakarta Sans", sans-serif',
+  opacity: 0,
+  animation: `${fadeInUp} 0.5s ease-out 0.2s forwards`,
+}))
+
+const SectionDot = styled(Box)<{ color?: string }>(({ color = '#E07A5F' }) => ({
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  backgroundColor: color,
 }))
 
 interface DashboardStats {
@@ -80,7 +141,7 @@ export default function CommandCenter() {
     // Simulate API call
     const fetchStats = async () => {
       setLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 800))
       setStats(mockStats)
       setLoading(false)
     }
@@ -104,19 +165,28 @@ export default function CommandCenter() {
   return (
     <Box>
       <PageHeader>
-        <WelcomeText>Command Center</WelcomeText>
-        <Typography variant="body1" color="text.secondary">
+        <WelcomeContainer>
+          <WelcomeIcon>
+            <Sparkles size={24} />
+          </WelcomeIcon>
+          <WelcomeText>Command Center</WelcomeText>
+        </WelcomeContainer>
+        <SubtitleText>
           Real-time overview of your bot performance and key metrics
-        </Typography>
+        </SubtitleText>
       </PageHeader>
 
       {/* Live Pulse Section */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 5 }}>
         <LivePulse />
       </Box>
 
       {/* Key Metrics Grid */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <SectionTitle>
+        <SectionDot color="#E07A5F" />
+        Key Metrics
+      </SectionTitle>
+      <Grid container spacing={3} sx={{ mb: 5 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Total Users"
@@ -126,6 +196,7 @@ export default function CommandCenter() {
             icon={<Users />}
             iconColor="primary"
             loading={loading}
+            delay={0}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -137,6 +208,7 @@ export default function CommandCenter() {
             icon={<UserCheck />}
             iconColor="success"
             loading={loading}
+            delay={60}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -148,6 +220,7 @@ export default function CommandCenter() {
             icon={<DollarSign />}
             iconColor="warning"
             loading={loading}
+            delay={120}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -159,12 +232,17 @@ export default function CommandCenter() {
             icon={<TrendingUp />}
             iconColor="info"
             loading={loading}
+            delay={180}
           />
         </Grid>
       </Grid>
 
       {/* Quick Action Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <SectionTitle sx={{ animationDelay: '0.3s' }}>
+        <SectionDot color="#22C55E" />
+        Quick Actions
+      </SectionTitle>
+      <Grid container spacing={3} sx={{ mb: 5 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Pending Messages"
@@ -174,6 +252,7 @@ export default function CommandCenter() {
             iconColor="danger"
             loading={loading}
             onClick={() => console.log('Go to messages')}
+            delay={240}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -185,6 +264,7 @@ export default function CommandCenter() {
             iconColor="warning"
             loading={loading}
             onClick={() => console.log('View expiring')}
+            delay={300}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -195,6 +275,7 @@ export default function CommandCenter() {
             icon={<CreditCard />}
             iconColor="success"
             loading={loading}
+            delay={360}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -205,12 +286,17 @@ export default function CommandCenter() {
             icon={<UserPlus />}
             iconColor="primary"
             loading={loading}
+            delay={420}
           />
         </Grid>
       </Grid>
 
       {/* Charts and Tables Row */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <SectionTitle sx={{ animationDelay: '0.4s' }}>
+        <SectionDot color="#3B82F6" />
+        Analytics Overview
+      </SectionTitle>
+      <Grid container spacing={3} sx={{ mb: 5 }}>
         <Grid item xs={12} lg={8}>
           <RevenueChart />
         </Grid>
@@ -220,6 +306,10 @@ export default function CommandCenter() {
       </Grid>
 
       {/* Bottom Row */}
+      <SectionTitle sx={{ animationDelay: '0.5s' }}>
+        <SectionDot color="#E8B931" />
+        Recent Activity
+      </SectionTitle>
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
           <RecentTransactions />

@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Divider from '@mui/material/Divider'
-import { styled } from '@mui/material/styles'
+import { styled, keyframes } from '@mui/material/styles'
 import {
   LayoutDashboard,
   Users,
@@ -33,7 +33,7 @@ import {
   FileText,
   HelpCircle,
   Zap,
-  Bell,
+  Sparkles,
 } from 'lucide-react'
 
 export interface NavItem {
@@ -105,118 +105,172 @@ const navigation: NavItem[] = [
   },
 ]
 
+const slideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`
+
 const StyledDrawer = styled(Drawer, {
   shouldForwardProp: (prop) => prop !== 'collapsed',
-})<{ collapsed?: boolean }>(({ theme, collapsed }) => ({
+})<{ collapsed?: boolean }>(({ collapsed }) => ({
   width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
   flexShrink: 0,
   whiteSpace: 'nowrap',
   boxSizing: 'border-box',
-  transition: 'width 200ms ease',
+  transition: 'width 250ms ease',
 
   '& .MuiDrawer-paper': {
     width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
-    backgroundColor: theme.palette.background.paper,
-    borderRight: `1px solid ${theme.palette.divider}`,
-    transition: 'width 200ms ease',
+    backgroundColor: '#FFFFFF',
+    borderRight: '1px solid rgba(0, 0, 0, 0.06)',
+    transition: 'width 250ms ease',
     overflowX: 'hidden',
+    boxShadow: '0 0 40px rgba(0, 0, 0, 0.03)',
   },
 }))
 
-const Logo = styled(Box)(({ theme }) => ({
+const Logo = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
-  padding: '20px 20px 16px',
-  minHeight: 64,
+  gap: 14,
+  padding: '24px 24px 20px',
+  minHeight: 72,
+  animation: `${slideIn} 0.4s ease-out`,
 }))
 
-const LogoIcon = styled(Box)(({ theme }) => ({
-  width: 40,
-  height: 40,
-  borderRadius: 10,
-  background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+const LogoIcon = styled(Box)(() => ({
+  width: 44,
+  height: 44,
+  borderRadius: 14,
+  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   color: '#FFFFFF',
-  fontWeight: 700,
+  fontWeight: 800,
   fontSize: '1.25rem',
   flexShrink: 0,
+  boxShadow: '0 4px 12px rgba(224, 122, 95, 0.3)',
+  transition: 'transform 300ms ease, box-shadow 300ms ease',
+
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: '0 6px 16px rgba(224, 122, 95, 0.4)',
+  },
 }))
 
-const NavSection = styled(Box)(({ theme }) => ({
-  padding: '8px 12px',
+const NavSection = styled(Box)(() => ({
+  padding: '8px 16px',
 }))
 
-const SectionLabel = styled(Typography)(({ theme }) => ({
+const SectionLabel = styled(Typography)(() => ({
   fontSize: '0.6875rem',
-  fontWeight: 600,
+  fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  color: theme.palette.text.secondary,
-  padding: '8px 8px 4px',
+  letterSpacing: '0.1em',
+  color: '#9CA3AF',
+  padding: '16px 12px 8px',
 }))
 
 const NavItemButton = styled(ListItemButton, {
   shouldForwardProp: (prop) => !['active', 'nested'].includes(prop as string),
-})<{ active?: boolean; nested?: boolean }>(({ theme, active, nested }) => ({
-  borderRadius: 10,
-  marginBottom: 2,
-  padding: nested ? '8px 12px 8px 44px' : '10px 12px',
-  transition: 'all 150ms ease',
-  color: active ? theme.palette.primary.main : theme.palette.text.secondary,
-  backgroundColor: active
-    ? theme.palette.mode === 'dark'
-      ? 'rgba(99, 102, 241, 0.15)'
-      : 'rgba(99, 102, 241, 0.08)'
-    : 'transparent',
+})<{ active?: boolean; nested?: boolean }>(({ active, nested }) => ({
+  borderRadius: 12,
+  marginBottom: 4,
+  padding: nested ? '10px 12px 10px 48px' : '12px 16px',
+  transition: 'all 200ms ease',
+  color: active ? '#E07A5F' : '#6B7280',
+  backgroundColor: active ? 'rgba(224, 122, 95, 0.1)' : 'transparent',
+  position: 'relative',
+
+  '&::before': active ? {
+    content: '""',
+    position: 'absolute',
+    left: 0,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: 4,
+    height: '60%',
+    borderRadius: '0 4px 4px 0',
+    background: 'linear-gradient(180deg, #E07A5F 0%, #E8B931 100%)',
+  } : {},
 
   '&:hover': {
-    backgroundColor: active
-      ? theme.palette.mode === 'dark'
-        ? 'rgba(99, 102, 241, 0.2)'
-        : 'rgba(99, 102, 241, 0.12)'
-      : theme.palette.action.hover,
+    backgroundColor: active ? 'rgba(224, 122, 95, 0.12)' : 'rgba(0, 0, 0, 0.04)',
+    color: active ? '#E07A5F' : '#1A1A2E',
   },
 
   '& .MuiListItemIcon-root': {
-    minWidth: 36,
+    minWidth: 40,
     color: 'inherit',
+    transition: 'transform 200ms ease',
+  },
+
+  '&:hover .MuiListItemIcon-root': {
+    transform: 'scale(1.1)',
   },
 
   '& .MuiListItemText-primary': {
     fontWeight: active ? 600 : 500,
     fontSize: nested ? '0.875rem' : '0.9375rem',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
   },
 }))
 
-const Badge = styled(Box)(({ theme }) => ({
-  minWidth: 20,
-  height: 20,
-  padding: '0 6px',
-  borderRadius: 10,
-  backgroundColor: theme.palette.error.main,
+const Badge = styled(Box)(() => ({
+  minWidth: 22,
+  height: 22,
+  padding: '0 7px',
+  borderRadius: 11,
+  background: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
   color: '#FFFFFF',
   fontSize: '0.6875rem',
-  fontWeight: 600,
+  fontWeight: 700,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
 }))
 
-const CollapseButton = styled(IconButton)(({ theme }) => ({
+const CollapseButton = styled(IconButton)(() => ({
   position: 'absolute',
-  right: -12,
-  top: 70,
-  width: 24,
-  height: 24,
-  backgroundColor: theme.palette.background.paper,
-  border: `1px solid ${theme.palette.divider}`,
+  right: -14,
+  top: 78,
+  width: 28,
+  height: 28,
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(0, 0, 0, 0.08)',
   borderRadius: '50%',
   zIndex: 1,
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+  transition: 'all 200ms ease',
+
   '&:hover': {
-    backgroundColor: theme.palette.action.hover,
+    backgroundColor: '#F8F6F3',
+    borderColor: '#E07A5F',
+    color: '#E07A5F',
+    transform: 'scale(1.1)',
+  },
+}))
+
+const HelpCard = styled(Box)(() => ({
+  padding: '20px',
+  borderRadius: 16,
+  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
+  color: 'white',
+  textAlign: 'center',
+  boxShadow: '0 4px 20px rgba(224, 122, 95, 0.3)',
+  transition: 'transform 300ms ease, box-shadow 300ms ease',
+
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 8px 30px rgba(224, 122, 95, 0.4)',
   },
 }))
 
@@ -234,17 +288,18 @@ export default function Sidebar() {
   const isActive = (path?: string) => {
     if (!path) return false
     if (path === '/') return pathname === '/'
+
     return pathname.startsWith(path)
   }
 
-  const renderNavItem = (item: NavItem, nested = false) => {
+  const renderNavItem = (item: NavItem, nested = false, index = 0) => {
     const active = isActive(item.path)
     const hasChildren = item.children && item.children.length > 0
     const isExpanded = expandedItems.includes(item.id)
 
     if (hasChildren) {
       return (
-        <Box key={item.id}>
+        <Box key={item.id} sx={{ animation: `${slideIn} 0.3s ease-out ${index * 50}ms both` }}>
           <NavItemButton
             onClick={() => toggleExpand(item.id)}
             active={item.children?.some((child) => isActive(child.path))}
@@ -257,16 +312,16 @@ export default function Sidebar() {
                   size={16}
                   style={{
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)',
-                    transition: 'transform 200ms ease',
+                    transition: 'transform 250ms ease',
                   }}
                 />
               </>
             )}
           </NavItemButton>
           {!collapsed && (
-            <Collapse in={isExpanded} timeout="auto">
+            <Collapse in={isExpanded} timeout={250}>
               <List disablePadding>
-                {item.children?.map((child) => renderNavItem(child, true))}
+                {item.children?.map((child, childIndex) => renderNavItem(child, true, childIndex))}
               </List>
             </Collapse>
           )}
@@ -289,7 +344,7 @@ export default function Sidebar() {
     if (collapsed) {
       return (
         <Tooltip key={item.id} title={item.label} placement="right" arrow>
-          <ListItem disablePadding>
+          <ListItem disablePadding sx={{ animation: `${slideIn} 0.3s ease-out ${index * 50}ms both` }}>
             <Link href={item.path || '#'} style={{ width: '100%', textDecoration: 'none', color: 'inherit' }}>
               {content}
             </Link>
@@ -299,7 +354,7 @@ export default function Sidebar() {
     }
 
     return (
-      <ListItem key={item.id} disablePadding>
+      <ListItem key={item.id} disablePadding sx={{ animation: `${slideIn} 0.3s ease-out ${index * 50}ms both` }}>
         <Link href={item.path || '#'} style={{ width: '100%', textDecoration: 'none', color: 'inherit' }}>
           {content}
         </Link>
@@ -319,45 +374,51 @@ export default function Sidebar() {
         <LogoIcon>F</LogoIcon>
         {!collapsed && (
           <Box>
-            <Typography variant="h6" fontWeight={700} fontSize="1rem">
+            <Typography
+              sx={{
+                fontWeight: 800,
+                fontSize: '1.125rem',
+                color: '#1A1A2E',
+                fontFamily: '"Plus Jakarta Sans", sans-serif',
+                letterSpacing: '-0.02em',
+              }}
+            >
               Funnel Admin
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              sx={{
+                fontSize: '0.75rem',
+                color: '#9CA3AF',
+                fontWeight: 500,
+              }}
+            >
               Dashboard
             </Typography>
           </Box>
         )}
       </Logo>
 
-      <Divider sx={{ mx: 2, mb: 1 }} />
+      <Divider sx={{ mx: 2, mb: 1, borderColor: 'rgba(0, 0, 0, 0.06)' }} />
 
       <NavSection sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {!collapsed && <SectionLabel>Navigation</SectionLabel>}
         <List disablePadding>
-          {navigation.map((item) => renderNavItem(item))}
+          {navigation.map((item, index) => renderNavItem(item, false, index))}
         </List>
       </NavSection>
 
       <Box sx={{ p: 2 }}>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: 'rgba(0, 0, 0, 0.06)' }} />
         {!collapsed && (
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: 'primary.main',
-              color: 'white',
-              textAlign: 'center',
-            }}
-          >
-            <Bell size={24} style={{ marginBottom: 8 }} />
-            <Typography variant="body2" fontWeight={600}>
+          <HelpCard>
+            <Sparkles size={28} style={{ marginBottom: 8, opacity: 0.9 }} />
+            <Typography sx={{ fontSize: '0.9375rem', fontWeight: 700, mb: 0.5 }}>
               Need help?
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
+            <Typography sx={{ fontSize: '0.75rem', opacity: 0.85, fontWeight: 500 }}>
               Check documentation
             </Typography>
-          </Box>
+          </HelpCard>
         )}
       </Box>
     </StyledDrawer>
