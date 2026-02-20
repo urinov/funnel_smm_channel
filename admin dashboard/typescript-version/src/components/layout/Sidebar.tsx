@@ -185,25 +185,14 @@ const NavItemButton = styled(ListItemButton, {
   marginBottom: 6,
   padding: nested ? '12px 14px 12px 52px' : '14px 18px',
   transition: 'all 200ms ease',
-  color: active ? '#E07A5F' : '#4B5563',
-  backgroundColor: active ? 'rgba(224, 122, 95, 0.1)' : 'transparent',
+  color: active ? '#FFFFFF' : '#4B5563',
+  background: active ? 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)' : 'transparent',
+  boxShadow: active ? '0 4px 12px rgba(224, 122, 95, 0.3)' : 'none',
   position: 'relative',
 
-  '&::before': active ? {
-    content: '""',
-    position: 'absolute',
-    left: 0,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: 4,
-    height: '60%',
-    borderRadius: '0 4px 4px 0',
-    background: 'linear-gradient(180deg, #E07A5F 0%, #E8B931 100%)',
-  } : {},
-
   '&:hover': {
-    backgroundColor: active ? 'rgba(224, 122, 95, 0.12)' : 'rgba(0, 0, 0, 0.04)',
-    color: active ? '#E07A5F' : '#1A1A2E',
+    background: active ? 'linear-gradient(135deg, #C86B52 0%, #D4A52A 100%)' : 'rgba(0, 0, 0, 0.04)',
+    color: active ? '#FFFFFF' : '#1A1A2E',
   },
 
   '& .MuiListItemIcon-root': {
@@ -220,6 +209,7 @@ const NavItemButton = styled(ListItemButton, {
     fontWeight: active ? 700 : 600,
     fontSize: nested ? '1rem' : '1.0625rem',
     fontFamily: '"Plus Jakarta Sans", sans-serif',
+    color: 'inherit',
   },
 }))
 
