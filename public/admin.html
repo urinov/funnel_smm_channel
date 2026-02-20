@@ -1546,37 +1546,39 @@
 <!-- Main Dashboard -->
 <div id="dashboard" class="hidden flex min-h-screen">
 
-  <!-- Left Sidebar -->
-  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 flex flex-col items-center py-6 z-40">
-    <div class="flex items-center gap-3 mb-6 px-3">
-      <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0">F</div>
-      <span class="sidebar-label text-lg font-bold text-gray-800">Funnel</span>
+  <!-- Left Sidebar - Icons Only Purple Gradient -->
+  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 flex flex-col items-center py-5 z-40">
+    <!-- Logo -->
+    <div class="mb-8">
+      <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white text-xl font-bold cursor-pointer hover:bg-white/30 transition-all hover:scale-105">F</div>
     </div>
 
-    <nav class="flex flex-col gap-2 flex-1 w-full px-3">
-      <div class="sidebar-item active" data-tab="overview" title="Umumiy"><span>📊</span><span class="sidebar-label">Umumiy</span></div>
-      <div class="sidebar-item" data-tab="analytics" title="Analitika"><span>📈</span><span class="sidebar-label">Analitika</span></div>
-      <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar"><span>👥</span><span class="sidebar-label">Foydalanuvchilar</span></div>
-      <div class="sidebar-item" data-tab="conversations" title="Suhbatlar"><span>💬</span><span class="sidebar-label">Suhbatlar</span></div>
-      <div class="sidebar-item" data-tab="payments" title="To'lovlar"><span>💳</span><span class="sidebar-label">To'lovlar</span></div>
-      <div class="sidebar-item" onclick="toggleSidebarMore()" title="Ko'proq"><span>☰</span><span class="sidebar-label">Ko'proq</span></div>
-      <div class="sidebar-item extra-nav" data-tab="referrals" title="Referallar"><span>🔗</span><span class="sidebar-label">Referallar</span></div>
-      <div class="sidebar-item extra-nav" data-tab="lessons" title="Darslar"><span>📚</span><span class="sidebar-label">Darslar</span></div>
-      <div class="sidebar-item extra-nav" data-tab="library" title="Kutubxona"><span>📖</span><span class="sidebar-label">Kutubxona</span></div>
-      <div class="sidebar-item extra-nav" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
-      <div class="sidebar-item extra-nav" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
-      <div class="sidebar-item extra-nav" data-tab="renewal" title="Uzaytirish"><span>🔁</span><span class="sidebar-label">Uzaytirish</span></div>
-      <div class="sidebar-item extra-nav" data-tab="promo" title="Promo kodlar"><span>🎟️</span><span class="sidebar-label">Promo kodlar</span></div>
-      <div class="sidebar-item extra-nav" data-tab="audit" title="Audit Log"><span>📋</span><span class="sidebar-label">Audit Log</span></div>
-      <div class="sidebar-item extra-nav" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
+    <!-- Main Nav -->
+    <nav class="flex flex-col gap-2 flex-1 w-full px-3 items-center">
+      <div class="sidebar-item active" data-tab="overview" title="Umumiy"><span class="material-symbols-outlined">dashboard</span></div>
+      <div class="sidebar-item" data-tab="analytics" title="Analitika"><span class="material-symbols-outlined">analytics</span></div>
+      <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar"><span class="material-symbols-outlined">group</span></div>
+      <div class="sidebar-item" data-tab="conversations" title="Suhbatlar"><span class="material-symbols-outlined">chat</span></div>
+      <div class="sidebar-item" data-tab="payments" title="To'lovlar"><span class="material-symbols-outlined">payments</span></div>
+      <div class="sidebar-item" data-tab="lessons" title="Darslar"><span class="material-symbols-outlined">school</span></div>
+      <div class="sidebar-item" data-tab="referrals" title="Referallar"><span class="material-symbols-outlined">share</span></div>
     </nav>
 
-    <div class="px-3 w-full space-y-2">
-      <div class="sidebar-toggle mx-auto" onclick="toggleSidebar()" title="Menyuni kengaytirish">
-        <span id="sidebarToggleIcon">→</span>
-      </div>
-      <div class="sidebar-item text-red-400" onclick="logout()" title="Chiqish"><span>🚪</span><span class="sidebar-label">Chiqish</span></div>
+    <!-- Divider -->
+    <div class="w-10 h-px bg-white/20 my-4"></div>
+
+    <!-- Bottom Nav -->
+    <div class="flex flex-col gap-2 w-full px-3 items-center">
+      <div class="sidebar-item" data-tab="settings" title="Sozlamalar"><span class="material-symbols-outlined">settings</span></div>
+      <div class="sidebar-item" onclick="toggleNotificationsPanel()" title="Bildirishnomalar"><span class="material-symbols-outlined">notifications</span></div>
+      <div class="sidebar-item" onclick="logout()" title="Chiqish" style="color: #fca5a5;"><span class="material-symbols-outlined">logout</span></div>
     </div>
+
+    <!-- Divider -->
+    <div class="w-10 h-px bg-white/20 my-4"></div>
+
+    <!-- Profile Avatar -->
+    <div class="w-11 h-11 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:scale-110 transition-all border-2 border-white/30">A</div>
   </aside>
 
   <!-- Mobile Bottom Nav -->
@@ -1646,79 +1648,160 @@
   <!-- Main Content -->
   <main class="main-content flex-1 ml-[70px] p-6 pb-24 md:pb-6">
 
-    <!-- Header -->
-    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Bosh panel</h1>
-        <p class="text-gray-500 text-sm" id="pageSubtitle">Asosiy monitoring paneli</p>
-        <p class="text-gray-400 text-xs mt-1" id="currentDate"></p>
+    <!-- Header - Modern Style -->
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <!-- Search Bar -->
+      <div onclick="openCommandPalette()" class="flex items-center gap-3 bg-white px-5 py-3.5 rounded-2xl cursor-pointer transition-all hover:shadow-lg hover:border-indigo-500 border border-gray-100 min-w-[300px] md:min-w-[400px]" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <span class="material-symbols-outlined text-gray-400">search</span>
+        <span class="text-gray-400 font-medium flex-1">Qidirish...</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">⌘K</span>
       </div>
-      <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-        <button onclick="openCommandPalette()" class="btn btn-secondary ui-btn-icon" title="Cmd/Ctrl + K">
-          <span class="material-symbols-outlined">search</span>
-          <span>Qidiruv</span>
-          <span class="command-kbd">Ctrl K</span>
+
+      <!-- Right Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Theme Toggle -->
+        <button onclick="toggleTheme()" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-500 border border-gray-100 transition-all" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+          <span class="material-symbols-outlined">dark_mode</span>
         </button>
-        <button onclick="toggleNotificationsPanel()" class="btn btn-secondary ui-btn-icon" title="Bildirishnomalar">
+
+        <!-- Notifications -->
+        <button onclick="toggleNotificationsPanel()" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-500 border border-gray-100 transition-all relative" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
           <span class="material-symbols-outlined">notifications</span>
-          <span>Bildirishnoma</span>
-          <span id="notifBadge" class="notif-badge hidden">0</span>
+          <span id="notifBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-pink-400 to-pink-600 text-white text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
         </button>
-        <button id="tableDensityToggleBtn" onclick="toggleTableDensity()" class="btn btn-secondary ui-btn-icon" title="Jadval zichligi">
-          <span class="material-symbols-outlined">density_medium</span>
-          <span id="tableDensityToggleLabel">Zich</span>
+
+        <!-- Broadcast Button -->
+        <button onclick="openBroadcastModal()" class="btn btn-primary flex items-center gap-2 px-5">
+          <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
+          <span class="hidden sm:inline">Xabar yuborish</span>
         </button>
-        <button onclick="openBroadcastModal()" class="btn btn-primary flex items-center gap-2">
-          <span>📨</span> Xabar yuborish
-        </button>
-        <button onclick="loadAll()" class="btn btn-secondary">🔄</button>
+
+        <!-- Profile -->
+        <div class="flex items-center gap-3 bg-white px-3 py-2 rounded-2xl border border-gray-100 cursor-pointer hover:border-indigo-500 transition-all" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);">A</div>
+          <div class="hidden md:block">
+            <p class="text-sm font-semibold text-gray-800">Admin</p>
+            <p class="text-xs text-gray-400">Administrator</p>
+          </div>
+          <span class="material-symbols-outlined text-gray-400 hidden md:block">expand_more</span>
+        </div>
       </div>
     </header>
 
     <!-- Overview Tab -->
     <div id="tab-overview">
 
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 kpi-grid">
-        <div class="card p-3 sm:p-5 card-hover relative overflow-hidden kpi-card">
-          <div class="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-indigo-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div class="flex items-center gap-2 sm:gap-4 relative">
-            <div class="stat-icon bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">👥</div>
-            <div class="min-w-0">
-              <p class="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wide font-medium truncate">Jami userlar</p>
-              <p class="text-xl sm:text-2xl font-bold text-gray-800" id="statTotalUsers">0</p>
+      <!-- Hero Banner -->
+      <div class="relative rounded-3xl p-8 md:p-10 mb-6 overflow-hidden" style="background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 40%, #A855F7 70%, #D946EF 100%); box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);">
+        <!-- Glow Effects -->
+        <div class="absolute -top-20 -left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-32 right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
+        <!-- Floating Icons -->
+        <div class="absolute top-6 right-20 w-14 h-14 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white animate-bounce" style="animation-duration: 3s;">
+          <span class="material-symbols-outlined" style="font-size: 28px;">trending_up</span>
+        </div>
+        <div class="absolute top-16 right-8 w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center text-white animate-bounce" style="animation-duration: 2.5s; animation-delay: 0.5s;">
+          <span class="material-symbols-outlined" style="font-size: 24px;">group</span>
+        </div>
+        <div class="absolute bottom-6 right-32 w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center text-white animate-bounce" style="animation-duration: 3.5s; animation-delay: 1s;">
+          <span class="material-symbols-outlined" style="font-size: 24px;">bolt</span>
+        </div>
+
+        <!-- Content -->
+        <div class="relative z-10 max-w-xl">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <span class="material-symbols-outlined text-white" style="font-size: 26px;">auto_awesome</span>
+            </div>
+            <span class="text-white/80 text-xs font-semibold uppercase tracking-widest">Boshqaruv Paneli</span>
+          </div>
+
+          <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-3" style="letter-spacing: -0.02em;">Xush kelibsiz, Admin!</h2>
+          <p class="text-white/85 text-lg font-medium mb-5 leading-relaxed">Bugun botingiz a'lo ishlayapti. Barcha ko'rsatkichlar o'sishda.</p>
+
+          <!-- Quick Stats Badges -->
+          <div class="flex flex-wrap gap-3">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
+              <span class="material-symbols-outlined" style="font-size: 18px;">group</span>
+              <span id="heroBannerUsers">0</span> foydalanuvchi
+            </div>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
+              <span class="material-symbols-outlined" style="font-size: 18px;">trending_up</span>
+              +<span id="heroBannerGrowth">0</span>% bugun
+            </div>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
+              <span class="material-symbols-outlined" style="font-size: 18px;">bolt</span>
+              <span id="heroBannerActive">0</span> faol hozir
             </div>
           </div>
         </div>
-        <div class="card p-3 sm:p-5 card-hover relative overflow-hidden kpi-card">
-          <div class="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-green-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div class="flex items-center gap-2 sm:gap-4 relative">
-            <div class="stat-icon bg-gradient-to-br from-green-100 to-emerald-100 text-green-600">💎</div>
-            <div class="min-w-0">
-              <p class="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wide font-medium truncate">To'lagan</p>
-              <p class="text-xl sm:text-2xl font-bold text-green-600" id="statPaidUsers">0</p>
+      </div>
+
+      <!-- Quick Stats - Modern Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 kpi-grid">
+        <div class="card p-5 card-hover relative overflow-hidden kpi-card">
+          <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl" style="background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); opacity: 0.08;"></div>
+          <div class="flex items-start justify-between mb-4 relative">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);">
+              <span class="material-symbols-outlined text-white" style="font-size: 26px;">group</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1" style="background: rgba(34,197,94,0.12); color: #22C55E;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+              +12.5%
             </div>
           </div>
+          <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Jami Foydalanuvchilar</p>
+          <p class="text-2xl font-extrabold text-gray-800" id="statTotalUsers" style="letter-spacing: -0.02em;">0</p>
+          <p class="text-gray-400 text-xs mt-1">Ro'yxatdan o'tgan</p>
         </div>
-        <div class="card p-3 sm:p-5 card-hover relative overflow-hidden kpi-card">
-          <div class="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div class="flex items-center gap-2 sm:gap-4 relative">
-            <div class="stat-icon bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-600">💰</div>
-            <div class="min-w-0">
-              <p class="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wide font-medium truncate">Daromad</p>
-              <p class="text-xl sm:text-2xl font-bold text-blue-600" id="statRevenue">0</p>
+
+        <div class="card p-5 card-hover relative overflow-hidden kpi-card">
+          <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl" style="background: linear-gradient(135deg, #22C55E 0%, #4ADE80 100%); opacity: 0.08;"></div>
+          <div class="flex items-start justify-between mb-4 relative">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #22C55E 0%, #4ADE80 100%);">
+              <span class="material-symbols-outlined text-white" style="font-size: 26px;">verified</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1" style="background: rgba(34,197,94,0.12); color: #22C55E;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+              +8.3%
             </div>
           </div>
+          <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Faol Obunachilar</p>
+          <p class="text-2xl font-extrabold text-gray-800" id="statPaidUsers" style="letter-spacing: -0.02em;">0</p>
+          <p class="text-gray-400 text-xs mt-1">Pullik a'zolar</p>
         </div>
-        <div class="card p-3 sm:p-5 card-hover relative overflow-hidden kpi-card">
-          <div class="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-orange-50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div class="flex items-center gap-2 sm:gap-4 relative">
-            <div class="stat-icon bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600">📈</div>
-            <div class="min-w-0">
-              <p class="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wide font-medium truncate">Konversiya</p>
-              <p class="text-xl sm:text-2xl font-bold text-orange-600" id="statConversion">0%</p>
+
+        <div class="card p-5 card-hover relative overflow-hidden kpi-card">
+          <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl" style="background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%); opacity: 0.08;"></div>
+          <div class="flex items-start justify-between mb-4 relative">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);">
+              <span class="material-symbols-outlined text-white" style="font-size: 26px;">payments</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1" style="background: rgba(34,197,94,0.12); color: #22C55E;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+              +15.2%
             </div>
           </div>
+          <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Oylik Daromad</p>
+          <p class="text-2xl font-extrabold text-gray-800" id="statRevenue" style="letter-spacing: -0.02em;">0</p>
+          <p class="text-gray-400 text-xs mt-1">Joriy oy</p>
+        </div>
+
+        <div class="card p-5 card-hover relative overflow-hidden kpi-card">
+          <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl" style="background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); opacity: 0.08;"></div>
+          <div class="flex items-start justify-between mb-4 relative">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);">
+              <span class="material-symbols-outlined text-white" style="font-size: 26px;">trending_up</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1" style="background: rgba(34,197,94,0.12); color: #22C55E;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+              +2.3%
+            </div>
+          </div>
+          <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Konversiya Darajasi</p>
+          <p class="text-2xl font-extrabold text-gray-800" id="statConversion" style="letter-spacing: -0.02em;">0%</p>
+          <p class="text-gray-400 text-xs mt-1">Userdan pullikka</p>
         </div>
       </div>
 
