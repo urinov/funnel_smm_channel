@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
   <style>
     * { font-family: 'Public Sans', sans-serif; box-sizing: border-box; }
     :root {
@@ -31,6 +32,18 @@
       min-height: 100vh;
       color: var(--ink);
       font-size: 14px;
+    }
+    .material-symbols-outlined { font-size: 18px; line-height: 1; vertical-align: middle; }
+    .ui-btn-icon { display: inline-flex; align-items: center; gap: 6px; }
+    .skeleton {
+      border-radius: 8px;
+      background: linear-gradient(90deg, #f1f2f7 0%, #f8f9fc 40%, #f1f2f7 100%);
+      background-size: 200% 100%;
+      animation: skeletonPulse 1.2s linear infinite;
+    }
+    @keyframes skeletonPulse {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
     }
 
     /* Scrollbar */
@@ -91,12 +104,16 @@
     .btn-secondary { background: #fff; color: #57536b; border: 1px solid #dedde5; box-shadow: none; }
     .btn-secondary:hover { background: #f8f7fa; border-color: #cfcdd8; transform: none; }
     .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
     .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239,68,68,0.45); }
 
     /* Input */
     .input { width: 100%; padding: 10px 12px; border: 1px solid #dcdbe3; border-radius: 8px; font-size: 14px; transition: all 0.2s; background: #fff; box-shadow: none; }
+    .input:hover { border-color: #c8c6d1; }
     .input:focus { outline: none; border-color: #7367f0; box-shadow: 0 0 0 2px rgba(115,103,240,0.12); background: #fff; }
+    .input:invalid { border-color: #ea5455; }
+    select.input { appearance: none; background-image: linear-gradient(45deg, transparent 50%, #8d8a98 50%), linear-gradient(135deg, #8d8a98 50%, transparent 50%); background-position: calc(100% - 16px) calc(1em + 1px), calc(100% - 11px) calc(1em + 1px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
     .input::placeholder { color: #9ca3af; }
 
     /* Modal */
@@ -331,6 +348,75 @@
     .mobile-nav-item.active { color: #fff; background: #7367f0; box-shadow: 0 6px 16px rgba(115,103,240,0.36); }
     .mobile-nav-item:active { transform: scale(0.95); }
 
+    /* Accessible focus ring */
+    button:focus-visible,
+    .btn:focus-visible,
+    .tab:focus-visible,
+    .input:focus-visible,
+    .sidebar-item:focus-visible,
+    .mobile-nav-item:focus-visible {
+      outline: 2px solid #a9a3f7;
+      outline-offset: 2px;
+    }
+
+    /* Dense table mode */
+    body.table-compact table th,
+    body.table-compact table td {
+      padding-top: 0.42rem !important;
+      padding-bottom: 0.42rem !important;
+      font-size: 12.5px !important;
+      line-height: 1.25 !important;
+    }
+    body.table-compact .badge {
+      padding: 2px 8px;
+      font-size: 10.5px;
+    }
+    body.table-compact .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* Dark mode */
+    body.theme-dark {
+      background: #25293c;
+      color: #d7d9e6;
+    }
+    body.theme-dark .card,
+    body.theme-dark .sf-shell,
+    body.theme-dark .sf-summary,
+    body.theme-dark .sf-stat,
+    body.theme-dark .sf-left,
+    body.theme-dark .sf-detail-card,
+    body.theme-dark .sf-payment-card,
+    body.theme-dark .sf-mini-list,
+    body.theme-dark .right-panel,
+    body.theme-dark .main-content > header {
+      background: #2f3349 !important;
+      border-color: #44485f !important;
+      color: #d7d9e6 !important;
+      box-shadow: 0 8px 20px rgba(14,18,33,0.22) !important;
+    }
+    body.theme-dark .sf-workspace,
+    body.theme-dark .tab,
+    body.theme-dark .mobile-nav,
+    body.theme-dark .btn-secondary,
+    body.theme-dark .input {
+      background: #25293c !important;
+      border-color: #44485f !important;
+      color: #d7d9e6 !important;
+    }
+    body.theme-dark .input::placeholder { color: #a7aac4; }
+    body.theme-dark .tab.active,
+    body.theme-dark .btn-primary,
+    body.theme-dark .mobile-nav-item.active {
+      background: #7367f0 !important;
+      border-color: #7367f0 !important;
+      color: #fff !important;
+    }
+    body.theme-dark .table-row:hover { background: #30344a; }
+    body.theme-dark .diag-table-scroll table thead th,
+    body.theme-dark .sf-dark-scroll table thead th { background: #25293c !important; color: #b7bad1 !important; }
+
     /* File ID Input */
     .file-id-input { font-family: monospace; font-size: 12px; background: #f9fafb; }
 
@@ -363,7 +449,7 @@
     .diag-list-meta { font-size: 11px; color: #64748b; white-space: nowrap; }
     .diag-progress { width: 100%; height: 6px; border-radius: 999px; background: rgba(148,163,184,0.24); overflow: hidden; }
     .diag-progress-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
-    .diag-progress-fill.source { background: linear-gradient(90deg, #5b7cfa, #7e5cff); }
+    .diag-progress-fill.source { background: linear-gradient(90deg, #7367f0, #8c82f7); }
     .diag-progress-fill.lesson { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
     .diag-progress-fill.activity { background: linear-gradient(90deg, #22c55e, #16a34a); }
     .diag-progress-fill.method { background: linear-gradient(90deg, #f59e0b, #f97316); }
@@ -607,7 +693,7 @@
     .conv-users-list { max-height: 72vh; overflow-y: auto; }
     .conv-user-item { width: 100%; text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(15,23,42,0.06); transition: background 0.18s ease; }
     .conv-user-item:hover { background: rgba(255,255,255,0.75); }
-    .conv-user-item.active { background: linear-gradient(90deg, rgba(91,124,250,0.13) 0%, rgba(91,124,250,0.04) 100%); border-left: 3px solid var(--accent); padding-left: 11px; }
+    .conv-user-item.active { background: linear-gradient(90deg, rgba(115,103,240,0.16) 0%, rgba(115,103,240,0.06) 100%); border-left: 3px solid var(--accent); padding-left: 11px; }
     .conv-avatar { width: 38px; height: 38px; border-radius: 999px; background: linear-gradient(135deg, #dbe7ff 0%, #cdd9ff 100%); color: #3f5ee6; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
     .tg-chat-shell { border: 1px solid rgba(15,23,42,0.08); border-radius: 18px; overflow: hidden; background: rgba(255,255,255,0.7); }
     .tg-chat-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid rgba(15,23,42,0.08); background: rgba(255,255,255,0.9); }
@@ -616,13 +702,13 @@
     .tg-bubble-row.user { justify-content: flex-end; }
     .tg-bubble { max-width: 78%; border-radius: 18px; padding: 9px 12px 8px; box-shadow: 0 2px 8px rgba(15,23,42,0.08); word-break: break-word; background: #fff; border-bottom-left-radius: 6px; }
     .tg-bubble.user { background: #d9f8c5; border-bottom-right-radius: 6px; }
-    .tg-bubble.action { background: #ecf1ff; border: 1px solid rgba(91,124,250,0.2); }
+    .tg-bubble.action { background: #f0eeff; border: 1px solid rgba(115,103,240,0.22); }
     .tg-meta { font-size: 11px; color: #6b7280; display: flex; justify-content: flex-end; gap: 8px; margin-top: 5px; }
     .tg-tag { display: inline-flex; align-items: center; font-size: 10px; border-radius: 999px; padding: 2px 7px; margin-bottom: 4px; background: rgba(255,255,255,0.72); color: #475569; border: 1px solid rgba(15,23,42,0.08); }
 
     /* Progrev UI polish */
     .progrev-flow-card {
-      border: 1px solid rgba(91,124,250,0.18);
+      border: 1px solid rgba(115,103,240,0.2);
       background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(241,245,255,0.86) 100%);
       box-shadow: 0 14px 30px rgba(15,23,42,0.08);
     }
@@ -729,6 +815,136 @@
       font-size: 12px;
     }
     #emojiBankProgrevList .emoji-trash-btn:hover { background: #fef2f2; border-color: #fca5a5; }
+
+    .extra-nav { display: none; }
+    .extra-nav.show { display: flex; }
+    .table-sticky-first th:first-child,
+    .table-sticky-first td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: inherit;
+    }
+    .table-settings-pop {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      min-width: 220px;
+      background: #fff;
+      border: 1px solid #e7e7ef;
+      border-radius: 10px;
+      box-shadow: 0 10px 26px rgba(31,32,45,0.16);
+      padding: 10px;
+      z-index: 30;
+    }
+    .table-settings-pop.hidden { display: none; }
+    .table-settings-opt { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5d596c; padding: 4px 2px; }
+    .saved-view-chip {
+      border: 1px solid #dddce4;
+      background: #fff;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #5d596c;
+      cursor: pointer;
+    }
+    .saved-view-chip.active { background: #7367f0; border-color: #7367f0; color: #fff; }
+    .global-hint {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #7367f0;
+      border: 1px solid rgba(115,103,240,0.35);
+      cursor: help;
+      background: rgba(115,103,240,0.08);
+    }
+    .command-kbd {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #d8d7df;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 11px;
+      background: #fff;
+      color: #7b788a;
+    }
+    .cmd-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(18,20,32,0.5);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 10vh;
+      z-index: 80;
+    }
+    .cmd-overlay.show { display: flex; }
+    .cmd-modal {
+      width: min(760px, calc(100vw - 24px));
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #e7e7ef;
+      box-shadow: 0 20px 40px rgba(24,26,40,0.25);
+      overflow: hidden;
+    }
+    .cmd-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f0f4;
+      font-size: 13px;
+      color: #4f4b61;
+    }
+    .cmd-item:hover, .cmd-item.active { background: #f4f5fa; color: #2f2b3d; }
+    .notif-panel {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: min(360px, calc(100vw - 28px));
+      background: #fff;
+      border: 1px solid #e5e4ec;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(20,22,36,0.18);
+      z-index: 70;
+      max-height: 70vh;
+      overflow: hidden;
+      display: none;
+    }
+    .notif-panel.show { display: block; }
+    .notif-list { max-height: 56vh; overflow-y: auto; }
+    .notif-item { padding: 10px 12px; border-bottom: 1px solid #f2f1f6; font-size: 12px; color: #5d596c; }
+    .notif-dot { width: 7px; height: 7px; border-radius: 999px; background: #ea5455; display: inline-block; margin-left: 6px; }
+    .notif-badge {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      background: #ea5455;
+      color: #fff;
+      padding: 0 5px;
+    }
+    body.theme-dark .table-settings-pop,
+    body.theme-dark .cmd-modal,
+    body.theme-dark .notif-panel { background: #2f3349; border-color: #44485f; }
+    body.theme-dark .cmd-item { border-color: #3d4158; color: #c6c9df; }
+    body.theme-dark .cmd-item:hover, body.theme-dark .cmd-item.active { background: #25293c; }
+    body.theme-dark .table-settings-opt,
+    body.theme-dark .notif-item { color: #c6c9df; border-color: #3d4158; }
+    body.theme-dark .command-kbd { background: #25293c; border-color: #44485f; color: #aeb2ce; }
   </style>
 </head>
 <body>
@@ -768,15 +984,16 @@
       <div class="sidebar-item" data-tab="users" title="Foydalanuvchilar"><span>👥</span><span class="sidebar-label">Foydalanuvchilar</span></div>
       <div class="sidebar-item" data-tab="conversations" title="Suhbatlar"><span>💬</span><span class="sidebar-label">Suhbatlar</span></div>
       <div class="sidebar-item" data-tab="payments" title="To'lovlar"><span>💳</span><span class="sidebar-label">To'lovlar</span></div>
-      <div class="sidebar-item" data-tab="referrals" title="Referallar"><span>🔗</span><span class="sidebar-label">Referallar</span></div>
-      <div class="sidebar-item" data-tab="lessons" title="Darslar"><span>📚</span><span class="sidebar-label">Darslar</span></div>
-      <div class="sidebar-item" data-tab="library" title="Kutubxona"><span>📖</span><span class="sidebar-label">Kutubxona</span></div>
-      <div class="sidebar-item" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
-      <div class="sidebar-item" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
-      <div class="sidebar-item" data-tab="renewal" title="Uzaytirish"><span>🔁</span><span class="sidebar-label">Uzaytirish</span></div>
-      <div class="sidebar-item" data-tab="promo" title="Promo kodlar"><span>🎟️</span><span class="sidebar-label">Promo kodlar</span></div>
-      <div class="sidebar-item" data-tab="audit" title="Audit Log"><span>📋</span><span class="sidebar-label">Audit Log</span></div>
-      <div class="sidebar-item" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
+      <div class="sidebar-item" onclick="toggleSidebarMore()" title="Ko'proq"><span>☰</span><span class="sidebar-label">Ko'proq</span></div>
+      <div class="sidebar-item extra-nav" data-tab="referrals" title="Referallar"><span>🔗</span><span class="sidebar-label">Referallar</span></div>
+      <div class="sidebar-item extra-nav" data-tab="lessons" title="Darslar"><span>📚</span><span class="sidebar-label">Darslar</span></div>
+      <div class="sidebar-item extra-nav" data-tab="library" title="Kutubxona"><span>📖</span><span class="sidebar-label">Kutubxona</span></div>
+      <div class="sidebar-item extra-nav" data-tab="progrev" title="Progrevlar"><span>🔥</span><span class="sidebar-label">Progrevlar</span></div>
+      <div class="sidebar-item extra-nav" data-tab="custdev" title="CustDev"><span>📝</span><span class="sidebar-label">CustDev</span></div>
+      <div class="sidebar-item extra-nav" data-tab="renewal" title="Uzaytirish"><span>🔁</span><span class="sidebar-label">Uzaytirish</span></div>
+      <div class="sidebar-item extra-nav" data-tab="promo" title="Promo kodlar"><span>🎟️</span><span class="sidebar-label">Promo kodlar</span></div>
+      <div class="sidebar-item extra-nav" data-tab="audit" title="Audit Log"><span>📋</span><span class="sidebar-label">Audit Log</span></div>
+      <div class="sidebar-item extra-nav" data-tab="settings" title="Sozlamalar"><span>⚙️</span><span class="sidebar-label">Sozlamalar</span></div>
     </nav>
 
     <div class="px-3 w-full space-y-2">
@@ -857,10 +1074,29 @@
     <!-- Header -->
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p class="text-gray-500 text-sm" id="currentDate"></p>
+        <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h1>
+        <p class="text-gray-500 text-sm" id="pageSubtitle">Asosiy monitoring paneli</p>
+        <p class="text-gray-400 text-xs mt-1" id="currentDate"></p>
       </div>
       <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+        <button onclick="openCommandPalette()" class="btn btn-secondary ui-btn-icon" title="Cmd/Ctrl + K">
+          <span class="material-symbols-outlined">search</span>
+          <span>Qidiruv</span>
+          <span class="command-kbd">Ctrl K</span>
+        </button>
+        <button onclick="toggleNotificationsPanel()" class="btn btn-secondary ui-btn-icon" title="Bildirishnomalar">
+          <span class="material-symbols-outlined">notifications</span>
+          <span>Alerts</span>
+          <span id="notifBadge" class="notif-badge hidden">0</span>
+        </button>
+        <button id="uiThemeToggleBtn" onclick="toggleUiTheme()" class="btn btn-secondary ui-btn-icon" title="Light/Dark">
+          <span class="material-symbols-outlined">dark_mode</span>
+          <span id="uiThemeToggleLabel">Dark</span>
+        </button>
+        <button id="tableDensityToggleBtn" onclick="toggleTableDensity()" class="btn btn-secondary ui-btn-icon" title="Table density">
+          <span class="material-symbols-outlined">density_medium</span>
+          <span id="tableDensityToggleLabel">Compact</span>
+        </button>
         <button onclick="openBroadcastModal()" class="btn btn-primary flex items-center gap-2">
           <span>📨</span> Xabar yuborish
         </button>
@@ -1080,9 +1316,19 @@
             <h3 class="font-semibold text-gray-800 text-lg">👥 Foydalanuvchilar <span class="text-gray-400 font-normal" id="filteredUsersCount"></span></h3>
             <div class="flex gap-2 items-center flex-wrap">
               <input type="text" id="userSearch" class="input py-2 px-3 w-full sm:w-48" placeholder="🔍 Ism, telefon..." oninput="applyUserFilters()">
+              <div class="flex items-center gap-1 flex-wrap" id="userSavedViews">
+                <button class="saved-view-chip active" onclick="applyUsersSavedView('all')">All</button>
+                <button class="saved-view-chip" onclick="applyUsersSavedView('high_intent')">High intent</button>
+                <button class="saved-view-chip" onclick="applyUsersSavedView('paid_not_joined')">Paid not joined</button>
+                <button class="saved-view-chip" onclick="applyUsersSavedView('inactive')">Inactive</button>
+              </div>
               <button onclick="toggleAdvancedFilters()" class="btn btn-secondary btn-sm flex items-center gap-1">
                 <span>🎛️</span> <span id="advFilterLabel">Filtrlar</span>
               </button>
+              <div class="relative">
+                <button onclick="toggleTableSettings('users')" class="btn btn-secondary btn-sm ui-btn-icon"><span class="material-symbols-outlined">view_column</span> Ustunlar</button>
+                <div id="usersTableSettings" class="table-settings-pop hidden"></div>
+              </div>
               <button onclick="exportUsers()" class="btn btn-secondary btn-sm" title="Eksport">📥</button>
             </div>
           </div>
@@ -1165,15 +1411,15 @@
           </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full responsive-table">
+          <table class="w-full responsive-table table-sticky-first" id="usersTable">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foydalanuvchi</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dars</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amal</th>
+                <th data-col="user" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foydalanuvchi</th>
+                <th data-col="phone" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
+                <th data-col="lesson" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dars</th>
+                <th data-col="status" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th data-col="date" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
+                <th data-col="actions" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amal</th>
               </tr>
             </thead>
             <tbody id="usersTableBody" class="divide-y divide-gray-100">
@@ -1341,19 +1587,25 @@
       <!-- Payments Table -->
       <div class="card">
         <div class="p-5 border-b border-gray-100">
-          <h3 class="font-semibold text-gray-800 text-lg">💳 To'lovlar tarixi</h3>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="font-semibold text-gray-800 text-lg">💳 To'lovlar tarixi</h3>
+            <div class="relative">
+              <button onclick="toggleTableSettings('payments')" class="btn btn-secondary btn-sm ui-btn-icon"><span class="material-symbols-outlined">view_column</span> Ustunlar</button>
+              <div id="paymentsTableSettings" class="table-settings-pop hidden"></div>
+            </div>
+          </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full responsive-table">
+          <table class="w-full responsive-table table-sticky-first" id="paymentsTable">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foydalanuvchi</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Summa</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reja</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tizim</th>
-                <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium kanal</th>
+                <th data-col="date" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
+                <th data-col="user" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foydalanuvchi</th>
+                <th data-col="amount" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Summa</th>
+                <th data-col="plan" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reja</th>
+                <th data-col="status" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th data-col="system" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tizim</th>
+                <th data-col="premium" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium kanal</th>
               </tr>
             </thead>
             <tbody id="paymentsTableBody" class="divide-y divide-gray-100">
@@ -1953,8 +2205,12 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
     <div id="promoModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
       <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
         <h3 class="font-semibold text-lg mb-4">🎟️ Yangi promo kod</h3>
+        <div class="flex items-center gap-2 mb-4 text-xs">
+          <span id="promoStepDot1" class="saved-view-chip active">1. Asosiy</span>
+          <span id="promoStepDot2" class="saved-view-chip">2. Qo'shimcha</span>
+        </div>
 
-        <div class="space-y-4">
+        <div id="promoStep1" class="space-y-4">
           <div>
             <label class="text-sm text-gray-600 mb-1 block">Kod *</label>
             <input type="text" id="promoCode" class="input uppercase" placeholder="YANGIOBUNA50" maxlength="20">
@@ -1964,7 +2220,9 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
             <label class="text-sm text-gray-600 mb-1 block">Chegirma foizi *</label>
             <input type="number" id="promoDiscount" class="input" placeholder="50" min="1" max="100">
           </div>
+        </div>
 
+        <div id="promoStep2" class="space-y-4 hidden">
           <div>
             <label class="text-sm text-gray-600 mb-1 block">Maksimal ishlatish soni (bo'sh = cheksiz)</label>
             <input type="number" id="promoMaxUses" class="input" placeholder="100" min="1">
@@ -1995,7 +2253,9 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
         <div class="flex gap-3 mt-6">
           <button onclick="closePromoModal()" class="btn btn-secondary flex-1">Bekor qilish</button>
-          <button onclick="createPromoCode()" class="btn btn-primary flex-1">Yaratish</button>
+          <button id="promoBackBtn" onclick="setPromoWizardStep(1)" class="btn btn-secondary flex-1 hidden">Orqaga</button>
+          <button id="promoNextBtn" onclick="setPromoWizardStep(2)" class="btn btn-secondary flex-1">Keyingi</button>
+          <button id="promoCreateBtn" onclick="createPromoCode()" class="btn btn-primary flex-1 hidden">Yaratish</button>
         </div>
       </div>
     </div>
@@ -2067,6 +2327,9 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <div class="sf-chip">Dars CR</div>
           <div class="sf-chip">Aktivlik CR</div>
           <div class="sf-chip">High intent</div>
+          <span class="global-hint" title="CR = to'lov qilgan / jami user * 100">CR</span>
+          <span class="global-hint" title="Prev dan = joriy bosqich / oldingi bosqich * 100">Prev</span>
+          <span class="global-hint" title="Start dan = joriy bosqich / ro'yxatdan o'tgan * 100">Start</span>
         </div>
 
         <div class="sf-workspace">
@@ -2996,6 +3259,30 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
   </div>
 </div>
 
+<!-- Command Palette -->
+<div id="commandPalette" class="cmd-overlay" onclick="closeCommandPalette(event)">
+  <div class="cmd-modal" onclick="event.stopPropagation()">
+    <div class="p-3 border-b border-gray-100">
+      <input id="commandInput" class="input" placeholder="Buyruq qidiring... (tab, user, action)" oninput="renderCommandResults()" />
+      <div class="text-xs text-gray-400 mt-2">Tablar, actionlar va user quick-open uchun. Enter bosib oching.</div>
+    </div>
+    <div id="commandResults" class="max-h-[52vh] overflow-y-auto">
+      <div class="p-4 text-sm text-gray-400">Yozishni boshlang...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications -->
+<aside id="notificationsPanel" class="notif-panel">
+  <div class="p-3 border-b border-gray-100 flex items-center justify-between">
+    <div class="font-semibold text-sm text-gray-700">Bildirishnomalar</div>
+    <button class="btn btn-secondary btn-sm" onclick="clearNotifications()">Tozalash</button>
+  </div>
+  <div id="notificationsList" class="notif-list">
+    <div class="p-3 text-xs text-gray-400">Hozircha bildirishnoma yo'q</div>
+  </div>
+</aside>
+
 <script>
 // ========== GLOBAL STATE ==========
 let auth = '';
@@ -3019,6 +3306,32 @@ const perPage = 20;
 let paymentFilter = 'completed';
 let selectedBroadcastUsers = new Set();
 let custdevAnswers = {};
+let uiTheme = localStorage.getItem('uiTheme') || 'light';
+let tableDensity = localStorage.getItem('tableDensity') || 'comfortable';
+let sidebarMoreOpen = false;
+let currentUsersSavedView = localStorage.getItem('usersSavedView') || 'all';
+const commandItems = [];
+let notifications = [];
+let tableColumnPrefs = {
+  users: JSON.parse(localStorage.getItem('tableColumnsUsers') || '{"user":true,"phone":true,"lesson":true,"status":true,"date":true,"actions":true}'),
+  payments: JSON.parse(localStorage.getItem('tableColumnsPayments') || '{"date":true,"user":true,"amount":true,"plan":true,"status":true,"system":true,"premium":true}')
+};
+const TAB_META = {
+  overview: { title: 'Dashboard', subtitle: 'Asosiy monitoring paneli' },
+  analytics: { title: 'Analitika', subtitle: 'Funnel, segment va to\'lov diagnostikasi' },
+  users: { title: 'Foydalanuvchilar', subtitle: 'Qidiruv, segmentlash va boshqaruv' },
+  conversations: { title: 'Suhbatlar', subtitle: 'User chat monitoring va tez javoblar' },
+  payments: { title: 'To\'lovlar', subtitle: 'Holatlar, status va premium oqimi' },
+  lessons: { title: 'Darslar', subtitle: 'Kontent va progress boshqaruvi' },
+  library: { title: 'Kutubxona', subtitle: 'Media va dars ID katalogi' },
+  progrev: { title: 'Progrev', subtitle: 'Sotuv oqimi va follow-up kontentlari' },
+  custdev: { title: 'CustDev', subtitle: 'Savollar, javoblar va feedback tahlili' },
+  renewal: { title: 'Uzaytirish', subtitle: 'Subscription renewal eslatmalari' },
+  referrals: { title: 'Referallar', subtitle: 'Referral performance va leaderboard' },
+  promo: { title: 'Promo kodlar', subtitle: 'Chegirma kodlari va limitlar' },
+  audit: { title: 'Audit log', subtitle: 'Tizim bo\'yicha kuzatuv yozuvlari' },
+  settings: { title: 'Sozlamalar', subtitle: 'Global platforma parametrlari' }
+};
 
 // Charts
 let revenueChart, userTypeChart, subscriberGrowthChart;
@@ -3027,15 +3340,237 @@ let questionStatsChart;
 
 // ========== INITIALIZATION ==========
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
-const chartTickFont = () => ({ size: isMobile() ? 10 : 12, family: 'Inter' });
+const chartTickFont = () => ({ size: isMobile() ? 10 : 12, family: 'Public Sans' });
 const chartLayoutPadding = () => isMobile() ? { left: 6, right: 6, top: 6, bottom: 20 } : { left: 0, right: 0, top: 0, bottom: 0 };
 const chartMaxXTicks = () => isMobile() ? 5 : 12;
-const chartGridColor = () => isMobile() ? 'rgba(148,163,184,0.25)' : 'rgba(148,163,184,0.2)';
-const chartTextColor = () => '#64748b';
-const chartAccent = () => '#5b7cfa';
-const chartAccentSoft = () => 'rgba(91,124,250,0.16)';
-const chartMuted = () => 'rgba(148,163,184,0.7)';
+const chartGridColor = () => uiTheme === 'dark' ? 'rgba(167,170,196,0.2)' : (isMobile() ? 'rgba(148,163,184,0.25)' : 'rgba(148,163,184,0.2)');
+const chartTextColor = () => uiTheme === 'dark' ? '#b7bad1' : '#64748b';
+const chartAccent = () => '#7367f0';
+const chartAccentSoft = () => 'rgba(115,103,240,0.16)';
+const chartMuted = () => uiTheme === 'dark' ? 'rgba(167,170,196,0.75)' : 'rgba(148,163,184,0.7)';
 const nativeFetch = window.fetch.bind(window);
+
+function syncUiToggleLabels() {
+  const themeLabel = document.getElementById('uiThemeToggleLabel');
+  if (themeLabel) themeLabel.textContent = uiTheme === 'dark' ? 'Light' : 'Dark';
+  const densityLabel = document.getElementById('tableDensityToggleLabel');
+  if (densityLabel) densityLabel.textContent = tableDensity === 'compact' ? 'Comfort' : 'Compact';
+}
+
+function updatePageHeader(tab) {
+  const title = document.getElementById('pageTitle');
+  const subtitle = document.getElementById('pageSubtitle');
+  const meta = TAB_META[tab] || TAB_META.overview;
+  if (title) title.textContent = meta.title;
+  if (subtitle) subtitle.textContent = meta.subtitle;
+}
+
+function addNotification(message, level = 'info') {
+  const item = {
+    id: Date.now() + Math.random().toString(16).slice(2),
+    message,
+    level,
+    createdAt: new Date().toISOString()
+  };
+  notifications.unshift(item);
+  if (notifications.length > 80) notifications = notifications.slice(0, 80);
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notificationsList');
+  const badge = document.getElementById('notifBadge');
+  if (!list || !badge) return;
+  if (!notifications.length) {
+    list.innerHTML = '<div class="p-3 text-xs text-gray-400">Hozircha bildirishnoma yo\'q</div>';
+    badge.classList.add('hidden');
+    return;
+  }
+  badge.classList.remove('hidden');
+  badge.textContent = String(Math.min(99, notifications.length));
+  list.innerHTML = notifications.slice(0, 40).map((n) => {
+    const dot = n.level === 'error' ? '#ea5455' : n.level === 'warn' ? '#ff9f43' : '#7367f0';
+    return `<div class="notif-item"><span style="display:inline-block;width:7px;height:7px;border-radius:999px;background:${dot};margin-right:8px;"></span>${escapeHtml(n.message)}<div class="text-[10px] text-gray-400 mt-1">${fmtDateTime(n.createdAt)}</div></div>`;
+  }).join('');
+}
+
+function toggleNotificationsPanel() {
+  document.getElementById('notificationsPanel')?.classList.toggle('show');
+}
+
+function clearNotifications() {
+  notifications = [];
+  renderNotifications();
+}
+
+function toggleSidebarMore() {
+  sidebarMoreOpen = !sidebarMoreOpen;
+  document.querySelectorAll('.extra-nav').forEach((el) => {
+    el.classList.toggle('show', sidebarMoreOpen);
+  });
+}
+
+function applyUsersSavedView(view) {
+  currentUsersSavedView = view || 'all';
+  localStorage.setItem('usersSavedView', currentUsersSavedView);
+  document.querySelectorAll('#userSavedViews .saved-view-chip').forEach((el) => {
+    const t = (el.textContent || '').trim().toLowerCase();
+    const key = t.includes('high') ? 'high_intent' : t.includes('paid') ? 'paid_not_joined' : t.includes('inactive') ? 'inactive' : 'all';
+    el.classList.toggle('active', key === currentUsersSavedView);
+  });
+  applyUserFilters();
+}
+
+function buildCommandPaletteData() {
+  commandItems.length = 0;
+  Object.keys(TAB_META).forEach((tab) => {
+    commandItems.push({ type: 'tab', key: tab, label: `Tab: ${TAB_META[tab].title}`, hint: TAB_META[tab].subtitle });
+  });
+  commandItems.push(
+    { type: 'action', key: 'refresh', label: 'Action: Yangilash (loadAll)', hint: 'Barcha datani reload qiladi', handler: () => loadAll() },
+    { type: 'action', key: 'broadcast', label: 'Action: Broadcast modal', hint: 'Mass xabar oynasini ochadi', handler: () => openBroadcastModal() },
+    { type: 'action', key: 'analytics', label: 'Action: Analytics refresh', hint: 'Analitika datalarini qayta yuklaydi', handler: () => { showTab('analytics'); loadAnalyticsData(); } }
+  );
+  allUsers.slice(0, 80).forEach((u) => {
+    commandItems.push({
+      type: 'user',
+      key: String(u.telegram_id),
+      label: `User: ${u.full_name || u.username || u.telegram_id}`,
+      hint: `ID ${u.telegram_id} • dars ${u.current_lesson || 0}`,
+      handler: () => { showTab('users'); openUserDetail(u.telegram_id); }
+    });
+  });
+}
+
+function openCommandPalette() {
+  buildCommandPaletteData();
+  const overlay = document.getElementById('commandPalette');
+  const input = document.getElementById('commandInput');
+  if (!overlay || !input) return;
+  overlay.classList.add('show');
+  input.value = '';
+  renderCommandResults();
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeCommandPalette(event) {
+  if (event && event.target && event.target.id !== 'commandPalette') return;
+  document.getElementById('commandPalette')?.classList.remove('show');
+}
+
+function executeCommandItem(index) {
+  const items = window.__commandFiltered || [];
+  const selected = items[index];
+  if (!selected) return;
+  closeCommandPalette();
+  if (selected.type === 'tab') {
+    showTab(selected.key);
+    return;
+  }
+  if (typeof selected.handler === 'function') selected.handler();
+}
+
+function renderCommandResults() {
+  const q = (document.getElementById('commandInput')?.value || '').trim().toLowerCase();
+  const results = q
+    ? commandItems.filter((i) => (`${i.label} ${i.hint || ''} ${i.key}`).toLowerCase().includes(q))
+    : commandItems.slice(0, 18);
+  window.__commandFiltered = results.slice(0, 40);
+  const wrap = document.getElementById('commandResults');
+  if (!wrap) return;
+  if (!window.__commandFiltered.length) {
+    wrap.innerHTML = '<div class="p-4 text-sm text-gray-400">Hech nima topilmadi</div>';
+    return;
+  }
+  wrap.innerHTML = window.__commandFiltered.map((i, idx) => `
+    <button class="cmd-item w-full text-left" onclick="executeCommandItem(${idx})">
+      <span>${escapeHtml(i.label)}</span>
+      <span class="text-xs text-gray-400">${escapeHtml(i.hint || i.type)}</span>
+    </button>
+  `).join('');
+}
+
+setTimeout(() => {
+  const input = document.getElementById('commandInput');
+  if (!input) return;
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeCommandItem(0);
+    }
+  });
+}, 0);
+
+function toggleTableSettings(type) {
+  const el = document.getElementById(type === 'users' ? 'usersTableSettings' : 'paymentsTableSettings');
+  if (!el) return;
+  el.classList.toggle('hidden');
+}
+
+function renderTableSettings(type) {
+  const map = tableColumnPrefs[type] || {};
+  const el = document.getElementById(type === 'users' ? 'usersTableSettings' : 'paymentsTableSettings');
+  if (!el) return;
+  el.innerHTML = Object.keys(map).map((key) => `
+    <label class="table-settings-opt">
+      <input type="checkbox" ${map[key] ? 'checked' : ''} onchange="setTableColumn('${type}','${key}',this.checked)" />
+      <span>${escapeHtml(key)}</span>
+    </label>
+  `).join('');
+}
+
+function applyTableColumnVisibility(type) {
+  const table = document.getElementById(type === 'users' ? 'usersTable' : 'paymentsTable');
+  if (!table) return;
+  const map = tableColumnPrefs[type] || {};
+  Object.keys(map).forEach((key) => {
+    table.querySelectorAll(`[data-col="${key}"]`).forEach((cell) => {
+      cell.style.display = map[key] ? '' : 'none';
+    });
+  });
+}
+
+function setTableColumn(type, key, visible) {
+  if (!tableColumnPrefs[type]) tableColumnPrefs[type] = {};
+  tableColumnPrefs[type][key] = !!visible;
+  localStorage.setItem(type === 'users' ? 'tableColumnsUsers' : 'tableColumnsPayments', JSON.stringify(tableColumnPrefs[type]));
+  applyTableColumnVisibility(type);
+}
+
+function applyUiPreferences() {
+  document.body.classList.toggle('theme-dark', uiTheme === 'dark');
+  document.body.classList.toggle('table-compact', tableDensity === 'compact');
+  syncUiToggleLabels();
+  configureChartDefaults();
+}
+
+function configureChartDefaults() {
+  if (!window.Chart) return;
+  Chart.defaults.color = chartTextColor();
+  Chart.defaults.borderColor = chartGridColor();
+  Chart.defaults.font.family = 'Public Sans';
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.legend.labels.padding = 14;
+  Chart.defaults.plugins.tooltip.backgroundColor = uiTheme === 'dark' ? '#363a51' : '#2f2b3d';
+  Chart.defaults.plugins.tooltip.titleColor = '#fff';
+  Chart.defaults.plugins.tooltip.bodyColor = '#fff';
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.padding = 10;
+}
+
+function toggleUiTheme() {
+  uiTheme = uiTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('uiTheme', uiTheme);
+  applyUiPreferences();
+  if (!document.getElementById('dashboard')?.classList.contains('hidden')) loadAll();
+}
+
+function toggleTableDensity() {
+  tableDensity = tableDensity === 'compact' ? 'comfortable' : 'compact';
+  localStorage.setItem('tableDensity', tableDensity);
+  applyUiPreferences();
+}
 
 window.fetch = function(input, init = {}) {
   const url = typeof input === 'string' ? input : (input?.url || '');
@@ -3050,6 +3585,8 @@ window.fetch = function(input, init = {}) {
 
   return nativeFetch(input, nextInit);
 };
+
+applyUiPreferences();
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
   year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
@@ -3117,6 +3654,14 @@ document.getElementById('loginForm').onsubmit = async function(e) {
 function showDashboard() {
   document.getElementById('loginModal').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
+  updatePageHeader('overview');
+  applyUiPreferences();
+  renderTableSettings('users');
+  renderTableSettings('payments');
+  applyTableColumnVisibility('users');
+  applyTableColumnVisibility('payments');
+  applyUsersSavedView(currentUsersSavedView);
+  addNotification('Dashboard ochildi', 'info');
   watchResponsiveTables();
   loadAll();
 }
@@ -3130,6 +3675,26 @@ function toggleMobileMenu() {
   const modal = document.getElementById('mobileMenuModal');
   modal.classList.toggle('hidden');
 }
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    openCommandPalette();
+  }
+  if (e.key === 'Escape') {
+    closeCommandPalette();
+    document.getElementById('notificationsPanel')?.classList.remove('show');
+    document.querySelectorAll('.table-settings-pop').forEach((el) => el.classList.add('hidden'));
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (!(t instanceof Element)) return;
+  if (!t.closest('.table-settings-pop') && !t.closest('[onclick*="toggleTableSettings"]')) {
+    document.querySelectorAll('.table-settings-pop').forEach((el) => el.classList.add('hidden'));
+  }
+});
 
 // ========== RESPONSIVE TABLE LABELS ==========
 function applyTableLabels() {
@@ -3241,6 +3806,20 @@ function applyUserFilters() {
       if (step === 0 && u.funnel_step !== 0) return false;
     }
 
+    // Saved view shortcuts
+    if (currentUsersSavedView === 'high_intent') {
+      const isHighIntent = (u.current_lesson || 0) >= 3 && !u.is_paid;
+      if (!isHighIntent) return false;
+    }
+    if (currentUsersSavedView === 'paid_not_joined') {
+      if (!(u.is_paid && !u.joined_premium_channel)) return false;
+    }
+    if (currentUsersSavedView === 'inactive') {
+      const last = u.last_activity ? new Date(u.last_activity).getTime() : 0;
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      if (!last || (Date.now() - last) < sevenDays) return false;
+    }
+
     // Date filter
     if (regDate !== 'all' && regDate !== 'custom') {
       const created = new Date(u.created_at);
@@ -3293,12 +3872,13 @@ function renderFilteredUsers(filtered) {
   const tbody = document.getElementById('usersTableBody');
   if (!paginated.length) {
     tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
+    applyTableColumnVisibility('users');
     return;
   }
 
   tbody.innerHTML = paginated.map(u => `
     <tr class="table-row" onclick="openUserDetail(${u.telegram_id})">
-      <td class="px-5 py-4">
+      <td data-col="user" class="px-5 py-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
             ${(u.full_name || u.username || 'U').charAt(0).toUpperCase()}
@@ -3309,17 +3889,17 @@ function renderFilteredUsers(filtered) {
           </div>
         </div>
       </td>
-      <td class="px-5 py-4 text-gray-600">${u.phone || '-'}</td>
-      <td class="px-5 py-4"><span class="badge badge-blue">${u.current_lesson || 0}-dars</span></td>
-      <td class="px-5 py-4">
+      <td data-col="phone" class="px-5 py-4 text-gray-600">${u.phone || '-'}</td>
+      <td data-col="lesson" class="px-5 py-4"><span class="badge badge-blue">${u.current_lesson || 0}-dars</span></td>
+      <td data-col="status" class="px-5 py-4">
         ${u.is_paid
           ? (u.joined_premium_channel
               ? '<span class="badge badge-green">Premium</span>'
               : '<span class="badge badge-orange" title="To\'lagan, lekin kanalga qo\'shilmagan">To\'lagan ❌</span>')
           : '<span class="badge badge-gray">Free</span>'}
       </td>
-      <td class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
-      <td class="px-5 py-4">
+      <td data-col="date" class="px-5 py-4 text-gray-500 text-sm">${fmtDate(u.created_at)}</td>
+      <td data-col="actions" class="px-5 py-4">
         <div class="flex gap-1">
           <button onclick="event.stopPropagation(); openUserDetail(${u.telegram_id})" class="btn btn-secondary btn-sm" title="Ko'rish">👁</button>
           <button onclick="event.stopPropagation(); deleteUser(${u.telegram_id}, '${(u.full_name || u.username || 'User').replace(/'/g, "\\'")}')" class="btn btn-sm bg-red-50 text-red-600 hover:bg-red-100" title="O'chirish">🗑️</button>
@@ -3327,6 +3907,7 @@ function renderFilteredUsers(filtered) {
       </td>
     </tr>
   `).join('');
+  applyTableColumnVisibility('users');
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / perPage);
@@ -3573,6 +4154,7 @@ document.querySelectorAll('button[data-growth-period]').forEach(btn => {
 function showTab(tab) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
   document.getElementById('tab-' + tab)?.classList.remove('hidden');
+  updatePageHeader(tab);
 
   document.querySelectorAll('.sidebar-item[data-tab]').forEach(el => el.classList.remove('active'));
   document.querySelector('.sidebar-item[data-tab="' + tab + '"]')?.classList.add('active');
@@ -3599,6 +4181,7 @@ function showTab(tab) {
   }
   if (tab === 'referrals') loadReferralData();
   if (tab === 'audit') loadAuditLogs();
+  addNotification(`Tab ochildi: ${TAB_META[tab]?.title || tab}`, 'info');
 }
 
 async function loadSettingsForm() {
@@ -3701,12 +4284,24 @@ function renderPromoCodes() {
 function showCreatePromoModal() {
   document.getElementById('promoModal').classList.remove('hidden');
   document.getElementById('promoModal').classList.add('flex');
+  setPromoWizardStep(1);
   document.getElementById('promoCode').value = '';
   document.getElementById('promoDiscount').value = '';
   document.getElementById('promoMaxUses').value = '';
   document.getElementById('promoValidFrom').value = '';
   document.getElementById('promoValidUntil').value = '';
   document.getElementById('promoMinPlan').value = '';
+}
+
+function setPromoWizardStep(step) {
+  const isStep2 = Number(step) === 2;
+  document.getElementById('promoStep1')?.classList.toggle('hidden', isStep2);
+  document.getElementById('promoStep2')?.classList.toggle('hidden', !isStep2);
+  document.getElementById('promoBackBtn')?.classList.toggle('hidden', !isStep2);
+  document.getElementById('promoNextBtn')?.classList.toggle('hidden', isStep2);
+  document.getElementById('promoCreateBtn')?.classList.toggle('hidden', !isStep2);
+  document.getElementById('promoStepDot1')?.classList.toggle('active', !isStep2);
+  document.getElementById('promoStepDot2')?.classList.toggle('active', isStep2);
 }
 
 function closePromoModal() {
@@ -3765,9 +4360,16 @@ async function togglePromoCode(id, isActive) {
 
 // ========== LOAD DATA ==========
 async function loadAll() {
-  await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadCustomEmojiLibrary(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary(), loadPromoCodes()]);
-  renderCharts();
-  renderTodayStats();
+  try {
+    addNotification('Data yangilanmoqda...', 'info');
+    await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadCustomEmojiLibrary(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary(), loadPromoCodes()]);
+    renderCharts();
+    renderTodayStats();
+    addNotification('Yangilash muvaffaqiyatli yakunlandi', 'info');
+  } catch (e) {
+    console.error('loadAll error:', e);
+    addNotification('Yangilashda xatolik yuz berdi', 'error');
+  }
 }
 
 async function loadStats() {
@@ -3968,7 +4570,8 @@ async function loadUsers() {
     renderUsers();
     renderRecentUsers();
     renderRecentActivity();
-  } catch(e) { console.error('loadUsers error:', e); }
+    buildCommandPaletteData();
+  } catch(e) { console.error('loadUsers error:', e); addNotification('Users yuklanmadi', 'error'); }
 }
 
 async function loadPayments() {
@@ -3978,7 +4581,7 @@ async function loadPayments() {
     renderPayments();
     renderRecentPayments();
     renderPaymentStats();
-  } catch(e) { console.error('loadPayments error:', e); }
+  } catch(e) { console.error('loadPayments error:', e); addNotification('Payments yuklanmadi', 'error'); }
 }
 
 async function loadLessons() {
@@ -3988,7 +4591,7 @@ async function loadLessons() {
     renderLessons();
     renderLessonProgress();
     renderLibrary();
-  } catch(e) { console.error('loadLessons error:', e); }
+  } catch(e) { console.error('loadLessons error:', e); addNotification('Lessons yuklanmadi', 'warn'); }
 }
 
 async function loadCustDev() {
@@ -5156,6 +5759,7 @@ function renderPayments() {
 
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
+    applyTableColumnVisibility('payments');
     return;
   }
 
@@ -5175,19 +5779,20 @@ function renderPayments() {
 
     return `
       <tr class="table-row">
-        <td class="px-5 py-4 text-gray-500 text-sm">${fmtDateTime(p.created_at)}</td>
-        <td class="px-5 py-4">
+        <td data-col="date" class="px-5 py-4 text-gray-500 text-sm">${fmtDateTime(p.created_at)}</td>
+        <td data-col="user" class="px-5 py-4">
           <p class="font-medium text-gray-800">${p.full_name || p.username || 'Foydalanuvchi'}</p>
           <p class="text-xs text-gray-400">ID: ${p.telegram_id || '-'}</p>
         </td>
-        <td class="px-5 py-4 font-semibold ${p.status === 'completed' ? 'text-green-600' : 'text-gray-600'}">${fmtMoney(p.amount)}</td>
-        <td class="px-5 py-4"><span class="badge badge-blue">${p.plan || '-'}</span></td>
-        <td class="px-5 py-4">${statusBadge}</td>
-        <td class="px-5 py-4 text-gray-500">${p.payment_system || '-'}</td>
-        <td class="px-5 py-4">${channelStatus}</td>
+        <td data-col="amount" class="px-5 py-4 font-semibold ${p.status === 'completed' ? 'text-green-600' : 'text-gray-600'}">${fmtMoney(p.amount)}</td>
+        <td data-col="plan" class="px-5 py-4"><span class="badge badge-blue">${p.plan || '-'}</span></td>
+        <td data-col="status" class="px-5 py-4">${statusBadge}</td>
+        <td data-col="system" class="px-5 py-4 text-gray-500">${p.payment_system || '-'}</td>
+        <td data-col="premium" class="px-5 py-4">${channelStatus}</td>
       </tr>
     `;
   }).join('');
+  applyTableColumnVisibility('payments');
 }
 
 function renderRecentPayments() {
@@ -6836,8 +7441,8 @@ function renderAnalyticsRevenueChart(data) {
       datasets: [{
         label: 'Daromad',
         data: values,
-        borderColor: '#5b7cfa',
-        backgroundColor: 'rgba(91, 124, 250, 0.1)',
+        borderColor: chartAccent(),
+        backgroundColor: chartAccentSoft(),
         fill: true,
         tension: 0.4
       }]
@@ -6880,7 +7485,7 @@ function renderSubscribersChart(data) {
         {
           label: 'Yangi userlar',
           data: newUsers,
-          backgroundColor: 'rgba(91, 124, 250, 0.7)',
+          backgroundColor: 'rgba(115, 103, 240, 0.72)',
           borderRadius: 4
         },
         {
@@ -6931,7 +7536,7 @@ function renderSourcesAnalytics(data) {
       analyticsCharts.sources.destroy();
     }
 
-    const colors = ['#5b7cfa', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+    const colors = ['#7367f0', '#28c76f', '#ff9f43', '#ea5455', '#00cfe8', '#a8aaae', '#666cff'];
 
     analyticsCharts.sources = new Chart(ctx, {
       type: 'doughnut',
@@ -6998,8 +7603,8 @@ function renderBuyerAnalytics(data) {
           labels: Object.keys(ageData),
           datasets: [{
             label: 'Xaridorlar soni',
-            data: Object.values(ageData),
-            backgroundColor: ['#5b7cfa', '#8b5cf6', '#f59e0b', '#22c55e', '#ef4444'],
+        data: Object.values(ageData),
+            backgroundColor: ['#7367f0', '#00cfe8', '#ff9f43', '#28c76f', '#ea5455'],
             borderRadius: 6
           }]
         },
@@ -7036,7 +7641,7 @@ function renderDiagFunnelChart(stages) {
       datasets: [{
         label: 'Userlar',
         data: stages.map((s) => s.count || 0),
-        backgroundColor: 'rgba(91,124,250,0.75)',
+        backgroundColor: 'rgba(115,103,240,0.75)',
         borderRadius: 8,
         maxBarThickness: 42
       }]
@@ -7074,9 +7679,9 @@ function renderSegmentMixChart(data) {
       datasets: [{
         label: 'Top CR',
         data: buckets.map((b) => b.value),
-        borderColor: '#7e5cff',
-        backgroundColor: 'rgba(126,92,255,0.18)',
-        pointBackgroundColor: '#5b7cfa',
+        borderColor: '#7367f0',
+        backgroundColor: 'rgba(115,103,240,0.2)',
+        pointBackgroundColor: '#7367f0',
         pointRadius: 4
       }]
     },
