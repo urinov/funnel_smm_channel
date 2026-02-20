@@ -415,96 +415,183 @@
       background: linear-gradient(145deg, #fbfffe, #f2fbfa);
       border-color: #d5ebe7;
     }
-    .ax-shell { display: flex; flex-direction: column; gap: 16px; }
-    .ax-hero {
+    .sf-shell {
+      border-radius: 32px;
+      background: linear-gradient(170deg, #edf5ff 0%, #eaf2fd 52%, #e6eef9 100%);
+      border: 1px solid #d3deeb;
+      box-shadow: 0 28px 60px rgba(15,23,42,0.16);
+      padding: 16px;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: column;
       gap: 14px;
-      border-radius: 22px;
-      border: 1px solid #cce4e1;
-      background:
-        radial-gradient(340px 170px at 90% -20%, rgba(0,121,107,0.14) 0%, rgba(0,121,107,0) 72%),
-        linear-gradient(135deg, #f4fffe 0%, #eaf8f6 50%, #f8fffe 100%);
-      padding: 16px;
     }
-    .ax-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #3f6864; }
-    .ax-title { font-size: 24px; font-weight: 800; color: #103639; line-height: 1.1; letter-spacing: -0.02em; }
-    .ax-subtitle { font-size: 13px; color: #587477; margin-top: 6px; max-width: 620px; }
-    .ax-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .ax-formula-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-    .ax-formula {
-      border-radius: 14px;
-      border: 1px solid #d5ebe7;
-      background: rgba(255,255,255,0.72);
-      padding: 10px 12px;
-    }
-    .ax-formula .k { font-size: 11px; font-weight: 700; color: #476f72; text-transform: uppercase; letter-spacing: 0.06em; }
-    .ax-formula .v { font-size: 13px; color: #1f4245; font-weight: 700; margin-top: 3px; }
-    .ax-block {
-      border-radius: 20px;
-      border: 1px solid #d6ebe8;
-      background: linear-gradient(145deg, #fcffff 0%, #f2fbfa 100%);
-      box-shadow: 0 10px 24px rgba(18,50,52,0.06);
-      padding: 16px;
-    }
-    .ax-block-head {
+    .sf-topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 12px;
+      padding: 6px 8px;
     }
-    .ax-block-title { font-size: 18px; font-weight: 800; color: #123234; letter-spacing: -0.01em; }
-    .ax-block-desc { font-size: 12px; color: #638082; }
-    .rx-kpi {
-      border-radius: 18px;
-      border: 1px solid #d5ebe7;
-      background: linear-gradient(145deg, #f6fffe, #edf9f8);
-      padding: 14px;
-      min-height: 100px;
+    .sf-brand { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #101316; }
+    .sf-top-pills {
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      background: #272a2f;
+      border-radius: 999px;
+      padding: 4px;
     }
-    .rx-kpi .label { font-size: 11px; color: #5f7e81; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .rx-kpi .value { font-size: 24px; font-weight: 800; color: #103639; line-height: 1.1; }
-    .rx-kpi .hint { font-size: 11px; color: #6f8b8e; }
-    .rx-action-btn {
-      margin-top: 8px;
-      border: 1px solid #c6dedd;
-      background: rgba(255,255,255,0.85);
-      color: #204447;
-      border-radius: 10px;
+    .sf-pill {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #d9dde5;
+      border: 1px solid transparent;
+    }
+    .sf-pill.active {
+      color: #101316;
+      background: #d6ff24;
+      font-weight: 700;
+    }
+    .sf-actions { display: flex; align-items: center; gap: 8px; }
+    .sf-mini-btn {
+      border-radius: 999px;
+      border: 1px solid #d6deea;
+      background: rgba(255,255,255,0.86);
+      color: #394b5f;
+      padding: 8px 12px;
       font-size: 11px;
       font-weight: 700;
+    }
+    .sf-mini-btn.active, .sf-mini-btn:hover { border-color: #afc0d7; }
+    .sf-main-btn {
+      border-radius: 999px;
+      border: 1px solid #0f1216;
+      background: #171b21;
+      color: #eef4ff;
+      padding: 8px 13px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .sf-main-btn.light {
+      border-color: #d4deea;
+      background: rgba(255,255,255,0.88);
+      color: #253547;
+    }
+    .sf-main-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .sf-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .sf-title {
+      font-size: 50px;
+      line-height: 1;
+      color: #0f141b;
+      letter-spacing: -0.03em;
+      font-weight: 500;
+    }
+    .sf-summary {
+      border-radius: 24px;
+      border: 1px solid #d2ddea;
+      background: linear-gradient(180deg, rgba(255,255,255,0.56), rgba(244,249,255,0.74));
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .sf-stat {
+      border-radius: 14px;
+      border: 1px solid rgba(196,209,224,0.72);
+      background: rgba(255,255,255,0.72);
+      padding: 10px;
+      min-height: 84px;
+    }
+    .sf-stat .k { font-size: 11px; color: #728293; margin-bottom: 6px; }
+    .sf-stat .v { font-size: 30px; line-height: 1; color: #0f161f; font-weight: 600; letter-spacing: -0.02em; }
+    .sf-stat .v.sm { font-size: 16px; line-height: 1.25; }
+    .sf-filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 2px 4px;
+    }
+    .sf-filter-label { font-size: 13px; color: #11161d; font-weight: 700; margin-right: 4px; }
+    .sf-chip {
+      border-radius: 999px;
+      border: 1px solid #d2dae7;
+      background: rgba(255,255,255,0.84);
+      color: #4c5b6d;
+      font-size: 11px;
       padding: 6px 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      font-weight: 600;
     }
-    .rx-action-btn:hover { transform: translateY(-1px); background: #ffffff; }
-    .rx-action-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none;
+    .sf-workspace {
+      background: linear-gradient(180deg, #202226 0%, #16181d 100%);
+      border-radius: 28px;
+      border: 1px solid #2c2f35;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 10px;
+      color: #d5d9e1;
     }
-    .rx-kpi.mint { background: linear-gradient(145deg, #ecfff8, #dcf8ef); }
-    .rx-kpi.blue { background: linear-gradient(145deg, #eef6ff, #dfefff); }
-    .rx-kpi.pink { background: linear-gradient(145deg, #fff1f4, #ffe6ed); }
-    .rx-kpi.sun { background: linear-gradient(145deg, #fff9ea, #fff2d1); }
-    .rx-grid-2 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; }
-    .rx-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .rx-title { font-size: 20px; font-weight: 800; color: #123234; letter-spacing: -0.02em; }
-    .rx-subtitle { font-size: 12px; color: #6d8a8d; }
-    @media (max-width: 1100px) {
-      .rx-grid-2 { grid-template-columns: 1fr; }
-      .ax-formula-grid { grid-template-columns: 1fr; }
+    .sf-left {
+      border-radius: 20px;
+      background: linear-gradient(180deg, #22252a 0%, #181a1f 100%);
+      border: 1px solid #30343c;
+      padding: 10px;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    @media (max-width: 768px) {
-      .ax-hero { flex-direction: column; }
-      .ax-title { font-size: 20px; }
-      .rx-grid-3 { grid-template-columns: 1fr; }
-      .rx-kpi .value { font-size: 20px; }
+    .sf-left-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sf-left-title { color: #f0f4fb; font-size: 15px; font-weight: 700; }
+    .sf-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .sf-detail-card {
+      border-radius: 20px;
+      background: linear-gradient(165deg, #90a8bb 0%, #7f98ac 100%);
+      border: 1px solid #97afc2;
+      padding: 12px;
+    }
+    .sf-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sf-label { font-size: 11px; font-weight: 700; color: rgba(20,33,49,0.75); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .sf-mini-list {
+      border-radius: 14px;
+      background: rgba(238,246,255,0.74);
+      border: 1px solid rgba(208,222,236,0.85);
+      padding: 8px;
+    }
+    .sf-payment-row { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; }
+    .sf-payment-card {
+      border-radius: 18px;
+      border: 1px solid rgba(176,194,212,0.62);
+      background: rgba(238,246,255,0.9);
+      padding: 10px;
+      color: #253446;
+    }
+    .sf-dark-scroll {
+      border-color: #343944;
+      background: rgba(13,15,20,0.55);
+    }
+    .sf-dark-scroll table thead th {
+      background: rgba(29,32,38,0.96);
+      color: #aab2be;
+    }
+    .sf-dark-scroll table tbody td { color: #dde3ec; }
+    @media (max-width: 1200px) {
+      .sf-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sf-workspace { grid-template-columns: 1fr; }
+      .sf-left { min-height: 280px; }
+      .sf-detail-grid, .sf-payment-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .sf-topbar, .sf-header-row { flex-direction: column; align-items: flex-start; }
+      .sf-title { font-size: 34px; }
+      .sf-summary { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 768px) {
@@ -1915,132 +2002,83 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
     <!-- Analytics Tab -->
     <div id="tab-analytics" class="hidden ref-analytics">
-      <div class="ax-shell">
-        <div class="ax-hero">
-          <div>
-            <div class="ax-eyebrow">Analytics</div>
-            <div class="ax-title">Tushunarli Diagnostika Paneli</div>
-            <div class="ax-subtitle">Bu bo‘lim ketma-ket o‘qiladi: avval umumiy holat, keyin qaysi bosqichda yo‘qotish borligi, oxirida aniq follow-up actionlar.</div>
+      <div class="sf-shell">
+        <div class="sf-topbar">
+          <div class="sf-brand">✶ funnelforce</div>
+          <div class="sf-top-pills">
+            <span class="sf-pill">Dashboard</span>
+            <span class="sf-pill active">Analytics</span>
+            <span class="sf-pill">Payments</span>
+            <span class="sf-pill">Users</span>
           </div>
-          <div class="ax-control">
-            <button id="analyticsPeriod7" onclick="setAnalyticsPeriod(7)" class="tab text-xs">7 kun</button>
-            <button id="analyticsPeriod30" onclick="setAnalyticsPeriod(30)" class="tab text-xs">30 kun</button>
-            <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🔎 Batafsil ko'rsatish</button>
-          </div>
-        </div>
-
-        <div class="ax-formula-grid">
-          <div class="ax-formula">
-            <div class="k">Prev dan</div>
-            <div class="v">Joriy bosqich / Oldingi bosqich × 100</div>
-          </div>
-          <div class="ax-formula">
-            <div class="k">Start dan</div>
-            <div class="v">Joriy bosqich / Ro‘yxatdan o‘tgan × 100</div>
-          </div>
-          <div class="ax-formula">
-            <div class="k">CR</div>
-            <div class="v">To‘lov qilgan / Jami user × 100</div>
+          <div class="sf-actions">
+            <button id="analyticsPeriod7" onclick="setAnalyticsPeriod(7)" class="sf-mini-btn">7 kun</button>
+            <button id="analyticsPeriod30" onclick="setAnalyticsPeriod(30)" class="sf-mini-btn">30 kun</button>
+            <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="sf-main-btn">Batafsil</button>
           </div>
         </div>
 
-        <!-- Funnel Diagnostics -->
-        <section class="ax-block">
-          <div class="ax-block-head">
-            <div>
-              <h3 class="ax-block-title">🧭 Funnel Diagnostika</h3>
-              <div class="ax-block-desc">Qayerda userlar tushib qolyapti va qaysi action birinchi bo‘lishi kerak.</div>
-            </div>
+        <div class="sf-header-row">
+          <h2 class="sf-title">Invoices / Analytics</h2>
+          <div class="flex items-center gap-2">
+            <button id="diagActionHighIntentBtn" class="sf-main-btn light" onclick="prepareHighIntentBroadcast()" disabled>High-intent follow-up</button>
+            <button id="diagActionStuckBtn" class="sf-main-btn" onclick="prepareStuckPaymentsBroadcast()" disabled>Stuck follow-up</button>
           </div>
+        </div>
 
-          <div class="rx-grid-3 mb-4">
-            <div class="rx-kpi mint">
-              <div class="label">Umumiy CR</div>
-              <div class="value" id="diagOverallCR">-</div>
-              <div class="hint">Butun funnel yakuniy natijasi</div>
-              <button class="rx-action-btn" onclick="toggleAnalyticsView()">Batafsil bloklarni ochish</button>
-            </div>
-            <div class="rx-kpi pink">
-              <div class="label">Eng katta yo'qotish</div>
-              <div class="value text-[18px] sm:text-[20px]" id="diagBiggestDrop">-</div>
-              <div class="hint">Drop eng katta bo'lgan bosqich</div>
-              <button id="diagActionHighIntentBtn" class="rx-action-btn" onclick="prepareHighIntentBroadcast()" disabled>High-intent follow-up</button>
-            </div>
-            <div class="rx-kpi sun">
-              <div class="label">Pitchdan checkoutsiz</div>
-              <div class="value" id="diagStuckUsers">-</div>
-              <div class="hint" id="diagNextAction">-</div>
-              <button id="diagActionStuckBtn" class="rx-action-btn" onclick="prepareStuckPaymentsBroadcast()" disabled>Stuck payments follow-up</button>
-            </div>
+        <div class="sf-summary">
+          <div class="sf-stat">
+            <div class="k">Umumiy CR</div>
+            <div class="v" id="diagOverallCR">-</div>
           </div>
+          <div class="sf-stat">
+            <div class="k">Eng katta yo'qotish</div>
+            <div class="v sm" id="diagBiggestDrop">-</div>
+          </div>
+          <div class="sf-stat">
+            <div class="k">Pitch -> Checkout</div>
+            <div class="v" id="payDiagPitchToCheckout">-</div>
+          </div>
+          <div class="sf-stat">
+            <div class="k">Checkout -> Prepare</div>
+            <div class="v" id="payDiagCheckoutToPrepared">-</div>
+          </div>
+          <div class="sf-stat">
+            <div class="k">Prepare -> Complete</div>
+            <div class="v" id="payDiagPreparedToCompleted">-</div>
+          </div>
+          <div class="sf-stat">
+            <div class="k">Pitchdan checkoutsiz</div>
+            <div class="v" id="diagStuckUsers">-</div>
+          </div>
+          <div class="sf-stat">
+            <div class="k">Stuck to'lovlar</div>
+            <div class="v" id="payDiagStuckCount">-</div>
+          </div>
+          <div class="sf-stat">
+            <div class="k">Asosiy action</div>
+            <div class="v sm" id="diagNextAction">-</div>
+          </div>
+        </div>
 
-          <div class="rx-grid-2 mb-4">
-            <div class="diag-surface p-3">
-              <div class="text-xs font-semibold text-gray-600 mb-2">Bosqichlar oqimi (son bo'yicha)</div>
-              <div class="diag-chart-wrap"><canvas id="diagFunnelChart"></canvas></div>
+        <div class="sf-filter-row">
+          <div class="sf-filter-label">Active filters</div>
+          <div class="sf-chip">Manba CR</div>
+          <div class="sf-chip">Dars CR</div>
+          <div class="sf-chip">Aktivlik CR</div>
+          <div class="sf-chip">High intent</div>
+        </div>
+
+        <div class="sf-workspace">
+          <div class="sf-left">
+            <div class="sf-left-head">
+              <div class="sf-left-title">High-intent userlar</div>
+              <div class="diag-chip" id="highIntentCount">0 ta</div>
             </div>
-            <div class="diag-table-scroll">
+            <div class="diag-table-scroll sf-dark-scroll">
               <table class="w-full text-sm responsive-table">
                 <thead>
-                  <tr class="text-left text-gray-500 border-b">
-                    <th class="pb-2 px-3">Bosqich</th>
-                    <th class="pb-2 px-3">User</th>
-                    <th class="pb-2 px-3">Prev dan</th>
-                    <th class="pb-2 px-3">Start dan</th>
-                    <th class="pb-2 px-3">Izoh</th>
-                  </tr>
-                </thead>
-                <tbody id="diagFunnelTable">
-                  <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="diagAlerts" class="space-y-2 analytics-advanced">
-            <div class="text-sm text-gray-400">Diagnostika yuklanmoqda...</div>
-          </div>
-        </section>
-
-        <!-- Segment Diagnostics -->
-        <section class="ax-block">
-          <div class="ax-block-head">
-            <div>
-              <h3 class="ax-block-title">🎯 Segment Diagnostika</h3>
-              <div class="ax-block-desc">Qaysi manba, dars bosqichi va aktivlikdagi userlar yaxshiroq konvert qilayotganini solishtiradi.</div>
-            </div>
-            <button onclick="prepareHighIntentBroadcast()" class="btn btn-secondary btn-sm">High-intent follow-up</button>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            <div class="diag-surface rounded-xl p-3">
-              <div class="text-sm font-semibold text-gray-700 mb-2">Manba bo'yicha CR</div>
-              <div id="segmentSourceList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
-            </div>
-            <div class="diag-surface rounded-xl p-3">
-              <div class="text-sm font-semibold text-gray-700 mb-2">Dars bo'yicha CR</div>
-              <div id="segmentLessonList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
-            </div>
-            <div class="diag-surface rounded-xl p-3">
-              <div class="text-sm font-semibold text-gray-700 mb-2">Aktivlik bo'yicha CR</div>
-              <div id="segmentActivityList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
-            </div>
-          </div>
-
-          <div class="rx-grid-2">
-            <div class="diag-surface p-3 xl:col-span-1">
-              <div class="text-sm font-semibold text-gray-700 mb-2">Segmentlar taqqoslanishi</div>
-              <div class="diag-chart-wrap"><canvas id="segmentMixChart"></canvas></div>
-            </div>
-            <div class="xl:col-span-2">
-              <div class="flex items-center justify-between mb-2">
-                <div class="text-sm font-semibold text-gray-700">High-intent (to'lamagan) userlar</div>
-                <div class="diag-chip" id="highIntentCount">0 ta</div>
-              </div>
-              <div class="diag-table-scroll">
-              <table class="w-full text-sm responsive-table">
-                <thead>
-                  <tr class="text-left text-gray-500 border-b">
+                  <tr>
                     <th class="py-2">User</th>
                     <th class="py-2">Dars</th>
                     <th class="py-2">Signal</th>
@@ -2052,70 +2090,88 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
                 </tbody>
               </table>
             </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Payment Friction Diagnostics -->
-        <section class="ax-block">
-          <div class="ax-block-head">
-            <div>
-              <h3 class="ax-block-title">💳 To'lov Friksiya Diagnostikasi</h3>
-              <div class="ax-block-desc">To‘lov yo‘lida qaysi bosqichda tiqilib qolayotganini ko‘rsatadi.</div>
-            </div>
-            <button onclick="prepareStuckPaymentsBroadcast()" class="btn btn-secondary btn-sm">Stuck payments follow-up</button>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div class="p-3 bg-indigo-50 rounded-xl">
-              <div class="text-xs text-gray-500">Pitch -> Checkout</div>
-              <div class="text-lg font-bold text-indigo-600" id="payDiagPitchToCheckout">-</div>
+          <div class="sf-right">
+            <div class="sf-detail-card">
+              <div class="sf-detail-grid">
+                <div>
+                  <div class="sf-label">Bosqichlar oqimi</div>
+                  <div class="diag-chart-wrap"><canvas id="diagFunnelChart"></canvas></div>
+                </div>
+                <div>
+                  <div class="sf-label">Segmentlar taqqoslanishi</div>
+                  <div class="diag-chart-wrap"><canvas id="segmentMixChart"></canvas></div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                <div class="sf-mini-list">
+                  <div class="sf-label">Manba bo'yicha CR</div>
+                  <div id="segmentSourceList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+                </div>
+                <div class="sf-mini-list">
+                  <div class="sf-label">Dars bo'yicha CR</div>
+                  <div id="segmentLessonList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+                </div>
+                <div class="sf-mini-list">
+                  <div class="sf-label">Aktivlik bo'yicha CR</div>
+                  <div id="segmentActivityList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+                </div>
+              </div>
+
+              <div class="diag-table-scroll mt-4">
+                <table class="w-full text-sm responsive-table">
+                  <thead>
+                    <tr class="text-left text-gray-500 border-b">
+                      <th class="pb-2 px-3">Bosqich</th>
+                      <th class="pb-2 px-3">User</th>
+                      <th class="pb-2 px-3">Prev dan</th>
+                      <th class="pb-2 px-3">Start dan</th>
+                      <th class="pb-2 px-3">Izoh</th>
+                    </tr>
+                  </thead>
+                  <tbody id="diagFunnelTable">
+                    <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div class="p-3 bg-blue-50 rounded-xl">
-              <div class="text-xs text-gray-500">Checkout -> Prepare</div>
-              <div class="text-lg font-bold text-blue-600" id="payDiagCheckoutToPrepared">-</div>
-            </div>
-            <div class="p-3 bg-green-50 rounded-xl">
-              <div class="text-xs text-gray-500">Prepare -> Complete</div>
-              <div class="text-lg font-bold text-green-600" id="payDiagPreparedToCompleted">-</div>
-            </div>
-            <div class="p-3 bg-amber-50 rounded-xl">
-              <div class="text-xs text-gray-500">Stuck to'lovlar</div>
-              <div class="text-lg font-bold text-amber-600" id="payDiagStuckCount">-</div>
+
+            <div class="sf-payment-row">
+              <div class="sf-payment-card">
+                <div class="sf-label">To'lov usuli bo'yicha conversion</div>
+                <div class="diag-chart-wrap mb-3"><canvas id="payMethodChart"></canvas></div>
+                <div id="payDiagMethods" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+              </div>
+              <div class="sf-payment-card">
+                <div class="sf-label">Asosiy tavsiya</div>
+                <div id="payDiagNextAction" class="text-sm text-gray-700 mb-3">Yuklanmoqda...</div>
+                <div class="diag-table-scroll">
+                  <table class="w-full text-sm responsive-table">
+                    <thead>
+                      <tr class="text-left text-gray-500 border-b">
+                        <th class="py-2 px-3">User</th>
+                        <th class="py-2 px-3">Buyurtma</th>
+                        <th class="py-2 px-3">Holat</th>
+                        <th class="py-2 px-3">Usul</th>
+                        <th class="py-2 px-3">Qachondan beri</th>
+                      </tr>
+                    </thead>
+                    <tbody id="payDiagStuckTable">
+                      <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div class="diag-surface rounded-xl p-3">
-              <div class="text-sm font-semibold text-gray-700 mb-2">To'lov usuli bo'yicha conversion</div>
-              <div class="diag-chart-wrap mb-3"><canvas id="payMethodChart"></canvas></div>
-              <div id="payDiagMethods" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
-            </div>
-            <div class="diag-surface rounded-xl p-3">
-              <div class="text-sm font-semibold text-gray-700 mb-2">Asosiy tavsiya</div>
-              <div id="payDiagNextAction" class="text-sm text-gray-700">Yuklanmoqda...</div>
-            </div>
-          </div>
+        <div id="diagAlerts" class="space-y-2 analytics-advanced">
+          <div class="text-sm text-gray-400">Diagnostika yuklanmoqda...</div>
+        </div>
 
-          <div class="diag-table-scroll">
-            <table class="w-full text-sm responsive-table">
-              <thead>
-                <tr class="text-left text-gray-500 border-b">
-                  <th class="py-2 px-3">User</th>
-                  <th class="py-2 px-3">Buyurtma</th>
-                  <th class="py-2 px-3">Holat</th>
-                  <th class="py-2 px-3">Usul</th>
-                  <th class="py-2 px-3">Qachondan beri</th>
-                </tr>
-              </thead>
-              <tbody id="payDiagStuckTable">
-                <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Revenue & Growth Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 analytics-advanced">
           <div class="card p-5">
             <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (<span id="analyticsRevenuePeriodLabel">so'nggi 30 kun</span>)</h3>
@@ -2127,7 +2183,6 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
         </div>
 
-        <!-- Source Analytics -->
         <div class="card p-5 analytics-advanced">
           <h3 class="font-semibold text-gray-800 mb-4">🌐 Trafik manbalari</h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2152,7 +2207,6 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
         </div>
 
-        <!-- Buyer Journey Analytics -->
         <div class="card p-5 analytics-advanced">
           <h3 class="font-semibold text-gray-800 mb-4">🛒 Xaridor statistikasi</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -2177,7 +2231,6 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <div class="chart-container h-[150px]"><canvas id="buyerFunnelChart"></canvas></div>
         </div>
 
-        <!-- Inactivity Stats -->
         <div class="card p-5 analytics-advanced">
           <h3 class="font-semibold text-gray-800 mb-4">⏰ Faolsizlik eslatmalari</h3>
           <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
