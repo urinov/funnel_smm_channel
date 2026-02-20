@@ -4,6 +4,7 @@ import { useState, useEffect, ReactNode } from 'react'
 import Box from '@mui/material/Box'
 import { styled, useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
+import { useSettings } from '@core/hooks/useSettings'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import CommandPalette from './CommandPalette'
@@ -29,7 +30,7 @@ const MainWrapper = styled(Box)(({ theme }) => ({
   },
 }))
 
-const ContentWrapper = styled(Box)(({ theme }) => ({
+const ContentWrapper = styled(Box)(() => ({
   flex: 1,
   paddingTop: HEADER_HEIGHT,
   minHeight: '100vh',
@@ -54,17 +55,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'))
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
 
-  // Detect initial theme
-  useEffect(() => {
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    setIsDarkMode(darkModeMediaQuery.matches)
-
-    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches)
-    darkModeMediaQuery.addEventListener('change', handler)
-    return () => darkModeMediaQuery.removeEventListener('change', handler)
-  }, [])
+  // Use the settings context for theme management
+  const { settings, updateSettings } = useSettings()
+  const isDarkMode = settings.mode === 'dark'
 
   // Global keyboard shortcut for command palette
   useEffect(() => {
@@ -76,16 +70,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
 
     window.addEventListener('keydown', handleKeyDown)
+
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   const handleThemeToggle = () => {
-    setIsDarkMode((prev) => !prev)
-    // Here you would integrate with your theme context/provider
-    document.documentElement.setAttribute(
-      'data-mui-color-scheme',
-      isDarkMode ? 'light' : 'dark'
-    )
+    updateSettings({ mode: isDarkMode ? 'light' : 'dark' })
   }
 
   return (
