@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Admin panel</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -946,141 +946,575 @@
     body.theme-dark .notif-item { color: #c6c9df; border-color: #3d4158; }
     body.theme-dark .command-kbd { background: #25293c; border-color: #44485f; color: #aeb2ce; }
 
-    /* ===== Reboot Design ===== */
+    /* ===== Reboot Design (Light-Only) ===== */
     :root {
-      --rb-bg: #0d111f;
-      --rb-bg-2: #171d30;
-      --rb-panel: rgba(255,255,255,0.08);
-      --rb-panel-strong: rgba(255,255,255,0.12);
-      --rb-border: rgba(255,255,255,0.14);
-      --rb-text: #f0f3ff;
-      --rb-muted: #a4adc8;
-      --rb-primary: #22d3ee;
-      --rb-primary-2: #818cf8;
-      --rb-accent: #34d399;
+      --rb-bg: #eef3ff;
+      --rb-bg-2: #f7f9ff;
+      --rb-panel: #ffffff;
+      --rb-panel-soft: #f8faff;
+      --rb-border: #dbe5f7;
+      --rb-text: #1a2340;
+      --rb-muted: #6f7a99;
+      --rb-primary: #2d6bff;
+      --rb-primary-2: #4d8bff;
+      --rb-accent: #14b8a6;
+      --rb-warning: #f59e0b;
     }
     body {
       background:
-        radial-gradient(1000px 600px at -10% -20%, #232f52 0%, rgba(35,47,82,0) 60%),
-        radial-gradient(800px 500px at 110% -10%, #203a4f 0%, rgba(32,58,79,0) 55%),
+        radial-gradient(900px 520px at -10% -20%, #d8e5ff 0%, rgba(216,229,255,0) 60%),
+        radial-gradient(700px 400px at 110% -10%, #d7f0ff 0%, rgba(215,240,255,0) 55%),
         linear-gradient(140deg, var(--rb-bg) 0%, var(--rb-bg-2) 100%) !important;
       color: var(--rb-text) !important;
     }
     .card {
-      background: linear-gradient(160deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%) !important;
+      background: linear-gradient(165deg, #ffffff 0%, #f9fbff 100%) !important;
       border: 1px solid var(--rb-border) !important;
-      box-shadow: 0 14px 40px rgba(3,7,18,0.35) !important;
-      border-radius: 16px !important;
-      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 34px rgba(21,53,120,0.08) !important;
+      border-radius: 18px !important;
     }
     .sidebar {
-      width: 84px !important;
-      background: linear-gradient(180deg, rgba(6,10,20,0.85) 0%, rgba(7,12,24,0.95) 100%) !important;
-      border-right: 1px solid rgba(255,255,255,0.1) !important;
-      box-shadow: 14px 0 36px rgba(0,0,0,0.3) !important;
+      width: 86px !important;
+      background: linear-gradient(180deg, #f7faff 0%, #edf4ff 100%) !important;
+      border-right: 1px solid #d8e4f8 !important;
+      box-shadow: 10px 0 30px rgba(42,61,108,0.08) !important;
     }
-    .sidebar.expanded { width: 248px !important; }
-    .sidebar .sidebar-label { display: block !important; color: #dbe3ff !important; font-weight: 600; }
+    .sidebar.expanded { width: 262px !important; }
+    .sidebar .sidebar-label { display: block !important; color: #2a3557 !important; font-weight: 700; }
     .sidebar-item {
       width: 100% !important;
       justify-content: flex-start !important;
       height: 44px !important;
       border-radius: 12px !important;
       padding: 0 14px !important;
-      color: #b9c3e6 !important;
+      color: #56638d !important;
       border: 1px solid transparent;
     }
     .sidebar-item:hover {
-      background: rgba(255,255,255,0.08) !important;
-      color: #ffffff !important;
-      border-color: rgba(255,255,255,0.12);
+      background: #eaf2ff !important;
+      color: #1f4ccf !important;
+      border-color: #d4e3ff;
     }
     .sidebar-item.active {
-      background: linear-gradient(135deg, rgba(34,211,238,0.2) 0%, rgba(129,140,248,0.2) 100%) !important;
-      border-color: rgba(34,211,238,0.45) !important;
-      color: #fff !important;
+      background: linear-gradient(135deg, rgba(45,107,255,0.16) 0%, rgba(77,139,255,0.2) 100%) !important;
+      border-color: rgba(45,107,255,0.42) !important;
+      color: #1e46bd !important;
     }
-    .sidebar-toggle { background: rgba(255,255,255,0.12) !important; color: #e2e8ff !important; }
-    .main-content { margin-left: 248px !important; }
+    .sidebar-toggle { background: #dfe9fd !important; color: #2f4fa5 !important; }
+    .main-content { margin-left: 262px !important; }
     .main-content > header {
       position: sticky;
       top: 12px;
       z-index: 20;
-      border-radius: 16px !important;
-      background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.07) 100%) !important;
+      border-radius: 18px !important;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,249,255,0.95) 100%) !important;
       border: 1px solid var(--rb-border) !important;
-      backdrop-filter: blur(12px);
       padding: 14px 16px !important;
-      box-shadow: 0 10px 32px rgba(0,0,0,0.26) !important;
+      box-shadow: 0 10px 26px rgba(44,77,152,0.1) !important;
     }
     .main-content > header h1,
-    .main-content > header p,
     .text-gray-800,
     .text-gray-700,
-    .text-gray-600,
+    .text-gray-600 { color: var(--rb-text) !important; }
+    .main-content > header p,
     .text-gray-500,
-    .text-gray-400 { color: var(--rb-text) !important; opacity: 0.95; }
-    .text-gray-400,
-    .text-gray-500 { color: var(--rb-muted) !important; }
+    .text-gray-400 { color: var(--rb-muted) !important; }
     .btn {
-      border-radius: 10px !important;
-      border: 1px solid rgba(255,255,255,0.2) !important;
-      background: rgba(255,255,255,0.08) !important;
-      color: #e8edff !important;
+      border-radius: 11px !important;
+      border: 1px solid #d4e1fb !important;
+      background: #ffffff !important;
+      color: #33456f !important;
     }
-    .btn:hover { background: rgba(255,255,255,0.14) !important; }
+    .btn:hover { background: #f4f8ff !important; }
     .btn-primary {
       background: linear-gradient(135deg, var(--rb-primary) 0%, var(--rb-primary-2) 100%) !important;
-      color: #071225 !important;
+      color: #ffffff !important;
       border: none !important;
-      box-shadow: 0 8px 20px rgba(34,211,238,0.32) !important;
+      box-shadow: 0 9px 22px rgba(45,107,255,0.28) !important;
       font-weight: 700;
     }
     .input {
-      background: rgba(255,255,255,0.08) !important;
-      border: 1px solid rgba(255,255,255,0.2) !important;
-      color: #ecf2ff !important;
+      background: #ffffff !important;
+      border: 1px solid #d5e2fb !important;
+      color: #223257 !important;
     }
-    .input::placeholder { color: #a7b1cf !important; }
+    .input::placeholder { color: #8d9bbb !important; }
     .input:focus {
-      border-color: rgba(34,211,238,0.55) !important;
-      box-shadow: 0 0 0 3px rgba(34,211,238,0.2) !important;
+      border-color: rgba(45,107,255,0.55) !important;
+      box-shadow: 0 0 0 3px rgba(45,107,255,0.16) !important;
     }
     .tab {
-      background: rgba(255,255,255,0.08) !important;
-      border: 1px solid rgba(255,255,255,0.18) !important;
-      color: #d8e1ff !important;
+      background: #ffffff !important;
+      border: 1px solid #d5e2fb !important;
+      color: #415783 !important;
       border-radius: 10px !important;
     }
     .tab.active {
       background: linear-gradient(135deg, var(--rb-primary) 0%, var(--rb-primary-2) 100%) !important;
-      color: #051223 !important;
+      color: #fff !important;
       border: none !important;
     }
-    .table-row:hover { background: rgba(255,255,255,0.08) !important; }
+    .table-row:hover { background: #f2f7ff !important; }
     table thead th {
-      background: rgba(255,255,255,0.08) !important;
-      color: #b8c3e8 !important;
-      border-bottom: 1px solid rgba(255,255,255,0.16) !important;
+      background: #f4f8ff !important;
+      color: #60739e !important;
+      border-bottom: 1px solid #d7e3fb !important;
     }
-    table td { border-color: rgba(255,255,255,0.08) !important; }
-    .badge-blue { background: rgba(34,211,238,0.2) !important; color: #67e8f9 !important; }
-    .badge-green { background: rgba(52,211,153,0.2) !important; color: #6ee7b7 !important; }
-    .badge-orange { background: rgba(251,191,36,0.2) !important; color: #fcd34d !important; }
-    .badge-red { background: rgba(248,113,113,0.2) !important; color: #fca5a5 !important; }
-    .badge-gray { background: rgba(148,163,184,0.2) !important; color: #cbd5e1 !important; }
+    table td { border-color: #e8efff !important; }
+    .badge-blue { background: rgba(45,107,255,0.12) !important; color: #2557d6 !important; }
+    .badge-green { background: rgba(20,184,166,0.16) !important; color: #0f887b !important; }
+    .badge-orange { background: rgba(245,158,11,0.16) !important; color: #b26c05 !important; }
+    .badge-red { background: rgba(239,68,68,0.14) !important; color: #be3535 !important; }
+    .badge-gray { background: rgba(148,163,184,0.14) !important; color: #60708f !important; }
     .mobile-nav {
-      background: rgba(6,10,20,0.88) !important;
-      border-color: rgba(255,255,255,0.14) !important;
+      background: rgba(255,255,255,0.95) !important;
+      border-color: #d2def5 !important;
       backdrop-filter: blur(10px);
     }
-    .mobile-nav-item { color: #b9c3e6 !important; }
+    .mobile-nav-item { color: #4f628f !important; }
     .mobile-nav-item.active {
       background: linear-gradient(135deg, var(--rb-primary) 0%, var(--rb-primary-2) 100%) !important;
-      color: #071225 !important;
+      color: #fff !important;
     }
+    .sf-shell,
+    .sf-summary,
+    .sf-stat,
+    .sf-left,
+    .sf-detail-card,
+    .sf-payment-card,
+    .sf-mini-list,
+    .sf-workspace {
+      background: #ffffff !important;
+      border-color: #dce6f8 !important;
+      color: #2b3b63 !important;
+      box-shadow: 0 8px 22px rgba(38,73,145,0.08) !important;
+    }
+    .sf-workspace { background: #f6f9ff !important; }
+    .sf-label, .sf-filter-label { color: #5c719c !important; }
+    .notif-panel,
+    .cmd-modal,
+    .table-settings-pop { background: #fff !important; border-color: #d7e4fb !important; }
+    .cmd-item:hover, .cmd-item.active { background: #f4f8ff !important; }
     @media (max-width: 900px) {
       .main-content { margin-left: 0 !important; }
+    }
+
+    /* ===== Light Rebuild v3 (final visual system) ===== */
+    :root {
+      --lx-bg: #eff3fb;
+      --lx-surface: #f8fbff;
+      --lx-card: #ffffff;
+      --lx-border: #dde5f2;
+      --lx-ink: #101322;
+      --lx-muted: #5e6883;
+      --lx-primary: #2b3658;
+      --lx-lime: #d8f21b;
+      --lx-lime-ink: #1f2800;
+    }
+    body {
+      background:
+        radial-gradient(900px 480px at -12% -15%, #dce6fa 0%, rgba(220,230,250,0) 60%),
+        radial-gradient(780px 420px at 112% -8%, #dff4fa 0%, rgba(223,244,250,0) 54%),
+        linear-gradient(145deg, #edf2fb 0%, #f6f9ff 100%) !important;
+      color: var(--lx-ink) !important;
+    }
+    .sidebar {
+      width: 94px !important;
+      background: rgba(248, 251, 255, 0.86) !important;
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--lx-border) !important;
+      box-shadow: 10px 0 24px rgba(16, 19, 34, 0.04) !important;
+    }
+    .sidebar.expanded { width: 270px !important; }
+    .sidebar-item {
+      border-radius: 14px !important;
+      color: #3f4d72 !important;
+      margin-bottom: 6px;
+    }
+    .sidebar-item:hover {
+      background: #e8eefb !important;
+      color: #253866 !important;
+      border-color: transparent !important;
+    }
+    .sidebar-item.active {
+      background: linear-gradient(120deg, #2f3d67 0%, #34467b 100%) !important;
+      color: #f6f8ff !important;
+      border-color: transparent !important;
+      box-shadow: 0 8px 20px rgba(47, 61, 103, 0.28) !important;
+    }
+    .main-content {
+      margin-left: 270px !important;
+      padding: 24px 26px 110px !important;
+    }
+    .main-content > header {
+      position: sticky;
+      top: 12px;
+      z-index: 30;
+      border-radius: 20px !important;
+      border: 1px solid var(--lx-border) !important;
+      background: rgba(252, 254, 255, 0.88) !important;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 28px rgba(32, 41, 72, 0.08) !important;
+      padding: 16px 18px !important;
+      margin-bottom: 18px !important;
+    }
+    .card {
+      border-radius: 20px !important;
+      border: 1px solid var(--lx-border) !important;
+      background: linear-gradient(160deg, #ffffff 0%, #f9fcff 100%) !important;
+      box-shadow: 0 12px 30px rgba(22, 30, 53, 0.07) !important;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgba(22, 30, 53, 0.11) !important;
+    }
+    .btn {
+      border-radius: 12px !important;
+      border: 1px solid #d6deee !important;
+      background: #fff !important;
+      color: #26345c !important;
+      font-weight: 600;
+    }
+    .btn-primary {
+      background: linear-gradient(120deg, var(--lx-primary) 0%, #1f2948 100%) !important;
+      color: #f5f8ff !important;
+      border: none !important;
+      box-shadow: 0 10px 22px rgba(35, 47, 84, 0.34) !important;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(35, 47, 84, 0.4) !important;
+    }
+    .btn-secondary:hover { background: #f3f6fd !important; }
+    .tab {
+      border-radius: 999px !important;
+      padding: 9px 16px !important;
+      border: 1px solid #d8e1f0 !important;
+      background: #fff !important;
+      color: #4a5573 !important;
+      font-weight: 700;
+    }
+    .tab.active {
+      background: var(--lx-lime) !important;
+      color: var(--lx-lime-ink) !important;
+      border-color: #c8e218 !important;
+      box-shadow: 0 6px 18px rgba(155, 179, 20, 0.32) !important;
+    }
+    .input {
+      border-radius: 12px !important;
+      border: 1px solid #d5dfef !important;
+      background: #fff !important;
+      color: #1d2b50 !important;
+    }
+    .input:focus {
+      border-color: #8397bf !important;
+      box-shadow: 0 0 0 3px rgba(99, 121, 166, 0.16) !important;
+    }
+    .kpi-card { border-radius: 20px !important; }
+    .kpi-grid .kpi-card:nth-child(1) .stat-icon,
+    .kpi-grid .kpi-card:nth-child(2) .stat-icon,
+    .kpi-grid .kpi-card:nth-child(3) .stat-icon,
+    .kpi-grid .kpi-card:nth-child(4) .stat-icon {
+      border-radius: 14px !important;
+      border: 1px solid #d8e1f0;
+      background: #f1f6ff !important;
+      color: #1f315d !important;
+    }
+    .table-row:hover { background: #f4f8ff !important; }
+    table thead th {
+      background: #f5f8ff !important;
+      color: #5b6788 !important;
+      border-bottom: 1px solid #dce4f2 !important;
+    }
+    .mobile-nav {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border: 1px solid #dbe3f2 !important;
+      box-shadow: 0 14px 30px rgba(19, 31, 63, 0.12) !important;
+      backdrop-filter: blur(10px);
+    }
+    .mobile-nav-item.active {
+      background: var(--lx-lime) !important;
+      color: var(--lx-lime-ink) !important;
+      box-shadow: none !important;
+    }
+    .notif-panel,
+    .cmd-modal,
+    .table-settings-pop {
+      border-radius: 16px !important;
+      border: 1px solid #dbe3f1 !important;
+      box-shadow: 0 16px 34px rgba(16, 24, 48, 0.14) !important;
+    }
+    .command-kbd {
+      border-radius: 8px !important;
+      border: 1px solid #d8e2f1 !important;
+      background: #f6f9ff !important;
+      color: #5b6889 !important;
+    }
+    @media (max-width: 900px) {
+      .main-content {
+        margin-left: 0 !important;
+        padding: 12px 12px calc(var(--mobile-nav-h) + 130px) !important;
+      }
+      .main-content > header {
+        border-radius: 14px !important;
+        padding: 12px !important;
+      }
+      .card { border-radius: 14px !important; }
+      #tab-analytics .sf-topbar,
+      #tab-analytics .sf-header-row,
+      #tab-analytics .sf-filter-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+      }
+      #tab-analytics .sf-summary {
+        grid-template-columns: 1fr 1fr !important;
+      }
+      #tab-analytics .sf-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      #tab-analytics .sf-main-btn,
+      #tab-analytics .sf-mini-btn {
+        flex: 1;
+        text-align: center;
+      }
+      #tab-conversations .tg-chat-shell {
+        min-height: 62vh;
+      }
+      #tab-conversations #convMessagesList {
+        max-height: 42vh;
+      }
+      #tab-progrev .format-toolbar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+      #tab-progrev .format-btn.wide {
+        grid-column: span 3;
+      }
+      #tab-progrev textarea,
+      #tab-progrev input[type="text"],
+      #tab-progrev input[type="number"] {
+        font-size: 14px;
+      }
+      #tab-users .table-filter-summary,
+      #tab-payments .table-filter-summary {
+        width: 100%;
+        justify-content: center;
+      }
+      .bulk-action-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    .ux-quick-dock {
+      position: fixed;
+      right: 18px;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 45;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid #d9e2f1;
+      border-radius: 999px;
+      box-shadow: 0 14px 30px rgba(17, 27, 50, 0.16);
+      padding: 8px;
+    }
+    .ux-dock-chip {
+      border: 1px solid #d7e0ef;
+      background: #fff;
+      color: #2e406c;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .ux-dock-chip:hover { background: #eef3ff; }
+    .ux-dock-chip.active {
+      background: #d8f21b;
+      border-color: #c8e218;
+      color: #232c07;
+    }
+    .ux-shortcuts-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 14, 26, 0.48);
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .ux-shortcuts-modal.show { display: flex; }
+    .ux-shortcuts-card {
+      width: min(560px, 100%);
+      border-radius: 18px;
+      border: 1px solid #d9e2f1;
+      background: #fff;
+      box-shadow: 0 20px 40px rgba(11, 21, 44, 0.2);
+      padding: 16px;
+    }
+    .ux-shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eef2f8;
+      font-size: 13px;
+      color: #334266;
+    }
+    .ux-shortcut-row:last-child { border-bottom: 0; }
+    .ux-kbd {
+      border: 1px solid #d9e2f1;
+      border-bottom-width: 2px;
+      background: #f8faff;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #4a5a7d;
+      min-width: 64px;
+      text-align: center;
+    }
+    .ux-loading .card {
+      position: relative;
+      overflow: hidden;
+    }
+    .ux-loading .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, rgba(255,255,255,0) 0%, rgba(225,233,248,0.52) 45%, rgba(255,255,255,0) 100%);
+      transform: translateX(-100%);
+      animation: uxShimmer 1.2s infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes uxShimmer {
+      to { transform: translateX(100%); }
+    }
+    .ux-tab {
+      display: grid;
+      gap: 18px;
+    }
+    .ux-empty {
+      border: 1px dashed #d8e2f0;
+      border-radius: 14px;
+      background: #f9fbff;
+      padding: 16px;
+      text-align: center;
+      color: #6a7796;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .ux-density-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 10px;
+      font-weight: 700;
+      border: 1px solid #d7e0ef;
+      background: #fff;
+      color: #546483;
+    }
+    .tab-section-shell {
+      display: grid;
+      gap: 14px;
+    }
+    .tab-section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border: 1px solid #dce5f3;
+      border-radius: 16px;
+      background: linear-gradient(150deg, #ffffff 0%, #f7faff 100%);
+      box-shadow: 0 8px 22px rgba(20, 34, 63, 0.06);
+    }
+    .table-shell {
+      border: 1px solid #dce5f3;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(15, 27, 53, 0.08);
+    }
+    .table-shell .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e6edf8;
+      background: #fbfdff;
+    }
+    .table-meta {
+      font-size: 12px;
+      color: #637393;
+      font-weight: 600;
+    }
+    .table-filter-summary {
+      font-size: 12px;
+      color: #4f6186;
+      background: #eef4ff;
+      border: 1px solid #d9e5fb;
+      border-radius: 999px;
+      padding: 6px 10px;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bulk-action-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f4f8ff;
+      border-bottom: 1px solid #dbe6fb;
+    }
+    .bulk-action-bar.show { display: flex; }
+    .bulk-action-bar .count {
+      font-size: 12px;
+      font-weight: 700;
+      color: #24355f;
+    }
+    .row-select {
+      width: 16px;
+      height: 16px;
+      accent-color: #2f3d67;
+      cursor: pointer;
+    }
+    .table-sticky-actions th[data-col="actions"],
+    .table-sticky-actions td[data-col="actions"] {
+      position: sticky;
+      right: 0;
+      z-index: 3;
+      background: #fff;
+      box-shadow: -6px 0 10px rgba(18, 28, 50, 0.04);
+    }
+    .table-sticky-actions tbody tr:hover td[data-col="actions"] { background: #f4f8ff; }
+    @media (max-width: 1024px) {
+      .ux-quick-dock { display: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>
@@ -1093,7 +1527,7 @@
       <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
         <span class="text-3xl">🚀</span>
       </div>
-      <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Admin panel</h1>
       <p class="text-gray-500 text-sm mt-1">Tizimga kirish</p>
     </div>
     <form id="loginForm">
@@ -1211,7 +1645,7 @@
     <!-- Header -->
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h1>
+        <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Bosh panel</h1>
         <p class="text-gray-500 text-sm" id="pageSubtitle">Asosiy monitoring paneli</p>
         <p class="text-gray-400 text-xs mt-1" id="currentDate"></p>
       </div>
@@ -1223,16 +1657,12 @@
         </button>
         <button onclick="toggleNotificationsPanel()" class="btn btn-secondary ui-btn-icon" title="Bildirishnomalar">
           <span class="material-symbols-outlined">notifications</span>
-          <span>Alerts</span>
+          <span>Bildirishnoma</span>
           <span id="notifBadge" class="notif-badge hidden">0</span>
         </button>
-        <button id="uiThemeToggleBtn" onclick="toggleUiTheme()" class="btn btn-secondary ui-btn-icon" title="Light/Dark">
-          <span class="material-symbols-outlined">dark_mode</span>
-          <span id="uiThemeToggleLabel">Dark</span>
-        </button>
-        <button id="tableDensityToggleBtn" onclick="toggleTableDensity()" class="btn btn-secondary ui-btn-icon" title="Table density">
+        <button id="tableDensityToggleBtn" onclick="toggleTableDensity()" class="btn btn-secondary ui-btn-icon" title="Jadval zichligi">
           <span class="material-symbols-outlined">density_medium</span>
-          <span id="tableDensityToggleLabel">Compact</span>
+          <span id="tableDensityToggleLabel">Zich</span>
         </button>
         <button onclick="openBroadcastModal()" class="btn btn-primary flex items-center gap-2">
           <span>📨</span> Xabar yuborish
@@ -1284,6 +1714,23 @@
               <p class="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wide font-medium truncate">Konversiya</p>
               <p class="text-xl sm:text-2xl font-bold text-orange-600" id="statConversion">0%</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overview Control Strip -->
+      <div class="card p-4 sm:p-5 mb-4 sm:mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-gray-400">Platform holati</p>
+            <h3 class="text-xl font-bold text-gray-800 mt-1" id="overviewHealthTitle">Monitoring faol</h3>
+            <p class="text-sm text-gray-500 mt-1" id="overviewHealthMeta">Barcha modullar ishlash holatida.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ux-density-pill">Paid ratio: <strong id="overviewPaidRatio">0%</strong></span>
+            <span class="ux-density-pill">Active ratio: <strong id="overviewActiveRatio">0%</strong></span>
+            <button onclick="showTab('analytics')" class="btn btn-secondary btn-sm">Analitikani ochish</button>
+            <button onclick="loadAll()" class="btn btn-primary btn-sm">Tez yangilash</button>
           </div>
         </div>
       </div>
@@ -1447,17 +1894,25 @@
 
     <!-- Users Tab -->
     <div id="tab-users" class="hidden">
-      <div class="card">
+      <div class="tab-section-shell">
+        <div class="tab-section-head">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-gray-400">Foydalanuvchilar paneli</p>
+            <h3 class="text-lg font-bold text-gray-800">Qidiruv, segmentlash va tez amallar</h3>
+          </div>
+          <div class="table-filter-summary" id="usersFilterSummary">Filtrlar: barchasi</div>
+        </div>
+      <div class="table-shell">
         <div class="p-5 border-b border-gray-100">
           <div class="flex flex-col lg:flex-row justify-between gap-4 mb-4">
             <h3 class="font-semibold text-gray-800 text-lg">👥 Foydalanuvchilar <span class="text-gray-400 font-normal" id="filteredUsersCount"></span></h3>
             <div class="flex gap-2 items-center flex-wrap">
               <input type="text" id="userSearch" class="input py-2 px-3 w-full sm:w-48" placeholder="🔍 Ism, telefon..." oninput="applyUserFilters()">
               <div class="flex items-center gap-1 flex-wrap" id="userSavedViews">
-                <button class="saved-view-chip active" onclick="applyUsersSavedView('all')">All</button>
-                <button class="saved-view-chip" onclick="applyUsersSavedView('high_intent')">High intent</button>
-                <button class="saved-view-chip" onclick="applyUsersSavedView('paid_not_joined')">Paid not joined</button>
-                <button class="saved-view-chip" onclick="applyUsersSavedView('inactive')">Inactive</button>
+                <button class="saved-view-chip active" onclick="applyUsersSavedView('all')">Barchasi</button>
+                <button class="saved-view-chip" onclick="applyUsersSavedView('high_intent')">Yuqori qiziqish</button>
+                <button class="saved-view-chip" onclick="applyUsersSavedView('paid_not_joined')">To'lagan, kirmagan</button>
+                <button class="saved-view-chip" onclick="applyUsersSavedView('inactive')">Nofaol</button>
               </div>
               <button onclick="toggleAdvancedFilters()" class="btn btn-secondary btn-sm flex items-center gap-1">
                 <span>🎛️</span> <span id="advFilterLabel">Filtrlar</span>
@@ -1547,10 +2002,18 @@
             </div>
           </div>
         </div>
+        <div id="usersBulkActionBar" class="bulk-action-bar">
+          <div class="count" id="usersBulkCount">0 ta user tanlangan</div>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="clearUsersSelection()">Tozalash</button>
+            <button class="btn btn-primary btn-sm" onclick="bulkBroadcastSelectedUsers()">Xabar yuborish</button>
+          </div>
+        </div>
         <div class="overflow-x-auto">
-          <table class="w-full responsive-table table-sticky-first" id="usersTable">
+          <table class="w-full responsive-table table-sticky-first table-sticky-actions" id="usersTable">
             <thead class="bg-gray-50">
               <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"><input id="usersSelectAllPage" type="checkbox" class="row-select" onchange="toggleSelectAllUsersPage(this.checked)" title="Sahifadagi barchani tanlash"></th>
                 <th data-col="user" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foydalanuvchi</th>
                 <th data-col="phone" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
                 <th data-col="lesson" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dars</th>
@@ -1560,11 +2023,12 @@
               </tr>
             </thead>
             <tbody id="usersTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
             </tbody>
           </table>
         </div>
         <div class="p-4 border-t border-gray-100 flex justify-center gap-2" id="usersPagination"></div>
+      </div>
       </div>
     </div>
 
@@ -1574,9 +2038,9 @@
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
           <div class="xl:col-span-3 border border-gray-100 rounded-xl bg-white/70">
             <div class="px-3 py-3 border-b border-gray-100">
-              <p class="text-sm font-semibold text-gray-700">💬 Chats</p>
+              <p class="text-sm font-semibold text-gray-700">💬 Suhbatlar</p>
               <div class="flex gap-2 mt-2">
-                <input id="convSearch" type="text" class="input py-2 px-3" placeholder="Search chat..." oninput="renderConversationUsers()">
+                <input id="convSearch" type="text" class="input py-2 px-3" placeholder="Suhbat qidirish..." oninput="renderConversationUsers()">
                 <button onclick="loadConversations()" class="btn btn-secondary btn-sm">🔄</button>
               </div>
             </div>
@@ -1626,7 +2090,7 @@
                     <option value="MarkdownV2">MarkdownV2</option>
                   </select>
                   <label class="text-xs text-gray-600 flex items-center gap-1">
-                    <input type="checkbox" id="convDisablePreview"> Link preview off
+                    <input type="checkbox" id="convDisablePreview"> Havola preview o'chirilgan
                   </label>
                 </div>
               </div>
@@ -1649,7 +2113,7 @@
               <div><span class="text-gray-400">Status:</span> <span id="convInfoStatus" class="text-gray-700">-</span></div>
             </div>
             <div class="mt-4 pt-3 border-t border-gray-100">
-              <p class="text-xs text-gray-400 mb-2">Quick actions</p>
+              <p class="text-xs text-gray-400 mb-2">Tez amallar</p>
               <div class="flex flex-col gap-2">
                 <button onclick="insertQuickReply('Assalomu alaykum! Xabaringiz uchun rahmat 🙌')" class="btn btn-secondary btn-sm text-left">Salomlashish</button>
                 <button onclick="insertQuickReply('Rahmat, tekshirib sizga tez orada javob beraman.')" class="btn btn-secondary btn-sm text-left">Standart javob</button>
@@ -1673,6 +2137,14 @@
 
     <!-- Payments Tab -->
     <div id="tab-payments" class="hidden">
+      <div class="tab-section-shell">
+      <div class="tab-section-head">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-gray-400">To'lovlar paneli</p>
+          <h3 class="text-lg font-bold text-gray-800">Konversiya va to'lov holatlarini boshqarish</h3>
+        </div>
+        <div class="table-filter-summary" id="paymentsFilterSummary">Filtr: To'langan</div>
+      </div>
       <!-- Payment Status Tabs -->
       <div class="flex flex-wrap gap-2 mb-4 tab-row">
         <button class="tab active" data-payment-status="completed" onclick="filterPayments('completed')">✅ To'langan</button>
@@ -1722,18 +2194,19 @@
       </div>
 
       <!-- Payments Table -->
-      <div class="card">
-        <div class="p-5 border-b border-gray-100">
+      <div class="table-shell">
+        <div class="table-header">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="font-semibold text-gray-800 text-lg">💳 To'lovlar tarixi</h3>
-            <div class="relative">
-              <button onclick="toggleTableSettings('payments')" class="btn btn-secondary btn-sm ui-btn-icon"><span class="material-symbols-outlined">view_column</span> Ustunlar</button>
-              <div id="paymentsTableSettings" class="table-settings-pop hidden"></div>
-            </div>
+            <div class="table-meta" id="paymentsTableMeta">0 ta yozuv</div>
+          </div>
+          <div class="relative">
+            <button onclick="toggleTableSettings('payments')" class="btn btn-secondary btn-sm ui-btn-icon"><span class="material-symbols-outlined">view_column</span> Ustunlar</button>
+            <div id="paymentsTableSettings" class="table-settings-pop hidden"></div>
           </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full responsive-table table-sticky-first" id="paymentsTable">
+          <table class="w-full responsive-table table-sticky-first table-sticky-actions" id="paymentsTable">
             <thead class="bg-gray-50">
               <tr>
                 <th data-col="date" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
@@ -1743,13 +2216,15 @@
                 <th data-col="status" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th data-col="system" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tizim</th>
                 <th data-col="premium" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium kanal</th>
+                <th data-col="actions" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amal</th>
               </tr>
             </thead>
             <tbody id="paymentsTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400">Yuklanmoqda...</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
 
@@ -3420,6 +3895,32 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
   </div>
 </aside>
 
+<!-- UX Quick Dock -->
+<div id="uxQuickDock" class="ux-quick-dock" aria-label="Quick navigation">
+  <button class="ux-dock-chip active" data-quick-tab="overview" onclick="showTab('overview')">Umumiy</button>
+  <button class="ux-dock-chip" data-quick-tab="analytics" onclick="showTab('analytics')">Analitika</button>
+  <button class="ux-dock-chip" data-quick-tab="users" onclick="showTab('users')">Userlar</button>
+  <button class="ux-dock-chip" data-quick-tab="payments" onclick="showTab('payments')">To'lovlar</button>
+  <button class="ux-dock-chip" onclick="openUxShortcutsHelp()">Qisqa tugmalar</button>
+</div>
+
+<!-- UX Shortcuts -->
+<div id="uxShortcutsModal" class="ux-shortcuts-modal" onclick="closeUxShortcutsHelp(event)">
+  <div class="ux-shortcuts-card" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between gap-2 mb-2">
+      <h3 class="text-lg font-bold text-gray-800">Klaviatura qisqa tugmalari</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeUxShortcutsHelp()">Yopish</button>
+    </div>
+    <div class="ux-shortcut-row"><span>Global qidiruv</span><span class="ux-kbd">Ctrl/Cmd + K</span></div>
+    <div class="ux-shortcut-row"><span>Umumiy tab</span><span class="ux-kbd">G O</span></div>
+    <div class="ux-shortcut-row"><span>Users tab</span><span class="ux-kbd">G U</span></div>
+    <div class="ux-shortcut-row"><span>Payments tab</span><span class="ux-kbd">G P</span></div>
+    <div class="ux-shortcut-row"><span>Analytics tab</span><span class="ux-kbd">G A</span></div>
+    <div class="ux-shortcut-row"><span>Yangilash</span><span class="ux-kbd">R</span></div>
+    <div class="ux-shortcut-row"><span>Yordam</span><span class="ux-kbd">?</span></div>
+  </div>
+</div>
+
 <script>
 // ========== GLOBAL STATE ==========
 let auth = '';
@@ -3443,18 +3944,43 @@ const perPage = 20;
 let paymentFilter = 'completed';
 let selectedBroadcastUsers = new Set();
 let custdevAnswers = {};
-let uiTheme = localStorage.getItem('uiTheme') || 'light';
+const uiTheme = 'light';
 let tableDensity = localStorage.getItem('tableDensity') || 'comfortable';
 let sidebarMoreOpen = false;
 let currentUsersSavedView = localStorage.getItem('usersSavedView') || 'all';
 const commandItems = [];
 let notifications = [];
+let pendingGoShortcut = null;
+const selectedUsersOnPage = new Set();
+const tabDataState = {};
+let activeModalId = null;
+let prevFocusedElement = null;
+const analyticsCacheByPeriod = new Map();
+let analyticsFetchInFlight = false;
 let tableColumnPrefs = {
   users: JSON.parse(localStorage.getItem('tableColumnsUsers') || '{"user":true,"phone":true,"lesson":true,"status":true,"date":true,"actions":true}'),
-  payments: JSON.parse(localStorage.getItem('tableColumnsPayments') || '{"date":true,"user":true,"amount":true,"plan":true,"status":true,"system":true,"premium":true}')
+  payments: JSON.parse(localStorage.getItem('tableColumnsPayments') || '{"date":true,"user":true,"amount":true,"plan":true,"status":true,"system":true,"premium":true,"actions":true}')
 };
+
+function normalizeTablePrefs() {
+  const usersDefaults = { user: true, phone: true, lesson: true, status: true, date: true, actions: true };
+  const paymentsDefaults = { date: true, user: true, amount: true, plan: true, status: true, system: true, premium: true, actions: true };
+  tableColumnPrefs.users = { ...usersDefaults, ...(tableColumnPrefs.users || {}) };
+  tableColumnPrefs.payments = { ...paymentsDefaults, ...(tableColumnPrefs.payments || {}) };
+  localStorage.setItem('tableColumnsUsers', JSON.stringify(tableColumnPrefs.users));
+  localStorage.setItem('tableColumnsPayments', JSON.stringify(tableColumnPrefs.payments));
+}
+
+function markTabStale(tab) {
+  if (!tab) return;
+  tabDataState[tab] = 0;
+}
+
+function markTabsStale(tabs) {
+  (tabs || []).forEach((tab) => markTabStale(tab));
+}
 const TAB_META = {
-  overview: { title: 'Dashboard', subtitle: 'Asosiy monitoring paneli' },
+  overview: { title: 'Bosh panel', subtitle: 'Asosiy monitoring paneli' },
   analytics: { title: 'Analitika', subtitle: 'Funnel, segment va to\'lov diagnostikasi' },
   users: { title: 'Foydalanuvchilar', subtitle: 'Qidiruv, segmentlash va boshqaruv' },
   conversations: { title: 'Suhbatlar', subtitle: 'User chat monitoring va tez javoblar' },
@@ -3480,18 +4006,73 @@ const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 const chartTickFont = () => ({ size: isMobile() ? 10 : 12, family: 'Public Sans' });
 const chartLayoutPadding = () => isMobile() ? { left: 6, right: 6, top: 6, bottom: 20 } : { left: 0, right: 0, top: 0, bottom: 0 };
 const chartMaxXTicks = () => isMobile() ? 5 : 12;
-const chartGridColor = () => uiTheme === 'dark' ? 'rgba(167,170,196,0.2)' : (isMobile() ? 'rgba(148,163,184,0.25)' : 'rgba(148,163,184,0.2)');
-const chartTextColor = () => uiTheme === 'dark' ? '#b7bad1' : '#64748b';
+const chartGridColor = () => (isMobile() ? 'rgba(148,163,184,0.25)' : 'rgba(148,163,184,0.2)');
+const chartTextColor = () => '#64748b';
 const chartAccent = () => '#7367f0';
 const chartAccentSoft = () => 'rgba(115,103,240,0.16)';
-const chartMuted = () => uiTheme === 'dark' ? 'rgba(167,170,196,0.75)' : 'rgba(148,163,184,0.7)';
+const chartMuted = () => 'rgba(148,163,184,0.7)';
 const nativeFetch = window.fetch.bind(window);
 
+function setGlobalLoadingState(isLoading) {
+  document.body.classList.toggle('ux-loading', !!isLoading);
+}
+
+function syncQuickDock(tab) {
+  document.querySelectorAll('#uxQuickDock [data-quick-tab]').forEach((el) => {
+    el.classList.toggle('active', el.getAttribute('data-quick-tab') === tab);
+  });
+}
+
+function openUxShortcutsHelp() {
+  document.getElementById('uxShortcutsModal')?.classList.add('show');
+}
+
+function closeUxShortcutsHelp(event) {
+  if (event && event.target && event.target.id !== 'uxShortcutsModal') return;
+  document.getElementById('uxShortcutsModal')?.classList.remove('show');
+}
+
+function applyAccessibilityLabels() {
+  document.querySelectorAll('button, input, select, textarea').forEach((el) => {
+    if (el.getAttribute('aria-label')) return;
+    const title = el.getAttribute('title');
+    if (title) {
+      el.setAttribute('aria-label', title);
+      return;
+    }
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+      const placeholder = el.getAttribute('placeholder');
+      if (placeholder) el.setAttribute('aria-label', placeholder.replace(/\s+/g, ' ').trim());
+    }
+  });
+}
+
+function enhanceTabStructure() {
+  document.querySelectorAll('[id^="tab-"]').forEach((tab) => {
+    tab.classList.add('ux-tab');
+  });
+}
+
+function hydrateEmptyStates() {
+  const map = [
+    { id: 'recentUsersList', text: "So'nggi foydalanuvchilar hozircha yo'q" },
+    { id: 'recentPaymentsList', text: "So'nggi to'lovlar hozircha yo'q" },
+    { id: 'lessonsList', text: "Darslar ro'yxati bo'sh" },
+    { id: 'mediaLibraryList', text: "Media kutubxonada yozuv yo'q" },
+    { id: 'libraryLessonsList', text: "Kutubxonada darslar topilmadi" }
+  ];
+  map.forEach((entry) => {
+    const el = document.getElementById(entry.id);
+    if (!el) return;
+    const txt = (el.textContent || '').toLowerCase();
+    const hasNoData = txt.includes('yo\'q') || txt.includes('bo\'sh') || txt.includes('topilmadi');
+    if (hasNoData) el.innerHTML = `<div class="ux-empty">${entry.text}</div>`;
+  });
+}
+
 function syncUiToggleLabels() {
-  const themeLabel = document.getElementById('uiThemeToggleLabel');
-  if (themeLabel) themeLabel.textContent = uiTheme === 'dark' ? 'Light' : 'Dark';
   const densityLabel = document.getElementById('tableDensityToggleLabel');
-  if (densityLabel) densityLabel.textContent = tableDensity === 'compact' ? 'Comfort' : 'Compact';
+  if (densityLabel) densityLabel.textContent = tableDensity === 'compact' ? 'Keng' : 'Zich';
 }
 
 function updatePageHeader(tab) {
@@ -3561,12 +4142,12 @@ function applyUsersSavedView(view) {
 function buildCommandPaletteData() {
   commandItems.length = 0;
   Object.keys(TAB_META).forEach((tab) => {
-    commandItems.push({ type: 'tab', key: tab, label: `Tab: ${TAB_META[tab].title}`, hint: TAB_META[tab].subtitle });
+    commandItems.push({ type: 'tab', key: tab, label: `Bo'lim: ${TAB_META[tab].title}`, hint: TAB_META[tab].subtitle });
   });
   commandItems.push(
-    { type: 'action', key: 'refresh', label: 'Action: Yangilash (loadAll)', hint: 'Barcha datani reload qiladi', handler: () => loadAll() },
-    { type: 'action', key: 'broadcast', label: 'Action: Broadcast modal', hint: 'Mass xabar oynasini ochadi', handler: () => openBroadcastModal() },
-    { type: 'action', key: 'analytics', label: 'Action: Analytics refresh', hint: 'Analitika datalarini qayta yuklaydi', handler: () => { showTab('analytics'); loadAnalyticsData(); } }
+    { type: 'action', key: 'refresh', label: 'Amal: Yangilash (loadAll)', hint: 'Barcha datani qayta yuklaydi', handler: () => loadAll() },
+    { type: 'action', key: 'broadcast', label: 'Amal: Broadcast oynasi', hint: 'Ommaviy xabar oynasini ochadi', handler: () => openBroadcastModal() },
+    { type: 'action', key: 'analytics', label: 'Amal: Analitikani yangilash', hint: 'Analitika datalarini qayta yuklaydi', handler: () => { showTab('analytics'); loadAnalyticsData(); } }
   );
   allUsers.slice(0, 80).forEach((u) => {
     commandItems.push({
@@ -3675,7 +4256,7 @@ function setTableColumn(type, key, visible) {
 }
 
 function applyUiPreferences() {
-  document.body.classList.toggle('theme-dark', uiTheme === 'dark');
+  document.body.classList.remove('theme-dark');
   document.body.classList.toggle('table-compact', tableDensity === 'compact');
   syncUiToggleLabels();
   configureChartDefaults();
@@ -3686,10 +4267,11 @@ function configureChartDefaults() {
   Chart.defaults.color = chartTextColor();
   Chart.defaults.borderColor = chartGridColor();
   Chart.defaults.font.family = 'Public Sans';
+  Chart.defaults.animation = isMobile() ? false : { duration: 450 };
   Chart.defaults.plugins.legend.labels.usePointStyle = true;
   Chart.defaults.plugins.legend.labels.boxWidth = 8;
   Chart.defaults.plugins.legend.labels.padding = 14;
-  Chart.defaults.plugins.tooltip.backgroundColor = uiTheme === 'dark' ? '#363a51' : '#2f2b3d';
+  Chart.defaults.plugins.tooltip.backgroundColor = '#2f2b3d';
   Chart.defaults.plugins.tooltip.titleColor = '#fff';
   Chart.defaults.plugins.tooltip.bodyColor = '#fff';
   Chart.defaults.plugins.tooltip.cornerRadius = 8;
@@ -3697,8 +4279,7 @@ function configureChartDefaults() {
 }
 
 function toggleUiTheme() {
-  uiTheme = uiTheme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('uiTheme', uiTheme);
+  // Light-only UI retained intentionally.
   applyUiPreferences();
   if (!document.getElementById('dashboard')?.classList.contains('hidden')) loadAll();
 }
@@ -3724,6 +4305,22 @@ window.fetch = function(input, init = {}) {
 };
 
 applyUiPreferences();
+
+let uiResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(uiResizeTimer);
+  uiResizeTimer = setTimeout(() => {
+    configureChartDefaults();
+    const activeTab = document.querySelector('[id^="tab-"]:not(.hidden)')?.id || '';
+    if (activeTab === 'tab-overview') {
+      renderRevenueChart(currentRevenuePeriod);
+      renderSubscriberGrowthChart(currentGrowthPeriod);
+      renderUserTypeChart();
+    } else if (activeTab === 'tab-analytics') {
+      Object.values(analyticsCharts).forEach((c) => c?.resize?.());
+    }
+  }, 220);
+});
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
   year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
@@ -3793,11 +4390,16 @@ function showDashboard() {
   document.getElementById('dashboard').classList.remove('hidden');
   updatePageHeader('overview');
   applyUiPreferences();
+  normalizeTablePrefs();
+  applyAccessibilityLabels();
+  enhanceTabStructure();
   renderTableSettings('users');
   renderTableSettings('payments');
   applyTableColumnVisibility('users');
   applyTableColumnVisibility('payments');
   applyUsersSavedView(currentUsersSavedView);
+  syncQuickDock('overview');
+  hydrateEmptyStates();
   addNotification('Dashboard ochildi', 'info');
   watchResponsiveTables();
   loadAll();
@@ -3814,12 +4416,45 @@ function toggleMobileMenu() {
 }
 
 document.addEventListener('keydown', (e) => {
+  if (activeModalId && e.key === 'Tab') {
+    trapModalFocus(e);
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
     openCommandPalette();
+    return;
+  }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key === '?') {
+    e.preventDefault();
+    openUxShortcutsHelp();
+    return;
+  }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'r' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((document.activeElement?.tagName || '').toUpperCase())) {
+    e.preventDefault();
+    loadAll();
+    return;
+  }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'g') {
+    pendingGoShortcut = 'g';
+    setTimeout(() => { pendingGoShortcut = null; }, 1200);
+    return;
+  }
+  if (pendingGoShortcut === 'g' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const k = e.key.toLowerCase();
+    if (k === 'o') showTab('overview');
+    if (k === 'u') showTab('users');
+    if (k === 'p') showTab('payments');
+    if (k === 'a') showTab('analytics');
+    pendingGoShortcut = null;
   }
   if (e.key === 'Escape') {
+    if (activeModalId) {
+      closeModal(activeModalId);
+      return;
+    }
     closeCommandPalette();
+    closeUxShortcutsHelp();
     document.getElementById('notificationsPanel')?.classList.remove('show');
     document.querySelectorAll('.table-settings-pop').forEach((el) => el.classList.add('hidden'));
   }
@@ -3865,7 +4500,7 @@ function toggleSidebar() {
   const isExpanded = sidebar.classList.contains('expanded');
 
   icon.textContent = isExpanded ? '←' : '→';
-  mainContent.style.marginLeft = isExpanded ? '248px' : '84px';
+  mainContent.style.marginLeft = isExpanded ? '270px' : '94px';
 
   localStorage.setItem('sidebarExpanded', isExpanded);
 }
@@ -3881,11 +4516,11 @@ function toggleSidebar() {
     if (sidebar && mainContent && icon) {
       sidebar.classList.add('expanded');
       icon.textContent = '←';
-      mainContent.style.marginLeft = '248px';
+      mainContent.style.marginLeft = '270px';
     }
   } else {
     const mainContent = document.querySelector('.main-content');
-    if (mainContent) mainContent.style.marginLeft = '84px';
+    if (mainContent) mainContent.style.marginLeft = '94px';
   }
 })();
 
@@ -3898,6 +4533,98 @@ function toggleAdvancedFilters() {
   const label = document.getElementById('advFilterLabel');
   panel.classList.toggle('hidden', !advancedFiltersVisible);
   label.textContent = advancedFiltersVisible ? 'Yopish' : 'Filtrlar';
+}
+
+function updateUsersFilterSummary(activeCount, total) {
+  const el = document.getElementById('usersFilterSummary');
+  if (!el) return;
+  el.textContent = activeCount > 0
+    ? `Filtrlar: ${activeCount} ta faol • ${total} natija`
+    : `Filtrlar: barchasi • ${total} natija`;
+}
+
+function updateUsersBulkBar() {
+  const bar = document.getElementById('usersBulkActionBar');
+  const countEl = document.getElementById('usersBulkCount');
+  const selectAll = document.getElementById('usersSelectAllPage');
+  if (!bar || !countEl) return;
+  const count = selectedUsersOnPage.size;
+  bar.classList.toggle('show', count > 0);
+  countEl.textContent = `${count} ta user tanlangan`;
+  if (selectAll) {
+    const boxes = document.querySelectorAll('#usersTableBody input.row-select');
+    const totalVisible = boxes.length;
+    selectAll.checked = !!totalVisible && count === totalVisible;
+  }
+}
+
+function toggleUserRowSelection(telegramId, checked) {
+  const id = String(telegramId);
+  if (checked) selectedUsersOnPage.add(id);
+  else selectedUsersOnPage.delete(id);
+  updateUsersBulkBar();
+}
+
+function toggleSelectAllUsersPage(checked) {
+  document.querySelectorAll('#usersTableBody input.row-select').forEach((box) => {
+    box.checked = checked;
+    const id = String(box.getAttribute('data-user-id') || '');
+    if (!id) return;
+    if (checked) selectedUsersOnPage.add(id);
+    else selectedUsersOnPage.delete(id);
+  });
+  updateUsersBulkBar();
+}
+
+function clearUsersSelection() {
+  selectedUsersOnPage.clear();
+  document.querySelectorAll('#usersTableBody input.row-select').forEach((box) => { box.checked = false; });
+  const selectAll = document.getElementById('usersSelectAllPage');
+  if (selectAll) selectAll.checked = false;
+  updateUsersBulkBar();
+}
+
+function bulkBroadcastSelectedUsers() {
+  if (!selectedUsersOnPage.size) return;
+  openBroadcastModal();
+  document.getElementById('broadcastTarget').value = 'specific';
+  toggleUserSelect();
+  selectedBroadcastUsers.clear();
+  selectedUsersOnPage.forEach((id) => selectedBroadcastUsers.add(Number(id)));
+  updateSelectedUsersList();
+}
+
+function renderUsersTableSkeleton() {
+  const tbody = document.getElementById('usersTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = Array.from({ length: 6 }).map(() => `
+    <tr>
+      <td class="px-4 py-4"><div class="skeleton h-4 w-4"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-8 w-44"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-24"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-16"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-20"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-24"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-8 w-20"></div></td>
+    </tr>
+  `).join('');
+}
+
+function renderPaymentsTableSkeleton() {
+  const tbody = document.getElementById('paymentsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = Array.from({ length: 6 }).map(() => `
+    <tr>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-28"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-8 w-40"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-20"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-16"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-24"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-20"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-6 w-24"></div></td>
+      <td class="px-5 py-4"><div class="skeleton h-8 w-16"></div></td>
+    </tr>
+  `).join('');
 }
 
 function applyUserFilters() {
@@ -4002,6 +4729,10 @@ function applyUserFilters() {
     infoEl.textContent = activeCount > 0 ? `${activeCount} ta filtr faol` : '';
   }
 
+  updateUsersFilterSummary(activeCount, filtered.length);
+  const maxPage = Math.max(1, Math.ceil(filtered.length / perPage));
+  if (currentPage > maxPage) currentPage = 1;
+
   // Render filtered results
   renderFilteredUsers(filtered);
 }
@@ -4009,16 +4740,24 @@ function applyUserFilters() {
 function renderFilteredUsers(filtered) {
   const start = (currentPage - 1) * perPage;
   const paginated = filtered.slice(start, start + perPage);
+  const pageIds = new Set(paginated.map((u) => String(u.telegram_id)));
+  Array.from(selectedUsersOnPage).forEach((id) => {
+    if (!pageIds.has(id)) selectedUsersOnPage.delete(id);
+  });
 
   const tbody = document.getElementById('usersTableBody');
   if (!paginated.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">Foydalanuvchilar topilmadi</td></tr>';
     applyTableColumnVisibility('users');
+    updateUsersBulkBar();
     return;
   }
 
   tbody.innerHTML = paginated.map(u => `
     <tr class="table-row" onclick="openUserDetail(${u.telegram_id})">
+      <td class="px-4 py-4">
+        <input type="checkbox" class="row-select" data-user-id="${u.telegram_id}" ${selectedUsersOnPage.has(String(u.telegram_id)) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleUserRowSelection(${u.telegram_id}, this.checked)">
+      </td>
       <td data-col="user" class="px-5 py-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
@@ -4049,6 +4788,7 @@ function renderFilteredUsers(filtered) {
     </tr>
   `).join('');
   applyTableColumnVisibility('users');
+  updateUsersBulkBar();
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / perPage);
@@ -4075,6 +4815,7 @@ function resetUserFilters() {
   if (document.getElementById('filterFunnelStep')) document.getElementById('filterFunnelStep').value = 'all';
   if (document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
   if (document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
+  clearUsersSelection();
   currentPage = 1;
   applyUserFilters();
 }
@@ -4292,10 +5033,39 @@ document.querySelectorAll('button[data-growth-period]').forEach(btn => {
   });
 });
 
+async function ensureTabData(tab, force = false) {
+  const now = Date.now();
+  const lastLoadedAt = tabDataState[tab] || 0;
+  if (!force && lastLoadedAt && (now - lastLoadedAt) < 120000) return;
+
+  if (tab === 'progrev') {
+    await loadProgrevSettings();
+    initProgrevFormatEditors();
+    await loadCustomEmojiLibrary();
+  }
+  if (tab === 'custdev') await loadFeedback();
+  if (tab === 'conversations') {
+    await loadConversations();
+    await loadCustomEmojiLibrary();
+  }
+  if (tab === 'renewal') await loadRenewalSettings();
+  if (tab === 'settings') await loadSettingsForm();
+  if (tab === 'analytics') {
+    applyAnalyticsViewPreference();
+    await loadAnalyticsData(force);
+  }
+  if (tab === 'referrals') await loadReferralData();
+  if (tab === 'audit') await loadAuditLogs();
+  tabDataState[tab] = Date.now();
+}
+
 function showTab(tab) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
   document.getElementById('tab-' + tab)?.classList.remove('hidden');
   updatePageHeader(tab);
+  syncQuickDock(tab);
+  hydrateEmptyStates();
+  applyAccessibilityLabels();
 
   document.querySelectorAll('.sidebar-item[data-tab]').forEach(el => el.classList.remove('active'));
   document.querySelector('.sidebar-item[data-tab="' + tab + '"]')?.classList.add('active');
@@ -4303,25 +5073,7 @@ function showTab(tab) {
   document.querySelectorAll('.mobile-nav-item[data-tab]').forEach(el => el.classList.remove('active'));
   document.querySelector('.mobile-nav-item[data-tab="' + tab + '"]')?.classList.add('active');
 
-  // Load tab-specific data
-  if (tab === 'progrev') {
-    loadProgrevSettings();
-    initProgrevFormatEditors();
-    loadCustomEmojiLibrary();
-  }
-  if (tab === 'custdev') loadFeedback();
-  if (tab === 'conversations') {
-    loadConversations();
-    loadCustomEmojiLibrary();
-  }
-  if (tab === 'renewal') loadRenewalSettings();
-  if (tab === 'settings') loadSettingsForm();
-  if (tab === 'analytics') {
-    applyAnalyticsViewPreference();
-    loadAnalyticsData();
-  }
-  if (tab === 'referrals') loadReferralData();
-  if (tab === 'audit') loadAuditLogs();
+  ensureTabData(tab).catch((e) => console.error(`ensureTabData(${tab}) error:`, e));
   addNotification(`Tab ochildi: ${TAB_META[tab]?.title || tab}`, 'info');
 }
 
@@ -4425,6 +5177,7 @@ function renderPromoCodes() {
 function showCreatePromoModal() {
   document.getElementById('promoModal').classList.remove('hidden');
   document.getElementById('promoModal').classList.add('flex');
+  activateModalA11y('promoModal');
   setPromoWizardStep(1);
   document.getElementById('promoCode').value = '';
   document.getElementById('promoDiscount').value = '';
@@ -4448,6 +5201,7 @@ function setPromoWizardStep(step) {
 function closePromoModal() {
   document.getElementById('promoModal').classList.add('hidden');
   document.getElementById('promoModal').classList.remove('flex');
+  deactivateModalA11y('promoModal');
 }
 
 async function createPromoCode() {
@@ -4502,14 +5256,35 @@ async function togglePromoCode(id, isActive) {
 // ========== LOAD DATA ==========
 async function loadAll() {
   try {
+    setGlobalLoadingState(true);
     addNotification('Data yangilanmoqda...', 'info');
-    await Promise.all([loadStats(), loadUsers(), loadPayments(), loadLessons(), loadCustDev(), loadCustdevAnswers(), loadFeedback(), loadConversations(), loadCustomEmojiLibrary(), loadRenewalSettings(), loadSettingsForm(), loadMediaLibrary(), loadPromoCodes()]);
+    await Promise.all([
+      loadStats(),
+      loadUsers(),
+      loadPayments(),
+      loadLessons(),
+      loadCustDev(),
+      loadCustdevAnswers(),
+      loadFeedback(),
+      loadSettingsForm(),
+      loadMediaLibrary(),
+      loadPromoCodes()
+    ]);
+    markTabsStale(['analytics', 'conversations', 'progrev', 'renewal', 'referrals', 'audit']);
+    const activeTab = (document.querySelector('[id^="tab-"]:not(.hidden)')?.id || 'tab-overview').replace('tab-', '');
+    if (activeTab && activeTab !== 'overview' && activeTab !== 'users' && activeTab !== 'payments' && activeTab !== 'lessons' && activeTab !== 'library' && activeTab !== 'custdev' && activeTab !== 'settings' && activeTab !== 'promo') {
+      await ensureTabData(activeTab, true);
+    }
     renderCharts();
     renderTodayStats();
+    hydrateEmptyStates();
+    applyAccessibilityLabels();
     addNotification('Yangilash muvaffaqiyatli yakunlandi', 'info');
   } catch (e) {
     console.error('loadAll error:', e);
     addNotification('Yangilashda xatolik yuz berdi', 'error');
+  } finally {
+    setGlobalLoadingState(false);
   }
 }
 
@@ -4523,6 +5298,15 @@ async function loadStats() {
 
     const conv = stats.totalUsers > 0 ? Math.round((stats.paidUsers / stats.totalUsers) * 100) : 0;
     document.getElementById('statConversion').textContent = conv + '%';
+    const activeRatio = stats.totalUsers > 0 ? Math.round(((stats.activeUsers || 0) / stats.totalUsers) * 100) : 0;
+    const healthTitle = (stats.totalUsers || 0) > 0 ? 'Monitoring faol' : 'Data kutilyapti';
+    const healthMeta = (stats.totalUsers || 0) > 0
+      ? `Jami ${stats.totalUsers} user ichidan ${stats.paidUsers || 0} tasi to'lov qilgan.`
+      : 'Userlar qo\'shilgach bu bo\'lim avtomatik to\'ladi.';
+    document.getElementById('overviewPaidRatio').textContent = conv + '%';
+    document.getElementById('overviewActiveRatio').textContent = activeRatio + '%';
+    document.getElementById('overviewHealthTitle').textContent = healthTitle;
+    document.getElementById('overviewHealthMeta').textContent = healthMeta;
 
     document.getElementById('rightPanelRevenue').textContent = fmtMoney(stats.totalRevenue || 0);
     document.getElementById('rightPanelMonthRevenue').textContent = fmtMoney(stats.monthRevenue || 0);
@@ -4706,6 +5490,7 @@ function renderTodayStats() {
 
 async function loadUsers() {
   try {
+    renderUsersTableSkeleton();
     const data = await (await fetch('/api/users', { headers: { Authorization: auth } })).json();
     allUsers = data;
     renderUsers();
@@ -4717,6 +5502,7 @@ async function loadUsers() {
 
 async function loadPayments() {
   try {
+    renderPaymentsTableSkeleton();
     const data = await (await fetch('/api/payments?all=true', { headers: { Authorization: auth } })).json();
     allPayments = data;
     renderPayments();
@@ -5886,6 +6672,11 @@ function filterPayments(status) {
   document.querySelectorAll('[data-payment-status]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.paymentStatus === status);
   });
+  const summary = document.getElementById('paymentsFilterSummary');
+  if (summary) {
+    const map = { completed: "Filtr: To'langan", pending: 'Filtr: Jarayonda', cancelled: 'Filtr: Bekor qilingan', all: 'Filtr: Barchasi' };
+    summary.textContent = map[status] || 'Filtr: Barchasi';
+  }
 
   renderPayments();
 }
@@ -5897,9 +6688,11 @@ function renderPayments() {
   if (paymentFilter !== 'all') {
     filtered = allPayments.filter(p => p.status === paymentFilter);
   }
+  const meta = document.getElementById('paymentsTableMeta');
+  if (meta) meta.textContent = `${filtered.length} ta yozuv`;
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-gray-400">To\'lovlar yo\'q</td></tr>';
     applyTableColumnVisibility('payments');
     return;
   }
@@ -5930,6 +6723,9 @@ function renderPayments() {
         <td data-col="status" class="px-5 py-4">${statusBadge}</td>
         <td data-col="system" class="px-5 py-4 text-gray-500">${p.payment_system || '-'}</td>
         <td data-col="premium" class="px-5 py-4">${channelStatus}</td>
+        <td data-col="actions" class="px-5 py-4">
+          <button class="btn btn-secondary btn-sm" onclick="openUserDetail(${p.telegram_id || 0})" ${p.telegram_id ? '' : 'disabled'}>👁</button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -6800,14 +7596,69 @@ function renderCustDevCharts() {
 }
 
 // ========== MODALS ==========
+function activateModalA11y(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  prevFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  activeModalId = id;
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  setTimeout(() => {
+    const firstFocusable = el.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable instanceof HTMLElement) firstFocusable.focus();
+    else el.focus();
+  }, 0);
+}
+
+function deactivateModalA11y(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.removeAttribute('role');
+  el.removeAttribute('aria-modal');
+  if (activeModalId === id) activeModalId = null;
+  if (prevFocusedElement instanceof HTMLElement) {
+    prevFocusedElement.focus();
+    prevFocusedElement = null;
+  }
+}
+
+function trapModalFocus(event) {
+  const modal = activeModalId ? document.getElementById(activeModalId) : null;
+  if (!modal) return;
+  const focusables = Array.from(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+    .filter((el) => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'));
+  if (!focusables.length) {
+    event.preventDefault();
+    return;
+  }
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const active = document.activeElement;
+  if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 function openModal(id) {
   document.getElementById(id).classList.remove('hidden');
+  activateModalA11y(id);
   // Load bot username for source link modal
   if (id === 'sourceLinkModal') {
     loadBotUsername();
   }
 }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('hidden');
+  if (id === 'promoModal') el.classList.remove('flex');
+  deactivateModalA11y(id);
+}
 
 // ========== SOURCE LINK GENERATOR ==========
 let botUsername = '';
@@ -7496,7 +8347,7 @@ function setAnalyticsPeriod(days) {
   analyticsPeriodDays = normalized;
   localStorage.setItem('analyticsPeriodDays', String(analyticsPeriodDays));
   updateAnalyticsPeriodUi();
-  loadAnalyticsData();
+  loadAnalyticsData(true);
 }
 
 function applyAnalyticsViewPreference() {
@@ -7516,20 +8367,33 @@ function toggleAnalyticsView() {
   applyAnalyticsViewPreference();
 }
 
-async function loadAnalyticsData() {
+async function loadAnalyticsData(force = false) {
   try {
+    if (analyticsFetchInFlight && !force) return;
     updateAnalyticsPeriodUi();
-    // Load all analytics data in parallel
-    const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData, paymentFrictionData] = await Promise.all([
-      fetch(`/api/analytics/revenue?days=${analyticsPeriodDays}`, { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch(`/api/subscribers/daily?days=${analyticsPeriodDays}`, { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/funnel-diagnostics', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/segments?limit=100', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/payment-friction?limit=100', { headers: { Authorization: auth } }).then(r => r.json())
-    ]);
+    const cacheKey = String(analyticsPeriodDays);
+    const cached = analyticsCacheByPeriod.get(cacheKey);
+    const freshMs = 90 * 1000;
+    let payload = null;
+
+    if (!force && cached && (Date.now() - cached.ts) < freshMs) {
+      payload = cached.data;
+    } else {
+      analyticsFetchInFlight = true;
+      const [revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData, paymentFrictionData] = await Promise.all([
+        fetch(`/api/analytics/revenue?days=${analyticsPeriodDays}`, { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch(`/api/subscribers/daily?days=${analyticsPeriodDays}`, { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch('/api/analytics/sources', { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch('/api/analytics/buyers', { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch('/api/analytics/funnel-diagnostics', { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch('/api/analytics/segments?limit=100', { headers: { Authorization: auth } }).then(r => r.json()),
+        fetch('/api/analytics/payment-friction?limit=100', { headers: { Authorization: auth } }).then(r => r.json())
+      ]);
+      payload = { revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData, paymentFrictionData };
+      analyticsCacheByPeriod.set(cacheKey, { ts: Date.now(), data: payload });
+    }
+    const { revenueData, subscribersData, sourcesData, buyerData, inactivityData, funnelDiagData, segmentDiagData, paymentFrictionData } = payload;
 
     // Render revenue chart
     renderAnalyticsRevenueChart(revenueData);
@@ -7557,6 +8421,8 @@ async function loadAnalyticsData() {
 
   } catch(e) {
     console.error('loadAnalyticsData error:', e);
+  } finally {
+    analyticsFetchInFlight = false;
   }
 }
 
