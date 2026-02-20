@@ -163,7 +163,83 @@ const ProgressBar = styled(LinearProgress)<{ customcolor: string }>(({ customcol
   },
 }))
 
-// Mock data
+// Visual Funnel Step Component
+const FunnelStep = styled(Box)<{ width: number; color: string; index: number }>(({ width, color, index }) => ({
+  position: 'relative',
+  height: 52,
+  marginBottom: 6,
+  borderRadius: 12,
+  overflow: 'hidden',
+  cursor: 'pointer',
+  transition: 'all 300ms ease',
+  opacity: 0,
+  animation: `${fadeInUp} 0.4s ease-out ${index * 60}ms forwards`,
+
+  '&:hover': {
+    transform: 'translateX(8px)',
+    '& .funnel-bar': {
+      opacity: 1,
+    },
+  },
+}))
+
+const FunnelBar = styled(Box)<{ width: number; color: string }>(({ width, color }) => ({
+  position: 'absolute',
+  left: 0,
+  top: 0,
+  bottom: 0,
+  width: `${width}%`,
+  background: `linear-gradient(90deg, ${color}30 0%, ${color}15 100%)`,
+  borderRight: `4px solid ${color}`,
+  transition: 'all 400ms ease',
+}))
+
+const FunnelContent = styled(Box)(() => ({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  height: '100%',
+  padding: '0 20px',
+  zIndex: 1,
+}))
+
+const CategoryBadge = styled(Chip)<{ categoryColor: string }>(({ categoryColor }) => ({
+  backgroundColor: `${categoryColor}15`,
+  color: categoryColor,
+  fontWeight: 700,
+  fontSize: '0.75rem',
+  height: 26,
+  borderRadius: 8,
+}))
+
+const DropOffArrow = styled(Box)(() => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '8px 0',
+  color: '#EF4444',
+  fontSize: '0.8125rem',
+  fontWeight: 700,
+  fontFamily: '"JetBrains Mono", monospace',
+  gap: 6,
+}))
+
+// Detailed funnel data with all lessons
+const detailedFunnelData = [
+  { stage: "Ro'yxatdan o'tgan", users: 644, fromPrev: 100, fromStart: 100, color: '#E07A5F', note: 'Start nuqta', category: 'start' },
+  { stage: 'Darsni boshlagan', users: 495, fromPrev: 76.9, fromStart: 76.9, color: '#E8B931', note: 'Onboarding', category: 'onboard' },
+  { stage: '0-dars', users: 485, fromPrev: 98.0, fromStart: 75.3, color: '#3B82F6', note: 'Kirish darsi', category: 'lesson' },
+  { stage: '1-dars', users: 481, fromPrev: 99.2, fromStart: 74.7, color: '#3B82F6', note: 'Asosiy dars', category: 'lesson' },
+  { stage: '2-dars', users: 320, fromPrev: 66.5, fromStart: 49.7, color: '#3B82F6', note: 'Davom etish', category: 'lesson' },
+  { stage: '3-dars', users: 185, fromPrev: 57.8, fromStart: 28.7, color: '#3B82F6', note: 'Chuqurlashish', category: 'lesson' },
+  { stage: '4-dars', users: 95, fromPrev: 51.4, fromStart: 14.8, color: '#3B82F6', note: 'Yakunlash', category: 'lesson' },
+  { stage: "Pitch ko'rgan", users: 45, fromPrev: 47.4, fromStart: 7.0, color: '#8B5CF6', note: 'Sotuvga qiziqish', category: 'sales' },
+  { stage: 'Checkout ochgan', users: 21, fromPrev: 46.7, fromStart: 3.3, color: '#22C55E', note: "To'lov niyati", category: 'sales' },
+  { stage: "To'lov qilgan", users: 2, fromPrev: 9.5, fromStart: 0.3, color: '#22C55E', note: 'Yakuniy konversiya', category: 'complete' },
+]
+
+// Simple funnel for overview
 const funnelData = [
   { stage: "Ro'yxatdan o'tgan", users: 644, percentage: 100, prevPercentage: 100, note: 'Start nuqta' },
   { stage: 'Darsni boshlagan', users: 495, percentage: 76.9, prevPercentage: 76.9, note: 'Onboarding bosqichi' },
@@ -611,57 +687,326 @@ export default function AnalyticsPage() {
         </Grid>
       </Grid>
 
-      {/* Funnel Table */}
-      <ChartCard delay={750}>
+      {/* Detailed Funnel with Visual */}
+      <ChartCard delay={750} sx={{ mb: 5 }}>
         <ChartTitle>
           <IconBox color="linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)">
-            <Activity size={20} />
+            <Activity size={22} />
           </IconBox>
-          Batafsil Funnel Ma'lumotlari
+          Batafsil Voronka Analizi
+          <Chip
+            label={`${detailedFunnelData.length} bosqich`}
+            size="small"
+            sx={{ ml: 'auto', fontWeight: 700, backgroundColor: '#F5F3EF', fontSize: '0.875rem' }}
+          />
         </ChartTitle>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <StyledTableHeadCell>Bosqich</StyledTableHeadCell>
-                <StyledTableHeadCell>User</StyledTableHeadCell>
-                <StyledTableHeadCell>Prev dan</StyledTableHeadCell>
-                <StyledTableHeadCell>Start dan</StyledTableHeadCell>
-                <StyledTableHeadCell>Izoh</StyledTableHeadCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {funnelData.map((row, index) => (
-                <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#F8F6F3' } }}>
-                  <StyledTableCell sx={{ fontWeight: 600, color: '#1A1A2E' }}>
-                    {row.stage}
-                  </StyledTableCell>
-                  <StyledTableCell>
-                    <Typography sx={{ fontWeight: 700, fontSize: '1.0625rem', color: '#1A1A2E' }}>
-                      {row.users}
-                    </Typography>
-                  </StyledTableCell>
-                  <StyledTableCell>
-                    <Typography sx={{ fontWeight: 600, color: row.percentage < 50 ? '#EF4444' : '#22C55E' }}>
-                      {row.percentage}%
-                    </Typography>
-                  </StyledTableCell>
-                  <StyledTableCell>
-                    <Typography sx={{ fontWeight: 600, color: '#6B7280' }}>
-                      {row.prevPercentage}%
-                    </Typography>
-                  </StyledTableCell>
-                  <StyledTableCell>
-                    <Typography sx={{ fontSize: '0.875rem', color: '#9CA3AF' }}>
-                      {row.note}
-                    </Typography>
-                  </StyledTableCell>
-                </TableRow>
+
+        <Grid container spacing={4}>
+          {/* Visual Funnel */}
+          <Grid item xs={12} lg={5}>
+            <Box sx={{ mb: 3 }}>
+              <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A2E', mb: 3 }}>
+                Vizual Voronka
+              </Typography>
+              {detailedFunnelData.map((step, index) => (
+                <Box key={step.stage}>
+                  <FunnelStep width={step.fromStart} color={step.color} index={index}>
+                    <FunnelBar className="funnel-bar" width={step.fromStart} color={step.color} />
+                    <FunnelContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 10,
+                            background: `${step.color}20`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: step.color,
+                            fontWeight: 800,
+                            fontSize: '0.875rem',
+                            fontFamily: '"JetBrains Mono", monospace',
+                          }}
+                        >
+                          {index + 1}
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1A1A2E' }}>
+                            {step.stage}
+                          </Typography>
+                          <Typography sx={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 500 }}>
+                            {step.note}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography sx={{ fontSize: '1.125rem', fontWeight: 800, color: '#1A1A2E', fontFamily: '"JetBrains Mono", monospace' }}>
+                          {step.users.toLocaleString()}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: step.color }}>
+                          {step.fromStart}%
+                        </Typography>
+                      </Box>
+                    </FunnelContent>
+                  </FunnelStep>
+
+                  {index < detailedFunnelData.length - 1 && step.fromPrev < 80 && (
+                    <DropOffArrow>
+                      <TrendingDown size={14} />
+                      -{(100 - detailedFunnelData[index + 1].fromPrev).toFixed(1)}% drop
+                    </DropOffArrow>
+                  )}
+                </Box>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </Box>
+
+            {/* Legend */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 3, pt: 3, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+              <CategoryBadge label="Start" categoryColor="#E07A5F" size="small" />
+              <CategoryBadge label="Onboarding" categoryColor="#E8B931" size="small" />
+              <CategoryBadge label="Darslar" categoryColor="#3B82F6" size="small" />
+              <CategoryBadge label="Sotuvlar" categoryColor="#8B5CF6" size="small" />
+              <CategoryBadge label="Yakuniy" categoryColor="#22C55E" size="small" />
+            </Box>
+          </Grid>
+
+          {/* Detailed Table */}
+          <Grid item xs={12} lg={7}>
+            <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A2E', mb: 3 }}>
+              Batafsil Ma'lumotlar
+            </Typography>
+            <TableContainer sx={{ maxHeight: 600 }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableHeadCell sx={{ backgroundColor: '#FAFAFA' }}>Bosqich</StyledTableHeadCell>
+                    <StyledTableHeadCell sx={{ backgroundColor: '#FAFAFA' }}>User</StyledTableHeadCell>
+                    <StyledTableHeadCell sx={{ backgroundColor: '#FAFAFA' }}>Oldingi dan</StyledTableHeadCell>
+                    <StyledTableHeadCell sx={{ backgroundColor: '#FAFAFA' }}>Start dan</StyledTableHeadCell>
+                    <StyledTableHeadCell sx={{ backgroundColor: '#FAFAFA' }}>Yo'qotish</StyledTableHeadCell>
+                    <StyledTableHeadCell sx={{ backgroundColor: '#FAFAFA' }}>Izoh</StyledTableHeadCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {detailedFunnelData.map((row, index) => {
+                    const prevUsers = index > 0 ? detailedFunnelData[index - 1].users : row.users
+                    const dropOff = prevUsers - row.users
+
+                    return (
+                      <TableRow
+                        key={index}
+                        sx={{
+                          '&:hover': { backgroundColor: '#F8F6F3' },
+                          backgroundColor: row.category === 'lesson' ? 'rgba(59, 130, 246, 0.02)' : 'transparent',
+                        }}
+                      >
+                        <StyledTableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box
+                              sx={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: '50%',
+                                backgroundColor: row.color,
+                              }}
+                            />
+                            <Typography sx={{ fontWeight: 700, color: '#1A1A2E', fontSize: '1rem' }}>
+                              {row.stage}
+                            </Typography>
+                          </Box>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Typography sx={{ fontWeight: 800, fontSize: '1.125rem', color: '#1A1A2E', fontFamily: '"JetBrains Mono", monospace' }}>
+                            {row.users.toLocaleString()}
+                          </Typography>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Typography sx={{
+                            fontWeight: 700,
+                            fontSize: '1rem',
+                            color: row.fromPrev >= 80 ? '#22C55E' : row.fromPrev >= 50 ? '#F59E0B' : '#EF4444',
+                          }}>
+                            {row.fromPrev}%
+                          </Typography>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#6B7280' }}>
+                            {row.fromStart}%
+                          </Typography>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          {dropOff > 0 ? (
+                            <Typography sx={{
+                              fontWeight: 700,
+                              fontSize: '0.9375rem',
+                              color: '#EF4444',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}>
+                              <TrendingDown size={16} />
+                              -{dropOff}
+                            </Typography>
+                          ) : (
+                            <Typography sx={{ fontWeight: 600, color: '#9CA3AF', fontSize: '0.875rem' }}>
+                              —
+                            </Typography>
+                          )}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Typography sx={{ fontSize: '0.9375rem', color: '#6B7280', fontWeight: 500 }}>
+                            {row.note}
+                          </Typography>
+                        </StyledTableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Summary Stats */}
+            <Box sx={{
+              mt: 3,
+              pt: 3,
+              borderTop: '1px solid rgba(0,0,0,0.06)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 3,
+            }}>
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>
+                  Umumiy konversiya
+                </Typography>
+                <Typography sx={{ fontSize: '1.75rem', fontWeight: 800, color: '#22C55E', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+                  0.3%
+                </Typography>
+              </Box>
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>
+                  Eng katta yo'qotish
+                </Typography>
+                <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#EF4444' }}>
+                  2-dars → 3-dars (-135)
+                </Typography>
+              </Box>
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>
+                  Eng yaxshi bosqich
+                </Typography>
+                <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#22C55E' }}>
+                  0-dars → 1-dars (99.2%)
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
       </ChartCard>
+
+      {/* Payment Method and Recommendations */}
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <ChartCard delay={800}>
+            <ChartTitle>
+              <IconBox color="linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)">
+                <ShoppingCart size={20} />
+              </IconBox>
+              To'lov usuli bo'yicha konversiya
+            </ChartTitle>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              {[
+                { method: 'Payme', users: 1, total: 15, percentage: 6.7, color: '#22C55E' },
+                { method: 'Click', users: 1, total: 4, percentage: 25.0, color: '#3B82F6' },
+                { method: 'Uzum', users: 0, total: 2, percentage: 0, color: '#E07A5F' },
+              ].map((item, index) => (
+                <Box key={index}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                    <Typography sx={{ fontWeight: 700, color: '#1A1A2E', fontSize: '1.0625rem' }}>
+                      {item.method}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Typography sx={{ fontWeight: 600, color: '#6B7280', fontSize: '1rem' }}>
+                        {item.users}/{item.total}
+                      </Typography>
+                      <Chip
+                        label={`${item.percentage}%`}
+                        size="small"
+                        sx={{
+                          backgroundColor: item.percentage > 0 ? `${item.color}15` : 'rgba(0,0,0,0.06)',
+                          color: item.percentage > 0 ? item.color : '#9CA3AF',
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                  <ProgressBar
+                    variant="determinate"
+                    value={item.percentage}
+                    customcolor={item.color}
+                    sx={{ height: 12, borderRadius: 6 }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </ChartCard>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <ChartCard delay={850}>
+            <ChartTitle>
+              <IconBox color="linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)">
+                <Target size={20} />
+              </IconBox>
+              Asosiy tavsiyalar
+            </ChartTitle>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              {[
+                { priority: 'Yuqori', action: "2-dars → 3-dars o'tishni yaxshilang", impact: '135 user yo\'qotilmoqda', color: '#EF4444' },
+                { priority: "O'rta", action: 'Pitch ko\'rgan, checkout ochmagan userlarga follow-up yuboring', impact: '24 user kutmoqda', color: '#F59E0B' },
+                { priority: "O'rta", action: '4-dars tugallaganlarni pitchga yo\'naltiring', impact: '50 user potensial', color: '#F59E0B' },
+                { priority: 'Past', action: 'Checkout ochgan, to\'lov qilmaganlarni eslatma bilan qaytaring', impact: '19 user stuck', color: '#3B82F6' },
+              ].map((item, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    p: 2,
+                    borderRadius: 12,
+                    backgroundColor: `${item.color}08`,
+                    border: `1px solid ${item.color}20`,
+                    transition: 'all 200ms ease',
+                    '&:hover': {
+                      backgroundColor: `${item.color}12`,
+                      transform: 'translateX(4px)',
+                    },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <Chip
+                      label={item.priority}
+                      size="small"
+                      sx={{
+                        backgroundColor: `${item.color}20`,
+                        color: item.color,
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        height: 24,
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '0.8125rem', color: item.color, fontWeight: 600 }}>
+                      {item.impact}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: '#1A1A2E' }}>
+                    {item.action}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </ChartCard>
+        </Grid>
+      </Grid>
     </Box>
   )
 }
