@@ -15,12 +15,12 @@ export interface ButtonProps extends Omit<MuiButtonProps, 'variant'> {
 
 const StyledButton = styled(MuiButton, {
   shouldForwardProp: (prop) => !['colorScheme', 'loading'].includes(prop as string),
-})<{ colorScheme?: string }>(({ theme, colorScheme = 'primary' }) => {
+})<{ colorScheme?: string }>(({ colorScheme = 'primary' }) => {
   const colors: Record<string, { main: string; dark: string; light: string; contrastText: string }> = {
     primary: {
-      main: '#E07A5F',
-      dark: '#C86B52',
-      light: '#E8927A',
+      main: '#6366F1',
+      dark: '#4F46E5',
+      light: '#818CF8',
       contrastText: '#FFFFFF',
     },
     success: {
@@ -30,9 +30,9 @@ const StyledButton = styled(MuiButton, {
       contrastText: '#FFFFFF',
     },
     warning: {
-      main: '#E8B931',
-      dark: '#D4A52A',
-      light: '#ECCC5A',
+      main: '#F59E0B',
+      dark: '#D97706',
+      light: '#FBBF24',
       contrastText: '#1A1A2E',
     },
     danger: {
@@ -52,10 +52,11 @@ const StyledButton = styled(MuiButton, {
   const color = colors[colorScheme] || colors.primary
 
   return {
-    borderRadius: '8px',
-    fontWeight: 500,
+    borderRadius: '12px',
+    fontWeight: 600,
     textTransform: 'none' as const,
     transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
 
     '&.variant-solid': {
       backgroundColor: color.main,
@@ -103,17 +104,17 @@ const StyledButton = styled(MuiButton, {
     },
 
     '&.MuiButton-sizeSmall': {
-      padding: '6px 14px',
+      padding: '8px 16px',
       fontSize: '0.8125rem',
     },
 
     '&.MuiButton-sizeMedium': {
-      padding: '10px 20px',
-      fontSize: '0.875rem',
+      padding: '12px 24px',
+      fontSize: '0.9375rem',
     },
 
     '&.MuiButton-sizeLarge': {
-      padding: '12px 28px',
+      padding: '14px 32px',
       fontSize: '1rem',
     },
   }

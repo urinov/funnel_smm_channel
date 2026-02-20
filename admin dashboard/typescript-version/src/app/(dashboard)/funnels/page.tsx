@@ -10,19 +10,11 @@ import { styled } from '@mui/material/styles'
 import {
   Plus,
   MoreVertical,
-  Users,
-  DollarSign,
-  TrendingUp,
-  Play,
-  Pause,
-  Copy,
-  Trash2,
-  Edit2,
   GitBranch,
   ArrowRight,
 } from 'lucide-react'
 
-import { Card, Button, Badge, Modal, Input, EmptyState } from '@/components/ui'
+import { Card, Button, Modal, Input } from '@/components/ui'
 
 interface Funnel {
   id: string
@@ -43,8 +35,8 @@ interface Funnel {
 const mockFunnels: Funnel[] = [
   {
     id: '1',
-    name: 'Main Sales Funnel',
-    description: 'Primary funnel for course sales',
+    name: 'Asosiy Sotish Voronkasi',
+    description: 'Kurs sotish uchun asosiy voronka',
     isDefault: true,
     isActive: true,
     stats: {
@@ -58,8 +50,8 @@ const mockFunnels: Funnel[] = [
   },
   {
     id: '2',
-    name: 'VIP Funnel',
-    description: 'High-ticket offer funnel',
+    name: 'VIP Voronka',
+    description: 'Yuqori narxli takliflar voronkasi',
     isDefault: false,
     isActive: true,
     stats: {
@@ -73,8 +65,8 @@ const mockFunnels: Funnel[] = [
   },
   {
     id: '3',
-    name: 'Re-engagement Funnel',
-    description: 'For inactive users',
+    name: 'Qayta faollashtirish',
+    description: 'Faol bo\'lmagan foydalanuvchilar uchun',
     isDefault: false,
     isActive: false,
     stats: {
@@ -93,14 +85,14 @@ const FunnelCard = styled(Card)(() => ({
   transition: 'all 300ms ease',
   cursor: 'pointer',
   background: '#FFFFFF',
-  borderRadius: 20,
-  border: '1px solid rgba(0, 0, 0, 0.06)',
-  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03)',
+  borderRadius: 24,
+  border: '1px solid rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
 
   '&:hover': {
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-    transform: 'translateY(-4px)',
-    borderColor: '#E07A5F',
+    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.12)',
+    transform: 'translateY(-6px)',
+    borderColor: '#6366F1',
   },
 }))
 
@@ -108,17 +100,17 @@ const StatusDot = styled(Box)<{ active: boolean }>(({ active }) => ({
   width: 8,
   height: 8,
   borderRadius: '50%',
-  backgroundColor: active ? '#10B981' : '#94A3B8',
+  backgroundColor: active ? '#22C55E' : '#94A3B8',
 }))
 
 const StatBox = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '12px 16px',
-  borderRadius: 10,
-  backgroundColor: '#F8F6F3',
-  border: '1px solid rgba(0, 0, 0, 0.04)',
+  padding: '14px 16px',
+  borderRadius: 14,
+  backgroundColor: '#F5F3FF',
+  border: '1px solid rgba(99, 102, 241, 0.08)',
 }))
 
 export default function FunnelsPage() {
@@ -178,18 +170,18 @@ export default function FunnelsPage() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Box
                       sx={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 12,
-                        background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
+                        width: 48,
+                        height: 48,
+                        borderRadius: 14,
+                        background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: 'white',
-                        boxShadow: '0 4px 12px rgba(224, 122, 95, 0.3)',
+                        boxShadow: '0 6px 16px rgba(99, 102, 241, 0.3)',
                       }}
                     >
-                      <GitBranch size={22} />
+                      <GitBranch size={24} />
                     </Box>
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -201,11 +193,11 @@ export default function FunnelsPage() {
                             label="Asosiy"
                             size="small"
                             sx={{
-                              height: 22,
+                              height: 24,
                               fontSize: '0.75rem',
                               fontWeight: 700,
-                              backgroundColor: 'rgba(224, 122, 95, 0.15)',
-                              color: '#E07A5F',
+                              backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                              color: '#6366F1',
                             }}
                           />
                         )}
@@ -283,19 +275,19 @@ export default function FunnelsPage() {
           <Box
             sx={{
               height: '100%',
-              minHeight: 320,
+              minHeight: 340,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '2px dashed rgba(224, 122, 95, 0.3)',
-              borderRadius: 20,
+              border: '2px dashed rgba(99, 102, 241, 0.3)',
+              borderRadius: 24,
               cursor: 'pointer',
               transition: 'all 300ms ease',
               backgroundColor: '#FFFFFF',
               '&:hover': {
-                borderColor: '#E07A5F',
-                backgroundColor: 'rgba(224, 122, 95, 0.05)',
-                transform: 'translateY(-4px)',
+                borderColor: '#6366F1',
+                backgroundColor: 'rgba(99, 102, 241, 0.04)',
+                transform: 'translateY(-6px)',
               },
             }}
             onClick={() => setIsModalOpen(true)}
@@ -303,20 +295,20 @@ export default function FunnelsPage() {
             <Box sx={{ textAlign: 'center' }}>
               <Box
                 sx={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 16,
-                  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
+                  width: 64,
+                  height: 64,
+                  borderRadius: 18,
+                  background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   mx: 'auto',
                   mb: 2.5,
-                  boxShadow: '0 4px 16px rgba(224, 122, 95, 0.3)',
+                  boxShadow: '0 8px 24px rgba(99, 102, 241, 0.3)',
                 }}
               >
-                <Plus size={28} />
+                <Plus size={30} />
               </Box>
               <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A2E', mb: 1, fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
                 Yangi Voronka Yaratish

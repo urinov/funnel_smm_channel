@@ -9,13 +9,13 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import CommandPalette from './CommandPalette'
 
-const HEADER_HEIGHT = 72
-const SIDEBAR_WIDTH = 280
+const HEADER_HEIGHT = 80
+const SIDEBAR_WIDTH = 88
 
 const LayoutRoot = styled(Box)(() => ({
   display: 'flex',
   minHeight: '100vh',
-  backgroundColor: '#F8F6F3',
+  background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #EEF2FF 100%)',
 }))
 
 const MainWrapper = styled(Box)(({ theme }) => ({
@@ -38,7 +38,7 @@ const ContentWrapper = styled(Box)(() => ({
 
 const Content = styled(Box)(({ theme }) => ({
   padding: 32,
-  maxWidth: 1480,
+  maxWidth: 1600,
   margin: '0 auto',
   width: '100%',
 

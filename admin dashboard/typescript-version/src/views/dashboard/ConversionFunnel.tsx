@@ -21,42 +21,42 @@ interface FunnelStepData {
 const mockFunnelData: FunnelStepData[] = [
   {
     id: 'start',
-    label: 'Started Bot',
+    label: 'Botni boshladi',
     count: 2847,
     percentage: 100,
     icon: <Users size={16} />,
-    color: '#E07A5F',
+    color: '#6366F1',
   },
   {
     id: 'lesson',
-    label: 'Completed Lesson 1',
+    label: '1-darsni tugatdi',
     count: 2276,
     percentage: 80,
     dropOff: 20,
     icon: <BookOpen size={16} />,
-    color: '#E8B931',
+    color: '#8B5CF6',
   },
   {
     id: 'custdev',
-    label: 'Answered Custdev',
+    label: 'Custdev javob berdi',
     count: 1423,
     percentage: 50,
     dropOff: 30,
     icon: <FileText size={16} />,
-    color: '#3B82F6',
+    color: '#A855F7',
   },
   {
     id: 'pitch',
-    label: 'Saw Pitch',
+    label: "Pitch ko'rdi",
     count: 854,
     percentage: 30,
     dropOff: 20,
     icon: <Zap size={16} />,
-    color: '#8B5CF6',
+    color: '#D946EF',
   },
   {
     id: 'paid',
-    label: 'Made Payment',
+    label: "To'lov qildi",
     count: 412,
     percentage: 14.5,
     dropOff: 15.5,
@@ -83,9 +83,9 @@ const FunnelContainer = styled(Box)(() => ({
 const FunnelStep = styled(Box)<{ index: number }>(({ index }) => ({
   position: 'relative',
   marginBottom: 8,
-  borderRadius: 12,
+  borderRadius: 14,
   overflow: 'hidden',
-  backgroundColor: 'rgba(0, 0, 0, 0.02)',
+  backgroundColor: 'rgba(99, 102, 241, 0.03)',
   cursor: 'pointer',
   transition: 'all 250ms ease',
   opacity: 0,
@@ -93,7 +93,7 @@ const FunnelStep = styled(Box)<{ index: number }>(({ index }) => ({
 
   '&:hover': {
     transform: 'translateX(6px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+    boxShadow: '0 4px 16px rgba(99, 102, 241, 0.1)',
     '& .funnel-bar': {
       opacity: 1,
     },
@@ -110,7 +110,7 @@ const FunnelBar = styled(Box)<{ percentage: number; color: string }>(({ percenta
   top: 0,
   bottom: 0,
   width: `${percentage}%`,
-  background: `linear-gradient(90deg, ${color}20 0%, ${color}10 100%)`,
+  background: `linear-gradient(90deg, ${color}20 0%, ${color}08 100%)`,
   borderRight: `3px solid ${color}`,
   transition: 'width 600ms ease, opacity 200ms ease',
   opacity: 0.85,
@@ -147,7 +147,7 @@ const DropOffIndicator = styled(Box)(() => ({
   alignItems: 'center',
   justifyContent: 'center',
   padding: '6px 0',
-  color: '#EF4444',
+  color: '#F472B6',
   fontSize: '0.6875rem',
   fontWeight: 600,
   gap: 4,
@@ -160,7 +160,7 @@ export default function ConversionFunnel() {
   }
 
   return (
-    <Card title="Conversion Funnel">
+    <Card title="Konversiya Voronkasi">
       <FunnelContainer>
         {mockFunnelData.map((step, index) => (
           <Box key={step.id}>
@@ -171,11 +171,11 @@ export default function ConversionFunnel() {
                     {step.label}
                   </Typography>
                   <Typography variant="caption" sx={{ display: 'block' }}>
-                    {formatNumber(step.count)} users ({step.percentage}%)
+                    {formatNumber(step.count)} foydalanuvchi ({step.percentage}%)
                   </Typography>
                   {step.dropOff && (
-                    <Typography variant="caption" display="block" sx={{ color: '#EF4444', mt: 0.5 }}>
-                      Drop-off: {step.dropOff}%
+                    <Typography variant="caption" display="block" sx={{ color: '#F472B6', mt: 0.5 }}>
+                      Tushish: {step.dropOff}%
                     </Typography>
                   )}
                 </Box>
@@ -210,7 +210,7 @@ export default function ConversionFunnel() {
                         fontWeight: 500,
                       }}
                     >
-                      {step.percentage}% of total
+                      {step.percentage}% jami
                     </Typography>
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
@@ -232,7 +232,7 @@ export default function ConversionFunnel() {
             {step.dropOff && index < mockFunnelData.length - 1 && (
               <DropOffIndicator>
                 <TrendingDown size={12} />
-                {step.dropOff}% drop-off
+                {step.dropOff}% tushish
               </DropOffIndicator>
             )}
           </Box>
@@ -258,7 +258,7 @@ export default function ConversionFunnel() {
               mb: 0.5,
             }}
           >
-            Overall Conversion
+            Umumiy Konversiya
           </Typography>
           <Typography
             sx={{
@@ -281,7 +281,7 @@ export default function ConversionFunnel() {
               mb: 0.5,
             }}
           >
-            vs Last Month
+            O'tgan oyga nisbatan
           </Typography>
           <Typography
             sx={{

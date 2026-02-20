@@ -15,14 +15,15 @@ import {
   Clock,
   CreditCard,
   UserPlus,
-  Sparkles,
+  BookOpen,
+  Calendar,
+  ArrowRight,
 } from 'lucide-react'
 
-import { StatCard } from '@/components/ui'
-import LivePulse from './LivePulse'
+import { StatCard, Card } from '@/components/ui'
+import HeroBanner from './HeroBanner'
 import RevenueChart from './RevenueChart'
 import RecentTransactions from './RecentTransactions'
-import ActionQueue from './ActionQueue'
 import ConversionFunnel from './ConversionFunnel'
 
 const fadeInUp = keyframes`
@@ -36,54 +37,11 @@ const fadeInUp = keyframes`
   }
 `
 
-const PageHeader = styled(Box)(() => ({
-  marginBottom: 40,
-  opacity: 0,
-  animation: `${fadeInUp} 0.5s ease-out forwards`,
-}))
-
-const WelcomeContainer = styled(Box)(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 16,
-  marginBottom: 8,
-}))
-
-const WelcomeIcon = styled(Box)(() => ({
-  width: 48,
-  height: 48,
-  borderRadius: 14,
-  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#FFFFFF',
-  boxShadow: '0 4px 16px rgba(224, 122, 95, 0.3)',
-}))
-
-const WelcomeText = styled(Typography)(() => ({
-  fontSize: '2.25rem',
-  fontWeight: 800,
-  letterSpacing: '-0.02em',
-  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  backgroundClip: 'text',
-  fontFamily: '"Plus Jakarta Sans", sans-serif',
-}))
-
-const SubtitleText = styled(Typography)(() => ({
-  fontSize: '1.125rem',
-  color: '#6B7280',
-  fontWeight: 500,
-  paddingLeft: 64,
-}))
-
 const SectionTitle = styled(Typography)(() => ({
-  fontSize: '1.375rem',
+  fontSize: '1.25rem',
   fontWeight: 700,
   color: '#1A1A2E',
-  marginBottom: 24,
+  marginBottom: 20,
   display: 'flex',
   alignItems: 'center',
   gap: 10,
@@ -92,11 +50,80 @@ const SectionTitle = styled(Typography)(() => ({
   animation: `${fadeInUp} 0.5s ease-out 0.2s forwards`,
 }))
 
-const SectionDot = styled(Box)<{ color?: string }>(({ color = '#E07A5F' }) => ({
+const SectionDot = styled(Box)<{ color?: string }>(({ color = '#6366F1' }) => ({
   width: 10,
   height: 10,
   borderRadius: '50%',
   backgroundColor: color,
+}))
+
+const QuickActionCard = styled(Box)(() => ({
+  padding: 24,
+  borderRadius: 20,
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+  cursor: 'pointer',
+  transition: 'all 300ms ease',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 16,
+
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.12)',
+    borderColor: '#6366F1',
+  },
+}))
+
+const QuickActionIcon = styled(Box)<{ gradient: string }>(({ gradient }) => ({
+  width: 52,
+  height: 52,
+  borderRadius: 14,
+  background: gradient,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#FFFFFF',
+  flexShrink: 0,
+}))
+
+const CalendarCard = styled(Box)(() => ({
+  padding: 24,
+  borderRadius: 24,
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+}))
+
+const CalendarDay = styled(Box)<{ isToday?: boolean; hasEvent?: boolean }>(({ isToday, hasEvent }) => ({
+  width: 36,
+  height: 36,
+  borderRadius: 10,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '0.875rem',
+  fontWeight: isToday ? 700 : 500,
+  color: isToday ? '#FFFFFF' : '#6B7280',
+  backgroundColor: isToday ? '#6366F1' : 'transparent',
+  position: 'relative',
+  cursor: 'pointer',
+  transition: 'all 200ms ease',
+
+  '&:hover': {
+    backgroundColor: isToday ? '#6366F1' : '#F5F3FF',
+  },
+
+  '&::after': hasEvent ? {
+    content: '""',
+    position: 'absolute',
+    bottom: 4,
+    width: 4,
+    height: 4,
+    borderRadius: '50%',
+    backgroundColor: isToday ? '#FFFFFF' : '#F472B6',
+  } : {},
 }))
 
 interface DashboardStats {
@@ -133,6 +160,30 @@ const mockStats: DashboardStats = {
   },
 }
 
+const quickActions = [
+  {
+    id: 1,
+    title: 'Yangi dars qo\'shish',
+    subtitle: 'Kontent yarating',
+    icon: BookOpen,
+    gradient: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+  },
+  {
+    id: 2,
+    title: 'Xabarlarni ko\'rish',
+    subtitle: '7 ta kutmoqda',
+    icon: MessageSquare,
+    gradient: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)',
+  },
+  {
+    id: 3,
+    title: 'Tranzaksiyalar',
+    subtitle: 'Bugungi sotuvlar',
+    icon: CreditCard,
+    gradient: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
+  },
+]
+
 export default function CommandCenter() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -162,31 +213,32 @@ export default function CommandCenter() {
     return new Intl.NumberFormat('en-US').format(num)
   }
 
+  // Generate calendar days
+  const today = new Date()
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay()
+  const calendarDays = Array.from({ length: 35 }, (_, i) => {
+    const day = i - firstDay + 1
+    if (day < 1 || day > daysInMonth) return null
+    return day
+  })
+
   return (
     <Box>
-      <PageHeader>
-        <WelcomeContainer>
-          <WelcomeIcon>
-            <Sparkles size={26} />
-          </WelcomeIcon>
-          <WelcomeText>Boshqaruv Markazi</WelcomeText>
-        </WelcomeContainer>
-        <SubtitleText>
-          Bot ishlashi va asosiy ko'rsatkichlarning real-vaqt ko'rinishi
-        </SubtitleText>
-      </PageHeader>
-
-      {/* Live Pulse Section */}
-      <Box sx={{ mb: 5 }}>
-        <LivePulse />
-      </Box>
+      {/* Hero Banner */}
+      <HeroBanner
+        userName="Admin"
+        totalUsers={stats?.totalUsers || 0}
+        todayGrowth={stats?.trends.users || 0}
+        activeNow={142}
+      />
 
       {/* Key Metrics Grid */}
       <SectionTitle>
-        <SectionDot color="#E07A5F" />
+        <SectionDot color="#6366F1" />
         Asosiy Ko'rsatkichlar
       </SectionTitle>
-      <Grid container spacing={3} sx={{ mb: 5 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Jami Foydalanuvchilar"
@@ -237,66 +289,89 @@ export default function CommandCenter() {
         </Grid>
       </Grid>
 
-      {/* Quick Action Cards */}
-      <SectionTitle sx={{ animationDelay: '0.3s' }}>
-        <SectionDot color="#22C55E" />
-        Tezkor Amallar
-      </SectionTitle>
-      <Grid container spacing={3} sx={{ mb: 5 }}>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Kutilayotgan Xabarlar"
-            value={loading ? '...' : stats?.pendingMessages || 0}
-            subtitle="Javob kutmoqda"
-            icon={<MessageSquare />}
-            iconColor="danger"
-            loading={loading}
-            onClick={() => console.log('Go to messages')}
-            delay={240}
-          />
+      {/* Quick Actions & Calendar Row */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} lg={8}>
+          <SectionTitle sx={{ animationDelay: '0.3s' }}>
+            <SectionDot color="#F472B6" />
+            Tezkor Amallar
+          </SectionTitle>
+          <Grid container spacing={2}>
+            {quickActions.map((action) => {
+              const Icon = action.icon
+              return (
+                <Grid item xs={12} sm={4} key={action.id}>
+                  <QuickActionCard>
+                    <QuickActionIcon gradient={action.gradient}>
+                      <Icon size={24} />
+                    </QuickActionIcon>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#1A1A2E', mb: 0.25 }}>
+                        {action.title}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500 }}>
+                        {action.subtitle}
+                      </Typography>
+                    </Box>
+                    <ArrowRight size={20} color="#9CA3AF" />
+                  </QuickActionCard>
+                </Grid>
+              )
+            })}
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Yaqinda Tugaydi"
-            value={loading ? '...' : stats?.expiringSubscriptions || 0}
-            subtitle="3 kun ichida"
-            icon={<Clock />}
-            iconColor="warning"
-            loading={loading}
-            onClick={() => console.log('View expiring')}
-            delay={300}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Bugungi Daromad"
-            value={loading ? '...' : formatCurrency(stats?.todayRevenue || 0)}
-            subtitle="Bugungi holatda"
-            icon={<CreditCard />}
-            iconColor="success"
-            loading={loading}
-            delay={360}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Bugun Yangi Userlar"
-            value={loading ? '...' : stats?.todayNewUsers || 0}
-            subtitle="Bugun qo'shilgan"
-            icon={<UserPlus />}
-            iconColor="primary"
-            loading={loading}
-            delay={420}
-          />
+        <Grid item xs={12} lg={4}>
+          <SectionTitle sx={{ animationDelay: '0.3s' }}>
+            <SectionDot color="#22C55E" />
+            Kalendar
+          </SectionTitle>
+          <CalendarCard>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#1A1A2E' }}>
+                {today.toLocaleString('uz-UZ', { month: 'long', year: 'numeric' })}
+              </Typography>
+              <Calendar size={20} color="#6366F1" />
+            </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5, mb: 2 }}>
+              {['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'].map((day) => (
+                <Typography
+                  key={day}
+                  sx={{
+                    textAlign: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#9CA3AF',
+                    py: 1,
+                  }}
+                >
+                  {day}
+                </Typography>
+              ))}
+            </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5 }}>
+              {calendarDays.map((day, i) => (
+                <Box key={i} sx={{ display: 'flex', justifyContent: 'center' }}>
+                  {day && (
+                    <CalendarDay
+                      isToday={day === today.getDate()}
+                      hasEvent={[5, 12, 18, 25].includes(day)}
+                    >
+                      {day}
+                    </CalendarDay>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </CalendarCard>
         </Grid>
       </Grid>
 
-      {/* Charts and Tables Row */}
+      {/* Charts Row */}
       <SectionTitle sx={{ animationDelay: '0.4s' }}>
         <SectionDot color="#3B82F6" />
         Analitika Ko'rinishi
       </SectionTitle>
-      <Grid container spacing={3} sx={{ mb: 5 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} lg={8}>
           <RevenueChart />
         </Grid>
@@ -307,15 +382,12 @@ export default function CommandCenter() {
 
       {/* Bottom Row */}
       <SectionTitle sx={{ animationDelay: '0.5s' }}>
-        <SectionDot color="#E8B931" />
+        <SectionDot color="#F59E0B" />
         So'nggi Faoliyat
       </SectionTitle>
       <Grid container spacing={3}>
-        <Grid item xs={12} lg={7}>
+        <Grid item xs={12}>
           <RecentTransactions />
-        </Grid>
-        <Grid item xs={12} lg={5}>
-          <ActionQueue />
         </Grid>
       </Grid>
     </Box>

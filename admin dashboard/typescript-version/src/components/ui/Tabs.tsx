@@ -47,7 +47,7 @@ const StyledTabs = styled(MuiTabs, {
     '& .MuiTabs-indicator': {
       height: 3,
       borderRadius: '3px 3px 0 0',
-      backgroundColor: '#E07A5F',
+      backgroundColor: '#6366F1',
     },
     '& .MuiTabs-flexContainer': {
       gap: 4,
@@ -60,9 +60,9 @@ const StyledTabs = styled(MuiTabs, {
       '& .MuiTabs-indicator': {
         display: 'none',
       },
-      backgroundColor: '#F5F3EF',
-      borderRadius: 12,
-      padding: 5,
+      backgroundColor: '#F5F3FF',
+      borderRadius: 14,
+      padding: 6,
     }
   }
 
@@ -73,7 +73,7 @@ const StyledTabs = styled(MuiTabs, {
       '& .MuiTabs-indicator': {
         height: 3,
         borderRadius: 0,
-        backgroundColor: '#E07A5F',
+        backgroundColor: '#6366F1',
       },
     }
   }
@@ -98,12 +98,12 @@ const StyledTab = styled(MuiTab, {
     fontFamily: '"Plus Jakarta Sans", sans-serif',
 
     '&:hover': {
-      backgroundColor: 'rgba(224, 122, 95, 0.08)',
+      backgroundColor: 'rgba(99, 102, 241, 0.08)',
       color: '#1A1A2E',
     },
 
     '&.Mui-selected': {
-      color: '#E07A5F',
+      color: '#6366F1',
       fontWeight: 700,
     },
 
@@ -117,12 +117,12 @@ const StyledTab = styled(MuiTab, {
       ...baseStyles,
       borderRadius: 10,
       '&.Mui-selected': {
-        background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
+        background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
         color: '#FFFFFF',
         fontWeight: 700,
-        boxShadow: '0 2px 8px rgba(224, 122, 95, 0.3)',
+        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
         '&:hover': {
-          background: 'linear-gradient(135deg, #C86B52 0%, #D4A52A 100%)',
+          background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
         },
       },
     }
@@ -135,7 +135,7 @@ const BadgeWrapper = styled(Box)(() => ({
   marginLeft: 8,
   padding: '3px 10px',
   borderRadius: 10,
-  backgroundColor: '#EF4444',
+  backgroundColor: '#F472B6',
   color: '#FFFFFF',
   fontSize: '0.75rem',
   fontWeight: 700,

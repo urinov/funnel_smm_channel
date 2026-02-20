@@ -48,9 +48,9 @@ const RevenueIcon = styled(Box)(() => ({
 }))
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(() => ({
-  backgroundColor: 'rgba(0, 0, 0, 0.04)',
-  borderRadius: 12,
-  padding: 4,
+  backgroundColor: '#F5F3FF',
+  borderRadius: 14,
+  padding: 5,
 
   '& .MuiToggleButton-root': {
     border: 'none',
@@ -64,11 +64,11 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(() => ({
     transition: 'all 200ms ease',
 
     '&.Mui-selected': {
-      background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
+      background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
       color: '#FFFFFF',
-      boxShadow: '0 2px 8px rgba(224, 122, 95, 0.3)',
+      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
       '&:hover': {
-        background: 'linear-gradient(135deg, #D4654A 0%, #D1A62C 100%)',
+        background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
       },
     },
   },
@@ -78,17 +78,17 @@ type Period = '7d' | '30d' | '90d' | '1y'
 
 const chartDataByPeriod: Record<Period, { categories: string[]; revenue: number[]; subscriptions: number[] }> = {
   '7d': {
-    categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    categories: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
     revenue: [120000, 180000, 150000, 280000, 220000, 310000, 190000],
     subscriptions: [3, 5, 4, 8, 6, 9, 5],
   },
   '30d': {
-    categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    categories: ['Hafta 1', 'Hafta 2', 'Hafta 3', 'Hafta 4'],
     revenue: [850000, 1200000, 980000, 1350000],
     subscriptions: [22, 31, 26, 35],
   },
   '90d': {
-    categories: ['Jan', 'Feb', 'Mar'],
+    categories: ['Yanvar', 'Fevral', 'Mart'],
     revenue: [3200000, 4100000, 4800000],
     subscriptions: [85, 108, 127],
   },
@@ -136,7 +136,7 @@ export default function RevenueChart() {
         },
       },
     },
-    colors: ['#E07A5F', '#22C55E'],
+    colors: ['#6366F1', '#22C55E'],
     fill: {
       type: 'gradient',
       gradient: {
@@ -168,7 +168,7 @@ export default function RevenueChart() {
     yaxis: [
       {
         title: {
-          text: 'Revenue (UZS)',
+          text: 'Daromad (UZS)',
           style: {
             color: '#9CA3AF',
             fontSize: '12px',
@@ -187,7 +187,7 @@ export default function RevenueChart() {
       {
         opposite: true,
         title: {
-          text: 'Subscriptions',
+          text: 'Obunalar',
           style: {
             color: '#9CA3AF',
             fontSize: '12px',
@@ -235,19 +235,19 @@ export default function RevenueChart() {
             }).format(val),
         },
         {
-          formatter: (val) => `${val} subscriptions`,
+          formatter: (val) => `${val} obuna`,
         },
       ],
     },
   }
 
   const series = [
-    { name: 'Revenue', data: data.revenue },
-    { name: 'Subscriptions', data: data.subscriptions },
+    { name: 'Daromad', data: data.revenue },
+    { name: 'Obunalar', data: data.subscriptions },
   ]
 
   return (
-    <Card title="Revenue Overview" padding="md">
+    <Card title="Daromad Ko'rinishi" padding="md">
       <ChartHeader>
         <TotalRevenue>
           <RevenueIcon>
@@ -262,7 +262,7 @@ export default function RevenueChart() {
                 marginBottom: 0.5,
               }}
             >
-              Total Revenue
+              Jami Daromad
             </Typography>
             <Typography
               sx={{
@@ -288,10 +288,10 @@ export default function RevenueChart() {
           onChange={handlePeriodChange}
           size="small"
         >
-          <ToggleButton value="7d">7 Days</ToggleButton>
-          <ToggleButton value="30d">30 Days</ToggleButton>
-          <ToggleButton value="90d">90 Days</ToggleButton>
-          <ToggleButton value="1y">1 Year</ToggleButton>
+          <ToggleButton value="7d">7 Kun</ToggleButton>
+          <ToggleButton value="30d">30 Kun</ToggleButton>
+          <ToggleButton value="90d">90 Kun</ToggleButton>
+          <ToggleButton value="1y">1 Yil</ToggleButton>
         </StyledToggleButtonGroup>
       </ChartHeader>
 

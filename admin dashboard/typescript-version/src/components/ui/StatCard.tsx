@@ -27,10 +27,10 @@ export interface StatCardProps {
 }
 
 const colorMap = {
-  primary: { bg: 'rgba(224, 122, 95, 0.12)', color: '#E07A5F', gradient: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)' },
+  primary: { bg: 'rgba(99, 102, 241, 0.12)', color: '#6366F1', gradient: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)' },
   success: { bg: 'rgba(34, 197, 94, 0.12)', color: '#22C55E', gradient: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)' },
   warning: { bg: 'rgba(245, 158, 11, 0.12)', color: '#F59E0B', gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)' },
-  danger: { bg: 'rgba(239, 68, 68, 0.12)', color: '#EF4444', gradient: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)' },
+  danger: { bg: 'rgba(244, 114, 182, 0.12)', color: '#F472B6', gradient: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)' },
   info: { bg: 'rgba(59, 130, 246, 0.12)', color: '#3B82F6', gradient: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)' },
 }
 
@@ -51,9 +51,9 @@ const StyledCard = styled(Card, {
   padding: '28px',
   position: 'relative',
   overflow: 'hidden',
-  borderRadius: '20px',
-  border: '1px solid rgba(0, 0, 0, 0.06)',
-  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03)',
+  borderRadius: '24px',
+  border: '1px solid rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.04)',
   transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
   cursor: clickable ? 'pointer' : 'default',
   background: '#FFFFFF',
@@ -61,44 +61,44 @@ const StyledCard = styled(Card, {
   animation: `${fadeInUp} 0.5s ease-out ${animationDelay}ms forwards`,
 
   '&:hover': clickable ? {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
-    borderColor: '#E07A5F',
+    transform: 'translateY(-6px)',
+    boxShadow: '0 12px 40px rgba(99, 102, 241, 0.15)',
+    borderColor: '#6366F1',
   } : {},
 }))
 
 const DecorativeShape = styled(Box)<{ iconColor: string }>(({ iconColor }) => ({
   position: 'absolute',
-  top: -20,
-  right: -20,
-  width: '140px',
-  height: '140px',
+  top: -30,
+  right: -30,
+  width: '160px',
+  height: '160px',
   background: colorMap[iconColor as keyof typeof colorMap]?.gradient || colorMap.primary.gradient,
-  opacity: 0.08,
+  opacity: 0.06,
   borderRadius: '50%',
-  filter: 'blur(30px)',
+  filter: 'blur(40px)',
 }))
 
 const IconWrapper = styled(Box)<{ iconColor: string }>(({ iconColor }) => ({
-  width: 60,
-  height: 60,
-  borderRadius: 18,
+  width: 56,
+  height: 56,
+  borderRadius: 16,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   background: colorMap[iconColor as keyof typeof colorMap]?.gradient || colorMap.primary.gradient,
   color: '#FFFFFF',
-  boxShadow: `0 4px 14px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}40`,
+  boxShadow: `0 8px 24px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}30`,
   transition: 'transform 300ms ease, box-shadow 300ms ease',
 
   '& svg': {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
   },
 
   '.MuiCard-root:hover &': {
-    transform: 'scale(1.05)',
-    boxShadow: `0 6px 18px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}50`,
+    transform: 'scale(1.08)',
+    boxShadow: `0 12px 32px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}40`,
   },
 }))
 
@@ -113,9 +113,9 @@ const TrendBadge = styled(Box)<{ trend: 'up' | 'down' | 'neutral' }>(({ trend })
     display: 'inline-flex',
     alignItems: 'center',
     gap: 5,
-    padding: '8px 12px',
-    borderRadius: 10,
-    fontSize: '0.9375rem',
+    padding: '8px 14px',
+    borderRadius: 12,
+    fontSize: '0.875rem',
     fontWeight: 700,
     backgroundColor: colors[trend].bg,
     color: colors[trend].color,
@@ -246,7 +246,7 @@ export default function StatCard({
       <StyledCard animationDelay={delay}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
           <Skeleton variant="rounded" width={56} height={56} sx={{ borderRadius: '16px' }} />
-          <Skeleton variant="rounded" width={70} height={28} sx={{ borderRadius: '8px' }} />
+          <Skeleton variant="rounded" width={70} height={28} sx={{ borderRadius: '12px' }} />
         </Box>
         <Skeleton variant="text" width="45%" height={20} sx={{ mb: 1 }} />
         <Skeleton variant="text" width="70%" height={40} />
@@ -274,7 +274,7 @@ export default function StatCard({
           fontWeight: 600,
           mb: 0.75,
           textTransform: 'uppercase',
-          fontSize: '0.875rem',
+          fontSize: '0.8125rem',
           letterSpacing: '0.06em',
           position: 'relative',
           zIndex: 1,
@@ -288,7 +288,7 @@ export default function StatCard({
         sx={{
           fontWeight: 800,
           fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontSize: '2.25rem',
+          fontSize: '2rem',
           lineHeight: 1.2,
           color: '#1A1A2E',
           letterSpacing: '-0.02em',
@@ -322,7 +322,7 @@ export default function StatCard({
             color: '#9CA3AF',
             mt: 1.5,
             display: 'block',
-            fontSize: '0.875rem',
+            fontSize: '0.8125rem',
             position: 'relative',
             zIndex: 1,
           }}

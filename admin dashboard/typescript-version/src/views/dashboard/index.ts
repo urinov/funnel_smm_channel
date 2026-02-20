@@ -2,6 +2,7 @@
 // Export all dashboard view components
 
 export { default as CommandCenter } from './CommandCenter'
+export { default as HeroBanner } from './HeroBanner'
 export { default as LivePulse } from './LivePulse'
 export { default as RevenueChart } from './RevenueChart'
 export { default as RecentTransactions } from './RecentTransactions'
