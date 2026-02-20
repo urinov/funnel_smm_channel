@@ -415,17 +415,59 @@
       background: linear-gradient(145deg, #fbfffe, #f2fbfa);
       border-color: #d5ebe7;
     }
+    .ax-shell { display: flex; flex-direction: column; gap: 16px; }
+    .ax-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      border-radius: 22px;
+      border: 1px solid #cce4e1;
+      background:
+        radial-gradient(340px 170px at 90% -20%, rgba(0,121,107,0.14) 0%, rgba(0,121,107,0) 72%),
+        linear-gradient(135deg, #f4fffe 0%, #eaf8f6 50%, #f8fffe 100%);
+      padding: 16px;
+    }
+    .ax-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #3f6864; }
+    .ax-title { font-size: 24px; font-weight: 800; color: #103639; line-height: 1.1; letter-spacing: -0.02em; }
+    .ax-subtitle { font-size: 13px; color: #587477; margin-top: 6px; max-width: 620px; }
+    .ax-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .ax-formula-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .ax-formula {
+      border-radius: 14px;
+      border: 1px solid #d5ebe7;
+      background: rgba(255,255,255,0.72);
+      padding: 10px 12px;
+    }
+    .ax-formula .k { font-size: 11px; font-weight: 700; color: #476f72; text-transform: uppercase; letter-spacing: 0.06em; }
+    .ax-formula .v { font-size: 13px; color: #1f4245; font-weight: 700; margin-top: 3px; }
+    .ax-block {
+      border-radius: 20px;
+      border: 1px solid #d6ebe8;
+      background: linear-gradient(145deg, #fcffff 0%, #f2fbfa 100%);
+      box-shadow: 0 10px 24px rgba(18,50,52,0.06);
+      padding: 16px;
+    }
+    .ax-block-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ax-block-title { font-size: 18px; font-weight: 800; color: #123234; letter-spacing: -0.01em; }
+    .ax-block-desc { font-size: 12px; color: #638082; }
     .rx-kpi {
       border-radius: 18px;
       border: 1px solid #d5ebe7;
       background: linear-gradient(145deg, #f6fffe, #edf9f8);
       padding: 14px;
-      min-height: 92px;
+      min-height: 100px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    .rx-kpi .label { font-size: 11px; color: #5f7e81; font-weight: 600; }
+    .rx-kpi .label { font-size: 11px; color: #5f7e81; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     .rx-kpi .value { font-size: 24px; font-weight: 800; color: #103639; line-height: 1.1; }
     .rx-kpi .hint { font-size: 11px; color: #6f8b8e; }
     .rx-action-btn {
@@ -456,8 +498,11 @@
     .rx-subtitle { font-size: 12px; color: #6d8a8d; }
     @media (max-width: 1100px) {
       .rx-grid-2 { grid-template-columns: 1fr; }
+      .ax-formula-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
+      .ax-hero { flex-direction: column; }
+      .ax-title { font-size: 20px; }
       .rx-grid-3 { grid-template-columns: 1fr; }
       .rx-kpi .value { font-size: 20px; }
     }
@@ -466,7 +511,7 @@
       .diag-list-label { font-size: 12px; }
       .diag-list-meta { font-size: 10px; }
       #tab-analytics .overflow-x-auto { overflow-x: auto !important; }
-      #tab-analytics table { min-width: 620px; }
+      #tab-analytics table { min-width: 760px; }
       .diag-chart-wrap { height: 180px; }
       .diag-table-scroll { max-height: 360px; }
     }
@@ -1870,265 +1915,292 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
     <!-- Analytics Tab -->
     <div id="tab-analytics" class="hidden ref-analytics">
-      <div class="card p-5 mb-4 flex items-center justify-between gap-3">
-        <div>
-          <div class="rx-title">Welcome back, Admin</div>
-          <div class="rx-subtitle">Asosiy metrikalar, conversion va qayerda yo‘qotayotganingiz bitta oynada</div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="analyticsPeriod7" onclick="setAnalyticsPeriod(7)" class="tab text-xs">7 kun</button>
-          <button id="analyticsPeriod30" onclick="setAnalyticsPeriod(30)" class="tab text-xs">30 kun</button>
-          <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🔎 Batafsil ko'rsatish</button>
-        </div>
-      </div>
-
-      <!-- Funnel Diagnostics -->
-      <div class="card p-5 mb-6">
-        <div class="diag-section-title">
-          <h3 class="text-gray-800">🧭 Funnel Diagnostika</h3>
-          <div class="diag-muted">Qayerda yiqilyapti va nima qilish kerak</div>
-        </div>
-
-        <div class="rx-grid-3 mb-4">
-          <div class="rx-kpi mint">
-            <div class="label">Umumiy CR</div>
-            <div class="value" id="diagOverallCR">-</div>
-            <div class="hint">Funnel natijasi</div>
-            <button class="rx-action-btn" onclick="toggleAnalyticsView()">Batafsil ko'rish</button>
+      <div class="ax-shell">
+        <div class="ax-hero">
+          <div>
+            <div class="ax-eyebrow">Analytics</div>
+            <div class="ax-title">Tushunarli Diagnostika Paneli</div>
+            <div class="ax-subtitle">Bu bo‘lim ketma-ket o‘qiladi: avval umumiy holat, keyin qaysi bosqichda yo‘qotish borligi, oxirida aniq follow-up actionlar.</div>
           </div>
-          <div class="rx-kpi pink">
-            <div class="label">Eng katta yo'qotish</div>
-            <div class="value text-[18px] sm:text-[20px]" id="diagBiggestDrop">-</div>
-            <div class="hint">Aynan qaysi bosqichda</div>
-            <button id="diagActionHighIntentBtn" class="rx-action-btn" onclick="prepareHighIntentBroadcast()" disabled>High-intent follow-up</button>
-          </div>
-          <div class="rx-kpi sun">
-            <div class="label">Pitchdan checkoutsiz</div>
-            <div class="value" id="diagStuckUsers">-</div>
-            <div class="hint" id="diagNextAction">-</div>
-            <button id="diagActionStuckBtn" class="rx-action-btn" onclick="prepareStuckPaymentsBroadcast()" disabled>Stuck payments follow-up</button>
+          <div class="ax-control">
+            <button id="analyticsPeriod7" onclick="setAnalyticsPeriod(7)" class="tab text-xs">7 kun</button>
+            <button id="analyticsPeriod30" onclick="setAnalyticsPeriod(30)" class="tab text-xs">30 kun</button>
+            <button id="analyticsViewToggle" onclick="toggleAnalyticsView()" class="btn btn-secondary btn-sm">🔎 Batafsil ko'rsatish</button>
           </div>
         </div>
 
-        <div class="rx-grid-2 mb-4">
-          <div class="diag-surface p-3">
-            <div class="text-xs font-semibold text-gray-600 mb-2">Bosqichlar oqimi</div>
-            <div class="diag-chart-wrap"><canvas id="diagFunnelChart"></canvas></div>
+        <div class="ax-formula-grid">
+          <div class="ax-formula">
+            <div class="k">Prev dan</div>
+            <div class="v">Joriy bosqich / Oldingi bosqich × 100</div>
           </div>
+          <div class="ax-formula">
+            <div class="k">Start dan</div>
+            <div class="v">Joriy bosqich / Ro‘yxatdan o‘tgan × 100</div>
+          </div>
+          <div class="ax-formula">
+            <div class="k">CR</div>
+            <div class="v">To‘lov qilgan / Jami user × 100</div>
+          </div>
+        </div>
+
+        <!-- Funnel Diagnostics -->
+        <section class="ax-block">
+          <div class="ax-block-head">
+            <div>
+              <h3 class="ax-block-title">🧭 Funnel Diagnostika</h3>
+              <div class="ax-block-desc">Qayerda userlar tushib qolyapti va qaysi action birinchi bo‘lishi kerak.</div>
+            </div>
+          </div>
+
+          <div class="rx-grid-3 mb-4">
+            <div class="rx-kpi mint">
+              <div class="label">Umumiy CR</div>
+              <div class="value" id="diagOverallCR">-</div>
+              <div class="hint">Butun funnel yakuniy natijasi</div>
+              <button class="rx-action-btn" onclick="toggleAnalyticsView()">Batafsil bloklarni ochish</button>
+            </div>
+            <div class="rx-kpi pink">
+              <div class="label">Eng katta yo'qotish</div>
+              <div class="value text-[18px] sm:text-[20px]" id="diagBiggestDrop">-</div>
+              <div class="hint">Drop eng katta bo'lgan bosqich</div>
+              <button id="diagActionHighIntentBtn" class="rx-action-btn" onclick="prepareHighIntentBroadcast()" disabled>High-intent follow-up</button>
+            </div>
+            <div class="rx-kpi sun">
+              <div class="label">Pitchdan checkoutsiz</div>
+              <div class="value" id="diagStuckUsers">-</div>
+              <div class="hint" id="diagNextAction">-</div>
+              <button id="diagActionStuckBtn" class="rx-action-btn" onclick="prepareStuckPaymentsBroadcast()" disabled>Stuck payments follow-up</button>
+            </div>
+          </div>
+
+          <div class="rx-grid-2 mb-4">
+            <div class="diag-surface p-3">
+              <div class="text-xs font-semibold text-gray-600 mb-2">Bosqichlar oqimi (son bo'yicha)</div>
+              <div class="diag-chart-wrap"><canvas id="diagFunnelChart"></canvas></div>
+            </div>
+            <div class="diag-table-scroll">
+              <table class="w-full text-sm responsive-table">
+                <thead>
+                  <tr class="text-left text-gray-500 border-b">
+                    <th class="pb-2 px-3">Bosqich</th>
+                    <th class="pb-2 px-3">User</th>
+                    <th class="pb-2 px-3">Prev dan</th>
+                    <th class="pb-2 px-3">Start dan</th>
+                    <th class="pb-2 px-3">Izoh</th>
+                  </tr>
+                </thead>
+                <tbody id="diagFunnelTable">
+                  <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="diagAlerts" class="space-y-2 analytics-advanced">
+            <div class="text-sm text-gray-400">Diagnostika yuklanmoqda...</div>
+          </div>
+        </section>
+
+        <!-- Segment Diagnostics -->
+        <section class="ax-block">
+          <div class="ax-block-head">
+            <div>
+              <h3 class="ax-block-title">🎯 Segment Diagnostika</h3>
+              <div class="ax-block-desc">Qaysi manba, dars bosqichi va aktivlikdagi userlar yaxshiroq konvert qilayotganini solishtiradi.</div>
+            </div>
+            <button onclick="prepareHighIntentBroadcast()" class="btn btn-secondary btn-sm">High-intent follow-up</button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+            <div class="diag-surface rounded-xl p-3">
+              <div class="text-sm font-semibold text-gray-700 mb-2">Manba bo'yicha CR</div>
+              <div id="segmentSourceList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+            </div>
+            <div class="diag-surface rounded-xl p-3">
+              <div class="text-sm font-semibold text-gray-700 mb-2">Dars bo'yicha CR</div>
+              <div id="segmentLessonList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+            </div>
+            <div class="diag-surface rounded-xl p-3">
+              <div class="text-sm font-semibold text-gray-700 mb-2">Aktivlik bo'yicha CR</div>
+              <div id="segmentActivityList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+            </div>
+          </div>
+
+          <div class="rx-grid-2">
+            <div class="diag-surface p-3 xl:col-span-1">
+              <div class="text-sm font-semibold text-gray-700 mb-2">Segmentlar taqqoslanishi</div>
+              <div class="diag-chart-wrap"><canvas id="segmentMixChart"></canvas></div>
+            </div>
+            <div class="xl:col-span-2">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm font-semibold text-gray-700">High-intent (to'lamagan) userlar</div>
+                <div class="diag-chip" id="highIntentCount">0 ta</div>
+              </div>
+              <div class="diag-table-scroll">
+              <table class="w-full text-sm responsive-table">
+                <thead>
+                  <tr class="text-left text-gray-500 border-b">
+                    <th class="py-2">User</th>
+                    <th class="py-2">Dars</th>
+                    <th class="py-2">Signal</th>
+                    <th class="py-2">Oxirgi aktivlik</th>
+                  </tr>
+                </thead>
+                <tbody id="highIntentTable">
+                  <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Payment Friction Diagnostics -->
+        <section class="ax-block">
+          <div class="ax-block-head">
+            <div>
+              <h3 class="ax-block-title">💳 To'lov Friksiya Diagnostikasi</h3>
+              <div class="ax-block-desc">To‘lov yo‘lida qaysi bosqichda tiqilib qolayotganini ko‘rsatadi.</div>
+            </div>
+            <button onclick="prepareStuckPaymentsBroadcast()" class="btn btn-secondary btn-sm">Stuck payments follow-up</button>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div class="p-3 bg-indigo-50 rounded-xl">
+              <div class="text-xs text-gray-500">Pitch -> Checkout</div>
+              <div class="text-lg font-bold text-indigo-600" id="payDiagPitchToCheckout">-</div>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-xl">
+              <div class="text-xs text-gray-500">Checkout -> Prepare</div>
+              <div class="text-lg font-bold text-blue-600" id="payDiagCheckoutToPrepared">-</div>
+            </div>
+            <div class="p-3 bg-green-50 rounded-xl">
+              <div class="text-xs text-gray-500">Prepare -> Complete</div>
+              <div class="text-lg font-bold text-green-600" id="payDiagPreparedToCompleted">-</div>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl">
+              <div class="text-xs text-gray-500">Stuck to'lovlar</div>
+              <div class="text-lg font-bold text-amber-600" id="payDiagStuckCount">-</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div class="diag-surface rounded-xl p-3">
+              <div class="text-sm font-semibold text-gray-700 mb-2">To'lov usuli bo'yicha conversion</div>
+              <div class="diag-chart-wrap mb-3"><canvas id="payMethodChart"></canvas></div>
+              <div id="payDiagMethods" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+            </div>
+            <div class="diag-surface rounded-xl p-3">
+              <div class="text-sm font-semibold text-gray-700 mb-2">Asosiy tavsiya</div>
+              <div id="payDiagNextAction" class="text-sm text-gray-700">Yuklanmoqda...</div>
+            </div>
+          </div>
+
           <div class="diag-table-scroll">
             <table class="w-full text-sm responsive-table">
               <thead>
                 <tr class="text-left text-gray-500 border-b">
-                  <th class="pb-2 px-3">Bosqich</th>
-                  <th class="pb-2 px-3">User</th>
-                  <th class="pb-2 px-3">Prev dan</th>
-                  <th class="pb-2 px-3">Start dan</th>
+                  <th class="py-2 px-3">User</th>
+                  <th class="py-2 px-3">Buyurtma</th>
+                  <th class="py-2 px-3">Holat</th>
+                  <th class="py-2 px-3">Usul</th>
+                  <th class="py-2 px-3">Qachondan beri</th>
                 </tr>
               </thead>
-              <tbody id="diagFunnelTable">
-                <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
+              <tbody id="payDiagStuckTable">
+                <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <div id="diagAlerts" class="space-y-2 analytics-advanced">
-          <div class="text-sm text-gray-400">Diagnostika yuklanmoqda...</div>
-        </div>
-      </div>
-
-      <!-- Segment Diagnostics -->
-      <div class="card p-5 mb-6">
-        <div class="diag-section-title">
-          <h3 class="text-gray-800">🎯 Segment Diagnostika</h3>
-          <button onclick="prepareHighIntentBroadcast()" class="btn btn-secondary btn-sm">High-intent follow-up</button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-          <div class="bg-gray-50 rounded-xl p-3">
-            <div class="text-sm font-semibold text-gray-700 mb-2">Manba bo'yicha CR</div>
-            <div id="segmentSourceList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+        <!-- Revenue & Growth Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 analytics-advanced">
+          <div class="card p-5">
+            <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (<span id="analyticsRevenuePeriodLabel">so'nggi 30 kun</span>)</h3>
+            <div class="chart-container"><canvas id="analyticsRevenueChart"></canvas></div>
           </div>
-          <div class="bg-gray-50 rounded-xl p-3">
-            <div class="text-sm font-semibold text-gray-700 mb-2">Dars bo'yicha CR</div>
-            <div id="segmentLessonList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
-          </div>
-          <div class="bg-gray-50 rounded-xl p-3">
-            <div class="text-sm font-semibold text-gray-700 mb-2">Aktivlik bo'yicha CR</div>
-            <div id="segmentActivityList" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+          <div class="card p-5">
+            <h3 class="font-semibold text-gray-800 mb-4">📈 Obunalar o'sishi (<span id="analyticsSubsPeriodLabel">so'nggi 30 kun</span>)</h3>
+            <div class="chart-container"><canvas id="analyticsSubscribersChart"></canvas></div>
           </div>
         </div>
 
-        <div class="rx-grid-2">
-          <div class="diag-surface p-3 xl:col-span-1">
-            <div class="text-sm font-semibold text-gray-700 mb-2">Segmentlar taqqoslanishi</div>
-            <div class="diag-chart-wrap"><canvas id="segmentMixChart"></canvas></div>
-          </div>
-          <div class="xl:col-span-2">
-            <div class="flex items-center justify-between mb-2">
-              <div class="text-sm font-semibold text-gray-700">High-intent (to'lamagan) userlar</div>
-              <div class="diag-chip" id="highIntentCount">0 ta</div>
+        <!-- Source Analytics -->
+        <div class="card p-5 analytics-advanced">
+          <h3 class="font-semibold text-gray-800 mb-4">🌐 Trafik manbalari</h3>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <canvas id="sourcesPieChart" height="250"></canvas>
             </div>
-            <div class="diag-table-scroll">
-            <table class="w-full text-sm responsive-table">
-              <thead>
-                <tr class="text-left text-gray-500 border-b">
-                  <th class="py-2">User</th>
-                  <th class="py-2">Dars</th>
-                  <th class="py-2">Signal</th>
-                  <th class="py-2">Oxirgi aktivlik</th>
-                </tr>
-              </thead>
-              <tbody id="highIntentTable">
-                <tr><td colspan="4" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
-              </tbody>
-            </table>
-          </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Payment Friction Diagnostics -->
-      <div class="card p-5 mb-6">
-        <div class="diag-section-title">
-          <h3 class="text-gray-800">💳 To'lov Friksiya Diagnostikasi</h3>
-          <button onclick="prepareStuckPaymentsBroadcast()" class="btn btn-secondary btn-sm">Stuck payments follow-up</button>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div class="p-3 bg-indigo-50 rounded-xl">
-            <div class="text-xs text-gray-500">Pitch -> Checkout</div>
-            <div class="text-lg font-bold text-indigo-600" id="payDiagPitchToCheckout">-</div>
-          </div>
-          <div class="p-3 bg-blue-50 rounded-xl">
-            <div class="text-xs text-gray-500">Checkout -> Prepare</div>
-            <div class="text-lg font-bold text-blue-600" id="payDiagCheckoutToPrepared">-</div>
-          </div>
-          <div class="p-3 bg-green-50 rounded-xl">
-            <div class="text-xs text-gray-500">Prepare -> Complete</div>
-            <div class="text-lg font-bold text-green-600" id="payDiagPreparedToCompleted">-</div>
-          </div>
-          <div class="p-3 bg-amber-50 rounded-xl">
-            <div class="text-xs text-gray-500">Stuck to'lovlar</div>
-            <div class="text-lg font-bold text-amber-600" id="payDiagStuckCount">-</div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-gray-500 border-b">
+                    <th class="pb-3">Manba</th>
+                    <th class="pb-3">Userlar</th>
+                    <th class="pb-3">To'lagan</th>
+                    <th class="pb-3">Konversiya</th>
+                  </tr>
+                </thead>
+                <tbody id="sourcesTable">
+                  <tr><td colspan="4" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div class="diag-surface rounded-xl p-3">
-            <div class="text-sm font-semibold text-gray-700 mb-2">To'lov usuli bo'yicha conversion</div>
-            <div class="diag-chart-wrap mb-3"><canvas id="payMethodChart"></canvas></div>
-            <div id="payDiagMethods" class="space-y-1 text-sm text-gray-500">Yuklanmoqda...</div>
+        <!-- Buyer Journey Analytics -->
+        <div class="card p-5 analytics-advanced">
+          <h3 class="font-semibold text-gray-800 mb-4">🛒 Xaridor statistikasi</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div class="text-center p-4 bg-blue-50 rounded-xl">
+              <div class="text-2xl font-bold text-blue-600" id="buyerAvgLesson">-</div>
+              <div class="text-xs text-gray-500">Jami xaridorlar</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-xl">
+              <div class="text-2xl font-bold text-green-600" id="buyerAvgDays">-</div>
+              <div class="text-xs text-gray-500">O'rtacha kun (sotib olish)</div>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-xl">
+              <div class="text-2xl font-bold text-purple-600" id="buyerConversion">-</div>
+              <div class="text-xs text-gray-500">Konversiya</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-xl">
+              <div class="text-2xl font-bold text-orange-600" id="buyerAvgCheck">-</div>
+              <div class="text-xs text-gray-500">Eng tez xarid</div>
+            </div>
           </div>
-          <div class="diag-surface rounded-xl p-3">
-            <div class="text-sm font-semibold text-gray-700 mb-2">Asosiy tavsiya</div>
-            <div id="payDiagNextAction" class="text-sm text-gray-700">Yuklanmoqda...</div>
-          </div>
+          <p class="text-xs text-gray-400 mb-2">Xaridorlar yosh guruhi bo'yicha:</p>
+          <div class="chart-container h-[150px]"><canvas id="buyerFunnelChart"></canvas></div>
         </div>
 
-        <div class="diag-table-scroll">
-          <table class="w-full text-sm responsive-table">
-            <thead>
-              <tr class="text-left text-gray-500 border-b">
-                <th class="py-2 px-3">User</th>
-                <th class="py-2 px-3">Buyurtma</th>
-                <th class="py-2 px-3">Holat</th>
-                <th class="py-2 px-3">Usul</th>
-                <th class="py-2 px-3">Qachondan beri</th>
-              </tr>
-            </thead>
-            <tbody id="payDiagStuckTable">
-              <tr><td colspan="5" class="py-3 text-center text-gray-400">Yuklanmoqda...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Revenue & Growth Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 analytics-advanced">
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">💰 Daromad (<span id="analyticsRevenuePeriodLabel">so'nggi 30 kun</span>)</h3>
-          <div class="chart-container"><canvas id="analyticsRevenueChart"></canvas></div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-semibold text-gray-800 mb-4">📈 Obunalar o'sishi (<span id="analyticsSubsPeriodLabel">so'nggi 30 kun</span>)</h3>
-          <div class="chart-container"><canvas id="analyticsSubscribersChart"></canvas></div>
-        </div>
-      </div>
-
-      <!-- Source Analytics -->
-      <div class="card p-5 mb-6 analytics-advanced">
-        <h3 class="font-semibold text-gray-800 mb-4">🌐 Trafik manbalari</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <canvas id="sourcesPieChart" height="250"></canvas>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-left text-gray-500 border-b">
-                  <th class="pb-3">Manba</th>
-                  <th class="pb-3">Userlar</th>
-                  <th class="pb-3">To'lagan</th>
-                  <th class="pb-3">Konversiya</th>
-                </tr>
-              </thead>
-              <tbody id="sourcesTable">
-                <tr><td colspan="4" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Buyer Journey Analytics -->
-      <div class="card p-5 mb-6 analytics-advanced">
-        <h3 class="font-semibold text-gray-800 mb-4">🛒 Xaridor statistikasi</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div class="text-center p-4 bg-blue-50 rounded-xl">
-            <div class="text-2xl font-bold text-blue-600" id="buyerAvgLesson">-</div>
-            <div class="text-xs text-gray-500">Jami xaridorlar</div>
-          </div>
-          <div class="text-center p-4 bg-green-50 rounded-xl">
-            <div class="text-2xl font-bold text-green-600" id="buyerAvgDays">-</div>
-            <div class="text-xs text-gray-500">O'rtacha kun (sotib olish)</div>
-          </div>
-          <div class="text-center p-4 bg-purple-50 rounded-xl">
-            <div class="text-2xl font-bold text-purple-600" id="buyerConversion">-</div>
-            <div class="text-xs text-gray-500">Konversiya</div>
-          </div>
-          <div class="text-center p-4 bg-orange-50 rounded-xl">
-            <div class="text-2xl font-bold text-orange-600" id="buyerAvgCheck">-</div>
-            <div class="text-xs text-gray-500">Eng tez xarid</div>
-          </div>
-        </div>
-        <p class="text-xs text-gray-400 mb-2">Xaridorlar yosh guruhi bo'yicha:</p>
-        <div class="chart-container h-[150px]"><canvas id="buyerFunnelChart"></canvas></div>
-      </div>
-
-      <!-- Inactivity Stats -->
-      <div class="card p-5 analytics-advanced">
-        <h3 class="font-semibold text-gray-800 mb-4">⏰ Faolsizlik eslatmalari</h3>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div class="text-center p-4 bg-gray-50 rounded-xl">
-            <div class="text-2xl font-bold text-gray-700" id="inactTotalDeliveries">-</div>
-            <div class="text-xs text-gray-500">Yuborilgan darslar</div>
-          </div>
-          <div class="text-center p-4 bg-green-50 rounded-xl">
-            <div class="text-2xl font-bold text-green-600" id="inactWatched">-</div>
-            <div class="text-xs text-gray-500">Ko'rilgan</div>
-          </div>
-          <div class="text-center p-4 bg-yellow-50 rounded-xl">
-            <div class="text-2xl font-bold text-yellow-600" id="inactReminder1">-</div>
-            <div class="text-xs text-gray-500">1-eslatma</div>
-          </div>
-          <div class="text-center p-4 bg-orange-50 rounded-xl">
-            <div class="text-2xl font-bold text-orange-600" id="inactReminder2">-</div>
-            <div class="text-xs text-gray-500">2-eslatma</div>
-          </div>
-          <div class="text-center p-4 bg-blue-50 rounded-xl">
-            <div class="text-2xl font-bold text-blue-600" id="inactWatchedAfter">-</div>
-            <div class="text-xs text-gray-500">Eslatmadan keyin</div>
+        <!-- Inactivity Stats -->
+        <div class="card p-5 analytics-advanced">
+          <h3 class="font-semibold text-gray-800 mb-4">⏰ Faolsizlik eslatmalari</h3>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="text-center p-4 bg-gray-50 rounded-xl">
+              <div class="text-2xl font-bold text-gray-700" id="inactTotalDeliveries">-</div>
+              <div class="text-xs text-gray-500">Yuborilgan darslar</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-xl">
+              <div class="text-2xl font-bold text-green-600" id="inactWatched">-</div>
+              <div class="text-xs text-gray-500">Ko'rilgan</div>
+            </div>
+            <div class="text-center p-4 bg-yellow-50 rounded-xl">
+              <div class="text-2xl font-bold text-yellow-600" id="inactReminder1">-</div>
+              <div class="text-xs text-gray-500">1-eslatma</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-xl">
+              <div class="text-2xl font-bold text-orange-600" id="inactReminder2">-</div>
+              <div class="text-xs text-gray-500">2-eslatma</div>
+            </div>
+            <div class="text-center p-4 bg-blue-50 rounded-xl">
+              <div class="text-2xl font-bold text-blue-600" id="inactWatchedAfter">-</div>
+              <div class="text-xs text-gray-500">Eslatmadan keyin</div>
+            </div>
           </div>
         </div>
       </div>
@@ -6635,7 +6707,7 @@ function applyAnalyticsViewPreference() {
 
   const btn = document.getElementById('analyticsViewToggle');
   if (btn) {
-    btn.textContent = analyticsSimpleView ? '🔎 Batafsil ko\'rsatish' : '🧹 Soddalashtirish';
+    btn.textContent = analyticsSimpleView ? '🔎 Batafsil ko\'rinish' : '🧹 Faqat asosiy bloklar';
   }
 }
 
@@ -6997,6 +7069,17 @@ function renderPayMethodChart(methods) {
   });
 }
 
+function getFunnelStageHint(stageLabel) {
+  const label = String(stageLabel || '').toLowerCase();
+  if (label.includes("ro'yxat") || label.includes("register")) return "Start nuqta";
+  if (label.includes("darsni boshlagan")) return "Onboarding bosqichi";
+  if (label.includes("1-dars")) return "Kontentga kirish";
+  if (label.includes("pitch")) return "Sotuvga qiziqish";
+  if (label.includes("checkout")) return "To'lov niyati";
+  if (label.includes("to'lov") || label.includes("paid")) return "Yakuniy konversiya";
+  return "Bosqich holati";
+}
+
 function renderFunnelDiagnostics(data) {
   const summary = data?.summary || {};
   const stages = Array.isArray(data?.stages) ? data.stages : [];
@@ -7013,7 +7096,7 @@ function renderFunnelDiagnostics(data) {
   if (overallCrEl) overallCrEl.textContent = (summary.overallConversion ?? 0) + '%';
   if (biggestDropEl) {
     biggestDropEl.textContent = biggestDrop
-      ? `${biggestDrop.from} -> ${biggestDrop.to} (${biggestDrop.dropCount} user)`
+      ? `${biggestDrop.from} -> ${biggestDrop.to} (-${biggestDrop.dropCount})`
       : '-';
   }
   if (stuckEl) stuckEl.textContent = summary.pitchWithoutCheckout ?? 0;
@@ -7022,7 +7105,7 @@ function renderFunnelDiagnostics(data) {
 
   if (tableBody) {
     if (!stages.length) {
-      tableBody.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-gray-400">Ma\'lumot yo\'q</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="5" class="py-3 text-center text-gray-400">Ma\'lumot yo\'q</td></tr>';
     } else {
       tableBody.innerHTML = stages.map((s) => `
         <tr class="border-b border-gray-100">
@@ -7030,6 +7113,7 @@ function renderFunnelDiagnostics(data) {
           <td class="py-2 px-3 font-semibold" data-label="User">${s.count}</td>
           <td class="py-2 px-3" data-label="Prev dan">${(s.fromPrev ?? 0)}%</td>
           <td class="py-2 px-3" data-label="Start dan">${(s.fromStart ?? 0)}%</td>
+          <td class="py-2 px-3 text-xs text-gray-600" data-label="Izoh">${getFunnelStageHint(s.label)}</td>
         </tr>
       `).join('');
     }
