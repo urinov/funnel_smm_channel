@@ -18,22 +18,22 @@ const StyledButton = styled(MuiButton, {
 })<{ colorScheme?: string }>(({ theme, colorScheme = 'primary' }) => {
   const colors: Record<string, { main: string; dark: string; light: string; contrastText: string }> = {
     primary: {
-      main: '#6366F1',
-      dark: '#4F46E5',
-      light: '#818CF8',
+      main: '#E07A5F',
+      dark: '#C86B52',
+      light: '#E8927A',
       contrastText: '#FFFFFF',
     },
     success: {
-      main: '#10B981',
-      dark: '#059669',
-      light: '#34D399',
+      main: '#22C55E',
+      dark: '#16A34A',
+      light: '#4ADE80',
       contrastText: '#FFFFFF',
     },
     warning: {
-      main: '#F59E0B',
-      dark: '#D97706',
-      light: '#FBBF24',
-      contrastText: '#000000',
+      main: '#E8B931',
+      dark: '#D4A52A',
+      light: '#ECCC5A',
+      contrastText: '#1A1A2E',
     },
     danger: {
       main: '#EF4444',
@@ -42,9 +42,9 @@ const StyledButton = styled(MuiButton, {
       contrastText: '#FFFFFF',
     },
     neutral: {
-      main: '#64748B',
-      dark: '#475569',
-      light: '#94A3B8',
+      main: '#6B7280',
+      dark: '#4B5563',
+      light: '#9CA3AF',
       contrastText: '#FFFFFF',
     },
   }

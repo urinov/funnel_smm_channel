@@ -88,14 +88,19 @@ const mockFunnels: Funnel[] = [
   },
 ]
 
-const FunnelCard = styled(Card)(({ theme }) => ({
+const FunnelCard = styled(Card)(() => ({
   position: 'relative',
-  transition: 'all 200ms ease',
+  transition: 'all 300ms ease',
   cursor: 'pointer',
+  background: '#FFFFFF',
+  borderRadius: 20,
+  border: '1px solid rgba(0, 0, 0, 0.06)',
+  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03)',
 
   '&:hover': {
-    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+    transform: 'translateY(-4px)',
+    borderColor: '#E07A5F',
   },
 }))
 
@@ -106,13 +111,14 @@ const StatusDot = styled(Box)<{ active: boolean }>(({ active }) => ({
   backgroundColor: active ? '#10B981' : '#94A3B8',
 }))
 
-const StatBox = styled(Box)(({ theme }) => ({
+const StatBox = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   padding: '12px 16px',
-  borderRadius: 8,
-  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+  borderRadius: 10,
+  backgroundColor: '#F8F6F3',
+  border: '1px solid rgba(0, 0, 0, 0.04)',
 }))
 
 export default function FunnelsPage() {
@@ -136,11 +142,20 @@ export default function FunnelsPage() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
         <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            Funnels
+          <Typography
+            sx={{
+              fontSize: '2rem',
+              fontWeight: 800,
+              color: '#1A1A2E',
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              letterSpacing: '-0.02em',
+              mb: 1,
+            }}
+          >
+            Voronkalar
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage your sales funnels and user flows
+          <Typography sx={{ fontSize: '1rem', color: '#6B7280', fontWeight: 500 }}>
+            Sotish voronkalari va foydalanuvchi oqimlarini boshqaring
           </Typography>
         </Box>
         <Button
@@ -149,7 +164,7 @@ export default function FunnelsPage() {
           leftIcon={<Plus size={18} />}
           onClick={() => setIsModalOpen(true)}
         >
-          Create Funnel
+          Yangi Voronka
         </Button>
       </Box>
 
@@ -163,41 +178,52 @@ export default function FunnelsPage() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Box
                       sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 2,
-                        bgcolor: 'primary.main',
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: 'white',
+                        boxShadow: '0 4px 12px rgba(224, 122, 95, 0.3)',
                       }}
                     >
-                      <GitBranch size={20} />
+                      <GitBranch size={22} />
                     </Box>
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="h6" fontWeight={600}>
+                        <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A2E', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
                           {funnel.name}
                         </Typography>
                         {funnel.isDefault && (
-                          <Chip label="Default" size="small" color="primary" sx={{ height: 20, fontSize: '0.6875rem' }} />
+                          <Chip
+                            label="Asosiy"
+                            size="small"
+                            sx={{
+                              height: 22,
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              backgroundColor: 'rgba(224, 122, 95, 0.15)',
+                              color: '#E07A5F',
+                            }}
+                          />
                         )}
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <StatusDot active={funnel.isActive} />
-                        <Typography variant="caption" color="text.secondary">
-                          {funnel.isActive ? 'Active' : 'Paused'}
+                        <Typography sx={{ fontSize: '0.8125rem', color: '#6B7280', fontWeight: 500 }}>
+                          {funnel.isActive ? 'Faol' : "To'xtatilgan"}
                         </Typography>
                       </Box>
                     </Box>
                   </Box>
-                  <IconButton size="small">
+                  <IconButton size="small" sx={{ color: '#6B7280' }}>
                     <MoreVertical size={18} />
                   </IconButton>
                 </Box>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                <Typography sx={{ fontSize: '0.9375rem', color: '#6B7280', fontWeight: 500, mb: 3 }}>
                   {funnel.description}
                 </Typography>
 
@@ -205,32 +231,32 @@ export default function FunnelsPage() {
                 <Grid container spacing={1.5} sx={{ mb: 3 }}>
                   <Grid item xs={6}>
                     <StatBox>
-                      <Typography variant="caption" color="text.secondary">Users</Typography>
-                      <Typography variant="h6" fontWeight={700} fontFamily='"JetBrains Mono", monospace'>
+                      <Typography sx={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>Foydalanuvchilar</Typography>
+                      <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#1A1A2E', fontFamily: '"JetBrains Mono", monospace' }}>
                         {formatNumber(funnel.stats.users)}
                       </Typography>
                     </StatBox>
                   </Grid>
                   <Grid item xs={6}>
                     <StatBox>
-                      <Typography variant="caption" color="text.secondary">Conversions</Typography>
-                      <Typography variant="h6" fontWeight={700} fontFamily='"JetBrains Mono", monospace'>
+                      <Typography sx={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>Konversiyalar</Typography>
+                      <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#1A1A2E', fontFamily: '"JetBrains Mono", monospace' }}>
                         {formatNumber(funnel.stats.conversions)}
                       </Typography>
                     </StatBox>
                   </Grid>
                   <Grid item xs={6}>
                     <StatBox>
-                      <Typography variant="caption" color="text.secondary">Revenue</Typography>
-                      <Typography variant="body2" fontWeight={700} fontFamily='"JetBrains Mono", monospace'>
+                      <Typography sx={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>Daromad</Typography>
+                      <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: '#1A1A2E', fontFamily: '"JetBrains Mono", monospace' }}>
                         {formatCurrency(funnel.stats.revenue)}
                       </Typography>
                     </StatBox>
                   </Grid>
                   <Grid item xs={6}>
                     <StatBox>
-                      <Typography variant="caption" color="text.secondary">Conv. Rate</Typography>
-                      <Typography variant="h6" fontWeight={700} color="success.main" fontFamily='"JetBrains Mono", monospace'>
+                      <Typography sx={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600, mb: 0.5 }}>CR</Typography>
+                      <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#22C55E', fontFamily: '"JetBrains Mono", monospace' }}>
                         {funnel.stats.conversionRate}%
                       </Typography>
                     </StatBox>
@@ -239,11 +265,11 @@ export default function FunnelsPage() {
 
                 {/* Footer */}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {funnel.nodesCount} nodes
+                  <Typography sx={{ fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500 }}>
+                    {funnel.nodesCount} bosqich
                   </Typography>
                   <Button variant="ghost" colorScheme="primary" size="small">
-                    Edit Funnel
+                    Tahrirlash
                     <ArrowRight size={14} style={{ marginLeft: 4 }} />
                   </Button>
                 </Box>
@@ -254,19 +280,22 @@ export default function FunnelsPage() {
 
         {/* Create New Funnel Card */}
         <Grid item xs={12} lg={6} xl={4}>
-          <Card
+          <Box
             sx={{
               height: '100%',
-              minHeight: 280,
+              minHeight: 320,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: (theme) => `2px dashed ${theme.palette.divider}`,
+              border: '2px dashed rgba(224, 122, 95, 0.3)',
+              borderRadius: 20,
               cursor: 'pointer',
-              transition: 'all 200ms ease',
+              transition: 'all 300ms ease',
+              backgroundColor: '#FFFFFF',
               '&:hover': {
-                borderColor: 'primary.main',
-                bgcolor: 'action.hover',
+                borderColor: '#E07A5F',
+                backgroundColor: 'rgba(224, 122, 95, 0.05)',
+                transform: 'translateY(-4px)',
               },
             }}
             onClick={() => setIsModalOpen(true)}
@@ -274,28 +303,29 @@ export default function FunnelsPage() {
             <Box sx={{ textAlign: 'center' }}>
               <Box
                 sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
-                  bgcolor: 'primary.main',
+                  width: 60,
+                  height: 60,
+                  borderRadius: 16,
+                  background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   mx: 'auto',
-                  mb: 2,
+                  mb: 2.5,
+                  boxShadow: '0 4px 16px rgba(224, 122, 95, 0.3)',
                 }}
               >
                 <Plus size={28} />
               </Box>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
-                Create New Funnel
+              <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: '#1A1A2E', mb: 1, fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+                Yangi Voronka Yaratish
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Design a new user flow
+              <Typography sx={{ fontSize: '0.9375rem', color: '#6B7280', fontWeight: 500 }}>
+                Yangi foydalanuvchi oqimini loyihalashtiring
               </Typography>
             </Box>
-          </Card>
+          </Box>
         </Grid>
       </Grid>
 
@@ -303,27 +333,27 @@ export default function FunnelsPage() {
       <Modal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Create New Funnel"
+        title="Yangi Voronka Yaratish"
         size="md"
         actions={
           <>
             <Button variant="ghost" colorScheme="neutral" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              Bekor qilish
             </Button>
             <Button variant="solid" colorScheme="primary">
-              Create Funnel
+              Yaratish
             </Button>
           </>
         }
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <Input
-            label="Funnel Name"
-            placeholder="Enter funnel name"
+            label="Voronka nomi"
+            placeholder="Voronka nomini kiriting"
           />
           <Input
-            label="Description"
-            placeholder="Describe this funnel"
+            label="Tavsif"
+            placeholder="Bu voronkani tasvirlab bering"
             multiline
             rows={3}
           />

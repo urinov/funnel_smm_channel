@@ -39,7 +39,7 @@ const sizeStyles = {
 
 const StyledTabs = styled(MuiTabs, {
   shouldForwardProp: (prop) => !['variant', 'size'].includes(prop as string),
-})<{ variant?: string; size?: string }>(({ theme, variant, size = 'md' }) => {
+})<{ variant?: string; size?: string }>(({ variant, size = 'md' }) => {
   const sizeStyle = sizeStyles[size as keyof typeof sizeStyles] || sizeStyles.md
 
   const baseStyles = {
@@ -47,6 +47,7 @@ const StyledTabs = styled(MuiTabs, {
     '& .MuiTabs-indicator': {
       height: 3,
       borderRadius: '3px 3px 0 0',
+      backgroundColor: '#E07A5F',
     },
     '& .MuiTabs-flexContainer': {
       gap: 4,
@@ -59,19 +60,20 @@ const StyledTabs = styled(MuiTabs, {
       '& .MuiTabs-indicator': {
         display: 'none',
       },
-      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-      borderRadius: 10,
-      padding: 4,
+      backgroundColor: '#F5F3EF',
+      borderRadius: 12,
+      padding: 5,
     }
   }
 
   if (variant === 'underline') {
     return {
       ...baseStyles,
-      borderBottom: `1px solid ${theme.palette.divider}`,
+      borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
       '& .MuiTabs-indicator': {
-        height: 2,
+        height: 3,
         borderRadius: 0,
+        backgroundColor: '#E07A5F',
       },
     }
   }
@@ -81,26 +83,28 @@ const StyledTabs = styled(MuiTabs, {
 
 const StyledTab = styled(MuiTab, {
   shouldForwardProp: (prop) => !['variant', 'size'].includes(prop as string),
-})<{ variant?: string; size?: string }>(({ theme, variant, size = 'md' }) => {
+})<{ variant?: string; size?: string }>(({ variant, size = 'md' }) => {
   const sizeStyle = sizeStyles[size as keyof typeof sizeStyles] || sizeStyles.md
 
   const baseStyles = {
     textTransform: 'none' as const,
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: sizeStyle.fontSize,
     minHeight: sizeStyle.minHeight,
     padding: sizeStyle.padding,
-    borderRadius: 8,
+    borderRadius: 10,
     transition: 'all 200ms ease',
-    color: theme.palette.text.secondary,
+    color: '#6B7280',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
 
     '&:hover': {
-      backgroundColor: theme.palette.action.hover,
+      backgroundColor: 'rgba(224, 122, 95, 0.08)',
+      color: '#1A1A2E',
     },
 
     '&.Mui-selected': {
-      color: theme.palette.primary.main,
-      fontWeight: 600,
+      color: '#E07A5F',
+      fontWeight: 700,
     },
 
     '&.Mui-disabled': {
@@ -111,13 +115,14 @@ const StyledTab = styled(MuiTab, {
   if (variant === 'pills') {
     return {
       ...baseStyles,
-      borderRadius: 8,
+      borderRadius: 10,
       '&.Mui-selected': {
-        backgroundColor: theme.palette.primary.main,
+        background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
         color: '#FFFFFF',
-        fontWeight: 600,
+        fontWeight: 700,
+        boxShadow: '0 2px 8px rgba(224, 122, 95, 0.3)',
         '&:hover': {
-          backgroundColor: theme.palette.primary.dark,
+          background: 'linear-gradient(135deg, #C86B52 0%, #D4A52A 100%)',
         },
       },
     }
@@ -126,14 +131,14 @@ const StyledTab = styled(MuiTab, {
   return baseStyles
 })
 
-const BadgeWrapper = styled(Box)(({ theme }) => ({
+const BadgeWrapper = styled(Box)(() => ({
   marginLeft: 8,
-  padding: '2px 8px',
+  padding: '3px 10px',
   borderRadius: 10,
-  backgroundColor: theme.palette.error.main,
+  backgroundColor: '#EF4444',
   color: '#FFFFFF',
-  fontSize: '0.6875rem',
-  fontWeight: 600,
+  fontSize: '0.75rem',
+  fontWeight: 700,
   lineHeight: 1.3,
 }))
 

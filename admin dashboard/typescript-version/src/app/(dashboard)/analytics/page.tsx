@@ -354,7 +354,7 @@ export default function AnalyticsPage() {
       type: 'donut',
       fontFamily: '"Plus Jakarta Sans", sans-serif',
     },
-    labels: ['Aktivlik', 'Dars', 'Manba'],
+    labels: ['Faol (7 kun)', 'Eskirgan (7+ kun)', 'Yangi (24 soat)'],
     colors: ['#E07A5F', '#E8B931', '#3B82F6'],
     dataLabels: {
       enabled: true,
@@ -564,13 +564,44 @@ export default function AnalyticsPage() {
               </IconBox>
               Segmentlar Taqqoslash
             </ChartTitle>
-            <Box sx={{ height: 320 }}>
+            <Box sx={{ height: 240 }}>
               <ApexChart
                 options={donutChartOptions}
-                series={[40, 35, 25]}
+                series={[399, 174, 71]}
                 type="donut"
                 height="100%"
               />
+            </Box>
+
+            {/* Segment Details */}
+            <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+              {[
+                { name: 'Faol (7 kun ichida)', users: 399, percentage: 62, color: '#E07A5F', cr: 0.3 },
+                { name: 'Eskirgan (7+ kun)', users: 174, percentage: 27, color: '#E8B931', cr: 0.6 },
+                { name: 'Yangi (24 soat)', users: 71, percentage: 11, color: '#3B82F6', cr: 0 },
+              ].map((segment, index) => (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: segment.color }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, color: '#1A1A2E' }}>
+                        {segment.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.8125rem', color: '#9CA3AF' }}>
+                        CR: {segment.cr}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: '#1A1A2E', fontFamily: '"JetBrains Mono", monospace' }}>
+                      {segment.users}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.8125rem', color: segment.color, fontWeight: 600 }}>
+                      {segment.percentage}%
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
             </Box>
           </ChartCard>
         </Grid>

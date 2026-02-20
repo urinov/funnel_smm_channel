@@ -239,9 +239,9 @@ export default function LivePulse() {
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, mb: 1 }}>
                 <Typography
                   sx={{
-                    fontSize: '2rem',
+                    fontSize: '2.25rem',
                     fontWeight: 800,
-                    color: stat.color,
+                    color: '#1A1A2E',
                     fontFamily: '"Plus Jakarta Sans", sans-serif',
                     lineHeight: 1,
                   }}
@@ -257,7 +257,7 @@ export default function LivePulse() {
                 )}
               </Box>
 
-              <Typography sx={{ fontSize: '0.875rem', color: '#9CA3AF', fontWeight: 500 }}>
+              <Typography sx={{ fontSize: '0.9375rem', color: '#6B7280', fontWeight: 500 }}>
                 {stat.subtext}
               </Typography>
             </StatCard>
