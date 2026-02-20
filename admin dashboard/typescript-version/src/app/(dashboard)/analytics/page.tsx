@@ -164,34 +164,41 @@ const ProgressBar = styled(LinearProgress)<{ customcolor: string }>(({ customcol
 }))
 
 // Visual Funnel Step Component
-const FunnelStep = styled(Box)<{ width: number; color: string; index: number }>(({ width, color, index }) => ({
+const FunnelStep = styled(Box, {
+  shouldForwardProp: (prop) => !['width', 'color', 'index', 'stepColor'].includes(prop as string),
+})<{ width: number; stepColor: string; index: number }>(({ stepColor, index }) => ({
   position: 'relative',
-  height: 52,
-  marginBottom: 6,
-  borderRadius: 12,
+  height: 56,
+  marginBottom: 8,
+  borderRadius: 14,
   overflow: 'hidden',
   cursor: 'pointer',
   transition: 'all 300ms ease',
+  backgroundColor: 'rgba(0, 0, 0, 0.02)',
   opacity: 0,
   animation: `${fadeInUp} 0.4s ease-out ${index * 60}ms forwards`,
 
   '&:hover': {
     transform: 'translateX(8px)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
     '& .funnel-bar': {
       opacity: 1,
     },
   },
 }))
 
-const FunnelBar = styled(Box)<{ width: number; color: string }>(({ width, color }) => ({
+const FunnelBar = styled(Box, {
+  shouldForwardProp: (prop) => !['width', 'barColor'].includes(prop as string),
+})<{ width: number; barColor: string }>(({ width, barColor }) => ({
   position: 'absolute',
   left: 0,
   top: 0,
   bottom: 0,
   width: `${width}%`,
-  background: `linear-gradient(90deg, ${color}30 0%, ${color}15 100%)`,
-  borderRight: `4px solid ${color}`,
+  background: `linear-gradient(90deg, ${barColor}35 0%, ${barColor}15 100%)`,
+  borderRight: `4px solid ${barColor}`,
   transition: 'all 400ms ease',
+  opacity: 0.9,
 }))
 
 const FunnelContent = styled(Box)(() => ({
@@ -710,8 +717,8 @@ export default function AnalyticsPage() {
               </Typography>
               {detailedFunnelData.map((step, index) => (
                 <Box key={step.stage}>
-                  <FunnelStep width={step.fromStart} color={step.color} index={index}>
-                    <FunnelBar className="funnel-bar" width={step.fromStart} color={step.color} />
+                  <FunnelStep width={step.fromStart} stepColor={step.color} index={index}>
+                    <FunnelBar className="funnel-bar" width={step.fromStart} barColor={step.color} />
                     <FunnelContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Box
