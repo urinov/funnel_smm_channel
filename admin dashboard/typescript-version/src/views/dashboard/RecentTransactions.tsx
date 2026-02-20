@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
@@ -8,8 +9,9 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Skeleton from '@mui/material/Skeleton'
 import { styled } from '@mui/material/styles'
-import { Card, Badge } from '@/components/ui'
 import { ExternalLink, CheckCircle, XCircle, Clock, MoreVertical } from 'lucide-react'
+
+import { Card } from '@/components/ui'
 
 interface Transaction {
   id: string
@@ -134,17 +136,6 @@ export default function RecentTransactions() {
       currency: 'UZS',
       minimumFractionDigits: 0,
     }).format(amount)
-  }
-
-  const getStatusColor = (status: Transaction['status']) => {
-    switch (status) {
-      case 'completed':
-        return 'success'
-      case 'pending':
-        return 'warning'
-      case 'failed':
-        return 'danger'
-    }
   }
 
   if (loading) {

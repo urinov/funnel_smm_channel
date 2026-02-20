@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import api from '@/lib/api'
+
+import apiClient from '@/lib/api'
 
 interface UseApiDataOptions<T> {
   initialData?: T
@@ -53,6 +54,7 @@ export function useApiData<T>(
   useEffect(() => {
     if (refreshInterval && refreshInterval > 0) {
       const interval = setInterval(fetch, refreshInterval)
+
       return () => clearInterval(interval)
     }
   }, [refreshInterval, fetch])
@@ -63,69 +65,69 @@ export function useApiData<T>(
 // Specific hooks for common data
 
 export function useStats() {
-  return useApiData(() => api.getStats(), {
+  return useApiData(() => apiClient.getStats(), {
     refreshInterval: 30000, // Refresh every 30 seconds
   })
 }
 
 export function useUsers() {
-  return useApiData(() => api.getUsers())
+  return useApiData(() => apiClient.getUsers())
 }
 
 export function useUser(telegramId: string) {
   return useApiData(
-    () => api.getUser(telegramId),
+    () => apiClient.getUser(telegramId),
     { autoFetch: !!telegramId }
   )
 }
 
 export function useConversations() {
-  return useApiData(() => api.getConversations(), {
+  return useApiData(() => apiClient.getConversations(), {
     refreshInterval: 10000, // Refresh every 10 seconds for real-time feel
   })
 }
 
 export function useLessons() {
-  return useApiData(() => api.getLessons())
+  return useApiData(() => apiClient.getLessons())
 }
 
 export function useCustdevQuestions() {
-  return useApiData(() => api.getCustdevQuestions())
+  return useApiData(() => apiClient.getCustdevQuestions())
 }
 
 export function usePitch() {
-  return useApiData(() => api.getPitch())
+  return useApiData(() => apiClient.getPitch())
 }
 
 export function useSubscriptionPlans() {
-  return useApiData(() => api.getSubscriptionPlans())
+  return useApiData(() => apiClient.getSubscriptionPlans())
 }
 
 export function usePromoCodes() {
-  return useApiData(() => api.getPromoCodes())
+  return useApiData(() => apiClient.getPromoCodes())
 }
 
 export function useFunnels() {
-  return useApiData(() => api.getFunnels())
+  return useApiData(() => apiClient.getFunnels())
 }
 
 export function useFunnel(id: number) {
   return useApiData(
-    () => api.getFunnel(id),
+    () => apiClient.getFunnel(id),
     { autoFetch: id > 0 }
   )
 }
 
 export function useSettings() {
-  return useApiData(() => api.getSettings())
+  return useApiData(() => apiClient.getSettings())
 }
 
 export function useAnalytics(type: 'subscriptions' | 'buyers' | 'sources' | 'segments' | 'referrals') {
-  return useApiData(() => api.getAnalytics(type))
+  return useApiData(() => apiClient.getAnalytics(type))
 }
 
 export function useAuditLogs(limit = 50, offset = 0) {
-  return useApiData(() => api.getAuditLogs({ limit, offset }))
+  return useApiData(() => apiClient.getAuditLogs({ limit, offset }))
 }
 
 // Mutation hooks
@@ -143,14 +145,19 @@ export function useMutation<TData, TVariables>(
 
       try {
         const result = await mutationFn(variables)
+
         if (result.error) {
           setError(result.error)
+
           return { success: false, error: result.error }
         }
+
         return { success: true, data: result.data }
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Unknown error'
+
         setError(errorMessage)
+
         return { success: false, error: errorMessage }
       } finally {
         setLoading(false)

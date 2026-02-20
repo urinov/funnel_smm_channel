@@ -1,9 +1,12 @@
 'use client'
 
-import { forwardRef, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { forwardRef } from 'react'
+
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
-import MuiSelect, { SelectProps as MuiSelectProps } from '@mui/material/Select'
+import MuiSelect from '@mui/material/Select'
+import type { SelectProps as MuiSelectProps } from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
@@ -106,6 +109,7 @@ const Select = forwardRef<HTMLDivElement, SelectProps>(
   ) => {
     const handleChange = (event: any) => {
       const newValue = event.target.value
+
       onChange?.(newValue)
     }
 
@@ -119,6 +123,7 @@ const Select = forwardRef<HTMLDivElement, SelectProps>(
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {selected.map((val) => {
               const option = options.find((o) => o.value === val)
+
               return (
                 <Chip
                   key={val}
@@ -133,6 +138,7 @@ const Select = forwardRef<HTMLDivElement, SelectProps>(
       }
 
       const option = options.find((o) => o.value === selected)
+
       return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {option?.icon}

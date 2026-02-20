@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
@@ -34,13 +35,13 @@ const Container = styled(Box)(({ theme }) => ({
   },
 }))
 
-const PulseIndicator = styled(Box)(({ theme }) => ({
+const PulseIndicator = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   gap: 8,
 }))
 
-const PulseDot = styled(Box)(({ theme }) => ({
+const PulseDot = styled(Box)(() => ({
   width: 10,
   height: 10,
   borderRadius: '50%',
@@ -74,7 +75,7 @@ const MetricIcon = styled(Box)(({ theme }) => ({
   },
 }))
 
-const MetricValue = styled(Typography)(({ theme }) => ({
+const MetricValue = styled(Typography)(() => ({
   fontFamily: '"JetBrains Mono", monospace',
   fontWeight: 700,
   fontSize: '1.25rem',
@@ -122,6 +123,7 @@ export default function LivePulse() {
     if (metric.label === 'Today Revenue') {
       return new Intl.NumberFormat('uz-UZ').format(metric.value)
     }
+
     return metric.value
   }
 

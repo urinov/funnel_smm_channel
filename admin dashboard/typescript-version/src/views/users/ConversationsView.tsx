@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
 import IconButton from '@mui/material/IconButton'
 import TextField from '@mui/material/TextField'
 import InputAdornment from '@mui/material/InputAdornment'
-import Divider from '@mui/material/Divider'
 import { styled } from '@mui/material/styles'
 import {
   Search,
@@ -21,7 +21,7 @@ import {
   Archive,
 } from 'lucide-react'
 
-import { Card, Badge, Button, EmptyState } from '@/components/ui'
+import { Badge, Button, EmptyState } from '@/components/ui'
 
 interface Message {
   id: string
@@ -175,7 +175,7 @@ const ConversationItem = styled(Box, {
   },
 }))
 
-const ChatArea = styled(Box)(({ theme }) => ({
+const ChatArea = styled(Box)(() => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
@@ -189,7 +189,7 @@ const ChatHeader = styled(Box)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }))
 
-const MessagesArea = styled(Box)(({ theme }) => ({
+const MessagesArea = styled(Box)(() => ({
   flex: 1,
   overflowY: 'auto',
   padding: 20,

@@ -6,7 +6,6 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import LinearProgress from '@mui/material/LinearProgress'
 import { styled } from '@mui/material/styles'
-import { Card, Button, Badge } from '@/components/ui'
 import {
   MessageSquare,
   Clock,
@@ -15,6 +14,8 @@ import {
   ArrowRight,
   RefreshCw,
 } from 'lucide-react'
+
+import { Card, Badge } from '@/components/ui'
 
 interface ActionItem {
   id: string

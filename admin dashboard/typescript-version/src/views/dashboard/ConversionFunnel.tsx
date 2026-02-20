@@ -4,8 +4,9 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
 import { styled } from '@mui/material/styles'
-import { Card } from '@/components/ui'
 import { Users, BookOpen, FileText, Zap, CreditCard, TrendingDown } from 'lucide-react'
+
+import { Card } from '@/components/ui'
 
 interface FunnelStep {
   id: string
@@ -64,12 +65,12 @@ const mockFunnelData: FunnelStep[] = [
   },
 ]
 
-const FunnelContainer = styled(Box)(({ theme }) => ({
+const FunnelContainer = styled(Box)(() => ({
   position: 'relative',
 }))
 
 const FunnelStep = styled(Box)<{ percentage: number; color: string }>(
-  ({ theme, percentage, color }) => ({
+  ({ theme }) => ({
     position: 'relative',
     marginBottom: 8,
     borderRadius: 8,
@@ -104,7 +105,7 @@ const FunnelBar = styled(Box)<{ percentage: number; color: string }>(
   })
 )
 
-const FunnelContent = styled(Box)(({ theme }) => ({
+const FunnelContent = styled(Box)(() => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',

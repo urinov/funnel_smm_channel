@@ -1,12 +1,16 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
+
 import Snackbar from '@mui/material/Snackbar'
-import Alert, { AlertColor } from '@mui/material/Alert'
+import Alert from '@mui/material/Alert'
+import type { AlertColor } from '@mui/material/Alert'
 import AlertTitle from '@mui/material/AlertTitle'
 import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'
-import Slide, { SlideProps } from '@mui/material/Slide'
+import Slide from '@mui/material/Slide'
+import type { SlideProps } from '@mui/material/Slide'
 import { styled } from '@mui/material/styles'
 import { X, CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react'
 

@@ -48,13 +48,16 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
 
       const data = await response.json()
+
       return { data }
     } catch (error) {
       console.error(`API Error [${method} ${endpoint}]:`, error)
+
       return {
         data: null as T,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -446,6 +449,7 @@ class ApiClient {
 
   async uploadMedia(file: File): Promise<ApiResponse<{ file_id: string; url: string }>> {
     const formData = new FormData()
+
     formData.append('media', file)
 
     try {
@@ -462,6 +466,7 @@ class ApiClient {
       }
 
       const data = await response.json()
+
       return { data }
     } catch (error) {
       return {
@@ -485,9 +490,12 @@ class ApiClient {
 
   async getAuditLogs(params?: { limit?: number; offset?: number }) {
     const query = new URLSearchParams()
+
     if (params?.limit) query.set('limit', params.limit.toString())
     if (params?.offset) query.set('offset', params.offset.toString())
+
     const queryString = query.toString()
+
     return this.request(`/api/audit-logs${queryString ? `?${queryString}` : ''}`)
   }
 

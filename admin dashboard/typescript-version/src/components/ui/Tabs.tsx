@@ -1,6 +1,8 @@
 'use client'
 
-import { ReactNode, useState, Children, isValidElement, cloneElement } from 'react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
+
 import Box from '@mui/material/Box'
 import MuiTabs from '@mui/material/Tabs'
 import MuiTab from '@mui/material/Tab'

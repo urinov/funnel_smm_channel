@@ -2,18 +2,20 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Skeleton from '@mui/material/Skeleton'
 import { styled, useTheme } from '@mui/material/styles'
-import { Card } from '@/components/ui'
 import { TrendingUp } from 'lucide-react'
+
+import { Card } from '@/components/ui'
 
 const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
-const ChartHeader = styled(Box)(({ theme }) => ({
+const ChartHeader = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -22,13 +24,13 @@ const ChartHeader = styled(Box)(({ theme }) => ({
   gap: 16,
 }))
 
-const TotalRevenue = styled(Box)(({ theme }) => ({
+const TotalRevenue = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   gap: 12,
 }))
 
-const RevenueIcon = styled(Box)(({ theme }) => ({
+const RevenueIcon = styled(Box)(() => ({
   width: 48,
   height: 48,
   borderRadius: 12,
@@ -95,7 +97,6 @@ export default function RevenueChart() {
 
   const data = chartDataByPeriod[period]
   const totalRevenue = data.revenue.reduce((a, b) => a + b, 0)
-  const totalSubscriptions = data.subscriptions.reduce((a, b) => a + b, 0)
 
   const handlePeriodChange = (_: React.MouseEvent<HTMLElement>, newPeriod: Period | null) => {
     if (newPeriod) {

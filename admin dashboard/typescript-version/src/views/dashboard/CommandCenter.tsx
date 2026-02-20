@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
@@ -17,18 +18,17 @@ import {
 } from 'lucide-react'
 
 import { StatCard } from '@/components/ui'
-import { useStats } from '@/hooks'
 import LivePulse from './LivePulse'
 import RevenueChart from './RevenueChart'
 import RecentTransactions from './RecentTransactions'
 import ActionQueue from './ActionQueue'
 import ConversionFunnel from './ConversionFunnel'
 
-const PageHeader = styled(Box)(({ theme }) => ({
+const PageHeader = styled(Box)(() => ({
   marginBottom: 32,
 }))
 
-const WelcomeText = styled(Typography)(({ theme }) => ({
+const WelcomeText = styled(Typography)(() => ({
   fontSize: '1.75rem',
   fontWeight: 700,
   marginBottom: 4,
@@ -36,15 +36,6 @@ const WelcomeText = styled(Typography)(({ theme }) => ({
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
-}))
-
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '1.125rem',
-  fontWeight: 600,
-  marginBottom: 16,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
 }))
 
 interface DashboardStats {

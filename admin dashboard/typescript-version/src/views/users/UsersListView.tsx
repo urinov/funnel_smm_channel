@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
-import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
@@ -22,10 +22,8 @@ import {
   RefreshCw,
 } from 'lucide-react'
 
-import { Card, Button, DataTable, Badge, Input, Select, Modal } from '@/components/ui'
+import { Button, DataTable, Badge, Input, Select, Modal } from '@/components/ui'
 import type { Column } from '@/components/ui'
-import { useUsers, useMutation } from '@/hooks'
-import api from '@/lib/api'
 
 interface User {
   id: string
@@ -115,7 +113,7 @@ const mockUsers: User[] = [
   },
 ]
 
-const PageHeader = styled(Box)(({ theme }) => ({
+const PageHeader = styled(Box)(() => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'flex-start',
@@ -124,21 +122,21 @@ const PageHeader = styled(Box)(({ theme }) => ({
   gap: 16,
 }))
 
-const FilterBar = styled(Box)(({ theme }) => ({
+const FilterBar = styled(Box)(() => ({
   display: 'flex',
   gap: 12,
   marginBottom: 24,
   flexWrap: 'wrap',
 }))
 
-const StatsBar = styled(Box)(({ theme }) => ({
+const StatsBar = styled(Box)(() => ({
   display: 'flex',
   gap: 24,
   marginBottom: 24,
   flexWrap: 'wrap',
 }))
 
-const StatItem = styled(Box)(({ theme }) => ({
+const StatItem = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   gap: 8,
@@ -159,6 +157,7 @@ export default function UsersListView() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
+
       result = result.filter(
         (u) =>
           u.name.toLowerCase().includes(query) ||
@@ -170,22 +169,28 @@ export default function UsersListView() {
 
     if (statusFilter !== 'all') {
       if (statusFilter === 'paid') result = result.filter((u) => u.isPaid)
+
       if (statusFilter === 'free') result = result.filter((u) => !u.isPaid && !u.isBlocked)
+
       if (statusFilter === 'blocked') result = result.filter((u) => u.isBlocked)
     }
 
     return result
   }, [users, searchQuery, statusFilter])
 
-  const stats = useMemo(() => ({
-    total: users.length,
-    paid: users.filter((u) => u.isPaid).length,
-    free: users.filter((u) => !u.isPaid && !u.isBlocked).length,
-    blocked: users.filter((u) => u.isBlocked).length,
-  }), [users])
+  const stats = useMemo(
+    () => ({
+      total: users.length,
+      paid: users.filter((u) => u.isPaid).length,
+      free: users.filter((u) => !u.isPaid && !u.isBlocked).length,
+      blocked: users.filter((u) => u.isBlocked).length,
+    }),
+    [users]
+  )
 
   const getFunnelStepBadge = (step: string, isPaid: boolean, isBlocked: boolean) => {
     if (isBlocked) return <Badge color="danger" variant="soft">Blocked</Badge>
+
     if (isPaid) return <Badge color="success" variant="soft">Subscribed</Badge>
 
     const stepMap: Record<string, { label: string; color: 'primary' | 'warning' | 'info' }> = {
@@ -198,6 +203,7 @@ export default function UsersListView() {
     }
 
     const config = stepMap[step] || { label: step, color: 'info' }
+
     return <Badge color={config.color} variant="soft">{config.label}</Badge>
   }
 

@@ -1,5 +1,6 @@
 // MUI Theme Configuration - Funnel SMM Channel Admin
 import { createTheme, type ThemeOptions } from '@mui/material/styles'
+
 import { colors, typography, borderRadius, shadows, transitions } from './tokens'
 
 // Light Theme Options

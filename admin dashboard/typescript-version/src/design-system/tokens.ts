@@ -174,6 +174,7 @@ export const shadows = {
   '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
   inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
   none: 'none',
+
   // Colored shadows for cards
   primary: '0 4px 14px 0 rgb(99 102 241 / 0.25)',
   success: '0 4px 14px 0 rgb(16 185 129 / 0.25)',

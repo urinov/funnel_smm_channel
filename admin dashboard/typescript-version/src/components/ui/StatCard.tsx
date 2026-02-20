@@ -1,6 +1,7 @@
 'use client'
 
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
@@ -112,7 +113,9 @@ export default function StatCard({
 }: StatCardProps) {
   const getTrendDirection = (val: number): 'up' | 'down' | 'neutral' => {
     if (val > 0) return 'up'
+
     if (val < 0) return 'down'
+
     return 'neutral'
   }
 
