@@ -62,7 +62,7 @@ const WelcomeIcon = styled(Box)(() => ({
 }))
 
 const WelcomeText = styled(Typography)(() => ({
-  fontSize: '2rem',
+  fontSize: '2.25rem',
   fontWeight: 800,
   letterSpacing: '-0.02em',
   background: 'linear-gradient(135deg, #E07A5F 0%, #E8B931 100%)',
@@ -73,28 +73,28 @@ const WelcomeText = styled(Typography)(() => ({
 }))
 
 const SubtitleText = styled(Typography)(() => ({
-  fontSize: '1rem',
+  fontSize: '1.125rem',
   color: '#6B7280',
   fontWeight: 500,
   paddingLeft: 64,
 }))
 
 const SectionTitle = styled(Typography)(() => ({
-  fontSize: '1.125rem',
+  fontSize: '1.375rem',
   fontWeight: 700,
   color: '#1A1A2E',
-  marginBottom: 20,
+  marginBottom: 24,
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 10,
   fontFamily: '"Plus Jakarta Sans", sans-serif',
   opacity: 0,
   animation: `${fadeInUp} 0.5s ease-out 0.2s forwards`,
 }))
 
 const SectionDot = styled(Box)<{ color?: string }>(({ color = '#E07A5F' }) => ({
-  width: 8,
-  height: 8,
+  width: 10,
+  height: 10,
   borderRadius: '50%',
   backgroundColor: color,
 }))
@@ -167,12 +167,12 @@ export default function CommandCenter() {
       <PageHeader>
         <WelcomeContainer>
           <WelcomeIcon>
-            <Sparkles size={24} />
+            <Sparkles size={26} />
           </WelcomeIcon>
-          <WelcomeText>Command Center</WelcomeText>
+          <WelcomeText>Boshqaruv Markazi</WelcomeText>
         </WelcomeContainer>
         <SubtitleText>
-          Real-time overview of your bot performance and key metrics
+          Bot ishlashi va asosiy ko'rsatkichlarning real-vaqt ko'rinishi
         </SubtitleText>
       </PageHeader>
 
@@ -184,15 +184,15 @@ export default function CommandCenter() {
       {/* Key Metrics Grid */}
       <SectionTitle>
         <SectionDot color="#E07A5F" />
-        Key Metrics
+        Asosiy Ko'rsatkichlar
       </SectionTitle>
       <Grid container spacing={3} sx={{ mb: 5 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Total Users"
+            title="Jami Foydalanuvchilar"
             value={loading ? '...' : formatNumber(stats?.totalUsers || 0)}
-            subtitle="All registered users"
-            trend={stats ? { value: stats.trends.users, label: 'vs last month' } : undefined}
+            subtitle="Ro'yxatdan o'tgan"
+            trend={stats ? { value: stats.trends.users, label: "o'tgan oyga nisbatan" } : undefined}
             icon={<Users />}
             iconColor="primary"
             loading={loading}
@@ -201,10 +201,10 @@ export default function CommandCenter() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Active Subscribers"
+            title="Faol Obunachilar"
             value={loading ? '...' : formatNumber(stats?.activeSubscribers || 0)}
-            subtitle="Paid members"
-            trend={stats ? { value: stats.trends.subscribers, label: 'vs last month' } : undefined}
+            subtitle="Pullik a'zolar"
+            trend={stats ? { value: stats.trends.subscribers, label: "o'tgan oyga nisbatan" } : undefined}
             icon={<UserCheck />}
             iconColor="success"
             loading={loading}
@@ -213,10 +213,10 @@ export default function CommandCenter() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Monthly Revenue"
+            title="Oylik Daromad"
             value={loading ? '...' : formatCurrency(stats?.monthlyRevenue || 0)}
-            subtitle="This month"
-            trend={stats ? { value: stats.trends.revenue, label: 'vs last month' } : undefined}
+            subtitle="Joriy oy"
+            trend={stats ? { value: stats.trends.revenue, label: "o'tgan oyga nisbatan" } : undefined}
             icon={<DollarSign />}
             iconColor="warning"
             loading={loading}
@@ -225,10 +225,10 @@ export default function CommandCenter() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Conversion Rate"
+            title="Konversiya Darajasi"
             value={loading ? '...' : `${stats?.conversionRate || 0}%`}
-            subtitle="Users to paid"
-            trend={{ value: 2.3, label: 'vs last month' }}
+            subtitle="Userdan pullikka"
+            trend={{ value: 2.3, label: "o'tgan oyga nisbatan" }}
             icon={<TrendingUp />}
             iconColor="info"
             loading={loading}
@@ -240,14 +240,14 @@ export default function CommandCenter() {
       {/* Quick Action Cards */}
       <SectionTitle sx={{ animationDelay: '0.3s' }}>
         <SectionDot color="#22C55E" />
-        Quick Actions
+        Tezkor Amallar
       </SectionTitle>
       <Grid container spacing={3} sx={{ mb: 5 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Pending Messages"
+            title="Kutilayotgan Xabarlar"
             value={loading ? '...' : stats?.pendingMessages || 0}
-            subtitle="Awaiting response"
+            subtitle="Javob kutmoqda"
             icon={<MessageSquare />}
             iconColor="danger"
             loading={loading}
@@ -257,9 +257,9 @@ export default function CommandCenter() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Expiring Soon"
+            title="Yaqinda Tugaydi"
             value={loading ? '...' : stats?.expiringSubscriptions || 0}
-            subtitle="In next 3 days"
+            subtitle="3 kun ichida"
             icon={<Clock />}
             iconColor="warning"
             loading={loading}
@@ -269,9 +269,9 @@ export default function CommandCenter() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Today's Revenue"
+            title="Bugungi Daromad"
             value={loading ? '...' : formatCurrency(stats?.todayRevenue || 0)}
-            subtitle="Today so far"
+            subtitle="Bugungi holatda"
             icon={<CreditCard />}
             iconColor="success"
             loading={loading}
@@ -280,9 +280,9 @@ export default function CommandCenter() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="New Users Today"
+            title="Bugun Yangi Userlar"
             value={loading ? '...' : stats?.todayNewUsers || 0}
-            subtitle="Joined today"
+            subtitle="Bugun qo'shilgan"
             icon={<UserPlus />}
             iconColor="primary"
             loading={loading}
@@ -294,7 +294,7 @@ export default function CommandCenter() {
       {/* Charts and Tables Row */}
       <SectionTitle sx={{ animationDelay: '0.4s' }}>
         <SectionDot color="#3B82F6" />
-        Analytics Overview
+        Analitika Ko'rinishi
       </SectionTitle>
       <Grid container spacing={3} sx={{ mb: 5 }}>
         <Grid item xs={12} lg={8}>
@@ -308,7 +308,7 @@ export default function CommandCenter() {
       {/* Bottom Row */}
       <SectionTitle sx={{ animationDelay: '0.5s' }}>
         <SectionDot color="#E8B931" />
-        Recent Activity
+        So'nggi Faoliyat
       </SectionTitle>
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>

@@ -51,56 +51,56 @@ const SIDEBAR_COLLAPSED_WIDTH = 80
 const navigation: NavItem[] = [
   {
     id: 'dashboard',
-    label: 'Command Center',
-    icon: <LayoutDashboard size={20} />,
+    label: 'Umumiy',
+    icon: <LayoutDashboard size={22} />,
     path: '/',
   },
   {
+    id: 'analytics',
+    label: 'Analitika',
+    icon: <BarChart3 size={22} />,
+    path: '/analytics',
+  },
+  {
     id: 'users',
-    label: 'Users',
-    icon: <Users size={20} />,
+    label: 'Foydalanuvchilar',
+    icon: <Users size={22} />,
     children: [
-      { id: 'users-all', label: 'All Users', icon: <Users size={18} />, path: '/users' },
-      { id: 'users-conversations', label: 'Conversations', icon: <MessageSquare size={18} />, path: '/users/conversations', badge: 3 },
-      { id: 'users-segments', label: 'Segments', icon: <Tag size={18} />, path: '/users/segments' },
+      { id: 'users-all', label: 'Barcha userlar', icon: <Users size={20} />, path: '/users' },
+      { id: 'users-conversations', label: 'Suhbatlar', icon: <MessageSquare size={20} />, path: '/users/conversations', badge: 3 },
+      { id: 'users-segments', label: 'Segmentlar', icon: <Tag size={20} />, path: '/users/segments' },
     ],
   },
   {
     id: 'content',
-    label: 'Content',
-    icon: <BookOpen size={20} />,
+    label: 'Kontentlar',
+    icon: <BookOpen size={22} />,
     children: [
-      { id: 'content-lessons', label: 'Lessons', icon: <FileText size={18} />, path: '/content/lessons' },
-      { id: 'content-custdev', label: 'Custdev', icon: <HelpCircle size={18} />, path: '/content/custdev' },
-      { id: 'content-pitch', label: 'Pitch', icon: <Zap size={18} />, path: '/content/pitch' },
+      { id: 'content-lessons', label: 'Darslar', icon: <FileText size={20} />, path: '/content/lessons' },
+      { id: 'content-custdev', label: 'Custdev', icon: <HelpCircle size={20} />, path: '/content/custdev' },
+      { id: 'content-pitch', label: 'Pitch', icon: <Zap size={20} />, path: '/content/pitch' },
     ],
   },
   {
     id: 'revenue',
-    label: 'Revenue',
-    icon: <DollarSign size={20} />,
+    label: 'Daromad',
+    icon: <DollarSign size={22} />,
     children: [
-      { id: 'revenue-transactions', label: 'Transactions', icon: <CreditCard size={18} />, path: '/revenue/transactions' },
-      { id: 'revenue-plans', label: 'Subscription Plans', icon: <Tag size={18} />, path: '/revenue/plans' },
-      { id: 'revenue-promo', label: 'Promo Codes', icon: <Tag size={18} />, path: '/revenue/promo' },
+      { id: 'revenue-transactions', label: 'Tranzaksiyalar', icon: <CreditCard size={20} />, path: '/revenue/transactions' },
+      { id: 'revenue-plans', label: 'Obuna rejalari', icon: <Tag size={20} />, path: '/revenue/plans' },
+      { id: 'revenue-promo', label: 'Promo kodlar', icon: <Tag size={20} />, path: '/revenue/promo' },
     ],
   },
   {
     id: 'funnels',
-    label: 'Funnels',
-    icon: <GitBranch size={20} />,
+    label: 'Voronkalar',
+    icon: <GitBranch size={22} />,
     path: '/funnels',
   },
   {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: <BarChart3 size={20} />,
-    path: '/analytics',
-  },
-  {
     id: 'settings',
-    label: 'Settings',
-    icon: <Settings size={20} />,
+    label: 'Sozlamalar',
+    icon: <Settings size={22} />,
     path: '/settings',
   },
 ]
@@ -170,22 +170,22 @@ const NavSection = styled(Box)(() => ({
 }))
 
 const SectionLabel = styled(Typography)(() => ({
-  fontSize: '0.6875rem',
+  fontSize: '0.8125rem',
   fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.1em',
+  letterSpacing: '0.08em',
   color: '#9CA3AF',
-  padding: '16px 12px 8px',
+  padding: '20px 14px 10px',
 }))
 
 const NavItemButton = styled(ListItemButton, {
   shouldForwardProp: (prop) => !['active', 'nested'].includes(prop as string),
 })<{ active?: boolean; nested?: boolean }>(({ active, nested }) => ({
-  borderRadius: 12,
-  marginBottom: 4,
-  padding: nested ? '10px 12px 10px 48px' : '12px 16px',
+  borderRadius: 14,
+  marginBottom: 6,
+  padding: nested ? '12px 14px 12px 52px' : '14px 18px',
   transition: 'all 200ms ease',
-  color: active ? '#E07A5F' : '#6B7280',
+  color: active ? '#E07A5F' : '#4B5563',
   backgroundColor: active ? 'rgba(224, 122, 95, 0.1)' : 'transparent',
   position: 'relative',
 
@@ -207,7 +207,7 @@ const NavItemButton = styled(ListItemButton, {
   },
 
   '& .MuiListItemIcon-root': {
-    minWidth: 40,
+    minWidth: 44,
     color: 'inherit',
     transition: 'transform 200ms ease',
   },
@@ -217,8 +217,8 @@ const NavItemButton = styled(ListItemButton, {
   },
 
   '& .MuiListItemText-primary': {
-    fontWeight: active ? 600 : 500,
-    fontSize: nested ? '0.875rem' : '0.9375rem',
+    fontWeight: active ? 700 : 600,
+    fontSize: nested ? '1rem' : '1.0625rem',
     fontFamily: '"Plus Jakarta Sans", sans-serif',
   },
 }))
@@ -377,7 +377,7 @@ export default function Sidebar() {
             <Typography
               sx={{
                 fontWeight: 800,
-                fontSize: '1.125rem',
+                fontSize: '1.25rem',
                 color: '#1A1A2E',
                 fontFamily: '"Plus Jakarta Sans", sans-serif',
                 letterSpacing: '-0.02em',
@@ -387,12 +387,12 @@ export default function Sidebar() {
             </Typography>
             <Typography
               sx={{
-                fontSize: '0.75rem',
+                fontSize: '0.875rem',
                 color: '#9CA3AF',
                 fontWeight: 500,
               }}
             >
-              Dashboard
+              Boshqaruv paneli
             </Typography>
           </Box>
         )}
@@ -401,7 +401,7 @@ export default function Sidebar() {
       <Divider sx={{ mx: 2, mb: 1, borderColor: 'rgba(0, 0, 0, 0.06)' }} />
 
       <NavSection sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        {!collapsed && <SectionLabel>Navigation</SectionLabel>}
+        {!collapsed && <SectionLabel>Navigatsiya</SectionLabel>}
         <List disablePadding>
           {navigation.map((item, index) => renderNavItem(item, false, index))}
         </List>
@@ -411,12 +411,12 @@ export default function Sidebar() {
         <Divider sx={{ mb: 2, borderColor: 'rgba(0, 0, 0, 0.06)' }} />
         {!collapsed && (
           <HelpCard>
-            <Sparkles size={28} style={{ marginBottom: 8, opacity: 0.9 }} />
-            <Typography sx={{ fontSize: '0.9375rem', fontWeight: 700, mb: 0.5 }}>
-              Need help?
+            <Sparkles size={32} style={{ marginBottom: 10, opacity: 0.9 }} />
+            <Typography sx={{ fontSize: '1.0625rem', fontWeight: 700, mb: 0.5 }}>
+              Yordam kerakmi?
             </Typography>
-            <Typography sx={{ fontSize: '0.75rem', opacity: 0.85, fontWeight: 500 }}>
-              Check documentation
+            <Typography sx={{ fontSize: '0.875rem', opacity: 0.85, fontWeight: 500 }}>
+              Dokumentatsiyani ko'ring
             </Typography>
           </HelpCard>
         )}

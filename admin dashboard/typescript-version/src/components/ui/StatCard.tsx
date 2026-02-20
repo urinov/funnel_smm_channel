@@ -80,25 +80,25 @@ const DecorativeShape = styled(Box)<{ iconColor: string }>(({ iconColor }) => ({
 }))
 
 const IconWrapper = styled(Box)<{ iconColor: string }>(({ iconColor }) => ({
-  width: 56,
-  height: 56,
-  borderRadius: 16,
+  width: 60,
+  height: 60,
+  borderRadius: 18,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   background: colorMap[iconColor as keyof typeof colorMap]?.gradient || colorMap.primary.gradient,
   color: '#FFFFFF',
-  boxShadow: `0 4px 12px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}40`,
+  boxShadow: `0 4px 14px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}40`,
   transition: 'transform 300ms ease, box-shadow 300ms ease',
 
   '& svg': {
-    width: 26,
-    height: 26,
+    width: 28,
+    height: 28,
   },
 
   '.MuiCard-root:hover &': {
     transform: 'scale(1.05)',
-    boxShadow: `0 6px 16px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}50`,
+    boxShadow: `0 6px 18px ${colorMap[iconColor as keyof typeof colorMap]?.color || colorMap.primary.color}50`,
   },
 }))
 
@@ -112,18 +112,18 @@ const TrendBadge = styled(Box)<{ trend: 'up' | 'down' | 'neutral' }>(({ trend })
   return {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 4,
-    padding: '6px 10px',
-    borderRadius: 8,
-    fontSize: '0.8125rem',
-    fontWeight: 600,
+    gap: 5,
+    padding: '8px 12px',
+    borderRadius: 10,
+    fontSize: '0.9375rem',
+    fontWeight: 700,
     backgroundColor: colors[trend].bg,
     color: colors[trend].color,
     fontFamily: '"JetBrains Mono", monospace',
 
     '& svg': {
-      width: 14,
-      height: 14,
+      width: 16,
+      height: 16,
     },
   }
 })
@@ -271,11 +271,11 @@ export default function StatCard({
       <Typography
         sx={{
           color: '#6B7280',
-          fontWeight: 500,
-          mb: 0.5,
+          fontWeight: 600,
+          mb: 0.75,
           textTransform: 'uppercase',
-          fontSize: '0.75rem',
-          letterSpacing: '0.08em',
+          fontSize: '0.875rem',
+          letterSpacing: '0.06em',
           position: 'relative',
           zIndex: 1,
         }}
@@ -288,7 +288,7 @@ export default function StatCard({
         sx={{
           fontWeight: 800,
           fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontSize: '2rem',
+          fontSize: '2.25rem',
           lineHeight: 1.2,
           color: '#1A1A2E',
           letterSpacing: '-0.02em',
@@ -304,8 +304,9 @@ export default function StatCard({
           variant="body2"
           sx={{
             color: '#9CA3AF',
-            mt: 0.5,
-            fontSize: '0.8125rem',
+            mt: 0.75,
+            fontSize: '0.9375rem',
+            fontWeight: 500,
             position: 'relative',
             zIndex: 1,
           }}
@@ -321,7 +322,7 @@ export default function StatCard({
             color: '#9CA3AF',
             mt: 1.5,
             display: 'block',
-            fontSize: '0.75rem',
+            fontSize: '0.875rem',
             position: 'relative',
             zIndex: 1,
           }}
