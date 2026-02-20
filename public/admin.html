@@ -4393,6 +4393,10 @@ window.fetch = function(input, init = {}) {
 
 applyUiPreferences();
 
+// Chart period state (declared early to avoid hoisting issues)
+let currentRevenuePeriod = 'week';
+let currentGrowthPeriod = 'day';
+
 let uiResizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(uiResizeTimer);
@@ -4400,18 +4404,21 @@ window.addEventListener('resize', () => {
     configureChartDefaults();
     const activeTab = document.querySelector('[id^="tab-"]:not(.hidden)')?.id || '';
     if (activeTab === 'tab-overview') {
-      renderRevenueChart(currentRevenuePeriod);
-      renderSubscriberGrowthChart(currentGrowthPeriod);
-      renderUserTypeChart();
+      if (typeof renderRevenueChart === 'function') renderRevenueChart(currentRevenuePeriod);
+      if (typeof renderSubscriberGrowthChart === 'function') renderSubscriberGrowthChart(currentGrowthPeriod);
+      if (typeof renderUserTypeChart === 'function') renderUserTypeChart();
     } else if (activeTab === 'tab-analytics') {
       Object.values(analyticsCharts).forEach((c) => c?.resize?.());
     }
   }, 220);
 });
 
-document.getElementById('currentDate').textContent = new Date().toLocaleDateString('uz-UZ', {
-  year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
-});
+const currentDateEl = document.getElementById('currentDate');
+if (currentDateEl) {
+  currentDateEl.textContent = new Date().toLocaleDateString('uz-UZ', {
+    year: 'numeric', month: 'short', day: 'numeric', weekday: 'short'
+  });
+}
 
 function blockAccess(message) {
   const title = document.querySelector('#loginModal h1');
@@ -5118,7 +5125,6 @@ document.querySelectorAll('.sidebar-item[data-tab], .mobile-nav-item[data-tab]')
 });
 
 // ========== REVENUE PERIOD TABS ==========
-let currentRevenuePeriod = 'week';
 document.querySelectorAll('button[data-period]').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('button[data-period]').forEach(b => b.classList.remove('active'));
@@ -5129,7 +5135,6 @@ document.querySelectorAll('button[data-period]').forEach(btn => {
 });
 
 // ========== SUBSCRIBER GROWTH PERIOD TABS ==========
-let currentGrowthPeriod = 'day';
 document.querySelectorAll('button[data-growth-period]').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('button[data-growth-period]').forEach(b => b.classList.remove('active'));
