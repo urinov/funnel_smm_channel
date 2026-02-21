@@ -1357,6 +1357,31 @@
       cursor: help;
       background: rgba(115,103,240,0.08);
     }
+    .sf-legend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      background: #f3f4f6;
+      cursor: help;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .sf-legend-badge:hover {
+      background: #e5e7eb;
+      border-color: #d1d5db;
+      transform: translateY(-1px);
+    }
+    .sf-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
     .command-kbd {
       display: inline-flex;
       align-items: center;
@@ -3575,9 +3600,15 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <div class="sf-chip" onclick="scrollToAnalyticsSection('segmentLessonList')" style="cursor:pointer">Dars CR</div>
           <div class="sf-chip" onclick="scrollToAnalyticsSection('segmentActivityList')" style="cursor:pointer">Aktivlik CR</div>
           <div class="sf-chip" onclick="scrollToAnalyticsSection('highIntentTable')" style="cursor:pointer">High intent</div>
-          <span class="global-hint" title="CR = to'lov qilgan / jami user * 100">CR</span>
-          <span class="global-hint" title="Prev dan = joriy bosqich / oldingi bosqich * 100">Prev</span>
-          <span class="global-hint" title="Start dan = joriy bosqich / ro'yxatdan o'tgan * 100">Start</span>
+          <span class="sf-legend-badge" title="CR = to'lov qilgan / jami user × 100%">
+            <span class="sf-legend-dot" style="background:#22c55e"></span>CR
+          </span>
+          <span class="sf-legend-badge" title="Prev = joriy bosqich / oldingi bosqich × 100%">
+            <span class="sf-legend-dot" style="background:#f59e0b"></span>Prev
+          </span>
+          <span class="sf-legend-badge" title="Start = joriy bosqich / jami ro'yxatdan o'tgan × 100%">
+            <span class="sf-legend-dot" style="background:#6366f1"></span>Start
+          </span>
         </div>
 
         <!-- MEGA FUNNEL VISUALIZATION -->
@@ -9516,13 +9547,13 @@ function renderAnalyticsMegaFunnel(data) {
 
   const totalUsers = stages[0]?.count || 0;
 
-  // Map stage labels to element IDs
+  // Map stage labels to element IDs (must match database.js labels exactly)
   const mapping = {
-    'Registered': { valueId: 'afTotalUsers', percentId: null, dropoffId: 'afDropoff1' },
-    'Active': { valueId: 'afActiveUsers', percentId: 'afActivePercent', dropoffId: 'afDropoff2' },
-    'Pitch ko\'rgan': { valueId: 'afPitchViewed', percentId: 'afPitchPercent', dropoffId: 'afDropoff3' },
+    "Ro'yxatdan o'tgan": { valueId: 'afTotalUsers', percentId: null, dropoffId: 'afDropoff1' },
+    'Darsni boshlagan': { valueId: 'afActiveUsers', percentId: 'afActivePercent', dropoffId: 'afDropoff2' },
+    "Pitch ko'rgan": { valueId: 'afPitchViewed', percentId: 'afPitchPercent', dropoffId: 'afDropoff3' },
     'Checkout ochgan': { valueId: 'afCheckout', percentId: 'afCheckoutPercent', dropoffId: 'afDropoff4' },
-    'To\'lov qilgan': { valueId: 'afPaidUsers', percentId: 'afPaidPercent', dropoffId: null }
+    "To'lov qilgan": { valueId: 'afPaidUsers', percentId: 'afPaidPercent', dropoffId: null }
   };
 
   stages.forEach((stage, idx) => {
