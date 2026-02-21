@@ -1,63 +1,25 @@
-// AI Sales Advisor - Gemini Integration
+// AI Sales Advisor - OpenAI Integration
 // Analyzes funnel data and provides actionable sales recommendations
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
-const apiKey = process.env.GEMINI_API_KEY || process.env.gemini_api;
+// Support both OpenAI and Gemini keys
+const openaiKey = process.env.OPENAI_API_KEY || process.env.gpt_bot_api;
+const geminiKey = process.env.GEMINI_API_KEY || process.env.gemini_api;
 
-if (!apiKey) {
-  console.warn('WARNING: No Gemini API key found. Set GEMINI_API_KEY environment variable.');
-}
+let client = null;
+let provider = null;
 
-console.log('Gemini API Key status:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'NOT FOUND');
-
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
-
-// Available models - try in order of preference (2024+ model names)
-const MODELS = [
-  'gemini-1.5-flash',
-  'gemini-1.5-pro',
-  'gemini-1.0-pro',
-  'gemini-pro-vision',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-pro-latest'
-];
-
-async function getWorkingModel() {
-  // First, try to list available models
-  console.log('Attempting to find working Gemini model...');
-
-  for (const modelName of MODELS) {
-    try {
-      console.log(`Trying model: ${modelName}`);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      // Test with a simple prompt
-      const result = await model.generateContent('Say "OK" in one word');
-      const response = await result.response;
-      const text = response.text();
-      if (text) {
-        console.log(`SUCCESS: Using Gemini model: ${modelName}`);
-        return model;
-      }
-    } catch (e) {
-      console.log(`Model ${modelName} failed: ${e.message?.substring(0, 100)}`);
-    }
-  }
-
-  // Last resort - try the simplest model name
-  console.log('All models failed, using fallback gemini-1.5-flash');
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-}
-
-let cachedModel = null;
-async function getModel() {
-  if (!genAI) {
-    throw new Error('Gemini API key topilmadi. GEMINI_API_KEY ni sozlang.');
-  }
-  if (!cachedModel) {
-    cachedModel = await getWorkingModel();
-  }
-  return cachedModel;
+if (openaiKey) {
+  client = new OpenAI({ apiKey: openaiKey });
+  provider = 'openai';
+  console.log('AI Provider: OpenAI (GPT)');
+} else if (geminiKey) {
+  // Fallback to Gemini if available
+  console.log('AI Provider: Gemini (fallback)');
+  provider = 'gemini';
+} else {
+  console.warn('WARNING: No AI API key found. Set OPENAI_API_KEY or GEMINI_API_KEY.');
 }
 
 const SYSTEM_PROMPT = `Sen professional sotish va marketing bo'yicha mutaxassissan. Sening vazifang - Telegram bot orqali kurs sotayotgan biznes uchun sotuvni oshirish bo'yicha aniq, amaliy tavsiyalar berish.
@@ -78,12 +40,31 @@ Tavsiyalaringda:
 Javoblaringni O'zbek tilida ber. Qisqa va aniq bo'l. Emoji ishlatishdan qo'rqma.`;
 
 /**
+ * Call OpenAI API
+ */
+async function callOpenAI(prompt, systemPrompt = SYSTEM_PROMPT) {
+  if (!client) {
+    throw new Error('OpenAI API key topilmadi. OPENAI_API_KEY ni sozlang.');
+  }
+
+  const completion = await client.chat.completions.create({
+    model: 'gpt-4o-mini', // Cost-effective and fast
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt }
+    ],
+    max_tokens: 1500,
+    temperature: 0.7
+  });
+
+  return completion.choices[0]?.message?.content || '';
+}
+
+/**
  * Generate AI sales recommendations based on funnel data
  */
 export async function generateSalesAdvice(funnelData, additionalContext = {}) {
   try {
-    const model = await getModel();
-
     const dataPrompt = `
 ## Joriy Voronka Ma'lumotlari:
 
@@ -118,19 +99,16 @@ Har bir tavsiya quyidagi formatda bo'lsin:
 - Ustuvorlik: [Yuqori/O'rta/Past]
 `;
 
-    const result = await model.generateContent([
-      { text: SYSTEM_PROMPT },
-      { text: dataPrompt }
-    ]);
+    const advice = await callOpenAI(dataPrompt);
 
-    const response = await result.response;
     return {
       success: true,
-      advice: response.text(),
-      generatedAt: new Date().toISOString()
+      advice,
+      generatedAt: new Date().toISOString(),
+      provider: 'OpenAI GPT-4o-mini'
     };
   } catch (error) {
-    console.error('AI Advisor error:', error);
+    console.error('AI Advice error:', error);
     return {
       success: false,
       error: error.message,
@@ -144,20 +122,17 @@ Har bir tavsiya quyidagi formatda bo'lsin:
  */
 export async function generateQuickInsight(metric, value, context = '') {
   try {
-    const model = await getModel();
-
     const prompt = `Ko'rsatkich: ${metric}
 Qiymat: ${value}
 Kontekst: ${context}
 
-Bu ko'rsatkich haqida 1-2 qator qisqa insight ber. Yaxshi yoki yomon ekanligini va nima qilish kerakligini ayt. O'zbek tilida javob ber.`;
+Bu ko'rsatkich haqida 1-2 qator qisqa insight ber. Yaxshi yoki yomon ekanligini va nima qilish kerakligini ayt.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const insight = await callOpenAI(prompt);
 
     return {
       success: true,
-      insight: response.text()
+      insight
     };
   } catch (error) {
     return {
@@ -172,20 +147,17 @@ Bu ko'rsatkich haqida 1-2 qator qisqa insight ber. Yaxshi yoki yomon ekanligini 
  */
 export async function analyzeSegment(segmentName, users, stats) {
   try {
-    const model = await getModel();
-
     const prompt = `Segment: ${segmentName}
 Foydalanuvchilar soni: ${users}
 Statistika: ${JSON.stringify(stats)}
 
-Bu segment uchun qanday xabar yuborish kerak? Qanday taklif qilish kerak? 2-3 qator tavsiya ber. O'zbek tilida.`;
+Bu segment uchun qanday xabar yuborish kerak? Qanday taklif qilish kerak? 2-3 qator tavsiya ber.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const recommendation = await callOpenAI(prompt);
 
     return {
       success: true,
-      recommendation: response.text()
+      recommendation
     };
   } catch (error) {
     return {
@@ -200,21 +172,18 @@ Bu segment uchun qanday xabar yuborish kerak? Qanday taklif qilish kerak? 2-3 qa
  */
 export async function suggestBroadcastMessage(targetAudience, goal, tone = 'friendly') {
   try {
-    const model = await getModel();
-
     const prompt = `Maqsadli auditoriya: ${targetAudience}
 Xabar maqsadi: ${goal}
 Ton: ${tone}
 
-Telegram uchun samarali xabar matni yoz. Emoji ishlatishingiz mumkin. HTML formatda (<b>, <i>, <a href="">). O'zbek tilida.
+Telegram uchun samarali xabar matni yoz. Emoji ishlatishingiz mumkin. HTML formatda (<b>, <i>, <a href="">).
 Xabar 500 belgidan oshmasin.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const message = await callOpenAI(prompt);
 
     return {
       success: true,
-      message: response.text()
+      message
     };
   } catch (error) {
     return {
@@ -229,8 +198,6 @@ Xabar 500 belgidan oshmasin.`;
  */
 export async function generateDailyBriefing(stats) {
   try {
-    const model = await getModel();
-
     const prompt = `Bugungi biznes statistikasi:
 - Yangi foydalanuvchilar: ${stats.newUsers || 0}
 - Faol foydalanuvchilar: ${stats.activeUsers || 0}
@@ -238,14 +205,13 @@ export async function generateDailyBriefing(stats) {
 - Konversiya: ${stats.conversionRate || 0}%
 - Faol suhbatlar: ${stats.activeConversations || 0}
 
-Qisqa (3-4 qator) kunlik brifing yoz. Asosiy e'tibor qaratish kerak bo'lgan narsani ko'rsat. O'zbek tilida.`;
+Qisqa (3-4 qator) kunlik brifing yoz. Asosiy e'tibor qaratish kerak bo'lgan narsani ko'rsat.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const briefing = await callOpenAI(prompt);
 
     return {
       success: true,
-      briefing: response.text()
+      briefing
     };
   } catch (error) {
     return {
@@ -260,8 +226,6 @@ Qisqa (3-4 qator) kunlik brifing yoz. Asosiy e'tibor qaratish kerak bo'lgan nars
  */
 export async function analyzeUserJourney(user) {
   try {
-    const model = await getModel();
-
     const prompt = `Foydalanuvchi ma'lumotlari:
 - Ism: ${user.name || 'Noma\'lum'}
 - Ro'yxatdan o'tgan: ${user.createdAt || 'Noma\'lum'}
@@ -271,14 +235,13 @@ export async function analyzeUserJourney(user) {
 - Oxirgi faollik: ${user.lastActivity || 'Noma\'lum'}
 - Manba: ${user.source || 'Noma\'lum'}
 
-Bu foydalanuvchiga nima qilish kerak? Qanday xabar yuborish kerak? 2-3 qator tavsiya. O'zbek tilida.`;
+Bu foydalanuvchiga nima qilish kerak? Qanday xabar yuborish kerak? 2-3 qator tavsiya.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const analysis = await callOpenAI(prompt);
 
     return {
       success: true,
-      analysis: response.text()
+      analysis
     };
   } catch (error) {
     return {
@@ -293,8 +256,6 @@ Bu foydalanuvchiga nima qilish kerak? Qanday xabar yuborish kerak? 2-3 qator tav
  */
 export async function generatePaymentAdvice(paymentData) {
   try {
-    const model = await getModel();
-
     const prompt = `To'lov statistikasi:
 - Jami checkout ochganlar: ${paymentData.totalCheckouts || 0}
 - To'lov qilganlar: ${paymentData.completedPayments || 0}
@@ -303,14 +264,13 @@ export async function generatePaymentAdvice(paymentData) {
 - Eng ko'p ishlatiladigan to'lov tizimi: ${paymentData.topPaymentMethod || 'Noma\'lum'}
 - Stuck to'lovlar: ${paymentData.stuckPayments || 0}
 
-To'lov konversiyasini oshirish uchun TOP 3 tavsiya ber. Har biri uchun aniq qadamlar. O'zbek tilida.`;
+To'lov konversiyasini oshirish uchun TOP 3 tavsiya ber. Har biri uchun aniq qadamlar.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const advice = await callOpenAI(prompt);
 
     return {
       success: true,
-      advice: response.text()
+      advice
     };
   } catch (error) {
     return {
@@ -325,8 +285,6 @@ To'lov konversiyasini oshirish uchun TOP 3 tavsiya ber. Har biri uchun aniq qada
  */
 export async function generateContentAdvice(lessonStats) {
   try {
-    const model = await getModel();
-
     const prompt = `Darslar statistikasi:
 - Jami darslar: ${lessonStats.totalLessons || 0}
 - Eng ko'p ko'rilgan dars: ${lessonStats.mostViewedLesson || 'Noma\'lum'}
@@ -334,14 +292,13 @@ export async function generateContentAdvice(lessonStats) {
 - O'rtacha dars ko'rish vaqti: ${lessonStats.avgViewTime || 'Noma\'lum'}
 - Drop-off eng ko'p bo'lgan dars: ${lessonStats.highestDropoffLesson || 'Noma\'lum'}
 
-Kontent va darslarni yaxshilash uchun TOP 3 tavsiya ber. O'zbek tilida.`;
+Kontent va darslarni yaxshilash uchun TOP 3 tavsiya ber.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const advice = await callOpenAI(prompt);
 
     return {
       success: true,
-      advice: response.text()
+      advice
     };
   } catch (error) {
     return {
@@ -356,8 +313,6 @@ Kontent va darslarni yaxshilash uchun TOP 3 tavsiya ber. O'zbek tilida.`;
  */
 export async function analyzeReferralProgram(referralData) {
   try {
-    const model = await getModel();
-
     const prompt = `Referal dasturi statistikasi:
 - Jami referallar: ${referralData.totalReferrals || 0}
 - Muvaffaqiyatli referallar: ${referralData.successfulReferrals || 0}
@@ -365,14 +320,13 @@ export async function analyzeReferralProgram(referralData) {
 - O'rtacha referal per user: ${referralData.avgReferralsPerUser || 0}
 - Referal orqali to'lovlar: ${referralData.referralPayments || 0}
 
-Referal dasturini yaxshilash uchun 2-3 ta tavsiya ber. O'zbek tilida.`;
+Referal dasturini yaxshilash uchun 2-3 ta tavsiya ber.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const analysis = await callOpenAI(prompt);
 
     return {
       success: true,
-      analysis: response.text()
+      analysis
     };
   } catch (error) {
     return {
