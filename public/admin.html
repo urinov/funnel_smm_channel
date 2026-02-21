@@ -3514,10 +3514,10 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
         <div class="sf-topbar">
           <div class="sf-brand">✶ funnelforce</div>
           <div class="sf-top-pills">
-            <span class="sf-pill">Overview</span>
+            <span class="sf-pill" onclick="showTab('overview')" style="cursor:pointer">Overview</span>
             <span class="sf-pill active">Analitika</span>
-            <span class="sf-pill">To'lovlar</span>
-            <span class="sf-pill">Userlar</span>
+            <span class="sf-pill" onclick="showTab('payments')" style="cursor:pointer">To'lovlar</span>
+            <span class="sf-pill" onclick="showTab('users')" style="cursor:pointer">Userlar</span>
           </div>
           <div class="sf-actions">
             <button id="analyticsPeriod7" onclick="setAnalyticsPeriod(7)" class="sf-mini-btn">7 kun</button>
@@ -3571,10 +3571,10 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 
         <div class="sf-filter-row">
           <div class="sf-filter-label">Active filters</div>
-          <div class="sf-chip">Manba CR</div>
-          <div class="sf-chip">Dars CR</div>
-          <div class="sf-chip">Aktivlik CR</div>
-          <div class="sf-chip">High intent</div>
+          <div class="sf-chip" onclick="scrollToAnalyticsSection('analyticsCRHeatmap')" style="cursor:pointer">Manba CR</div>
+          <div class="sf-chip" onclick="scrollToAnalyticsSection('segmentLessonList')" style="cursor:pointer">Dars CR</div>
+          <div class="sf-chip" onclick="scrollToAnalyticsSection('segmentActivityList')" style="cursor:pointer">Aktivlik CR</div>
+          <div class="sf-chip" onclick="scrollToAnalyticsSection('highIntentTable')" style="cursor:pointer">High intent</div>
           <span class="global-hint" title="CR = to'lov qilgan / jami user * 100">CR</span>
           <span class="global-hint" title="Prev dan = joriy bosqich / oldingi bosqich * 100">Prev</span>
           <span class="global-hint" title="Start dan = joriy bosqich / ro'yxatdan o'tgan * 100">Start</span>
@@ -9495,41 +9495,55 @@ async function loadAnalyticsData(force = false) {
 
 // ═══ NEW ANALYTICS VISUALIZATION FUNCTIONS ═══
 
+// Scroll to a section in analytics
+function scrollToAnalyticsSection(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.style.boxShadow = '0 0 0 3px rgba(115, 103, 240, 0.3)';
+    setTimeout(() => { element.style.boxShadow = ''; }, 2000);
+  }
+}
+
 function renderAnalyticsMegaFunnel(data) {
-  if (!data || !data.steps) return;
+  // Data comes from funnel-diagnostics with stages array
+  const stages = Array.isArray(data?.stages) ? data.stages : [];
 
-  const steps = data.steps;
-  const totalUsers = steps[0]?.count || 0;
+  if (!stages.length) {
+    console.log('No stages data for mega funnel');
+    return;
+  }
 
-  // Map step names to element IDs
-  const mapping = [
-    { valueId: 'afTotalUsers', percentId: null, dropoffId: 'afDropoff1' },
-    { valueId: 'afActiveUsers', percentId: 'afActivePercent', dropoffId: 'afDropoff2' },
-    { valueId: 'afPitchViewed', percentId: 'afPitchPercent', dropoffId: 'afDropoff3' },
-    { valueId: 'afCheckout', percentId: 'afCheckoutPercent', dropoffId: 'afDropoff4' },
-    { valueId: 'afPaidUsers', percentId: 'afPaidPercent', dropoffId: null }
-  ];
+  const totalUsers = stages[0]?.count || 0;
 
-  steps.forEach((step, idx) => {
-    const m = mapping[idx];
+  // Map stage labels to element IDs
+  const mapping = {
+    'Registered': { valueId: 'afTotalUsers', percentId: null, dropoffId: 'afDropoff1' },
+    'Active': { valueId: 'afActiveUsers', percentId: 'afActivePercent', dropoffId: 'afDropoff2' },
+    'Pitch ko\'rgan': { valueId: 'afPitchViewed', percentId: 'afPitchPercent', dropoffId: 'afDropoff3' },
+    'Checkout ochgan': { valueId: 'afCheckout', percentId: 'afCheckoutPercent', dropoffId: 'afDropoff4' },
+    'To\'lov qilgan': { valueId: 'afPaidUsers', percentId: 'afPaidPercent', dropoffId: null }
+  };
+
+  stages.forEach((stage, idx) => {
+    const m = mapping[stage.label];
     if (!m) return;
 
     const valueEl = document.getElementById(m.valueId);
-    if (valueEl) valueEl.textContent = step.count.toLocaleString();
+    if (valueEl) valueEl.textContent = (stage.count || 0).toLocaleString();
 
     if (m.percentId) {
       const percentEl = document.getElementById(m.percentId);
       if (percentEl) {
-        const pct = totalUsers > 0 ? ((step.count / totalUsers) * 100).toFixed(1) : 0;
-        percentEl.textContent = pct + '%';
+        percentEl.textContent = (stage.fromStart || 0) + '%';
       }
     }
 
-    if (m.dropoffId && idx < steps.length - 1) {
+    if (m.dropoffId && idx < stages.length - 1) {
       const dropoffEl = document.getElementById(m.dropoffId);
       if (dropoffEl) {
-        const nextCount = steps[idx + 1]?.count || 0;
-        const dropoff = step.count > 0 ? Math.round(((step.count - nextCount) / step.count) * 100) : 0;
+        const nextStage = stages[idx + 1];
+        const dropoff = stage.count > 0 ? Math.round(((stage.count - (nextStage?.count || 0)) / stage.count) * 100) : 0;
         dropoffEl.textContent = '-' + dropoff + '%';
       }
     }
@@ -9934,25 +9948,80 @@ function renderDiagFunnelChart(stages) {
   if (analyticsCharts.diagFunnel) analyticsCharts.diagFunnel.destroy();
   if (!Array.isArray(stages) || stages.length === 0) return;
 
+  // Create gradient colors for funnel effect
+  const funnelColors = [
+    'rgba(99, 102, 241, 0.9)',   // Indigo - Start
+    'rgba(139, 92, 246, 0.85)',  // Purple
+    'rgba(167, 139, 250, 0.8)',  // Light purple
+    'rgba(196, 181, 253, 0.75)', // Lighter
+    'rgba(34, 197, 94, 0.85)'    // Green - End (paid)
+  ];
+
+  const borderColors = [
+    'rgba(99, 102, 241, 1)',
+    'rgba(139, 92, 246, 1)',
+    'rgba(167, 139, 250, 1)',
+    'rgba(196, 181, 253, 1)',
+    'rgba(34, 197, 94, 1)'
+  ];
+
   analyticsCharts.diagFunnel = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: stages.map((s) => s.label),
       datasets: [{
-        label: 'Userlar',
+        label: 'Foydalanuvchilar',
         data: stages.map((s) => s.count || 0),
-        backgroundColor: 'rgba(115,103,240,0.75)',
-        borderRadius: 8,
-        maxBarThickness: 42
+        backgroundColor: stages.map((_, i) => funnelColors[i % funnelColors.length]),
+        borderColor: stages.map((_, i) => borderColors[i % borderColors.length]),
+        borderWidth: 2,
+        borderRadius: 10,
+        borderSkipped: false,
+        maxBarThickness: 60
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      indexAxis: 'y', // Horizontal bars for funnel effect
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            afterLabel: function(context) {
+              const idx = context.dataIndex;
+              if (idx < stages.length - 1) {
+                const current = stages[idx].count || 0;
+                const next = stages[idx + 1]?.count || 0;
+                const dropoff = current > 0 ? Math.round(((current - next) / current) * 100) : 0;
+                return `📉 Keyingi bosqichga: -${dropoff}%`;
+              }
+              return '✅ Yakuniy bosqich';
+            }
+          }
+        }
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { precision: 0 } },
-        x: { ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, font: { size: 10 } } }
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            precision: 0,
+            font: { size: 11 }
+          }
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 11, weight: '600' },
+            color: '#374151'
+          }
+        }
       }
     }
   });
