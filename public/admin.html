@@ -3737,6 +3737,25 @@
         </div>
       </div>
 
+      <!-- AI Daily Briefing -->
+      <div class="card p-5 mb-6 ai-briefing-card" style="background: linear-gradient(135deg, #faf5ff 0%, #f0f9ff 100%); border: 1px solid rgba(99, 102, 241, 0.15);">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+              <span style="font-size: 20px;">🤖</span>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-800 text-base">AI Kunlik Brifing</h3>
+              <span style="font-size: 10px; background: linear-gradient(135deg, #4285f4, #34a853); color: white; padding: 2px 8px; border-radius: 10px;">Gemini</span>
+            </div>
+          </div>
+          <button onclick="loadDailyBriefing(true)" class="btn btn-secondary btn-sm">🔄</button>
+        </div>
+        <div id="aiBriefingContent" class="text-gray-700 text-sm leading-relaxed">
+          <div class="text-center py-4 text-gray-400">Yuklanmoqda...</div>
+        </div>
+      </div>
+
       <!-- Charts Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Revenue Chart -->
@@ -4157,6 +4176,21 @@
         <div class="card p-4 border-l-4 border-red-500 kpi-card">
           <p class="text-sm text-gray-500">Bekor qilingan</p>
           <p class="text-xl font-bold text-red-600" id="payCancelledCount">0</p>
+        </div>
+      </div>
+
+      <!-- AI Payment Advice -->
+      <div class="card p-4 mb-6" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border: 1px solid rgba(34, 197, 94, 0.2);">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span style="font-size: 18px;">🤖</span>
+            <span class="font-semibold text-gray-800 text-sm">AI To'lov Tavsiyalari</span>
+            <span style="font-size: 9px; background: linear-gradient(135deg, #4285f4, #34a853); color: white; padding: 2px 6px; border-radius: 8px;">Gemini</span>
+          </div>
+          <button onclick="loadPaymentAdvice(true)" class="btn btn-secondary btn-sm text-xs">🔄</button>
+        </div>
+        <div id="aiPaymentAdviceContent" class="text-gray-700 text-sm leading-relaxed">
+          <span class="text-gray-400 text-xs">Yuklanmoqda...</span>
         </div>
       </div>
 
@@ -7510,6 +7544,99 @@ async function togglePromoCode(id, isActive) {
 }
 
 // ========== LOAD DATA ==========
+
+// AI Daily Briefing
+let dailyBriefingCache = null;
+let dailyBriefingTimestamp = 0;
+
+// AI Payment Advice
+let paymentAdviceCache = null;
+let paymentAdviceTimestamp = 0;
+
+async function loadPaymentAdvice(forceRefresh = false) {
+  const container = document.getElementById('aiPaymentAdviceContent');
+  if (!container) return;
+
+  const now = Date.now();
+  const CACHE_DURATION = 10 * 60 * 1000;
+
+  if (!forceRefresh && paymentAdviceCache && (now - paymentAdviceTimestamp) < CACHE_DURATION) {
+    container.innerHTML = paymentAdviceCache;
+    return;
+  }
+
+  container.innerHTML = '<span class="text-gray-400 text-xs">AI tahlil qilmoqda...</span>';
+
+  try {
+    const response = await fetch('/api/ai/payment-advice', {
+      headers: { 'Authorization': 'Basic ' + btoa(sessionStorage.getItem('adminUser') + ':' + sessionStorage.getItem('adminPass')) }
+    });
+
+    if (!response.ok) throw new Error('API xatosi');
+
+    const data = await response.json();
+
+    if (data.success && data.advice) {
+      const formatted = data.advice
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+
+      paymentAdviceCache = formatted;
+      paymentAdviceTimestamp = now;
+      container.innerHTML = formatted;
+    } else {
+      throw new Error(data.error || 'Tavsiya olinmadi');
+    }
+  } catch (error) {
+    container.innerHTML = `<span class="text-gray-500 text-xs">⚠️ ${error.message}</span>`;
+  }
+}
+
+async function loadDailyBriefing(forceRefresh = false) {
+  const container = document.getElementById('aiBriefingContent');
+  if (!container) return;
+
+  const now = Date.now();
+  const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+  if (!forceRefresh && dailyBriefingCache && (now - dailyBriefingTimestamp) < CACHE_DURATION) {
+    container.innerHTML = dailyBriefingCache;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="flex items-center gap-3 py-2">
+      <div class="ai-loading-spinner" style="width: 24px; height: 24px; border-width: 2px;"></div>
+      <span class="text-gray-500 text-sm">AI tahlil qilmoqda...</span>
+    </div>
+  `;
+
+  try {
+    const response = await fetch('/api/ai/daily-briefing', {
+      headers: { 'Authorization': 'Basic ' + btoa(sessionStorage.getItem('adminUser') + ':' + sessionStorage.getItem('adminPass')) }
+    });
+
+    if (!response.ok) throw new Error('API xatosi');
+
+    const data = await response.json();
+
+    if (data.success && data.briefing) {
+      const formatted = data.briefing
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+
+      dailyBriefingCache = formatted;
+      dailyBriefingTimestamp = now;
+      container.innerHTML = formatted;
+    } else {
+      throw new Error(data.error || 'Brifing olinmadi');
+    }
+  } catch (error) {
+    console.error('Daily briefing error:', error);
+    container.innerHTML = `<p class="text-gray-500">⚠️ ${error.message}. <button onclick="loadDailyBriefing(true)" class="text-indigo-600 underline">Qayta urinish</button></p>`;
+  }
+}
+
 async function loadAll() {
   try {
     setGlobalLoadingState(true);
@@ -7524,7 +7651,8 @@ async function loadAll() {
       loadFeedback(),
       loadSettingsForm(),
       loadMediaLibrary(),
-      loadPromoCodes()
+      loadPromoCodes(),
+      loadDailyBriefing()
     ]);
     markTabsStale(['analytics', 'conversations', 'progrev', 'renewal', 'referrals', 'audit']);
     const activeTab = (document.querySelector('[id^="tab-"]:not(.hidden)')?.id || 'tab-overview').replace('tab-', '');
@@ -7839,6 +7967,7 @@ async function loadPayments() {
     renderPayments();
     renderRecentPayments();
     renderPaymentStats();
+    loadPaymentAdvice(); // Load AI advice
   } catch(e) { console.error('loadPayments error:', e); addNotification('Payments yuklanmadi', 'error'); }
 }
 

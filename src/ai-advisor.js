@@ -5,6 +5,33 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.gemini_api);
 
+// Available models - try in order of preference
+const MODELS = ['gemini-pro', 'gemini-1.0-pro', 'gemini-1.5-flash-latest'];
+
+async function getWorkingModel() {
+  for (const modelName of MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      // Test with a simple prompt
+      await model.generateContent('test');
+      console.log(`Using Gemini model: ${modelName}`);
+      return model;
+    } catch (e) {
+      console.log(`Model ${modelName} not available, trying next...`);
+    }
+  }
+  // Fallback to gemini-pro
+  return genAI.getGenerativeModel({ model: 'gemini-pro' });
+}
+
+let cachedModel = null;
+async function getModel() {
+  if (!cachedModel) {
+    cachedModel = await getWorkingModel();
+  }
+  return cachedModel;
+}
+
 const SYSTEM_PROMPT = `Sen professional sotish va marketing bo'yicha mutaxassissan. Sening vazifang - Telegram bot orqali kurs sotayotgan biznes uchun sotuvni oshirish bo'yicha aniq, amaliy tavsiyalar berish.
 
 Sening tahliling quyidagilarga asoslanadi:
@@ -27,7 +54,7 @@ Javoblaringni O'zbek tilida ber. Qisqa va aniq bo'l. Emoji ishlatishdan qo'rqma.
  */
 export async function generateSalesAdvice(funnelData, additionalContext = {}) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = await getModel();
 
     const dataPrompt = `
 ## Joriy Voronka Ma'lumotlari:
@@ -89,7 +116,7 @@ Har bir tavsiya quyidagi formatda bo'lsin:
  */
 export async function generateQuickInsight(metric, value, context = '') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = await getModel();
 
     const prompt = `Ko'rsatkich: ${metric}
 Qiymat: ${value}
@@ -117,7 +144,7 @@ Bu ko'rsatkich haqida 1-2 qator qisqa insight ber. Yaxshi yoki yomon ekanligini 
  */
 export async function analyzeSegment(segmentName, users, stats) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = await getModel();
 
     const prompt = `Segment: ${segmentName}
 Foydalanuvchilar soni: ${users}
@@ -145,7 +172,7 @@ Bu segment uchun qanday xabar yuborish kerak? Qanday taklif qilish kerak? 2-3 qa
  */
 export async function suggestBroadcastMessage(targetAudience, goal, tone = 'friendly') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = await getModel();
 
     const prompt = `Maqsadli auditoriya: ${targetAudience}
 Xabar maqsadi: ${goal}
@@ -169,9 +196,172 @@ Xabar 500 belgidan oshmasin.`;
   }
 }
 
+/**
+ * Generate daily overview/briefing for dashboard
+ */
+export async function generateDailyBriefing(stats) {
+  try {
+    const model = await getModel();
+
+    const prompt = `Bugungi biznes statistikasi:
+- Yangi foydalanuvchilar: ${stats.newUsers || 0}
+- Faol foydalanuvchilar: ${stats.activeUsers || 0}
+- Bugungi to'lovlar: ${stats.todayPayments || 0} ta (${stats.todayRevenue || 0} so'm)
+- Konversiya: ${stats.conversionRate || 0}%
+- Faol suhbatlar: ${stats.activeConversations || 0}
+
+Qisqa (3-4 qator) kunlik brifing yoz. Asosiy e'tibor qaratish kerak bo'lgan narsani ko'rsat. O'zbek tilida.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    return {
+      success: true,
+      briefing: response.text()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      briefing: "Brifing yuklanmadi"
+    };
+  }
+}
+
+/**
+ * Analyze specific user journey and suggest next action
+ */
+export async function analyzeUserJourney(user) {
+  try {
+    const model = await getModel();
+
+    const prompt = `Foydalanuvchi ma'lumotlari:
+- Ism: ${user.name || 'Noma\'lum'}
+- Ro'yxatdan o'tgan: ${user.createdAt || 'Noma\'lum'}
+- Joriy bosqich: ${user.currentStep || 0}
+- Jami darslar: ${user.lessonsCompleted || 0}
+- To'lov holati: ${user.isPaid ? 'To\'lagan' : 'To\'lamagan'}
+- Oxirgi faollik: ${user.lastActivity || 'Noma\'lum'}
+- Manba: ${user.source || 'Noma\'lum'}
+
+Bu foydalanuvchiga nima qilish kerak? Qanday xabar yuborish kerak? 2-3 qator tavsiya. O'zbek tilida.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    return {
+      success: true,
+      analysis: response.text()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      analysis: "Tahlil qilib bo'lmadi"
+    };
+  }
+}
+
+/**
+ * Generate payment optimization advice
+ */
+export async function generatePaymentAdvice(paymentData) {
+  try {
+    const model = await getModel();
+
+    const prompt = `To'lov statistikasi:
+- Jami checkout ochganlar: ${paymentData.totalCheckouts || 0}
+- To'lov qilganlar: ${paymentData.completedPayments || 0}
+- Tashlab ketganlar: ${paymentData.abandonedPayments || 0}
+- O'rtacha vaqt (checkout -> to'lov): ${paymentData.avgTimeToPayment || 'Noma\'lum'}
+- Eng ko'p ishlatiladigan to'lov tizimi: ${paymentData.topPaymentMethod || 'Noma\'lum'}
+- Stuck to'lovlar: ${paymentData.stuckPayments || 0}
+
+To'lov konversiyasini oshirish uchun TOP 3 tavsiya ber. Har biri uchun aniq qadamlar. O'zbek tilida.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    return {
+      success: true,
+      advice: response.text()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      advice: "Tavsiya yuklanmadi"
+    };
+  }
+}
+
+/**
+ * Generate content/lesson improvement suggestions
+ */
+export async function generateContentAdvice(lessonStats) {
+  try {
+    const model = await getModel();
+
+    const prompt = `Darslar statistikasi:
+- Jami darslar: ${lessonStats.totalLessons || 0}
+- Eng ko'p ko'rilgan dars: ${lessonStats.mostViewedLesson || 'Noma\'lum'}
+- Eng kam ko'rilgan dars: ${lessonStats.leastViewedLesson || 'Noma\'lum'}
+- O'rtacha dars ko'rish vaqti: ${lessonStats.avgViewTime || 'Noma\'lum'}
+- Drop-off eng ko'p bo'lgan dars: ${lessonStats.highestDropoffLesson || 'Noma\'lum'}
+
+Kontent va darslarni yaxshilash uchun TOP 3 tavsiya ber. O'zbek tilida.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    return {
+      success: true,
+      advice: response.text()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      advice: "Tavsiya yuklanmadi"
+    };
+  }
+}
+
+/**
+ * Analyze referral program performance
+ */
+export async function analyzeReferralProgram(referralData) {
+  try {
+    const model = await getModel();
+
+    const prompt = `Referal dasturi statistikasi:
+- Jami referallar: ${referralData.totalReferrals || 0}
+- Muvaffaqiyatli referallar: ${referralData.successfulReferrals || 0}
+- Top referer: ${referralData.topReferer || 'Noma\'lum'}
+- O'rtacha referal per user: ${referralData.avgReferralsPerUser || 0}
+- Referal orqali to'lovlar: ${referralData.referralPayments || 0}
+
+Referal dasturini yaxshilash uchun 2-3 ta tavsiya ber. O'zbek tilida.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    return {
+      success: true,
+      analysis: response.text()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      analysis: "Tahlil yuklanmadi"
+    };
+  }
+}
+
 export default {
   generateSalesAdvice,
   generateQuickInsight,
   analyzeSegment,
-  suggestBroadcastMessage
+  suggestBroadcastMessage,
+  generateDailyBriefing,
+  analyzeUserJourney,
+  generatePaymentAdvice,
+  generateContentAdvice,
+  analyzeReferralProgram
 };

@@ -1691,6 +1691,126 @@ app.post('/api/ai/analyze-segment', authMiddleware, async (req, res) => {
   }
 });
 
+// Daily briefing for overview section
+app.get('/api/ai/daily-briefing', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const aiAdvisor = await import('./ai-advisor.js');
+
+    // Gather stats
+    const stats = await db.getStats();
+    const recentPayments = await db.getRecentPayments(1); // Last 1 day
+
+    const briefingData = {
+      newUsers: stats.today_users || 0,
+      activeUsers: stats.active_users || 0,
+      todayPayments: recentPayments?.length || 0,
+      todayRevenue: recentPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0,
+      conversionRate: stats.total_users > 0 ? ((stats.paid_users / stats.total_users) * 100).toFixed(1) : 0,
+      activeConversations: stats.active_conversations || 0
+    };
+
+    const result = await aiAdvisor.generateDailyBriefing(briefingData);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+// Analyze specific user
+app.get('/api/ai/analyze-user/:telegramId', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const aiAdvisor = await import('./ai-advisor.js');
+
+    const user = await db.getUser(req.params.telegramId);
+    if (!user) return res.status(404).json({ error: 'User not found', success: false });
+
+    const userData = {
+      name: user.full_name,
+      createdAt: user.created_at,
+      currentStep: user.current_lesson,
+      lessonsCompleted: user.current_lesson || 0,
+      isPaid: user.is_paid,
+      lastActivity: user.last_active,
+      source: user.source || 'Direct'
+    };
+
+    const result = await aiAdvisor.analyzeUserJourney(userData);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+// Payment optimization advice
+app.get('/api/ai/payment-advice', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const aiAdvisor = await import('./ai-advisor.js');
+
+    const paymentAnalytics = await db.getPaymentAnalytics();
+    const frictionData = await db.getPaymentFriction(100);
+
+    const paymentData = {
+      totalCheckouts: paymentAnalytics?.checkout_count || 0,
+      completedPayments: paymentAnalytics?.completed_count || 0,
+      abandonedPayments: (paymentAnalytics?.checkout_count || 0) - (paymentAnalytics?.completed_count || 0),
+      stuckPayments: frictionData?.stuck_payments?.length || 0,
+      topPaymentMethod: 'Payme/Click'
+    };
+
+    const result = await aiAdvisor.generatePaymentAdvice(paymentData);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+// Content/lesson advice
+app.get('/api/ai/content-advice', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const aiAdvisor = await import('./ai-advisor.js');
+
+    const lessons = await db.getLessons();
+
+    const lessonStats = {
+      totalLessons: lessons?.length || 0,
+      mostViewedLesson: lessons?.[0]?.title || 'Noma\'lum',
+      leastViewedLesson: lessons?.[lessons?.length - 1]?.title || 'Noma\'lum'
+    };
+
+    const result = await aiAdvisor.generateContentAdvice(lessonStats);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+// Referral program analysis
+app.get('/api/ai/referral-advice', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const aiAdvisor = await import('./ai-advisor.js');
+
+    const referralStats = await db.getReferralStats();
+
+    const referralData = {
+      totalReferrals: referralStats?.total_referrals || 0,
+      successfulReferrals: referralStats?.successful_referrals || 0,
+      topReferer: referralStats?.top_referers?.[0]?.name || 'Noma\'lum',
+      avgReferralsPerUser: referralStats?.avg_per_user || 0,
+      referralPayments: referralStats?.referral_payments || 0
+    };
+
+    const result = await aiAdvisor.analyzeReferralProgram(referralData);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
 // ============ APP SETTINGS API ============
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
