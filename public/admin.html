@@ -275,7 +275,8 @@
     }
 
     /* Stat card with icon */
-    .stat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 24px rgba(99,102,241,0.2); background: var(--gradient-primary); color: #fff; }
+    .stat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 24px rgba(99,102,241,0.2); background: var(--gradient-primary); color: #fff !important; }
+    .stat-icon .material-symbols-outlined { color: #fff !important; font-size: 26px; }
 
     /* Table */
     .table-row { border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: all 0.15s ease; }
@@ -295,10 +296,10 @@
 
     /* Button */
     .btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; transition: all 0.2s ease; cursor: pointer; border: 1px solid #dddce3; background: #fff; color: #49465a; font-family: 'Plus Jakarta Sans', 'Public Sans', sans-serif; }
-    .btn-primary { background: var(--gradient-primary); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.32); border-color: transparent; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
-    .btn-secondary { background: #fff; color: #57536b; border: 1px solid #dedde5; box-shadow: none; }
-    .btn-secondary:hover { background: #f8f7fa; border-color: #cfcdd8; transform: none; }
+    .btn-primary { background: var(--gradient-primary); color: #fff !important; box-shadow: 0 4px 14px rgba(99,102,241,0.32); border-color: transparent; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); color: #fff !important; }
+    .btn-secondary { background: #fff; color: #374151 !important; border: 1px solid #dedde5; box-shadow: none; }
+    .btn-secondary:hover { background: #f3f4f6; border-color: #9ca3af; transform: none; color: #111827 !important; }
     .btn-sm { padding: 6px 12px; font-size: 13px; }
     .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
@@ -1748,26 +1749,29 @@
 
   <!-- Left Sidebar - Icons Only Purple Gradient -->
   <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 flex flex-col items-center py-5 z-40">
-    <!-- Logo -->
-    <div class="mb-8">
+    <!-- Logo & Toggle -->
+    <div class="mb-6 flex flex-col items-center gap-3">
       <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white text-xl font-bold cursor-pointer hover:bg-white/30 transition-all hover:scale-105">F</div>
+      <button onclick="toggleSidebar()" class="sidebar-toggle" title="Menyuni kengaytirish" aria-label="Menyuni kengaytirish">
+        <span class="material-symbols-outlined" style="font-size: 16px;" id="sidebarToggleIcon">chevron_right</span>
+      </button>
     </div>
 
     <!-- Main Nav -->
-    <nav class="flex flex-col gap-2 flex-1 w-full px-3 items-center" aria-label="Asosiy navigatsiya">
-      <div class="sidebar-item active" data-tab="overview" data-tooltip="Umumiy ko'rinish" aria-label="Umumiy ko'rinish"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span></div>
-      <div class="sidebar-item" data-tab="analytics" data-tooltip="Analitika" aria-label="Analitika"><span class="material-symbols-outlined" aria-hidden="true">analytics</span></div>
-      <div class="sidebar-item" data-tab="users" data-tooltip="Foydalanuvchilar" aria-label="Foydalanuvchilar"><span class="material-symbols-outlined" aria-hidden="true">group</span></div>
-      <div class="sidebar-item" data-tab="conversations" data-tooltip="Xabarlar" aria-label="Xabarlar"><span class="material-symbols-outlined" aria-hidden="true">chat</span></div>
-      <div class="sidebar-item" data-tab="payments" data-tooltip="To'lovlar" aria-label="To'lovlar"><span class="material-symbols-outlined" aria-hidden="true">payments</span></div>
-      <div class="sidebar-item" data-tab="lessons" data-tooltip="Darslar" aria-label="Darslar"><span class="material-symbols-outlined" aria-hidden="true">school</span></div>
-      <div class="sidebar-item" data-tab="library" data-tooltip="Kutubxona" aria-label="Kutubxona"><span class="material-symbols-outlined" aria-hidden="true">video_library</span></div>
-      <div class="sidebar-item" data-tab="progrev" data-tooltip="Progrev" aria-label="Progrev"><span class="material-symbols-outlined" aria-hidden="true">local_fire_department</span></div>
-      <div class="sidebar-item" data-tab="custdev" data-tooltip="CustDev" aria-label="CustDev"><span class="material-symbols-outlined" aria-hidden="true">psychology</span></div>
-      <div class="sidebar-item" data-tab="renewal" data-tooltip="Yangilash" aria-label="Yangilash"><span class="material-symbols-outlined" aria-hidden="true">autorenew</span></div>
-      <div class="sidebar-item" data-tab="promo" data-tooltip="Promokodlar" aria-label="Promokodlar"><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span></div>
-      <div class="sidebar-item" data-tab="referrals" data-tooltip="Referallar" aria-label="Referallar"><span class="material-symbols-outlined" aria-hidden="true">share</span></div>
-      <div class="sidebar-item" data-tab="audit" data-tooltip="Audit" aria-label="Audit"><span class="material-symbols-outlined" aria-hidden="true">history</span></div>
+    <nav class="flex flex-col gap-2 flex-1 w-full px-3 items-center overflow-y-auto overflow-x-hidden" aria-label="Asosiy navigatsiya">
+      <div class="sidebar-item active" data-tab="overview" data-tooltip="Umumiy ko'rinish" aria-label="Umumiy ko'rinish"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span class="sidebar-label">Umumiy</span></div>
+      <div class="sidebar-item" data-tab="analytics" data-tooltip="Analitika" aria-label="Analitika"><span class="material-symbols-outlined" aria-hidden="true">analytics</span><span class="sidebar-label">Analitika</span></div>
+      <div class="sidebar-item" data-tab="users" data-tooltip="Foydalanuvchilar" aria-label="Foydalanuvchilar"><span class="material-symbols-outlined" aria-hidden="true">group</span><span class="sidebar-label">Userlar</span></div>
+      <div class="sidebar-item" data-tab="conversations" data-tooltip="Xabarlar" aria-label="Xabarlar"><span class="material-symbols-outlined" aria-hidden="true">chat</span><span class="sidebar-label">Xabarlar</span></div>
+      <div class="sidebar-item" data-tab="payments" data-tooltip="To'lovlar" aria-label="To'lovlar"><span class="material-symbols-outlined" aria-hidden="true">payments</span><span class="sidebar-label">To'lovlar</span></div>
+      <div class="sidebar-item" data-tab="lessons" data-tooltip="Darslar" aria-label="Darslar"><span class="material-symbols-outlined" aria-hidden="true">school</span><span class="sidebar-label">Darslar</span></div>
+      <div class="sidebar-item" data-tab="library" data-tooltip="Kutubxona" aria-label="Kutubxona"><span class="material-symbols-outlined" aria-hidden="true">video_library</span><span class="sidebar-label">Kutubxona</span></div>
+      <div class="sidebar-item" data-tab="progrev" data-tooltip="Progrev" aria-label="Progrev"><span class="material-symbols-outlined" aria-hidden="true">local_fire_department</span><span class="sidebar-label">Progrev</span></div>
+      <div class="sidebar-item" data-tab="custdev" data-tooltip="CustDev" aria-label="CustDev"><span class="material-symbols-outlined" aria-hidden="true">psychology</span><span class="sidebar-label">CustDev</span></div>
+      <div class="sidebar-item" data-tab="renewal" data-tooltip="Yangilash" aria-label="Yangilash"><span class="material-symbols-outlined" aria-hidden="true">autorenew</span><span class="sidebar-label">Yangilash</span></div>
+      <div class="sidebar-item" data-tab="promo" data-tooltip="Promokodlar" aria-label="Promokodlar"><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span><span class="sidebar-label">Promokod</span></div>
+      <div class="sidebar-item" data-tab="referrals" data-tooltip="Referallar" aria-label="Referallar"><span class="material-symbols-outlined" aria-hidden="true">share</span><span class="sidebar-label">Referallar</span></div>
+      <div class="sidebar-item" data-tab="audit" data-tooltip="Audit" aria-label="Audit"><span class="material-symbols-outlined" aria-hidden="true">history</span><span class="sidebar-label">Audit</span></div>
     </nav>
 
     <!-- Divider -->
@@ -1775,9 +1779,9 @@
 
     <!-- Bottom Nav -->
     <div class="flex flex-col gap-2 w-full px-3 items-center">
-      <div class="sidebar-item" data-tab="settings" data-tooltip="Sozlamalar" aria-label="Sozlamalar"><span class="material-symbols-outlined" aria-hidden="true">settings</span></div>
-      <div class="sidebar-item" onclick="toggleNotificationsPanel()" data-tooltip="Bildirishnomalar" aria-label="Bildirishnomalar"><span class="material-symbols-outlined" aria-hidden="true">notifications</span></div>
-      <div class="sidebar-item" onclick="logout()" data-tooltip="Chiqish" aria-label="Chiqish" style="color: #fca5a5;"><span class="material-symbols-outlined" aria-hidden="true">logout</span></div>
+      <div class="sidebar-item" data-tab="settings" data-tooltip="Sozlamalar" aria-label="Sozlamalar"><span class="material-symbols-outlined" aria-hidden="true">settings</span><span class="sidebar-label">Sozlamalar</span></div>
+      <div class="sidebar-item" onclick="toggleNotificationsPanel()" data-tooltip="Bildirishnomalar" aria-label="Bildirishnomalar"><span class="material-symbols-outlined" aria-hidden="true">notifications</span><span class="sidebar-label">Xabarnoma</span></div>
+      <div class="sidebar-item" onclick="logout()" data-tooltip="Chiqish" aria-label="Chiqish" style="color: #fca5a5;"><span class="material-symbols-outlined" aria-hidden="true">logout</span><span class="sidebar-label" style="color: #fca5a5;">Chiqish</span></div>
     </div>
 
     <!-- Divider -->
@@ -2029,36 +2033,36 @@
       </div>
 
       <!-- Today's Quick Stats -->
-      <div class="card hero-card p-4 sm:p-5 mb-4 sm:mb-6 bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+      <div class="card hero-card p-4 sm:p-5 mb-4 sm:mb-6 bg-gradient-to-br from-indigo-600 to-purple-700 text-white">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
-            <p class="text-indigo-200 text-sm">📅 Bugungi statistika</p>
-            <p class="text-2xl sm:text-3xl font-bold" id="todayDateText"></p>
+            <p class="text-white/80 text-sm font-medium">📅 Bugungi statistika</p>
+            <p class="text-2xl sm:text-3xl font-bold text-white" id="todayDateText"></p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 bg-white/20 rounded-full text-sm" id="todayTimeRange">00:00 - 23:59</span>
+            <span class="px-3 py-1 bg-white/20 rounded-full text-sm text-white" id="todayTimeRange">00:00 - 23:59</span>
           </div>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
-            <p class="text-indigo-200 text-xs uppercase tracking-wide">Yangi userlar</p>
-            <p class="text-2xl sm:text-3xl font-bold" id="todayNewUsers">0</p>
-            <p class="text-xs text-indigo-200 mt-1" id="todayNewUsersChange">O'tgan kunga nisbatan</p>
+          <div class="bg-white/15 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-white/70 text-xs uppercase tracking-wide font-semibold">Yangi userlar</p>
+            <p class="text-2xl sm:text-3xl font-bold text-white" id="todayNewUsers">0</p>
+            <p class="text-xs text-white/60 mt-1" id="todayNewUsersChange">O'tgan kunga nisbatan</p>
           </div>
-          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
-            <p class="text-indigo-200 text-xs uppercase tracking-wide">To'lovlar</p>
-            <p class="text-2xl sm:text-3xl font-bold" id="todayPayments">0</p>
-            <p class="text-xs text-indigo-200 mt-1" id="todayPaymentsAmount">0 so'm</p>
+          <div class="bg-white/15 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-white/70 text-xs uppercase tracking-wide font-semibold">To'lovlar</p>
+            <p class="text-2xl sm:text-3xl font-bold text-white" id="todayPayments">0</p>
+            <p class="text-xs text-white/60 mt-1" id="todayPaymentsAmount">0 so'm</p>
           </div>
-          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
-            <p class="text-indigo-200 text-xs uppercase tracking-wide">Dars ko'rganlar</p>
-            <p class="text-2xl sm:text-3xl font-bold" id="todayLessonsWatched">0</p>
-            <p class="text-xs text-indigo-200 mt-1">Bugun aktiv</p>
+          <div class="bg-white/15 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-white/70 text-xs uppercase tracking-wide font-semibold">Dars ko'rganlar</p>
+            <p class="text-2xl sm:text-3xl font-bold text-white" id="todayLessonsWatched">0</p>
+            <p class="text-xs text-white/60 mt-1">Bugun aktiv</p>
           </div>
-          <div class="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
-            <p class="text-indigo-200 text-xs uppercase tracking-wide">Feedback</p>
-            <p class="text-2xl sm:text-3xl font-bold" id="todayFeedback">0</p>
-            <p class="text-xs text-indigo-200 mt-1" id="todayFeedbackPositive">0 ijobiy</p>
+          <div class="bg-white/15 backdrop-blur rounded-xl p-3 sm:p-4">
+            <p class="text-white/70 text-xs uppercase tracking-wide font-semibold">Feedback</p>
+            <p class="text-2xl sm:text-3xl font-bold text-white" id="todayFeedback">0</p>
+            <p class="text-xs text-white/60 mt-1" id="todayFeedbackPositive">0 ijobiy</p>
           </div>
         </div>
       </div>
@@ -3709,10 +3713,10 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
     <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-5 text-white mb-6 shadow-lg shadow-indigo-500/25 relative overflow-hidden">
       <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
       <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-      <p class="text-indigo-200 text-sm mb-1 relative">💰 Umumiy daromad</p>
-      <p class="text-3xl font-bold mb-4 relative" id="rightPanelRevenue">0 so'm</p>
+      <p class="text-white/80 text-sm mb-1 relative font-medium">💰 Umumiy daromad</p>
+      <p class="text-3xl font-bold mb-4 relative text-white" id="rightPanelRevenue">0 so'm</p>
       <div class="flex justify-between text-sm relative">
-        <span class="text-indigo-200">📅 Bu oy</span>
+        <span class="text-white/70">📅 Bu oy</span>
         <span class="font-semibold bg-white/20 px-2 py-0.5 rounded-full" id="rightPanelMonthRevenue">0</span>
       </div>
     </div>
@@ -4987,8 +4991,8 @@ function toggleSidebar() {
   sidebar.classList.toggle('expanded');
   const isExpanded = sidebar.classList.contains('expanded');
 
-  icon.textContent = isExpanded ? '←' : '→';
-  mainContent.style.marginLeft = isExpanded ? '270px' : '94px';
+  icon.textContent = isExpanded ? 'chevron_left' : 'chevron_right';
+  mainContent.style.marginLeft = isExpanded ? '220px' : '94px';
 
   localStorage.setItem('sidebarExpanded', isExpanded);
 }

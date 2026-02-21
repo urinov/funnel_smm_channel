@@ -1593,8 +1593,8 @@ export async function getFullStats() {
     completedUsers: parseInt(userStats[0].completed_users) || 0,
     todayUsers: parseInt(userStats[0].today_users) || 0,
     totalPayments: parseInt(paymentStats[0].total_payments) || 0,
-    totalRevenue: parseInt(paymentStats[0].total_revenue) || 0,
-    monthRevenue: parseInt(paymentStats[0].monthly_revenue) || 0,
+    totalRevenue: Math.floor(parseInt(paymentStats[0].total_revenue) / 100) || 0,
+    monthRevenue: Math.floor(parseInt(paymentStats[0].monthly_revenue) / 100) || 0,
     funnel_distribution: funnelStats
   };
 }
