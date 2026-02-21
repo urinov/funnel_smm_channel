@@ -462,26 +462,42 @@
       .tab-row { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; }
       .tab-row::-webkit-scrollbar { display: none; }
 
-      /* Responsive tables -> cards */
-      .overflow-x-auto { overflow-x: visible; }
-      table.responsive-table { width: 100%; }
-      table.responsive-table thead { display: none; }
-      table.responsive-table tbody { display: block; }
-      table.responsive-table tbody tr { display: block; background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; box-shadow: 0 6px 16px rgba(15,23,42,0.06); }
-      table.responsive-table tbody tr td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border: none; }
-      table.responsive-table tbody tr td::before {
-        content: attr(data-label);
-        font-size: 10px;
-        font-weight: 700;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
+      /* Mobile-friendly tables with horizontal scroll */
+      .overflow-x-auto {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
       }
-      table.responsive-table tbody tr td:last-child { justify-content: flex-end; }
-      table.responsive-table tbody tr td:first-child { font-weight: 600; }
-      table.responsive-table tbody tr td:first-child::before { display: none; }
-      table.responsive-table tbody tr td .badge { font-size: 10px; padding: 4px 8px; }
-      table.responsive-table tbody tr td button { border-radius: 10px; }
+      .overflow-x-auto::after {
+        content: '→';
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95) 30%);
+        padding: 20px 8px 20px 30px;
+        color: #94a3b8;
+        font-size: 18px;
+        pointer-events: none;
+        opacity: 0.8;
+      }
+      .overflow-x-auto::-webkit-scrollbar { height: 4px; }
+      .overflow-x-auto::-webkit-scrollbar-thumb { background: #c4b5fd; border-radius: 4px; }
+      table {
+        min-width: 550px !important;
+      }
+      table th,
+      table td {
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+        white-space: nowrap;
+      }
+      table th { font-size: 9px !important; }
+      .table-row td:first-child { padding-left: 8px !important; }
+      .table-row .flex.items-center.gap-3 { gap: 8px !important; }
+      .table-row .w-10 { width: 32px !important; height: 32px !important; font-size: 12px !important; }
+      .table-row .badge { font-size: 9px !important; padding: 2px 6px !important; }
+      .table-row .btn-sm { padding: 4px 8px !important; font-size: 10px !important; }
 
       /* Bottom spacing so content is readable above nav */
       .main-content {
@@ -2253,55 +2269,105 @@
       .gap-4 { gap: 10px !important; }
 
       /* === ANALYTICS SECTION === */
+      #tab-analytics .sf-shell {
+        padding: 0 !important;
+      }
       #tab-analytics .sf-topbar {
         flex-direction: column !important;
-        gap: 12px !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        align-items: stretch !important;
+      }
+      #tab-analytics .sf-brand {
+        font-size: 14px !important;
+        text-align: center;
       }
       #tab-analytics .sf-top-pills {
         display: flex;
         overflow-x: auto;
         gap: 6px;
         padding-bottom: 4px;
+        justify-content: center;
       }
       #tab-analytics .sf-top-pills::-webkit-scrollbar { display: none; }
       #tab-analytics .sf-pill {
         flex-shrink: 0;
-        padding: 8px 14px !important;
-        font-size: 12px !important;
+        padding: 8px 12px !important;
+        font-size: 11px !important;
       }
       #tab-analytics .sf-actions {
         width: 100%;
         display: flex;
         gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
       }
       #tab-analytics .sf-mini-btn,
       #tab-analytics .sf-main-btn {
-        flex: 1;
+        flex: 1 1 auto;
+        min-width: 70px;
         text-align: center;
         font-size: 11px !important;
         padding: 8px 10px !important;
       }
+      #tab-analytics .sf-header-row {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        align-items: stretch !important;
+      }
+      #tab-analytics .sf-header-row .flex {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+      }
+      #tab-analytics .sf-header-row .sf-main-btn {
+        flex: 1;
+        min-width: 120px;
+        font-size: 10px !important;
+        padding: 8px !important;
+      }
+      #tab-analytics .sf-title {
+        font-size: 1.25rem !important;
+        text-align: center;
+      }
       #tab-analytics .sf-summary {
+        display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 8px !important;
+        padding: 0 12px !important;
       }
-      #tab-analytics .sf-summary-card {
-        padding: 12px !important;
+      #tab-analytics .sf-stat {
+        padding: 10px !important;
+        border-radius: 10px !important;
       }
-      #tab-analytics .sf-summary-card .sf-summary-value {
-        font-size: 1.25rem !important;
+      #tab-analytics .sf-stat .k {
+        font-size: 10px !important;
+      }
+      #tab-analytics .sf-stat .v {
+        font-size: 1.125rem !important;
+      }
+      #tab-analytics .sf-stat .v.sm {
+        font-size: 0.875rem !important;
       }
       #tab-analytics .sf-filter-row {
         flex-wrap: wrap !important;
-        gap: 8px !important;
+        gap: 6px !important;
+        padding: 10px 12px !important;
+        justify-content: flex-start;
+      }
+      #tab-analytics .sf-filter-label {
+        width: 100%;
+        font-size: 11px !important;
+        margin-bottom: 4px;
       }
       #tab-analytics .sf-chip {
         padding: 6px 10px !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
       }
       #tab-analytics .sf-legend-badge {
         padding: 4px 8px !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
       }
 
       /* === ANALYTICS MEGA FUNNEL === */
@@ -2386,10 +2452,62 @@
 
       /* === USERS TAB === */
       #tab-users .card { margin-bottom: 12px !important; }
+      #tab-users .tab-section-head {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 12px !important;
+      }
+      #tab-users .tab-section-head h2 {
+        font-size: 1rem !important;
+      }
+      #tab-users .table-header {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 10px !important;
+      }
+      #tab-users .table-filter-summary {
+        width: 100%;
+        justify-content: center;
+      }
+      #tab-users .flex.flex-wrap.gap-2 {
+        justify-content: center;
+        width: 100%;
+      }
+      #tab-users .flex.flex-wrap.gap-2 > button,
+      #tab-users .flex.flex-wrap.gap-2 > span {
+        flex: 1;
+        min-width: 80px;
+        text-align: center;
+        font-size: 10px !important;
+        padding: 6px 8px !important;
+      }
       #recentUsersList > div { padding: 10px !important; }
 
       /* === PAYMENTS TAB === */
       #tab-payments .card { margin-bottom: 12px !important; }
+      #tab-payments .tab-section-head {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 12px !important;
+      }
+      #tab-payments .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      #tab-payments .kpi-card {
+        padding: 12px !important;
+      }
+      #tab-payments .kpi-card .text-2xl {
+        font-size: 1.125rem !important;
+      }
+      #tab-payments .kpi-card .text-xs {
+        font-size: 10px !important;
+      }
+      #tab-payments .table-header {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 10px !important;
+      }
       #recentPaymentsList > div { padding: 10px !important; }
 
       /* === LESSONS TAB === */
