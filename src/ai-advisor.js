@@ -3,29 +3,57 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.gemini_api);
+const apiKey = process.env.GEMINI_API_KEY || process.env.gemini_api;
 
-// Available models - try in order of preference
-const MODELS = ['gemini-pro', 'gemini-1.0-pro', 'gemini-1.5-flash-latest'];
+if (!apiKey) {
+  console.warn('WARNING: No Gemini API key found. Set GEMINI_API_KEY environment variable.');
+}
+
+console.log('Gemini API Key status:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'NOT FOUND');
+
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+// Available models - try in order of preference (2024+ model names)
+const MODELS = [
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+  'gemini-1.0-pro',
+  'gemini-pro-vision',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-pro-latest'
+];
 
 async function getWorkingModel() {
+  // First, try to list available models
+  console.log('Attempting to find working Gemini model...');
+
   for (const modelName of MODELS) {
     try {
+      console.log(`Trying model: ${modelName}`);
       const model = genAI.getGenerativeModel({ model: modelName });
       // Test with a simple prompt
-      await model.generateContent('test');
-      console.log(`Using Gemini model: ${modelName}`);
-      return model;
+      const result = await model.generateContent('Say "OK" in one word');
+      const response = await result.response;
+      const text = response.text();
+      if (text) {
+        console.log(`SUCCESS: Using Gemini model: ${modelName}`);
+        return model;
+      }
     } catch (e) {
-      console.log(`Model ${modelName} not available, trying next...`);
+      console.log(`Model ${modelName} failed: ${e.message?.substring(0, 100)}`);
     }
   }
-  // Fallback to gemini-pro
-  return genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+  // Last resort - try the simplest model name
+  console.log('All models failed, using fallback gemini-1.5-flash');
+  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 }
 
 let cachedModel = null;
 async function getModel() {
+  if (!genAI) {
+    throw new Error('Gemini API key topilmadi. GEMINI_API_KEY ni sozlang.');
+  }
   if (!cachedModel) {
     cachedModel = await getWorkingModel();
   }
