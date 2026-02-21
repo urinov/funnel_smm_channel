@@ -2040,8 +2040,9 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
     const allUsers = await getAllActiveUsers();
 
     if (target === 'specific' && user_ids && user_ids.length > 0) {
-      // Send to specific users
-      users = allUsers.filter(u => user_ids.includes(u.telegram_id));
+      // Send to specific users - convert both to numbers for comparison
+      const userIdSet = new Set(user_ids.map(id => Number(id)));
+      users = allUsers.filter(u => userIdSet.has(Number(u.telegram_id)));
     } else if (target === 'paid') {
       users = allUsers.filter(u => u.is_paid);
     } else if (target === 'free') {
