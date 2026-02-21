@@ -1608,6 +1608,89 @@ app.get('/api/analytics/inactivity', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ AI SALES ADVISOR API ============
+app.get('/api/ai/sales-advice', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const aiAdvisor = await import('./ai-advisor.js');
+
+    // Gather funnel data
+    const funnelData = await db.getFunnelDiagnostics();
+    const paymentAnalytics = await db.getPaymentAnalytics();
+    const sourceStats = await db.getSourceStats();
+
+    // Calculate percentages and dropoffs
+    const totalUsers = funnelData.stages?.[0]?.count || 0;
+    const activeUsers = funnelData.stages?.[1]?.count || 0;
+    const pitchViewed = funnelData.stages?.[2]?.count || 0;
+    const checkoutOpened = funnelData.stages?.[3]?.count || 0;
+    const paidUsers = funnelData.stages?.[4]?.count || 0;
+
+    const formattedData = {
+      totalUsers,
+      activeUsers,
+      activePercent: totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0,
+      pitchViewed,
+      pitchPercent: totalUsers > 0 ? ((pitchViewed / totalUsers) * 100).toFixed(1) : 0,
+      checkoutOpened,
+      checkoutPercent: totalUsers > 0 ? ((checkoutOpened / totalUsers) * 100).toFixed(1) : 0,
+      paidUsers,
+      paidPercent: totalUsers > 0 ? ((paidUsers / totalUsers) * 100).toFixed(1) : 0,
+      dropoff1: totalUsers > 0 ? (100 - (activeUsers / totalUsers) * 100).toFixed(1) : 0,
+      dropoff2: activeUsers > 0 ? (100 - (pitchViewed / activeUsers) * 100).toFixed(1) : 0,
+      dropoff3: pitchViewed > 0 ? (100 - (checkoutOpened / pitchViewed) * 100).toFixed(1) : 0,
+      dropoff4: checkoutOpened > 0 ? (100 - (paidUsers / checkoutOpened) * 100).toFixed(1) : 0,
+      overallCR: totalUsers > 0 ? ((paidUsers / totalUsers) * 100).toFixed(2) : 0
+    };
+
+    const additionalContext = {
+      recentPayments: paymentAnalytics?.recentPayments || 0,
+      avgOrderValue: paymentAnalytics?.avgOrderValue || 0,
+      topSources: sourceStats?.slice(0, 3).map(s => `${s.source}: ${s.count} user`).join(', ') || '',
+      stuckUsers: paymentAnalytics?.stuckPayments || 0
+    };
+
+    const result = await aiAdvisor.generateSalesAdvice(formattedData, additionalContext);
+    res.json(result);
+  } catch (e) {
+    console.error('AI Advice error:', e);
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+app.post('/api/ai/quick-insight', authMiddleware, async (req, res) => {
+  try {
+    const aiAdvisor = await import('./ai-advisor.js');
+    const { metric, value, context } = req.body;
+    const result = await aiAdvisor.generateQuickInsight(metric, value, context);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+app.post('/api/ai/suggest-message', authMiddleware, async (req, res) => {
+  try {
+    const aiAdvisor = await import('./ai-advisor.js');
+    const { targetAudience, goal, tone } = req.body;
+    const result = await aiAdvisor.suggestBroadcastMessage(targetAudience, goal, tone || 'friendly');
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
+app.post('/api/ai/analyze-segment', authMiddleware, async (req, res) => {
+  try {
+    const aiAdvisor = await import('./ai-advisor.js');
+    const { segmentName, users, stats } = req.body;
+    const result = await aiAdvisor.analyzeSegment(segmentName, users, stats);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message, success: false });
+  }
+});
+
 // ============ APP SETTINGS API ============
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
