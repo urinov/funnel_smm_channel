@@ -1207,18 +1207,35 @@
       height: 44px !important;
       border-radius: 12px !important;
       padding: 0 14px !important;
-      color: #56638d !important;
+      color: #3d4a6b !important;
       border: 1px solid transparent;
     }
+    .sidebar-item .material-symbols-outlined {
+      color: #5a6789 !important;
+      font-size: 22px;
+    }
     .sidebar-item:hover {
-      background: #eaf2ff !important;
-      color: #1f4ccf !important;
-      border-color: #d4e3ff;
+      background: #e3edff !important;
+      color: #1a3fa8 !important;
+      border-color: #c5d8ff;
+    }
+    .sidebar-item:hover .material-symbols-outlined {
+      color: #1a3fa8 !important;
+    }
+    .sidebar-item:hover .sidebar-label {
+      color: #1a3fa8 !important;
     }
     .sidebar-item.active {
-      background: linear-gradient(135deg, rgba(45,107,255,0.16) 0%, rgba(77,139,255,0.2) 100%) !important;
-      border-color: rgba(45,107,255,0.42) !important;
-      color: #1e46bd !important;
+      background: linear-gradient(135deg, #4f6af0 0%, #6366f1 100%) !important;
+      border-color: transparent !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(79, 106, 240, 0.35);
+    }
+    .sidebar-item.active .material-symbols-outlined {
+      color: #ffffff !important;
+    }
+    .sidebar-item.active .sidebar-label {
+      color: #ffffff !important;
     }
     .sidebar-toggle { background: #dfe9fd !important; color: #2f4fa5 !important; }
     .main-content { margin-left: 262px !important; }
@@ -1355,16 +1372,27 @@
       color: #3f4d72 !important;
       margin-bottom: 6px;
     }
+    .sidebar-item .material-symbols-outlined {
+      color: #566085 !important;
+    }
     .sidebar-item:hover {
       background: #e8eefb !important;
-      color: #253866 !important;
+      color: #1a2d5c !important;
       border-color: transparent !important;
     }
+    .sidebar-item:hover .material-symbols-outlined,
+    .sidebar-item:hover .sidebar-label {
+      color: #1a2d5c !important;
+    }
     .sidebar-item.active {
-      background: linear-gradient(120deg, #2f3d67 0%, #34467b 100%) !important;
-      color: #f6f8ff !important;
+      background: linear-gradient(120deg, #4f5fa0 0%, #5a6bb5 100%) !important;
+      color: #ffffff !important;
       border-color: transparent !important;
-      box-shadow: 0 8px 20px rgba(47, 61, 103, 0.28) !important;
+      box-shadow: 0 8px 20px rgba(79, 95, 160, 0.35) !important;
+    }
+    .sidebar-item.active .material-symbols-outlined,
+    .sidebar-item.active .sidebar-label {
+      color: #ffffff !important;
     }
     .main-content {
       margin-left: 270px !important;
