@@ -2085,6 +2085,436 @@
         scroll-behavior: auto !important;
       }
     }
+
+    /* ========================================
+       COMPREHENSIVE MOBILE RESPONSIVE STYLES
+       ======================================== */
+
+    /* Mobile: < 768px */
+    @media (max-width: 767px) {
+      /* === GLOBAL LAYOUT === */
+      .main-content {
+        padding: 10px !important;
+        padding-bottom: calc(var(--mobile-nav-h) + 100px) !important;
+      }
+
+      /* === TYPOGRAPHY SCALE === */
+      .text-4xl { font-size: 1.5rem !important; }
+      .text-3xl { font-size: 1.25rem !important; }
+      .text-2xl { font-size: 1.125rem !important; }
+      .text-xl { font-size: 1rem !important; }
+      .text-lg { font-size: 0.9375rem !important; }
+
+      /* === CARDS === */
+      .card {
+        padding: 12px !important;
+        border-radius: 14px !important;
+      }
+      .card h3 { font-size: 0.9375rem !important; }
+
+      /* === KPI/STAT CARDS === */
+      .kpi-grid,
+      .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      .kpi-card .text-3xl,
+      .kpi-card .text-2xl {
+        font-size: 1.25rem !important;
+      }
+      .stat-icon {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+        border-radius: 10px !important;
+      }
+      .growth-badge {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+      }
+
+      /* === CHARTS === */
+      .chart-container {
+        height: 180px !important;
+        min-height: 180px !important;
+      }
+      .chart-bleed {
+        margin-left: -12px;
+        margin-right: -12px;
+        width: calc(100% + 24px);
+      }
+
+      /* === HERO CARDS === */
+      .hero-card {
+        padding: 16px !important;
+        border-radius: 16px !important;
+      }
+      .hero-card .text-3xl { font-size: 1.5rem !important; }
+      .hero-card .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      .hero-floating-icon { display: none !important; }
+
+      /* === TABLES === */
+      .table-shell {
+        border-radius: 12px !important;
+        overflow: hidden;
+      }
+      .overflow-x-auto {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      table {
+        min-width: 600px;
+      }
+      table th,
+      table td {
+        padding: 10px 8px !important;
+        font-size: 12px !important;
+        white-space: nowrap;
+      }
+      .table-header {
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+      }
+      .table-header .flex {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      /* === BUTTONS === */
+      .btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        border-radius: 10px !important;
+      }
+      .btn-sm {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+      }
+      .btn-icon {
+        width: 36px !important;
+        height: 36px !important;
+      }
+
+      /* === TABS === */
+      .tab-row {
+        display: flex !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px !important;
+        padding-bottom: 4px;
+        flex-wrap: nowrap !important;
+      }
+      .tab-row::-webkit-scrollbar { display: none; }
+      .tab {
+        flex-shrink: 0 !important;
+        padding: 8px 12px !important;
+        font-size: 11px !important;
+        white-space: nowrap;
+      }
+
+      /* === FORMS & INPUTS === */
+      .input,
+      input[type="text"],
+      input[type="number"],
+      input[type="password"],
+      input[type="email"],
+      select,
+      textarea {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        padding: 12px !important;
+        border-radius: 10px !important;
+      }
+
+      /* === MODALS === */
+      .modal-content {
+        margin: 10px !important;
+        max-height: calc(100vh - 80px) !important;
+        border-radius: 16px !important;
+      }
+      .modal-content h2 { font-size: 1.125rem !important; }
+
+      /* === GRIDS === */
+      .grid-cols-2,
+      .grid-cols-3,
+      .lg\\:grid-cols-2,
+      .lg\\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+      }
+      .grid-cols-4,
+      .lg\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .gap-6 { gap: 12px !important; }
+      .gap-4 { gap: 10px !important; }
+
+      /* === ANALYTICS SECTION === */
+      #tab-analytics .sf-topbar {
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+      #tab-analytics .sf-top-pills {
+        display: flex;
+        overflow-x: auto;
+        gap: 6px;
+        padding-bottom: 4px;
+      }
+      #tab-analytics .sf-top-pills::-webkit-scrollbar { display: none; }
+      #tab-analytics .sf-pill {
+        flex-shrink: 0;
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+      }
+      #tab-analytics .sf-actions {
+        width: 100%;
+        display: flex;
+        gap: 6px;
+      }
+      #tab-analytics .sf-mini-btn,
+      #tab-analytics .sf-main-btn {
+        flex: 1;
+        text-align: center;
+        font-size: 11px !important;
+        padding: 8px 10px !important;
+      }
+      #tab-analytics .sf-summary {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      #tab-analytics .sf-summary-card {
+        padding: 12px !important;
+      }
+      #tab-analytics .sf-summary-card .sf-summary-value {
+        font-size: 1.25rem !important;
+      }
+      #tab-analytics .sf-filter-row {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+      }
+      #tab-analytics .sf-chip {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+      }
+      #tab-analytics .sf-legend-badge {
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+      }
+
+      /* === ANALYTICS MEGA FUNNEL === */
+      .analytics-mega-funnel {
+        padding: 12px !important;
+        border-radius: 14px !important;
+      }
+      .analytics-mega-funnel-title {
+        font-size: 14px !important;
+        margin-bottom: 12px !important;
+      }
+      .analytics-funnel-stages {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      .analytics-funnel-stage {
+        flex-direction: row !important;
+        align-items: center !important;
+        width: 100% !important;
+      }
+      .analytics-funnel-bar {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 10px 14px !important;
+        border-radius: 10px !important;
+        min-height: auto !important;
+        height: auto !important;
+        width: 100% !important;
+        gap: 8px !important;
+      }
+      .analytics-funnel-bar .analytics-funnel-value {
+        font-size: 1.125rem !important;
+        order: 2;
+      }
+      .analytics-funnel-bar .analytics-funnel-percent {
+        font-size: 11px !important;
+        order: 3;
+      }
+      .analytics-funnel-label {
+        display: none !important;
+      }
+      .analytics-funnel-bar::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.9);
+        margin-right: auto;
+        order: 1;
+      }
+      .analytics-funnel-dropoff {
+        position: static !important;
+        transform: none !important;
+        margin-left: 8px;
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+      }
+
+      /* === CR HEATMAP TABLE === */
+      #analyticsCRHeatmap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      #analyticsCRHeatmap table {
+        min-width: 500px;
+      }
+
+      /* === FUNNEL DIAGNOSTICS === */
+      .sf-diag-card {
+        padding: 12px !important;
+      }
+      .sf-diag-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      .sf-diag-item .sf-diag-value {
+        font-size: 1.25rem !important;
+      }
+      #diagFunnelTable {
+        overflow-x: auto !important;
+      }
+
+      /* === USERS TAB === */
+      #tab-users .card { margin-bottom: 12px !important; }
+      #recentUsersList > div { padding: 10px !important; }
+
+      /* === PAYMENTS TAB === */
+      #tab-payments .card { margin-bottom: 12px !important; }
+      #recentPaymentsList > div { padding: 10px !important; }
+
+      /* === LESSONS TAB === */
+      #tab-lessons .card { margin-bottom: 12px !important; }
+      #lessonsList > div { padding: 10px !important; }
+
+      /* === BROADCASTS/XABARLAR === */
+      #tab-broadcasts textarea {
+        min-height: 120px !important;
+      }
+      #tab-broadcasts .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* === PROGREV === */
+      #tab-progrev .progrev-flow-track {
+        flex-wrap: wrap;
+        gap: 6px !important;
+      }
+      #tab-progrev .progrev-flow-pill {
+        font-size: 11px !important;
+        padding: 5px 10px !important;
+      }
+      #tab-progrev textarea {
+        min-height: 100px !important;
+      }
+
+      /* === CONVERSATIONS === */
+      #tab-conversations .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+      }
+      #tab-conversations .conv-users-list {
+        max-height: 200px !important;
+        margin-bottom: 12px;
+      }
+      .tg-chat-body {
+        max-height: 50vh !important;
+      }
+      .tg-bubble {
+        max-width: 85% !important;
+        font-size: 13px !important;
+      }
+
+      /* === SETTINGS === */
+      #tab-settings .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* === PROMO CODES === */
+      #tab-promo .card { margin-bottom: 12px !important; }
+
+      /* === LIBRARY === */
+      #tab-library .grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+
+      /* === CUSTDEV === */
+      #tab-custdev .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* === BADGES & CHIPS === */
+      .badge {
+        font-size: 10px !important;
+        padding: 3px 8px !important;
+      }
+
+      /* === SPACING FIXES === */
+      .mb-6 { margin-bottom: 12px !important; }
+      .mb-4 { margin-bottom: 10px !important; }
+      .p-5 { padding: 12px !important; }
+      .p-4 { padding: 10px !important; }
+
+      /* === HEADER === */
+      .main-content > header {
+        padding: 10px !important;
+        border-radius: 12px !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+      }
+      .main-content > header .flex {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .main-content > header .btn-primary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* === NOTIFICATIONS === */
+      .notif-panel {
+        right: 10px !important;
+        left: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+      }
+
+      /* === COMMAND PALETTE === */
+      .cmd-modal .cmd-inner {
+        margin: 10px;
+        max-height: calc(100vh - 100px);
+      }
+    }
+
+    /* Extra small mobile: < 400px */
+    @media (max-width: 399px) {
+      .kpi-grid,
+      .stats-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .hero-card .grid-cols-4 {
+        grid-template-columns: 1fr !important;
+      }
+      #tab-analytics .sf-summary {
+        grid-template-columns: 1fr !important;
+      }
+      .tab {
+        padding: 6px 10px !important;
+        font-size: 10px !important;
+      }
+      .btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -3618,7 +4048,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           </div>
           <div class="analytics-funnel-stages">
             <div class="analytics-funnel-stage">
-              <div class="analytics-funnel-bar">
+              <div class="analytics-funnel-bar" data-label="Jami Userlar">
                 <span class="analytics-funnel-value" id="afTotalUsers">0</span>
                 <span class="analytics-funnel-percent">100%</span>
               </div>
@@ -3626,7 +4056,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               <p class="analytics-funnel-label">Jami Userlar</p>
             </div>
             <div class="analytics-funnel-stage">
-              <div class="analytics-funnel-bar">
+              <div class="analytics-funnel-bar" data-label="Faol Userlar">
                 <span class="analytics-funnel-value" id="afActiveUsers">0</span>
                 <span class="analytics-funnel-percent" id="afActivePercent">0%</span>
               </div>
@@ -3634,7 +4064,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               <p class="analytics-funnel-label">Faol Userlar</p>
             </div>
             <div class="analytics-funnel-stage">
-              <div class="analytics-funnel-bar">
+              <div class="analytics-funnel-bar" data-label="Pitch Ko'rgan">
                 <span class="analytics-funnel-value" id="afPitchViewed">0</span>
                 <span class="analytics-funnel-percent" id="afPitchPercent">0%</span>
               </div>
@@ -3642,7 +4072,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               <p class="analytics-funnel-label">Pitch Ko'rgan</p>
             </div>
             <div class="analytics-funnel-stage">
-              <div class="analytics-funnel-bar">
+              <div class="analytics-funnel-bar" data-label="Checkout Ochgan">
                 <span class="analytics-funnel-value" id="afCheckout">0</span>
                 <span class="analytics-funnel-percent" id="afCheckoutPercent">0%</span>
               </div>
@@ -3650,7 +4080,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
               <p class="analytics-funnel-label">Checkout Ochgan</p>
             </div>
             <div class="analytics-funnel-stage">
-              <div class="analytics-funnel-bar">
+              <div class="analytics-funnel-bar" data-label="Pullik Userlar">
                 <span class="analytics-funnel-value" id="afPaidUsers">0</span>
                 <span class="analytics-funnel-percent" id="afPaidPercent">0%</span>
               </div>
