@@ -2499,8 +2499,8 @@
           <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-indigo-500"></span> Bu davr</div>
           <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-gray-300"></span> O'tgan davr</div>
         </div>
-        <div class="chart-container chart-bleed h-[250px]">
-          <canvas id="subscriberGrowthChart"></canvas>
+        <div class="chart-container chart-bleed" style="height: 250px; min-height: 250px;">
+          <canvas id="subscriberGrowthChart" style="width: 100% !important; height: 100% !important;"></canvas>
         </div>
       </div>
 
@@ -8353,8 +8353,23 @@ function renderRevenueChart(period = 'week') {
 }
 
 function renderSubscriberGrowthChart(period = 'day') {
-  const ctx = document.getElementById('subscriberGrowthChart')?.getContext('2d');
-  if (!ctx) return;
+  const canvas = document.getElementById('subscriberGrowthChart');
+  if (!canvas) {
+    console.warn('subscriberGrowthChart canvas not found');
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    console.warn('subscriberGrowthChart context not found');
+    return;
+  }
+
+  // Ensure canvas has dimensions
+  const container = canvas.parentElement;
+  if (container) {
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+  }
 
   const now = new Date();
   let labels = [];
@@ -8519,8 +8534,12 @@ function renderSubscriberGrowthChart(period = 'day') {
     percent.textContent = growthPercent + '%';
   }
 
+  // Debug log
+  console.log('renderSubscriberGrowthChart:', { period, labels: labels.length, dataSum: currentTotal, prevSum: previousTotal, sampleData: data.slice(0, 5) });
+
   if (subscriberGrowthChart) subscriberGrowthChart.destroy();
 
+  // Create chart with explicit dimensions
   subscriberGrowthChart = new Chart(ctx, {
     type: 'line',
     data: {
