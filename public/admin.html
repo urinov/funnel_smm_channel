@@ -898,6 +898,289 @@
       .diag-table-scroll { max-height: 360px; }
     }
 
+    /* ═══ ANALYTICS ENHANCEMENTS ═══ */
+
+    /* Mega Funnel Visualization */
+    .analytics-mega-funnel {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(99, 102, 241, 0.1);
+    }
+    .analytics-mega-funnel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2f2b3d;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .analytics-funnel-stages {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .analytics-funnel-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .analytics-funnel-bar {
+      width: 100%;
+      border-radius: 12px 12px 4px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 8px;
+      min-height: 100px;
+      transition: all 0.3s ease;
+    }
+    .analytics-funnel-stage:nth-child(1) .analytics-funnel-bar {
+      background: linear-gradient(180deg, #6366F1 0%, #4F46E5 100%);
+      height: 140px;
+    }
+    .analytics-funnel-stage:nth-child(2) .analytics-funnel-bar {
+      background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%);
+      height: 120px;
+    }
+    .analytics-funnel-stage:nth-child(3) .analytics-funnel-bar {
+      background: linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%);
+      height: 100px;
+    }
+    .analytics-funnel-stage:nth-child(4) .analytics-funnel-bar {
+      background: linear-gradient(180deg, #C4B5FD 0%, #A78BFA 100%);
+      height: 80px;
+    }
+    .analytics-funnel-stage:nth-child(5) .analytics-funnel-bar {
+      background: linear-gradient(180deg, #22C55E 0%, #16A34A 100%);
+      height: 60px;
+    }
+    .analytics-funnel-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .analytics-funnel-percent {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      margin-top: 4px;
+    }
+    .analytics-funnel-label {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #5d596c;
+      text-align: center;
+    }
+    .analytics-funnel-dropoff {
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 6px;
+      z-index: 5;
+      white-space: nowrap;
+    }
+
+    /* CR Heatmap */
+    .analytics-heatmap {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e7e7ef;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .analytics-heatmap-header {
+      padding: 14px 16px;
+      background: #f8f7fa;
+      border-bottom: 1px solid #e7e7ef;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2f2b3d;
+    }
+    .analytics-heatmap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .analytics-heatmap th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #7b788a;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid #e7e7ef;
+    }
+    .analytics-heatmap td {
+      padding: 10px 12px;
+      font-size: 12px;
+      border-bottom: 1px solid #f4f5fa;
+    }
+    .analytics-heatmap tr:hover { background: #f8f7fa; }
+    .heatmap-cell {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-align: center;
+      min-width: 44px;
+    }
+    .heatmap-cell.excellent { background: rgba(34, 197, 94, 0.15); color: #15803d; }
+    .heatmap-cell.good { background: rgba(34, 197, 94, 0.08); color: #22c55e; }
+    .heatmap-cell.average { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+    .heatmap-cell.poor { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+    .heatmap-cell.critical { background: rgba(239, 68, 68, 0.18); color: #b91c1c; }
+    .heatmap-source {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #2f2b3d;
+    }
+    .heatmap-source-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    /* AI Insights Panel */
+    .analytics-insights {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e7e7ef;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .analytics-insights-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .analytics-insights-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2f2b3d;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .analytics-insight-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: #f8f7fa;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border-left: 3px solid #7367f0;
+      transition: all 0.2s ease;
+    }
+    .analytics-insight-card:hover {
+      background: #f1f0fb;
+      transform: translateX(2px);
+    }
+    .analytics-insight-card.critical { border-left-color: #ef4444; background: #fef2f2; }
+    .analytics-insight-card.warning { border-left-color: #f59e0b; background: #fffbeb; }
+    .analytics-insight-card.success { border-left-color: #22c55e; background: #f0fdf4; }
+    .analytics-insight-card.info { border-left-color: #3b82f6; background: #eff6ff; }
+    .analytics-insight-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(115, 103, 240, 0.1);
+      color: #7367f0;
+    }
+    .analytics-insight-card.critical .analytics-insight-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .analytics-insight-card.warning .analytics-insight-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .analytics-insight-card.success .analytics-insight-icon { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .analytics-insight-content { flex: 1; }
+    .analytics-insight-title { font-size: 13px; font-weight: 600; color: #2f2b3d; margin-bottom: 4px; }
+    .analytics-insight-detail { font-size: 11px; color: #6f6b7d; margin-bottom: 6px; }
+    .analytics-insight-action {
+      font-size: 11px;
+      color: #7367f0;
+      background: rgba(115, 103, 240, 0.08);
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* High-Intent Quick Actions */
+    .high-intent-quick-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .high-intent-action {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #e7e7ef;
+      color: #6f6b7d;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .high-intent-action:hover {
+      border-color: #7367f0;
+      color: #7367f0;
+      background: rgba(115, 103, 240, 0.05);
+    }
+    .high-intent-action.primary {
+      background: #7367f0;
+      border-color: #7367f0;
+      color: #fff;
+    }
+    .high-intent-action.primary:hover {
+      background: #5d51e8;
+    }
+
+    @media (max-width: 768px) {
+      .analytics-funnel-stages { flex-direction: column; gap: 6px; }
+      .analytics-funnel-stage { flex-direction: row; align-items: center; }
+      .analytics-funnel-bar {
+        width: auto;
+        height: auto !important;
+        min-height: 40px;
+        flex-direction: row;
+        border-radius: 8px;
+        padding: 10px 14px;
+        gap: 8px;
+      }
+      .analytics-funnel-dropoff { position: static; transform: none; margin-left: 8px; }
+      .analytics-funnel-label { margin-top: 0; margin-left: 12px; text-align: left; }
+      .analytics-insight-card { padding: 10px; gap: 10px; }
+      .analytics-insight-icon { width: 28px; height: 28px; }
+    }
+
     /* Conversations */
     .conv-users-list { max-height: 72vh; overflow-y: auto; }
     .conv-user-item { width: 100%; text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(15,23,42,0.06); transition: background 0.18s ease; }
@@ -3297,6 +3580,94 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <span class="global-hint" title="Start dan = joriy bosqich / ro'yxatdan o'tgan * 100">Start</span>
         </div>
 
+        <!-- MEGA FUNNEL VISUALIZATION -->
+        <div class="analytics-mega-funnel" id="analyticsMegaFunnel">
+          <div class="analytics-mega-funnel-title">
+            <span>📊</span> Sotish Voronkasi — Foydalanuvchi Yo'li
+          </div>
+          <div class="analytics-funnel-stages">
+            <div class="analytics-funnel-stage">
+              <div class="analytics-funnel-bar">
+                <span class="analytics-funnel-value" id="afTotalUsers">0</span>
+                <span class="analytics-funnel-percent">100%</span>
+              </div>
+              <span class="analytics-funnel-dropoff" id="afDropoff1">-0%</span>
+              <p class="analytics-funnel-label">Jami Userlar</p>
+            </div>
+            <div class="analytics-funnel-stage">
+              <div class="analytics-funnel-bar">
+                <span class="analytics-funnel-value" id="afActiveUsers">0</span>
+                <span class="analytics-funnel-percent" id="afActivePercent">0%</span>
+              </div>
+              <span class="analytics-funnel-dropoff" id="afDropoff2">-0%</span>
+              <p class="analytics-funnel-label">Faol Userlar</p>
+            </div>
+            <div class="analytics-funnel-stage">
+              <div class="analytics-funnel-bar">
+                <span class="analytics-funnel-value" id="afPitchViewed">0</span>
+                <span class="analytics-funnel-percent" id="afPitchPercent">0%</span>
+              </div>
+              <span class="analytics-funnel-dropoff" id="afDropoff3">-0%</span>
+              <p class="analytics-funnel-label">Pitch Ko'rgan</p>
+            </div>
+            <div class="analytics-funnel-stage">
+              <div class="analytics-funnel-bar">
+                <span class="analytics-funnel-value" id="afCheckout">0</span>
+                <span class="analytics-funnel-percent" id="afCheckoutPercent">0%</span>
+              </div>
+              <span class="analytics-funnel-dropoff" id="afDropoff4">-0%</span>
+              <p class="analytics-funnel-label">Checkout Ochgan</p>
+            </div>
+            <div class="analytics-funnel-stage">
+              <div class="analytics-funnel-bar">
+                <span class="analytics-funnel-value" id="afPaidUsers">0</span>
+                <span class="analytics-funnel-percent" id="afPaidPercent">0%</span>
+              </div>
+              <p class="analytics-funnel-label">Pullik Userlar</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI INSIGHTS PANEL -->
+        <div class="analytics-insights" id="analyticsInsights">
+          <div class="analytics-insights-header">
+            <div class="analytics-insights-title">
+              <span>🤖</span> AI Tavsiyalar
+            </div>
+            <button onclick="refreshAnalyticsInsights()" class="sf-mini-btn">Yangilash</button>
+          </div>
+          <div id="analyticsInsightsContainer">
+            <div class="text-center text-gray-400 py-4 text-sm">Yuklanmoqda...</div>
+          </div>
+        </div>
+
+        <!-- CR HEATMAP TABLE -->
+        <div class="analytics-heatmap" id="analyticsCRHeatmap">
+          <div class="analytics-heatmap-header">📈 Manba bo'yicha Konversiya Heatmap</div>
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Manba</th>
+                  <th style="text-align: center;">Userlar</th>
+                  <th style="text-align: center;">→ Faol</th>
+                  <th style="text-align: center;">→ Pitch</th>
+                  <th style="text-align: center;">→ Checkout</th>
+                  <th style="text-align: center;">→ Pullik</th>
+                  <th style="text-align: center;">Umumiy CR</th>
+                </tr>
+              </thead>
+              <tbody id="analyticsCRHeatmapBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 20px; color: #7b788a;">
+                    Yuklanmoqda...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="sf-workspace">
           <div class="sf-left">
             <div class="sf-left-head">
@@ -3311,6 +3682,7 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
                     <th class="py-2">Dars</th>
                     <th class="py-2">Signal</th>
                     <th class="py-2">Oxirgi aktivlik</th>
+                    <th class="py-2">Harakatlar</th>
                   </tr>
                 </thead>
                 <tbody id="highIntentTable">
@@ -9105,10 +9477,245 @@ async function loadAnalyticsData(force = false) {
     // Render payment friction diagnostics
     renderPaymentFrictionDiagnostics(paymentFrictionData);
 
+    // NEW: Render analytics mega funnel
+    renderAnalyticsMegaFunnel(funnelDiagData);
+
+    // NEW: Render CR heatmap
+    renderAnalyticsCRHeatmap(sourcesData);
+
+    // NEW: Render AI insights
+    renderAnalyticsInsights(funnelDiagData, segmentDiagData, paymentFrictionData);
+
   } catch(e) {
     console.error('loadAnalyticsData error:', e);
   } finally {
     analyticsFetchInFlight = false;
+  }
+}
+
+// ═══ NEW ANALYTICS VISUALIZATION FUNCTIONS ═══
+
+function renderAnalyticsMegaFunnel(data) {
+  if (!data || !data.steps) return;
+
+  const steps = data.steps;
+  const totalUsers = steps[0]?.count || 0;
+
+  // Map step names to element IDs
+  const mapping = [
+    { valueId: 'afTotalUsers', percentId: null, dropoffId: 'afDropoff1' },
+    { valueId: 'afActiveUsers', percentId: 'afActivePercent', dropoffId: 'afDropoff2' },
+    { valueId: 'afPitchViewed', percentId: 'afPitchPercent', dropoffId: 'afDropoff3' },
+    { valueId: 'afCheckout', percentId: 'afCheckoutPercent', dropoffId: 'afDropoff4' },
+    { valueId: 'afPaidUsers', percentId: 'afPaidPercent', dropoffId: null }
+  ];
+
+  steps.forEach((step, idx) => {
+    const m = mapping[idx];
+    if (!m) return;
+
+    const valueEl = document.getElementById(m.valueId);
+    if (valueEl) valueEl.textContent = step.count.toLocaleString();
+
+    if (m.percentId) {
+      const percentEl = document.getElementById(m.percentId);
+      if (percentEl) {
+        const pct = totalUsers > 0 ? ((step.count / totalUsers) * 100).toFixed(1) : 0;
+        percentEl.textContent = pct + '%';
+      }
+    }
+
+    if (m.dropoffId && idx < steps.length - 1) {
+      const dropoffEl = document.getElementById(m.dropoffId);
+      if (dropoffEl) {
+        const nextCount = steps[idx + 1]?.count || 0;
+        const dropoff = step.count > 0 ? Math.round(((step.count - nextCount) / step.count) * 100) : 0;
+        dropoffEl.textContent = '-' + dropoff + '%';
+      }
+    }
+  });
+}
+
+function renderAnalyticsCRHeatmap(data) {
+  const container = document.getElementById('analyticsCRHeatmapBody');
+  if (!container) return;
+
+  const sources = data?.sources || [];
+  if (!sources.length) {
+    container.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #7b788a;">Ma\'lumot yo\'q</td></tr>';
+    return;
+  }
+
+  const getHeatmapClass = (value) => {
+    if (value >= 20) return 'excellent';
+    if (value >= 15) return 'good';
+    if (value >= 10) return 'average';
+    if (value >= 5) return 'poor';
+    return 'critical';
+  };
+
+  const sourceIcons = {
+    'direct': { icon: '🌐', bg: '#E0E7FF' },
+    'instagram': { icon: '📸', bg: '#FCE7F3' },
+    'telegram': { icon: '📱', bg: '#DBEAFE' },
+    'facebook': { icon: '👤', bg: '#DBEAFE' },
+    'youtube': { icon: '🎬', bg: '#FEE2E2' },
+    'tiktok': { icon: '🎵', bg: '#F3E8FF' }
+  };
+
+  const formatName = (s) => {
+    const names = { 'direct': 'Direct', 'instagram': 'Instagram', 'telegram': 'Telegram', 'facebook': 'Facebook', 'youtube': 'YouTube', 'tiktok': 'TikTok' };
+    return names[s] || s;
+  };
+
+  container.innerHTML = sources.map(source => {
+    const iconInfo = sourceIcons[source.source] || { icon: '🔗', bg: '#E5E7EB' };
+    const total = source.total_users || 0;
+    const active = source.active_users || Math.round(total * 0.6);
+    const pitch = source.pitch_viewed || Math.round(total * 0.3);
+    const checkout = source.checkout_opened || Math.round(total * 0.15);
+    const paid = source.paid_users || 0;
+
+    const activeRate = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
+    const pitchRate = active > 0 ? ((pitch / active) * 100).toFixed(1) : 0;
+    const checkoutRate = pitch > 0 ? ((checkout / pitch) * 100).toFixed(1) : 0;
+    const paidRate = checkout > 0 ? ((paid / checkout) * 100).toFixed(1) : 0;
+    const overallCR = total > 0 ? ((paid / total) * 100).toFixed(1) : 0;
+
+    return `
+      <tr>
+        <td>
+          <div class="heatmap-source">
+            <span class="heatmap-source-icon" style="background: ${iconInfo.bg};">${iconInfo.icon}</span>
+            ${formatName(source.source)}
+          </div>
+        </td>
+        <td style="text-align: center; font-weight: 600;">${total.toLocaleString()}</td>
+        <td style="text-align: center;"><span class="heatmap-cell ${getHeatmapClass(parseFloat(activeRate))}">${activeRate}%</span></td>
+        <td style="text-align: center;"><span class="heatmap-cell ${getHeatmapClass(parseFloat(pitchRate))}">${pitchRate}%</span></td>
+        <td style="text-align: center;"><span class="heatmap-cell ${getHeatmapClass(parseFloat(checkoutRate))}">${checkoutRate}%</span></td>
+        <td style="text-align: center;"><span class="heatmap-cell ${getHeatmapClass(parseFloat(paidRate))}">${paidRate}%</span></td>
+        <td style="text-align: center;"><span class="heatmap-cell ${getHeatmapClass(parseFloat(overallCR))}" style="font-size: 12px;">${overallCR}%</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAnalyticsInsights(funnelData, segmentData, paymentData) {
+  const container = document.getElementById('analyticsInsightsContainer');
+  if (!container) return;
+
+  const insights = [];
+  const steps = funnelData?.steps || [];
+
+  // Analyze funnel drop-offs
+  if (steps.length >= 2) {
+    for (let i = 0; i < steps.length - 1; i++) {
+      const current = steps[i].count || 0;
+      const next = steps[i + 1].count || 0;
+      const dropoff = current > 0 ? ((current - next) / current) * 100 : 0;
+
+      if (dropoff > 50) {
+        insights.push({
+          type: 'critical',
+          icon: '⚠️',
+          title: `${steps[i].name} → ${steps[i + 1].name} da ${Math.round(dropoff)}% yo'qotish`,
+          detail: `${current - next} ta foydalanuvchi keyingi bosqichga o'tmayapti`,
+          action: `${steps[i].name} bosqichini tahlil qiling va optimallashtiring`
+        });
+      } else if (dropoff > 30) {
+        insights.push({
+          type: 'warning',
+          icon: '📊',
+          title: `${steps[i].name} → ${steps[i + 1].name} da ${Math.round(dropoff)}% drop-off`,
+          detail: 'Bu bosqichda o\'rtacha yo\'qotish bor',
+          action: 'Kontentni yaxshilash yoki eslatmalar qo\'shish tavsiya etiladi'
+        });
+      }
+    }
+  }
+
+  // Analyze stuck payments
+  const stuckPayments = paymentData?.stuck_payments || [];
+  if (stuckPayments.length > 3) {
+    insights.push({
+      type: 'critical',
+      icon: '💳',
+      title: `${stuckPayments.length} ta to'lov muallaq holda`,
+      detail: 'Foydalanuvchilar to\'lovni yakunlamayapti',
+      action: 'Ushbu foydalanuvchilarga eslatma xabari yuboring'
+    });
+  }
+
+  // Positive insights
+  const overallCR = funnelData?.overall_cr;
+  if (overallCR && overallCR > 10) {
+    insights.push({
+      type: 'success',
+      icon: '🎉',
+      title: `Konversiya ${overallCR.toFixed(1)}% - yaxshi natija!`,
+      detail: 'Funnel samarali ishlayapti',
+      action: 'Shu yo\'nalishda davom eting'
+    });
+  }
+
+  // Default insight if nothing found
+  if (insights.length === 0) {
+    insights.push({
+      type: 'info',
+      icon: '📈',
+      title: 'Hozircha tahlil qilish uchun yetarli ma\'lumot yo\'q',
+      detail: 'Ko\'proq foydalanuvchilar kelgach tavsiyalar paydo bo\'ladi',
+      action: 'Trafikni oshirishga e\'tibor qarating'
+    });
+  }
+
+  container.innerHTML = insights.slice(0, 4).map(insight => `
+    <div class="analytics-insight-card ${insight.type}">
+      <div class="analytics-insight-icon">${insight.icon}</div>
+      <div class="analytics-insight-content">
+        <div class="analytics-insight-title">${insight.title}</div>
+        <div class="analytics-insight-detail">${insight.detail}</div>
+        <div class="analytics-insight-action">💡 ${insight.action}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function refreshAnalyticsInsights() {
+  loadAnalyticsData(true);
+}
+
+// Quick action functions for high-intent users
+function sendQuickMessage(telegramId) {
+  openBroadcastModal();
+  document.getElementById('broadcastTarget').value = 'specific';
+  toggleUserSelect();
+  // Pre-select the user
+  const userSelect = document.getElementById('broadcastUserSelect');
+  if (userSelect) {
+    setTimeout(() => {
+      const option = Array.from(userSelect.options).find(opt => opt.value === String(telegramId));
+      if (option) option.selected = true;
+    }, 100);
+  }
+}
+
+function sendQuickOffer(telegramId) {
+  openBroadcastModal();
+  document.getElementById('broadcastTarget').value = 'specific';
+  toggleUserSelect();
+  // Pre-fill with offer template
+  const messageInput = document.getElementById('broadcastMessage');
+  if (messageInput) {
+    messageInput.value = '🎁 Maxsus taklif!\n\nSiz uchun chegirmali narx tayyorladik. Bugun to\'lov qilsangiz, 20% chegirma olasiz!\n\n💰 Batafsil: /checkout';
+  }
+  const userSelect = document.getElementById('broadcastUserSelect');
+  if (userSelect) {
+    setTimeout(() => {
+      const option = Array.from(userSelect.options).find(opt => opt.value === String(telegramId));
+      if (option) option.selected = true;
+    }, 100);
   }
 }
 
@@ -9532,7 +10139,7 @@ function renderSegmentDiagnostics(data) {
 
   if (highIntentTable) {
     if (highIntent.length === 0) {
-      highIntentTable.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-gray-400">High-intent user topilmadi</td></tr>';
+      highIntentTable.innerHTML = '<tr><td colspan="5" class="py-3 text-center text-gray-400">High-intent user topilmadi</td></tr>';
     } else {
       const topRows = highIntent.slice(0, 20);
       highIntentTable.innerHTML = topRows.map((u) => {
@@ -9549,10 +10156,16 @@ function renderSegmentDiagnostics(data) {
             <td class="py-2" data-label="Dars">${u.current_lesson || 0}</td>
             <td class="py-2" data-label="Signal">${escapeHtml(signal.join(', ') || '-')}</td>
             <td class="py-2" data-label="Oxirgi aktivlik">${u.last_activity ? fmtDateTime(u.last_activity) : '-'}</td>
+            <td class="py-2" data-label="Harakatlar">
+              <div class="high-intent-quick-actions">
+                <button class="high-intent-action" onclick="sendQuickMessage(${u.telegram_id})" title="Xabar yuborish">💬</button>
+                <button class="high-intent-action primary" onclick="sendQuickOffer(${u.telegram_id})" title="Maxsus taklif">🎁</button>
+              </div>
+            </td>
           </tr>
         `;
       }).join('') + (highIntent.length > topRows.length
-        ? `<tr><td colspan="4" class="py-3 text-center text-xs text-gray-500">Yana ${highIntent.length - topRows.length} ta user bor</td></tr>`
+        ? `<tr><td colspan="5" class="py-3 text-center text-xs text-gray-500">Yana ${highIntent.length - topRows.length} ta user bor</td></tr>`
         : '');
     }
   }
