@@ -2557,11 +2557,181 @@
       }
 
       /* === PROMO CODES === */
-      #tab-promo .card { margin-bottom: 12px !important; }
+      #tab-promo .card {
+        margin-bottom: 12px !important;
+        padding: 12px !important;
+      }
+      #tab-promo .card > .flex.justify-between {
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+      }
+      #tab-promo .card > .flex.justify-between h3 {
+        font-size: 1rem !important;
+      }
+      #tab-promo .card > .flex.justify-between .btn {
+        width: 100%;
+      }
+      #tab-promo table {
+        min-width: 600px !important;
+      }
+      #tab-promo table th,
+      #tab-promo table td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+      }
 
       /* === LIBRARY === */
-      #tab-library .grid-cols-3 {
+      #tab-library .card {
+        margin-bottom: 12px !important;
+        padding: 12px !important;
+      }
+      #tab-library .flex.flex-col.sm\\:flex-row {
+        flex-direction: column !important;
+        gap: 10px !important;
+      }
+      #tab-library h3 {
+        font-size: 1rem !important;
+      }
+      #tab-library .grid-cols-2.sm\\:grid-cols-5 {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+      }
+      #tab-library .grid-cols-2.sm\\:grid-cols-5 > div {
+        padding: 8px !important;
+      }
+      #tab-library .grid-cols-2.sm\\:grid-cols-5 .text-lg {
+        font-size: 1rem !important;
+      }
+      #tab-library .grid-cols-2.sm\\:grid-cols-5 .text-xs {
+        font-size: 9px !important;
+      }
+      #tab-library .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+      }
+      #tab-library .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 > div {
+        padding: 12px !important;
+      }
+      #tab-library .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 .text-2xl {
+        font-size: 1.25rem !important;
+      }
+      #tab-library #mediaLibraryList > div {
+        padding: 10px !important;
+      }
+      #tab-library .flex.flex-wrap.gap-2 {
+        flex-direction: column;
+      }
+      #tab-library .flex.flex-wrap.gap-2 select,
+      #tab-library .flex.flex-wrap.gap-2 button {
+        width: 100% !important;
+      }
+
+      /* === REFERRALS === */
+      #tab-referrals .grid.grid-cols-2.md\\:grid-cols-4 {
         grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      #tab-referrals .card {
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+      }
+      #tab-referrals .card .text-3xl {
+        font-size: 1.5rem !important;
+      }
+      #tab-referrals .card .text-sm {
+        font-size: 11px !important;
+      }
+      #tab-referrals .grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+      }
+      #tab-referrals .grid-cols-3 > div {
+        padding: 8px !important;
+      }
+      #tab-referrals .grid-cols-3 .text-xl {
+        font-size: 1rem !important;
+      }
+      #tab-referrals .grid-cols-3 .text-xs {
+        font-size: 9px !important;
+      }
+      #tab-referrals table {
+        min-width: 400px !important;
+      }
+      #tab-referrals table th,
+      #tab-referrals table td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+      }
+
+      /* === AUDIT LOG === */
+      #tab-audit .card {
+        padding: 12px !important;
+      }
+      #tab-audit .flex.flex-col.md\\:flex-row {
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+      }
+      #tab-audit h3 {
+        font-size: 1rem !important;
+      }
+      #tab-audit .flex.gap-2.flex-wrap {
+        flex-direction: column;
+        width: 100%;
+      }
+      #tab-audit .flex.gap-2.flex-wrap select,
+      #tab-audit .flex.gap-2.flex-wrap input,
+      #tab-audit .flex.gap-2.flex-wrap button {
+        width: 100% !important;
+      }
+      #tab-audit table {
+        min-width: 600px !important;
+      }
+      #tab-audit table th,
+      #tab-audit table td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+      }
+
+      /* === ANALYTICS ADDITIONAL === */
+      #tab-analytics .analytics-mega-funnel {
+        margin: 0 -12px !important;
+        border-radius: 0 !important;
+        padding: 12px !important;
+      }
+      #tab-analytics .analytics-heatmap,
+      #tab-analytics .analytics-insights {
+        margin: 12px 0 !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+      }
+      #tab-analytics .sf-workspace {
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+      #tab-analytics .sf-left,
+      #tab-analytics .sf-right {
+        width: 100% !important;
+      }
+      #tab-analytics .diag-table-scroll {
+        max-height: 250px !important;
+      }
+      #tab-analytics .sf-diag-card {
+        padding: 10px !important;
+      }
+      #tab-analytics .sf-diag-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+      }
+      #tab-analytics .sf-diag-item {
+        padding: 8px !important;
+      }
+      #tab-analytics .sf-diag-item .sf-diag-value {
+        font-size: 1rem !important;
+      }
+      #tab-analytics .sf-diag-item .sf-diag-label {
+        font-size: 9px !important;
       }
 
       /* === CUSTDEV === */
