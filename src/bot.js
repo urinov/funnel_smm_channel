@@ -3595,6 +3595,13 @@ bot.action(/^test_ans_(\d+)_([abcd])$/, async (ctx) => {
 
     await delay(400);
 
+    // Delete progress message to keep chat clean
+    try {
+      await ctx.deleteMessage();
+    } catch (e) {
+      // Message might already be deleted, ignore
+    }
+
     // Send next question
     await sendTestQuestion(telegramId, question.lesson_number, question.question_order + 1);
   } catch (e) {
