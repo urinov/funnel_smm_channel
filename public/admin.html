@@ -5514,6 +5514,13 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
 - '3-7 mln' → max 15%"></textarea>
           <p class="text-xs text-gray-400 mt-1">AI shu qoidalarga amal qiladi</p>
         </div>
+
+        <!-- Fallback Message (when AI is disabled) -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-600 mb-1 block">AI o'chirilgandagi xabar</label>
+          <input type="text" id="aiFallbackMessage" class="input" placeholder="Savollaringiz bo'lsa, yozing - tez orada javob beramiz!">
+          <p class="text-xs text-gray-400 mt-1">AI o'chirilganda userga shu xabar yuboriladi</p>
+        </div>
       </div>
 
       <!-- AI Prompt -->
@@ -12717,6 +12724,7 @@ async function loadAISettings() {
     document.getElementById('aiFirstOfferDiscount').value = data.first_offer_discount || 0;
     document.getElementById('aiDiscountRules').value = data.discount_rules || '';
     document.getElementById('aiSalesPrompt').value = data.sales_prompt || '';
+    document.getElementById('aiFallbackMessage').value = data.fallback_message || '';
 
     // Update status indicator
     const statusEl = document.getElementById('aiStatus');
@@ -12752,7 +12760,8 @@ async function saveAISettings() {
       max_discount: parseInt(document.getElementById('aiMaxDiscount').value) || 30,
       first_offer_discount: parseInt(document.getElementById('aiFirstOfferDiscount').value) || 0,
       discount_rules: document.getElementById('aiDiscountRules').value,
-      sales_prompt: document.getElementById('aiSalesPrompt').value
+      sales_prompt: document.getElementById('aiSalesPrompt').value,
+      fallback_message: document.getElementById('aiFallbackMessage').value
     };
 
     await fetch('/api/ai-settings', {

@@ -1130,9 +1130,10 @@ async function handleAIChat(ctx, telegramId, text, user) {
     // Check if AI is enabled
     const aiEnabled = await db.getBotMessage('ai_sales_enabled');
     if (aiEnabled === 'false') {
-      // AI disabled - simple response
+      // AI disabled - send fallback message
       if (!isAdmin(telegramId)) {
-        await ctx.reply('Savollaringiz bo\'lsa, admin bilan bog\'laning: @admin');
+        const fallbackMsg = await db.getBotMessage('ai_fallback_message') || 'Savollaringiz bo\'lsa, yozing - tez orada javob beramiz!';
+        await ctx.reply(fallbackMsg);
       }
       return;
     }
