@@ -837,6 +837,88 @@ app.delete('/api/lessons/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ LESSON TESTS API ============
+
+// Get all lesson tests
+app.get('/api/tests', authMiddleware, async (req, res) => {
+  try {
+    const { getAllLessonTests } = await import('./database.js');
+    const tests = await getAllLessonTests();
+    res.json(tests);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get tests for specific lesson
+app.get('/api/tests/lesson/:lessonNumber', authMiddleware, async (req, res) => {
+  try {
+    const { getLessonTests } = await import('./database.js');
+    const tests = await getLessonTests(parseInt(req.params.lessonNumber));
+    res.json(tests);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create test question
+app.post('/api/tests', authMiddleware, async (req, res) => {
+  try {
+    const { createTestQuestion } = await import('./database.js');
+    const test = await createTestQuestion(req.body);
+    res.json(test);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Update test question
+app.put('/api/tests/:id', authMiddleware, async (req, res) => {
+  try {
+    const { updateTestQuestion } = await import('./database.js');
+    const test = await updateTestQuestion(parseInt(req.params.id), req.body);
+    if (!test) {
+      return res.status(404).json({ error: 'Test savoli topilmadi' });
+    }
+    res.json(test);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete test question
+app.delete('/api/tests/:id', authMiddleware, async (req, res) => {
+  try {
+    const { deleteTestQuestion } = await import('./database.js');
+    await deleteTestQuestion(parseInt(req.params.id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get test statistics
+app.get('/api/tests/stats', authMiddleware, async (req, res) => {
+  try {
+    const { getTestStatistics } = await import('./database.js');
+    const stats = await getTestStatistics();
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get test questions count per lesson
+app.get('/api/tests/count', authMiddleware, async (req, res) => {
+  try {
+    const { getTestQuestionsCount } = await import('./database.js');
+    const counts = await getTestQuestionsCount();
+    res.json(counts);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/custdev', authMiddleware, async (req, res) => {
   try {
     const { getAllCustDevQuestions } = await import('./database.js');

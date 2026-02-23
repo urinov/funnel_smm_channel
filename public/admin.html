@@ -3435,6 +3435,7 @@
       <div class="sidebar-item" data-tab="conversations" data-tooltip="Xabarlar" aria-label="Xabarlar"><span class="material-symbols-outlined" aria-hidden="true">chat</span><span class="sidebar-label">Xabarlar</span></div>
       <div class="sidebar-item" data-tab="payments" data-tooltip="To'lovlar" aria-label="To'lovlar"><span class="material-symbols-outlined" aria-hidden="true">payments</span><span class="sidebar-label">To'lovlar</span></div>
       <div class="sidebar-item" data-tab="lessons" data-tooltip="Darslar" aria-label="Darslar"><span class="material-symbols-outlined" aria-hidden="true">school</span><span class="sidebar-label">Darslar</span></div>
+      <div class="sidebar-item" data-tab="tests" data-tooltip="Testlar" aria-label="Testlar"><span class="material-symbols-outlined" aria-hidden="true">quiz</span><span class="sidebar-label">Testlar</span></div>
       <div class="sidebar-item" data-tab="library" data-tooltip="Kutubxona" aria-label="Kutubxona"><span class="material-symbols-outlined" aria-hidden="true">video_library</span><span class="sidebar-label">Kutubxona</span></div>
       <div class="sidebar-item" data-tab="progrev" data-tooltip="Progrev" aria-label="Progrev"><span class="material-symbols-outlined" aria-hidden="true">local_fire_department</span><span class="sidebar-label">Progrev</span></div>
       <div class="sidebar-item" data-tab="custdev" data-tooltip="CustDev" aria-label="CustDev"><span class="material-symbols-outlined" aria-hidden="true">psychology</span><span class="sidebar-label">CustDev</span></div>
@@ -3477,6 +3478,10 @@
       <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
       <h3 class="font-semibold text-gray-800 mb-4">Qo'shimcha menyu</h3>
       <div class="grid grid-cols-3 gap-4">
+        <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('tests'); toggleMobileMenu();">
+          <span class="text-2xl mb-2">📝</span>
+          <span class="text-xs text-gray-600">Testlar</span>
+        </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('library'); toggleMobileMenu();">
           <span class="text-2xl mb-2">📖</span>
           <span class="text-xs text-gray-600">Kutubxona</span>
@@ -3486,7 +3491,7 @@
           <span class="text-xs text-gray-600">Progrevlar</span>
         </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('custdev'); toggleMobileMenu();">
-          <span class="text-2xl mb-2">📝</span>
+          <span class="text-2xl mb-2">🧠</span>
           <span class="text-xs text-gray-600">CustDev</span>
         </div>
         <div class="mobile-menu-item flex flex-col items-center p-4 rounded-xl bg-gray-50 cursor-pointer hover:bg-indigo-50 transition-colors" onclick="showTab('analytics'); toggleMobileMenu();">
@@ -4256,6 +4261,75 @@
           Telegram botga video/audio/fayl/video xabar yuboring - bot sizga File ID beradi.
           O'sha ID ni darsga joylashtirsangiz, foydalanuvchilarga o'sha media yuboriladi.
         </p>
+      </div>
+    </div>
+
+    <!-- Tests Tab (Test savollari boshqaruvi) -->
+    <div id="tab-tests" class="hidden">
+      <!-- Test Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="card p-4 text-center">
+          <p class="text-2xl font-bold text-indigo-600" id="test1PassedCount">0</p>
+          <p class="text-xs text-gray-500">Test 1 o'tganlar</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-2xl font-bold text-blue-600" id="test2PassedCount">0</p>
+          <p class="text-xs text-gray-500">Test 2 o'tganlar</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-2xl font-bold text-green-600" id="test3PassedCount">0</p>
+          <p class="text-xs text-gray-500">Test 3 o'tganlar</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-2xl font-bold text-yellow-600" id="perfectScoreCount">0</p>
+          <p class="text-xs text-gray-500">100% natija</p>
+        </div>
+        <div class="card p-4 text-center">
+          <p class="text-2xl font-bold text-purple-600" id="currentlyTestingCount">0</p>
+          <p class="text-xs text-gray-500">Test topshirmoqda</p>
+        </div>
+      </div>
+
+      <!-- Test Questions Management -->
+      <div class="card">
+        <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 class="font-semibold text-gray-800 text-lg">📝 Test savollari</h3>
+            <p class="text-sm text-gray-500">Har bir dars uchun 5 ta test savoli</p>
+          </div>
+          <div class="flex gap-2">
+            <select id="testLessonFilter" class="input text-sm" onchange="filterTestsByLesson()">
+              <option value="all">Barcha darslar</option>
+              <option value="1">1-dars</option>
+              <option value="2">2-dars</option>
+              <option value="3">3-dars</option>
+            </select>
+            <button onclick="openTestQuestionModal()" class="btn btn-primary">+ Yangi savol</button>
+          </div>
+        </div>
+
+        <div id="testQuestionsList" class="divide-y divide-gray-100">
+          <div class="p-8 text-center text-gray-400">Yuklanmoqda...</div>
+        </div>
+      </div>
+
+      <!-- Question Success Rates -->
+      <div class="card mt-6 p-5">
+        <h3 class="font-semibold text-gray-800 mb-4">📊 Savol bo'yicha statistika</h3>
+        <div id="questionSuccessRates" class="space-y-3">
+          <p class="text-gray-400 text-center">Yuklanmoqda...</p>
+        </div>
+      </div>
+
+      <!-- Test Settings Info -->
+      <div class="card mt-6 p-5 bg-blue-50 border-blue-200">
+        <h3 class="font-semibold text-blue-800 mb-2">📋 Test tizimi haqida</h3>
+        <div class="text-sm text-blue-600 space-y-1">
+          <p>• Har bir dars uchun 5 ta savol tavsiya etiladi</p>
+          <p>• O'tish uchun kamida 3 ta to'g'ri javob kerak (60%)</p>
+          <p>• Barcha testlardan 100% olganlar maxsus chegirmaga ega bo'ladi</p>
+          <p>• To'g'ri javoblar A, B, C yoki D bo'lishi kerak</p>
+        </div>
       </div>
     </div>
 
@@ -5844,6 +5918,84 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
   </div>
 </div>
 
+<!-- Test Question Modal -->
+<div id="testQuestionModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+  <div class="modal-content modal-md mx-4 p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-gray-800">📝 Test savoli</h3>
+      <button onclick="closeTestQuestionModal()" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">✕</button>
+    </div>
+    <form id="testQuestionForm" onsubmit="event.preventDefault(); saveTestQuestion();" class="space-y-4">
+      <input type="hidden" id="testQuestionId">
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Dars raqami</label>
+          <select id="testLessonNumber" class="input" required>
+            <option value="1">1-dars</option>
+            <option value="2">2-dars</option>
+            <option value="3">3-dars</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Savol tartibi</label>
+          <select id="testQuestionOrder" class="input" required>
+            <option value="1">1-savol</option>
+            <option value="2">2-savol</option>
+            <option value="3">3-savol</option>
+            <option value="4">4-savol</option>
+            <option value="5">5-savol</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-600 mb-1 block">Savol matni</label>
+        <textarea id="testQuestionText" class="input h-20 resize-none" required placeholder="Savol matnini kiriting..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">A) variant</label>
+          <input type="text" id="testOptionA" class="input" required placeholder="A varianti...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">B) variant</label>
+          <input type="text" id="testOptionB" class="input" required placeholder="B varianti...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">C) variant</label>
+          <input type="text" id="testOptionC" class="input" required placeholder="C varianti...">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">D) variant</label>
+          <input type="text" id="testOptionD" class="input" required placeholder="D varianti...">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">To'g'ri javob</label>
+          <select id="testCorrectAnswer" class="input" required>
+            <option value="a">A</option>
+            <option value="b">B</option>
+            <option value="c">C</option>
+            <option value="d">D</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="testIsActive" checked class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            <span class="text-sm text-gray-700">Faol</span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full">💾 Saqlash</button>
+    </form>
+  </div>
+</div>
+
 <!-- User Detail Modal -->
 <div id="userDetailModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
   <div class="modal-content modal-lg mx-4 p-6">
@@ -6252,6 +6404,7 @@ const TAB_META = {
   conversations: { title: 'Suhbatlar', subtitle: 'User chat monitoring va tez javoblar' },
   payments: { title: 'To\'lovlar', subtitle: 'Holatlar, status va premium oqimi' },
   lessons: { title: 'Darslar', subtitle: 'Kontent va progress boshqaruvi' },
+  tests: { title: 'Testlar', subtitle: 'Dars testlari va natijalar' },
   library: { title: 'Kutubxona', subtitle: 'Media va dars ID katalogi' },
   progrev: { title: 'Progrev', subtitle: 'Sotuv oqimi va follow-up kontentlari' },
   custdev: { title: 'CustDev', subtitle: 'Savollar, javoblar va feedback tahlili' },
@@ -7346,6 +7499,7 @@ async function ensureTabData(tab, force = false) {
   }
   if (tab === 'referrals') await loadReferralData();
   if (tab === 'audit') await loadAuditLogs();
+  if (tab === 'tests') await loadTests();
   tabDataState[tab] = Date.now();
 }
 
@@ -11978,6 +12132,237 @@ async function loadReferralData() {
 
   } catch(e) {
     console.error('loadReferralData error:', e);
+  }
+}
+
+// ========== LESSON TESTS TAB ==========
+let allTestQuestions = [];
+let testStats = null;
+
+async function loadTests() {
+  try {
+    const [tests, stats] = await Promise.all([
+      fetch('/api/tests', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/tests/stats', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    allTestQuestions = Array.isArray(tests) ? tests : [];
+    testStats = stats;
+
+    renderTestQuestions();
+    renderTestStats();
+    renderQuestionSuccessRates();
+  } catch(e) {
+    console.error('loadTests error:', e);
+    addNotification('Test savollari yuklanmadi', 'error');
+  }
+}
+
+function renderTestStats() {
+  if (!testStats || !testStats.passStats) return;
+
+  const ps = testStats.passStats;
+  document.getElementById('test1PassedCount').textContent = ps.test_1_passed_count || 0;
+  document.getElementById('test2PassedCount').textContent = ps.test_2_passed_count || 0;
+  document.getElementById('test3PassedCount').textContent = ps.test_3_passed_count || 0;
+  document.getElementById('perfectScoreCount').textContent = ps.perfect_score_count || 0;
+  document.getElementById('currentlyTestingCount').textContent = ps.currently_testing || 0;
+}
+
+function renderTestQuestions() {
+  const container = document.getElementById('testQuestionsList');
+  const filterValue = document.getElementById('testLessonFilter').value;
+
+  let filtered = allTestQuestions;
+  if (filterValue !== 'all') {
+    filtered = allTestQuestions.filter(q => q.lesson_number === parseInt(filterValue));
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="p-8 text-center text-gray-400">Test savollari yo\'q. Yangi savol qo\'shing!</div>';
+    return;
+  }
+
+  // Group by lesson
+  const grouped = {};
+  filtered.forEach(q => {
+    if (!grouped[q.lesson_number]) grouped[q.lesson_number] = [];
+    grouped[q.lesson_number].push(q);
+  });
+
+  let html = '';
+  Object.keys(grouped).sort((a,b) => a - b).forEach(lessonNum => {
+    html += '<div class="bg-gray-50 px-5 py-2 font-semibold text-gray-600 text-sm">📚 ' + lessonNum + '-dars savollari</div>';
+
+    grouped[lessonNum].sort((a,b) => a.question_order - b.question_order).forEach(q => {
+      const correctLabel = q.correct_answer.toUpperCase();
+      html += `
+        <div class="p-4 hover:bg-gray-50 transition-colors">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded font-medium">Savol ${q.question_order}</span>
+                <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">To'g'ri: ${correctLabel}</span>
+                ${!q.is_active ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">Nofaol</span>' : ''}
+              </div>
+              <p class="text-gray-800 font-medium mb-2">${escapeHtml(q.question_text)}</p>
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="${q.correct_answer === 'a' ? 'text-green-600 font-medium' : 'text-gray-600'}">A) ${escapeHtml(q.option_a)}</div>
+                <div class="${q.correct_answer === 'b' ? 'text-green-600 font-medium' : 'text-gray-600'}">B) ${escapeHtml(q.option_b)}</div>
+                <div class="${q.correct_answer === 'c' ? 'text-green-600 font-medium' : 'text-gray-600'}">C) ${escapeHtml(q.option_c)}</div>
+                <div class="${q.correct_answer === 'd' ? 'text-green-600 font-medium' : 'text-gray-600'}">D) ${escapeHtml(q.option_d)}</div>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editTestQuestion(${q.id})" class="p-2 hover:bg-blue-100 rounded-lg transition-colors" title="Tahrirlash">
+                <span class="material-symbols-outlined text-blue-600">edit</span>
+              </button>
+              <button onclick="deleteTestQuestion(${q.id})" class="p-2 hover:bg-red-100 rounded-lg transition-colors" title="O'chirish">
+                <span class="material-symbols-outlined text-red-600">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+function renderQuestionSuccessRates() {
+  const container = document.getElementById('questionSuccessRates');
+  if (!testStats || !testStats.questionStats || testStats.questionStats.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-center">Statistika mavjud emas</p>';
+    return;
+  }
+
+  let html = '';
+  let currentLesson = 0;
+
+  testStats.questionStats.forEach(q => {
+    if (q.lesson_number !== currentLesson) {
+      currentLesson = q.lesson_number;
+      html += `<div class="font-semibold text-gray-700 mt-3 first:mt-0">${currentLesson}-dars</div>`;
+    }
+
+    const rate = parseFloat(q.success_rate) || 0;
+    const barColor = rate >= 70 ? 'bg-green-500' : rate >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+
+    html += `
+      <div class="flex items-center gap-3">
+        <div class="w-16 text-xs text-gray-500">Savol ${q.question_order}</div>
+        <div class="flex-1 bg-gray-200 rounded-full h-2">
+          <div class="${barColor} h-2 rounded-full transition-all" style="width: ${rate}%"></div>
+        </div>
+        <div class="w-16 text-xs text-right text-gray-600">${rate}% (${q.correct_count || 0}/${q.total_attempts || 0})</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function filterTestsByLesson() {
+  renderTestQuestions();
+}
+
+function openTestQuestionModal(id = null) {
+  const modal = document.getElementById('testQuestionModal');
+  const form = document.getElementById('testQuestionForm');
+
+  form.reset();
+  document.getElementById('testQuestionId').value = '';
+
+  if (id) {
+    const q = allTestQuestions.find(x => x.id === id);
+    if (q) {
+      document.getElementById('testQuestionId').value = q.id;
+      document.getElementById('testLessonNumber').value = q.lesson_number;
+      document.getElementById('testQuestionOrder').value = q.question_order;
+      document.getElementById('testQuestionText').value = q.question_text;
+      document.getElementById('testOptionA').value = q.option_a;
+      document.getElementById('testOptionB').value = q.option_b;
+      document.getElementById('testOptionC').value = q.option_c;
+      document.getElementById('testOptionD').value = q.option_d;
+      document.getElementById('testCorrectAnswer').value = q.correct_answer.toLowerCase();
+      document.getElementById('testIsActive').checked = q.is_active;
+    }
+  }
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeTestQuestionModal() {
+  const modal = document.getElementById('testQuestionModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function editTestQuestion(id) {
+  openTestQuestionModal(id);
+}
+
+async function saveTestQuestion() {
+  const id = document.getElementById('testQuestionId').value;
+  const data = {
+    lesson_number: parseInt(document.getElementById('testLessonNumber').value),
+    question_order: parseInt(document.getElementById('testQuestionOrder').value),
+    question_text: document.getElementById('testQuestionText').value,
+    option_a: document.getElementById('testOptionA').value,
+    option_b: document.getElementById('testOptionB').value,
+    option_c: document.getElementById('testOptionC').value,
+    option_d: document.getElementById('testOptionD').value,
+    correct_answer: document.getElementById('testCorrectAnswer').value,
+    is_active: document.getElementById('testIsActive').checked
+  };
+
+  if (!data.question_text || !data.option_a || !data.option_b || !data.option_c || !data.option_d) {
+    addNotification('Barcha maydonlarni to\'ldiring!', 'error');
+    return;
+  }
+
+  try {
+    const url = id ? `/api/tests/${id}` : '/api/tests';
+    const method = id ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: auth
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) throw new Error('Xatolik');
+
+    closeTestQuestionModal();
+    await loadTests();
+    addNotification(id ? 'Savol yangilandi!' : 'Yangi savol qo\'shildi!', 'success');
+  } catch(e) {
+    console.error('saveTestQuestion error:', e);
+    addNotification('Saqlashda xatolik: ' + e.message, 'error');
+  }
+}
+
+async function deleteTestQuestion(id) {
+  if (!confirm('Bu savolni o\'chirishni xohlaysizmi?')) return;
+
+  try {
+    const response = await fetch(`/api/tests/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: auth }
+    });
+
+    if (!response.ok) throw new Error('Xatolik');
+
+    await loadTests();
+    addNotification('Savol o\'chirildi!', 'success');
+  } catch(e) {
+    console.error('deleteTestQuestion error:', e);
+    addNotification('O\'chirishda xatolik', 'error');
   }
 }
 

@@ -1101,12 +1101,12 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
     if (lessonNumber < totalLessons) {
       // Value means: ask subscription AFTER this lesson number
       const requireSubLesson = parseInt(await db.getBotMessage('require_subscription_before_lesson')) || 3;
-      
+
       if (requireSubLesson > 0 && lessonNumber === requireSubLesson) {
         const nextLesson = lessonNumber + 1;
         // Check subscription status
         const isSubscribed = await checkFreeChannelSubscription(telegramId);
-        
+
         if (isSubscribed) {
           // Already subscribed - say thank you!
           if (!user?.subscribed_free_channel) {
@@ -1120,11 +1120,14 @@ bot.action(/^watched_(\d+)$/, async (ctx) => {
           return;
         }
       }
-      
+
       await delay(1000);
-      await startCustDev(telegramId, lessonNumber);
+      // Start lesson test instead of custdev (test will call custdev after passing)
+      await startLessonTest(telegramId, lessonNumber);
     } else {
-      await schedulePostLesson(telegramId);
+      // Last lesson - also start test first
+      await delay(1000);
+      await startLessonTest(telegramId, lessonNumber);
     }
   } catch (e) {
     console.error('Watched error:', e);
@@ -2938,5 +2941,395 @@ bot.on('video_note', async (ctx) => {
   await ctx.reply('✅ Video xabar saqlandi!\n\n📋 File ID:\n<code>' + fileId + '</code>\n\n💡 Dashboard > Media > ✏️ orqali izoh qo\'shing', { parse_mode: 'HTML' });
 });
 
+// ============ BONUS OFFER SYSTEM ============
+
+/**
+ * Send bonus offer to user after completing all lessons
+ */
+async function sendBonusOffer(telegramId, isPerfect) {
+  const user = await db.getUser(telegramId);
+  const discountPercent = isPerfect ?
+    (await db.getSetting('perfect_score_discount_percent') || '30') :
+    '0';
+
+  let message = `🎁 <b>Sizga maxsus taklif!</b>\n\n`;
+
+  if (isPerfect) {
+    message += `🏆 Siz barcha testlardan 100% natija oldingiz!\n`;
+    message += `✨ Sizga <b>${discountPercent}% chegirma</b> taqdim etamiz!\n\n`;
+  }
+
+  message += `📚 <b>To'liq SMM kursiga</b> kirish uchun hoziroq ro'yxatdan o'ting!\n\n`;
+  message += `Kurs ichida:\n`;
+  message += `✅ 50+ video darslar\n`;
+  message += `✅ Amaliy topshiriqlar\n`;
+  message += `✅ Mentor qo'llab-quvvatlashi\n`;
+  message += `✅ Premium kanal a'zoligi\n`;
+  message += `✅ Sertifikat\n\n`;
+
+  const buttons = [];
+
+  if (isPerfect) {
+    buttons.push([Markup.button.callback(`🎁 ${discountPercent}% chegirma bilan sotib olish`, 'claim_perfect_discount')]);
+  }
+
+  buttons.push([Markup.button.callback('💳 Sotib olish', 'buy_course')]);
+  buttons.push([Markup.button.callback('📞 Batafsil ma\'lumot', 'course_info')]);
+
+  await bot.telegram.sendMessage(telegramId, message, {
+    parse_mode: 'HTML',
+    ...Markup.inlineKeyboard(buttons)
+  });
+
+  // Mark bonus as offered
+  await db.updateUser(telegramId, { bonus_claimed: false });
+}
+
+// Claim perfect score discount
+bot.action('claim_perfect_discount', async (ctx) => {
+  try {
+    const telegramId = ctx.from.id;
+    const user = await db.getUser(telegramId);
+
+    if (!user?.perfect_score) {
+      await ctx.answerCbQuery('Bu chegirma faqat barcha testlardan 100% olganlar uchun!');
+      return;
+    }
+
+    if (user?.perfect_score_discount_used) {
+      await ctx.answerCbQuery('Siz bu chegirmadan allaqachon foydalangansiz!');
+      return;
+    }
+
+    await ctx.answerCbQuery('Chegirma qo\'llanildi!');
+    await ctx.editMessageReplyMarkup(undefined);
+
+    const discountPercent = await db.getSetting('perfect_score_discount_percent') || '30';
+
+    await ctx.reply(
+      `🎉 <b>${discountPercent}% chegirma qo'llanildi!</b>\n\n` +
+      `Endi to'lov sahifasiga o'ting va chegirma avtomatik hisobga olinadi.\n\n` +
+      `To'lov uchun quyidagi tugmani bosing:`,
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback('💳 To\'lovga o\'tish', 'checkout_with_discount')]
+        ])
+      }
+    );
+
+  } catch (e) {
+    console.error('Claim discount error:', e);
+    await ctx.answerCbQuery('Xatolik yuz berdi');
+  }
+});
+
+// Handle checkout with perfect score discount
+bot.action('checkout_with_discount', async (ctx) => {
+  try {
+    const telegramId = ctx.from.id;
+    const user = await db.getUser(telegramId);
+
+    if (!user?.perfect_score || user?.perfect_score_discount_used) {
+      await ctx.answerCbQuery('Chegirma mavjud emas');
+      // Redirect to normal checkout
+      await handleCheckout(telegramId);
+      return;
+    }
+
+    // Get discount percent and apply
+    const discountPercent = parseInt(await db.getSetting('perfect_score_discount_percent') || '30');
+    const originalPrice = DEFAULT_PRICE;
+    const discountedPrice = Math.round(originalPrice * (100 - discountPercent) / 100);
+
+    await ctx.answerCbQuery();
+    await ctx.editMessageReplyMarkup(undefined);
+
+    // Show payment options with discounted price
+    const buttons = [
+      [Markup.button.callback(`💳 Payme (${formatMoney(discountedPrice)})`, `pay_payme_perfect`)],
+      [Markup.button.callback(`💳 Click (${formatMoney(discountedPrice)})`, `pay_click_perfect`)],
+      [Markup.button.callback('🔙 Orqaga', 'buy_course')]
+    ];
+
+    await ctx.reply(
+      `💰 <b>To'lov</b>\n\n` +
+      `📦 To'liq SMM kurs\n` +
+      `💵 Narxi: <s>${formatMoney(originalPrice)}</s>\n` +
+      `🎁 Chegirma: <b>${discountPercent}%</b>\n` +
+      `✅ Yangi narx: <b>${formatMoney(discountedPrice)}</b>\n\n` +
+      `To'lov usulini tanlang:`,
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard(buttons)
+      }
+    );
+
+  } catch (e) {
+    console.error('Checkout with discount error:', e);
+    await ctx.answerCbQuery('Xatolik yuz berdi');
+  }
+});
+
+// ============ LESSON TEST SYSTEM ============
+
+const TEST_PASS_THRESHOLD = 3; // 5 savoldan kamida 3 ta to'g'ri javob kerak
+const QUESTIONS_PER_TEST = 5;
+
+/**
+ * Start a test for a specific lesson
+ */
+async function startLessonTest(telegramId, lessonNumber) {
+  const tests = await db.getLessonTests(lessonNumber);
+
+  if (!tests || tests.length === 0) {
+    // No tests for this lesson - proceed to custdev
+    console.log(`No tests found for lesson ${lessonNumber}`);
+    await startCustDev(telegramId, lessonNumber);
+    return;
+  }
+
+  // Reset any previous test results for this lesson
+  await db.resetUserLessonTest(telegramId, lessonNumber);
+
+  // Set user to test mode
+  await db.updateUser(telegramId, {
+    test_mode: true,
+    current_test_lesson: lessonNumber,
+    current_test_question: 1
+  });
+
+  await bot.telegram.sendMessage(telegramId,
+    `📝 <b>${lessonNumber}-dars testi</b>\n\n` +
+    `Darsni qanchalik tushunganingizni tekshiramiz!\n\n` +
+    `📊 ${tests.length} ta savol\n` +
+    `✅ O'tish uchun: kamida ${TEST_PASS_THRESHOLD} ta to'g'ri javob\n\n` +
+    `Boshlashga tayyormisiz?`,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback('🚀 Boshlash', `test_start_${lessonNumber}`)]
+      ])
+    }
+  );
+}
+
+/**
+ * Send a test question
+ */
+async function sendTestQuestion(telegramId, lessonNumber, questionOrder) {
+  const question = await db.getTestQuestion(lessonNumber, questionOrder);
+
+  if (!question) {
+    // No more questions - calculate results
+    await finishLessonTest(telegramId, lessonNumber);
+    return;
+  }
+
+  await db.updateUser(telegramId, { current_test_question: questionOrder });
+
+  const buttons = [
+    [Markup.button.callback(`A) ${question.option_a}`, `test_ans_${question.id}_a`)],
+    [Markup.button.callback(`B) ${question.option_b}`, `test_ans_${question.id}_b`)],
+    [Markup.button.callback(`C) ${question.option_c}`, `test_ans_${question.id}_c`)],
+    [Markup.button.callback(`D) ${question.option_d}`, `test_ans_${question.id}_d`)]
+  ];
+
+  await bot.telegram.sendMessage(telegramId,
+    `📝 <b>Savol ${questionOrder}/${QUESTIONS_PER_TEST}</b>\n\n` +
+    `${question.question_text}`,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard(buttons)
+    }
+  );
+}
+
+/**
+ * Finish test and show results
+ */
+async function finishLessonTest(telegramId, lessonNumber) {
+  const score = await db.getUserLessonTestScore(telegramId, lessonNumber);
+  const correctCount = score.correct_answers;
+  const totalQuestions = score.total_questions;
+  const passed = correctCount >= TEST_PASS_THRESHOLD;
+
+  // Update user scores
+  const scoreField = `test_${lessonNumber}_score`;
+  const passedField = `test_${lessonNumber}_passed`;
+
+  await db.updateUser(telegramId, {
+    [scoreField]: correctCount,
+    [passedField]: passed,
+    test_mode: false,
+    current_test_question: 0
+  });
+
+  // Check for perfect score (all questions across all tests)
+  const allResults = await db.getUserAllTestResults(telegramId);
+  const totalCorrect = allResults.reduce((sum, r) => sum + r.correct_answers, 0);
+  const totalAnswered = allResults.reduce((sum, r) => sum + r.total_questions, 0);
+
+  // Calculate total test score
+  await db.updateUser(telegramId, { total_test_score: totalCorrect });
+
+  if (passed) {
+    // User passed!
+    let message = `🎉 <b>Tabriklaymiz!</b>\n\n` +
+      `✅ Natija: <b>${correctCount}/${totalQuestions}</b>\n\n`;
+
+    if (correctCount === totalQuestions) {
+      message += `⭐ Ajoyib! Barcha javoblar to'g'ri!\n\n`;
+    } else {
+      message += `👏 Yaxshi natija! Testdan o'tdingiz!\n\n`;
+    }
+
+    const totalLessons = await db.getLessonsCount();
+    const isLastLesson = lessonNumber >= totalLessons;
+
+    // Check if all tests passed with perfect score
+    const isPerfect = totalAnswered >= (totalLessons * QUESTIONS_PER_TEST) && totalCorrect === totalAnswered;
+    if (isLastLesson && isPerfect) {
+      await db.updateUser(telegramId, { perfect_score: true });
+      const discountPercent = await db.getSetting('perfect_score_discount_percent') || '30';
+      message += `🏆 <b>SUPER!</b> Barcha testlardan 100% natija!\n` +
+        `🎁 Siz ${discountPercent}% maxsus chegirmaga ega bo'ldingiz!\n\n`;
+    }
+
+    // If last lesson completed - send bonus offer
+    if (isLastLesson) {
+      message += `\n🎊 Barcha darslar va testlarni muvaffaqiyatli tugatdingiz!`;
+      await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+
+      await delay(2000);
+
+      // Send bonus offer
+      const bonusEnabled = (await db.getSetting('bonus_enabled')) !== 'false';
+      if (bonusEnabled) {
+        await sendBonusOffer(telegramId, isPerfect);
+      } else {
+        await startCustDev(telegramId, lessonNumber);
+      }
+    } else {
+      message += `Davom etamiz...`;
+      await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      await delay(2000);
+      await startCustDev(telegramId, lessonNumber);
+    }
+  } else {
+    // User failed
+    await bot.telegram.sendMessage(telegramId,
+      `😔 <b>Afsuski, testdan o'ta olmadingiz</b>\n\n` +
+      `❌ Natija: <b>${correctCount}/${totalQuestions}</b>\n` +
+      `✅ O'tish uchun: kamida ${TEST_PASS_THRESHOLD} ta to'g'ri javob\n\n` +
+      `Darsni qayta ko'rib, testni takrorlang!\n\n` +
+      `💪 Siz albatta o'ta olasiz!`,
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback('🔄 Testni qayta topshirish', `test_retry_${lessonNumber}`)],
+          [Markup.button.callback('📚 Darsni qayta ko\'rish', `rewatch_${lessonNumber}`)]
+        ])
+      }
+    );
+  }
+}
+
+// Test start callback
+bot.action(/^test_start_(\d+)$/, async (ctx) => {
+  try {
+    const lessonNumber = parseInt(ctx.match[1]);
+    await ctx.answerCbQuery('Boshlandi!');
+    await ctx.editMessageReplyMarkup(undefined);
+    await delay(500);
+    await sendTestQuestion(ctx.from.id, lessonNumber, 1);
+  } catch (e) {
+    console.error('Test start error:', e);
+  }
+});
+
+// Test answer callback
+bot.action(/^test_ans_(\d+)_([abcd])$/, async (ctx) => {
+  try {
+    const questionId = parseInt(ctx.match[1]);
+    const userAnswer = ctx.match[2];
+    const telegramId = ctx.from.id;
+
+    // Get question details
+    const question = await db.getTestQuestionById(questionId);
+
+    if (!question) {
+      await ctx.answerCbQuery('Savol topilmadi');
+      return;
+    }
+
+    const isCorrect = userAnswer === question.correct_answer.toLowerCase();
+
+    // Save answer
+    await db.saveUserTestAnswer(
+      telegramId,
+      question.lesson_number,
+      question.question_order,
+      userAnswer,
+      isCorrect,
+      questionId
+    );
+
+    // Show result
+    const correctOption = question[`option_${question.correct_answer.toLowerCase()}`];
+
+    if (isCorrect) {
+      await ctx.answerCbQuery('✅ To\'g\'ri!', { show_alert: false });
+      await ctx.editMessageText(
+        `${ctx.update.callback_query.message.text}\n\n` +
+        `✅ <b>To'g'ri javob!</b>`,
+        { parse_mode: 'HTML' }
+      );
+    } else {
+      await ctx.answerCbQuery('❌ Noto\'g\'ri', { show_alert: false });
+      await ctx.editMessageText(
+        `${ctx.update.callback_query.message.text}\n\n` +
+        `❌ <b>Noto'g'ri.</b>\n` +
+        `✅ To'g'ri javob: <b>${question.correct_answer.toUpperCase()}) ${correctOption}</b>`,
+        { parse_mode: 'HTML' }
+      );
+    }
+
+    await delay(1500);
+
+    // Send next question
+    await sendTestQuestion(telegramId, question.lesson_number, question.question_order + 1);
+  } catch (e) {
+    console.error('Test answer error:', e);
+    await ctx.answerCbQuery('Xatolik yuz berdi');
+  }
+});
+
+// Test retry callback
+bot.action(/^test_retry_(\d+)$/, async (ctx) => {
+  try {
+    const lessonNumber = parseInt(ctx.match[1]);
+    await ctx.answerCbQuery('Qayta boshlanmoqda...');
+    await ctx.editMessageReplyMarkup(undefined);
+    await delay(500);
+    await startLessonTest(ctx.from.id, lessonNumber);
+  } catch (e) {
+    console.error('Test retry error:', e);
+  }
+});
+
+// Rewatch lesson callback
+bot.action(/^rewatch_(\d+)$/, async (ctx) => {
+  try {
+    const lessonNumber = parseInt(ctx.match[1]);
+    await ctx.answerCbQuery('Dars yuborilmoqda...');
+    await ctx.editMessageReplyMarkup(undefined);
+    await delay(500);
+    await sendLesson(ctx.from.id, lessonNumber);
+  } catch (e) {
+    console.error('Rewatch error:', e);
+  }
+});
+
 export default bot;
-// Last deploy: 2026-02-09 02:30:26
+// Last deploy: 2026-02-23 test-system

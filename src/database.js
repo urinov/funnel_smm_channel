@@ -593,6 +593,48 @@ export async function initDatabase() {
       await client.query(`CREATE INDEX IF NOT EXISTS idx_lesson_deliveries_unwatched ON lesson_deliveries(telegram_id, watched_at) WHERE watched_at IS NULL`);
     } catch (e) {}
 
+    // ============ LESSON TESTS TABLE ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lesson_tests (
+        id SERIAL PRIMARY KEY,
+        lesson_number INTEGER NOT NULL,
+        question_order INTEGER NOT NULL,
+        question_text TEXT NOT NULL,
+        option_a TEXT NOT NULL,
+        option_b TEXT NOT NULL,
+        option_c TEXT NOT NULL,
+        option_d TEXT NOT NULL,
+        correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('a', 'b', 'c', 'd')),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(lesson_number, question_order)
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_lesson_tests_lesson ON lesson_tests(lesson_number)`);
+    } catch (e) {}
+
+    // ============ USER TEST RESULTS TABLE ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_test_results (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        lesson_number INTEGER NOT NULL,
+        question_id INTEGER REFERENCES lesson_tests(id),
+        question_order INTEGER NOT NULL,
+        user_answer CHAR(1),
+        is_correct BOOLEAN,
+        answered_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(telegram_id, lesson_number, question_order)
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_user_test_results_user ON user_test_results(telegram_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_user_test_results_lesson ON user_test_results(telegram_id, lesson_number)`);
+    } catch (e) {}
+
     // ============ REFERRAL SYSTEM MIGRATIONS ============
     await client.query(`
       CREATE TABLE IF NOT EXISTS referrals (
@@ -648,6 +690,29 @@ export async function initDatabase() {
     ];
 
     for (const sql of channelJoinMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {}
+    }
+
+    // ============ LESSON TEST SYSTEM MIGRATIONS ============
+    const testSystemMigrations = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_1_score INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_1_passed BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_2_score INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_2_passed BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_3_score INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_3_passed BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS total_test_score INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS perfect_score BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS perfect_score_discount_used BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_claimed BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS current_test_lesson INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS current_test_question INTEGER DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS test_mode BOOLEAN DEFAULT FALSE`
+    ];
+
+    for (const sql of testSystemMigrations) {
       try {
         await client.query(sql);
       } catch (e) {}
@@ -725,8 +790,7 @@ async function seedDefaultData(client) {
       INSERT INTO lessons (lesson_number, title, content, delay_hours) VALUES
       (1, 'SMM nima va nima uchun kerak?', 'Bu darsda SMM asoslarini organasiz.', 0),
       (2, 'Kontent strategiyasi', 'Bu darsda kontent yaratishni organasiz.', 24),
-      (3, 'Targetlangan reklama', 'Bu darsda reklama asoslarini organasiz.', 24),
-      (4, 'Analitika va natijalar', 'Bu darsda statistikani tahlil qilishni organasiz.', 24)
+      (3, 'Targetlangan reklama va analitika', 'Bu darsda reklama va statistikani organasiz.', 24)
       ON CONFLICT (lesson_number) DO NOTHING
     `);
     console.log('Lessons seeded');
@@ -816,10 +880,48 @@ async function seedDefaultData(client) {
       ('referral_enabled', 'true'),
       ('referral_required_count', '3'),
       ('referral_discount_percent', '50'),
-      ('inactivity_reminder_enabled', 'true')
+      ('inactivity_reminder_enabled', 'true'),
+      ('perfect_score_discount_percent', '30'),
+      ('bonus_enabled', 'true')
     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
   `);
   console.log('Referral and inactivity settings seeded');
+
+  // Seed test questions for 3 lessons (5 questions each)
+  const { rows: testCount } = await client.query('SELECT COUNT(*) FROM lesson_tests');
+  if (parseInt(testCount[0].count) === 0) {
+    const testQuestions = [
+      // Lesson 1: SMM nima va nima uchun kerak?
+      { lesson: 1, order: 1, text: 'SMM qanday so\'zning qisqartmasi?', a: 'Social Media Marketing', b: 'Social Media Management', c: 'Simple Marketing Method', d: 'Sales Media Marketing', correct: 'a' },
+      { lesson: 1, order: 2, text: 'SMM ning asosiy maqsadi nima?', a: 'Faqat rasm joylash', b: 'Auditoriya bilan aloqa va brendni rivojlantirish', c: 'Faqat reklama berish', d: 'Veb-sayt yaratish', correct: 'b' },
+      { lesson: 1, order: 3, text: 'Qaysi ijtimoiy tarmoq biznes uchun eng muhim?', a: 'Faqat Instagram', b: 'Faqat Telegram', c: 'Maqsadli auditoriya qaerdaligi', d: 'Faqat Facebook', correct: 'c' },
+      { lesson: 1, order: 4, text: 'SMM mutaxassisining asosiy vazifasi nima?', a: 'Faqat postlar yozish', b: 'Strategiya, kontent va auditoriya bilan ishlash', c: 'Faqat reklama sozlash', d: 'Faqat dizayn qilish', correct: 'b' },
+      { lesson: 1, order: 5, text: 'SMM nima uchun muhim?', a: 'Boshqa marketingdan qimmatroq', b: 'Faqat katta kompaniyalar uchun', c: 'Brendni tanitmaydi', d: 'Kam xarajat bilan keng auditoriyaga yetish', correct: 'd' },
+
+      // Lesson 2: Kontent strategiyasi
+      { lesson: 2, order: 1, text: 'Kontent strategiyasi nima?', a: 'Faqat postlar yozish', b: 'Maqsadli kontent yaratish va tarqatish rejasi', c: 'Faqat rasm tanlash', d: 'Hashtag qo\'shish', correct: 'b' },
+      { lesson: 2, order: 2, text: 'Qanday kontent eng ko\'p engage oladi?', a: 'Faqat matnli postlar', b: 'Faqat reklama postlari', c: 'Video va interaktiv kontent', d: 'Faqat rasmlar', correct: 'c' },
+      { lesson: 2, order: 3, text: 'Kontent rejasi nima uchun kerak?', a: 'Shunchaki zamonaviy bo\'lish', b: 'Muntazam va sifatli kontent uchun', c: 'Faqat vaqtni o\'ldirish', d: 'Algoritmlarni aldash', correct: 'b' },
+      { lesson: 2, order: 4, text: 'Eng yaxshi post vaqtini qanday aniqlash mumkin?', a: 'Har doim ertalab', b: 'Auditoriya faolligini tahlil qilish', c: 'Har doim kechqurun', d: 'Vaqt muhim emas', correct: 'b' },
+      { lesson: 2, order: 5, text: 'User-generated content (UGC) nima?', a: 'AI yaratgan kontent', b: 'Foydalanuvchilar yaratgan kontent', c: 'Faqat reklama', d: 'Bot xabarlari', correct: 'b' },
+
+      // Lesson 3: Targetlangan reklama va analitika
+      { lesson: 3, order: 1, text: 'Target reklama nima?', a: 'Hammaga bir xil reklama', b: 'Aniq auditoriyaga mo\'ljallangan reklama', c: 'Faqat TV reklama', d: 'Bepul reklama', correct: 'b' },
+      { lesson: 3, order: 2, text: 'CPM nima degani?', a: 'Cost Per Message', b: 'Cost Per Mile (1000 ko\'rish narxi)', c: 'Click Per Minute', d: 'Content Per Month', correct: 'b' },
+      { lesson: 3, order: 3, text: 'Conversion rate nima?', a: 'Harakatga o\'tgan foiz', b: 'Post soni', c: 'Follower soni', d: 'Like soni', correct: 'a' },
+      { lesson: 3, order: 4, text: 'Retargeting nima?', a: 'Yangi auditoriyaga reklama', b: 'Oldin qiziqish bildirgan odamlarga qayta reklama', c: 'Reklama o\'chirish', d: 'Budjet kamaytirish', correct: 'b' },
+      { lesson: 3, order: 5, text: 'A/B test nima uchun kerak?', a: 'Faqat chiroyli ko\'rinish', b: 'Qaysi variant yaxshiroq ishlashini aniqlash', c: 'Faqat vaqt o\'tkazish', d: 'Algoritm aldash', correct: 'b' }
+    ];
+
+    for (const q of testQuestions) {
+      await client.query(`
+        INSERT INTO lesson_tests (lesson_number, question_order, question_text, option_a, option_b, option_c, option_d, correct_answer)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (lesson_number, question_order) DO NOTHING
+      `, [q.lesson, q.order, q.text, q.a, q.b, q.c, q.d, q.correct]);
+    }
+    console.log('Test questions seeded (15 questions for 3 lessons)');
+  }
 }
 
 export async function getUser(telegramId) {
@@ -863,7 +965,12 @@ const ALLOWED_USER_UPDATE_FIELDS = new Set([
   // Subscription bypass
   'subscription_check_attempts', 'subscription_bypassed', 'subscription_asked_at',
   // Traffic tracking
-  'source', 'utm_campaign'
+  'source', 'utm_campaign',
+  // Test system
+  'test_1_score', 'test_1_passed', 'test_2_score', 'test_2_passed',
+  'test_3_score', 'test_3_passed', 'total_test_score', 'perfect_score',
+  'perfect_score_discount_used', 'bonus_claimed',
+  'current_test_lesson', 'current_test_question', 'test_mode'
 ]);
 
 // Protected fields that require special functions to update
@@ -3751,4 +3858,250 @@ export async function deleteAppSetting(key) {
   } catch (e) {
     // Ignore errors
   }
+}
+
+// ============ LESSON TEST SYSTEM FUNCTIONS ============
+
+// Get all tests for a lesson
+export async function getLessonTests(lessonNumber) {
+  const { rows } = await pool.query(
+    'SELECT * FROM lesson_tests WHERE lesson_number = $1 AND is_active = TRUE ORDER BY question_order',
+    [lessonNumber]
+  );
+  return rows;
+}
+
+// Get all lesson tests (for admin)
+export async function getAllLessonTests() {
+  const { rows } = await pool.query(
+    'SELECT * FROM lesson_tests ORDER BY lesson_number, question_order'
+  );
+  return rows;
+}
+
+// Get specific test question by lesson and order
+export async function getTestQuestion(lessonNumber, questionOrder) {
+  const { rows } = await pool.query(
+    'SELECT * FROM lesson_tests WHERE lesson_number = $1 AND question_order = $2',
+    [lessonNumber, questionOrder]
+  );
+  return rows[0] || null;
+}
+
+// Get test question by ID
+export async function getTestQuestionById(id) {
+  const { rows } = await pool.query(
+    'SELECT * FROM lesson_tests WHERE id = $1',
+    [id]
+  );
+  return rows[0] || null;
+}
+
+// Create test question
+export async function createTestQuestion(data) {
+  const { rows } = await pool.query(`
+    INSERT INTO lesson_tests (lesson_number, question_order, question_text, option_a, option_b, option_c, option_d, correct_answer)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING *
+  `, [
+    data.lesson_number,
+    data.question_order,
+    data.question_text,
+    data.option_a,
+    data.option_b,
+    data.option_c,
+    data.option_d,
+    data.correct_answer.toLowerCase()
+  ]);
+  return rows[0];
+}
+
+// Update test question
+export async function updateTestQuestion(id, data) {
+  const allowedFields = ['question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'is_active', 'question_order'];
+  const updates = [];
+  const values = [id];
+  let paramIndex = 2;
+
+  for (const [key, value] of Object.entries(data)) {
+    if (allowedFields.includes(key)) {
+      updates.push(`${key} = $${paramIndex++}`);
+      values.push(key === 'correct_answer' ? value.toLowerCase() : value);
+    }
+  }
+
+  if (updates.length === 0) return null;
+
+  const { rows } = await pool.query(`
+    UPDATE lesson_tests SET ${updates.join(', ')} WHERE id = $1 RETURNING *
+  `, values);
+
+  return rows[0];
+}
+
+// Delete test question
+export async function deleteTestQuestion(id) {
+  await pool.query('DELETE FROM lesson_tests WHERE id = $1', [id]);
+}
+
+// Bulk create test questions for a lesson
+export async function bulkCreateTestQuestions(lessonNumber, questions) {
+  const results = [];
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
+    const result = await createTestQuestion({
+      lesson_number: lessonNumber,
+      question_order: i + 1,
+      question_text: q.question_text,
+      option_a: q.option_a,
+      option_b: q.option_b,
+      option_c: q.option_c,
+      option_d: q.option_d,
+      correct_answer: q.correct_answer
+    });
+    results.push(result);
+  }
+  return results;
+}
+
+// Save user's answer to a test question
+export async function saveUserTestAnswer(telegramId, lessonNumber, questionOrder, userAnswer, isCorrect, questionId = null) {
+  const { rows } = await pool.query(`
+    INSERT INTO user_test_results (telegram_id, lesson_number, question_order, question_id, user_answer, is_correct)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    ON CONFLICT (telegram_id, lesson_number, question_order) DO UPDATE SET
+      user_answer = EXCLUDED.user_answer,
+      is_correct = EXCLUDED.is_correct,
+      answered_at = NOW()
+    RETURNING *
+  `, [telegramId, lessonNumber, questionOrder, questionId, userAnswer ? userAnswer.toLowerCase() : null, isCorrect]);
+  return rows[0];
+}
+
+// Get user's test results for a lesson
+export async function getUserLessonTestResults(telegramId, lessonNumber) {
+  const { rows } = await pool.query(`
+    SELECT utr.*, lt.question_text, lt.option_a, lt.option_b, lt.option_c, lt.option_d, lt.correct_answer
+    FROM user_test_results utr
+    LEFT JOIN lesson_tests lt ON utr.question_id = lt.id
+    WHERE utr.telegram_id = $1 AND utr.lesson_number = $2
+    ORDER BY utr.question_order
+  `, [telegramId, lessonNumber]);
+  return rows;
+}
+
+// Get user's test score for a lesson
+export async function getUserLessonTestScore(telegramId, lessonNumber) {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(*)::int as total_questions,
+      COUNT(*) FILTER (WHERE is_correct = TRUE)::int as correct_answers
+    FROM user_test_results
+    WHERE telegram_id = $1 AND lesson_number = $2
+  `, [telegramId, lessonNumber]);
+  return rows[0] || { total_questions: 0, correct_answers: 0 };
+}
+
+// Get user's all test results
+export async function getUserAllTestResults(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT
+      lesson_number,
+      COUNT(*)::int as total_questions,
+      COUNT(*) FILTER (WHERE is_correct = TRUE)::int as correct_answers
+    FROM user_test_results
+    WHERE telegram_id = $1
+    GROUP BY lesson_number
+    ORDER BY lesson_number
+  `, [telegramId]);
+  return rows;
+}
+
+// Check if user has perfect score (all 15 questions correct across 3 lessons)
+export async function checkUserPerfectScore(telegramId) {
+  const results = await getUserAllTestResults(telegramId);
+  if (results.length < 3) return false;
+
+  const totalCorrect = results.reduce((sum, r) => sum + r.correct_answers, 0);
+  const totalQuestions = results.reduce((sum, r) => sum + r.total_questions, 0);
+
+  // Perfect score: all 15 questions (5 per lesson x 3 lessons) answered correctly
+  return totalQuestions >= 15 && totalCorrect === totalQuestions;
+}
+
+// Reset user's test results for a lesson (for retry)
+export async function resetUserLessonTest(telegramId, lessonNumber) {
+  await pool.query(
+    'DELETE FROM user_test_results WHERE telegram_id = $1 AND lesson_number = $2',
+    [telegramId, lessonNumber]
+  );
+}
+
+// Get test statistics (for admin dashboard)
+export async function getTestStatistics() {
+  const { rows: lessonStats } = await pool.query(`
+    SELECT
+      lesson_number,
+      COUNT(DISTINCT telegram_id)::int as total_takers,
+      COUNT(*)::int as total_answers,
+      COUNT(*) FILTER (WHERE is_correct = TRUE)::int as correct_answers,
+      ROUND(100.0 * COUNT(*) FILTER (WHERE is_correct = TRUE) / NULLIF(COUNT(*), 0), 1) as success_rate
+    FROM user_test_results
+    GROUP BY lesson_number
+    ORDER BY lesson_number
+  `);
+
+  const { rows: questionStats } = await pool.query(`
+    SELECT
+      lt.id,
+      lt.lesson_number,
+      lt.question_order,
+      LEFT(lt.question_text, 50) as question_preview,
+      COUNT(utr.id)::int as total_attempts,
+      COUNT(*) FILTER (WHERE utr.is_correct = TRUE)::int as correct_count,
+      ROUND(100.0 * COUNT(*) FILTER (WHERE utr.is_correct = TRUE) / NULLIF(COUNT(utr.id), 0), 1) as success_rate
+    FROM lesson_tests lt
+    LEFT JOIN user_test_results utr ON lt.id = utr.question_id
+    GROUP BY lt.id, lt.lesson_number, lt.question_order, lt.question_text
+    ORDER BY lt.lesson_number, lt.question_order
+  `);
+
+  const { rows: passStats } = await pool.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE test_1_passed = TRUE)::int as test_1_passed_count,
+      COUNT(*) FILTER (WHERE test_2_passed = TRUE)::int as test_2_passed_count,
+      COUNT(*) FILTER (WHERE test_3_passed = TRUE)::int as test_3_passed_count,
+      COUNT(*) FILTER (WHERE perfect_score = TRUE)::int as perfect_score_count,
+      COUNT(*) FILTER (WHERE test_mode = TRUE)::int as currently_testing
+    FROM users
+    WHERE test_1_passed = TRUE OR test_2_passed = TRUE OR test_3_passed = TRUE OR test_mode = TRUE
+  `);
+
+  return {
+    lessonStats,
+    questionStats,
+    passStats: passStats[0] || {}
+  };
+}
+
+// Get users who need test reminders (started but didn't finish)
+export async function getUsersWithIncompleteTests() {
+  const { rows } = await pool.query(`
+    SELECT u.telegram_id, u.full_name, u.current_test_lesson, u.current_test_question
+    FROM users u
+    WHERE u.test_mode = TRUE AND u.current_test_question > 0
+  `);
+  return rows;
+}
+
+// Count questions per lesson
+export async function getTestQuestionsCount() {
+  const { rows } = await pool.query(`
+    SELECT lesson_number, COUNT(*)::int as question_count
+    FROM lesson_tests
+    WHERE is_active = TRUE
+    GROUP BY lesson_number
+    ORDER BY lesson_number
+  `);
+  return rows;
 }
