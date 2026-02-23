@@ -2966,7 +2966,7 @@ bot.on('video_note', async (ctx) => {
  * Send pitch/sales offer to user after completing all lessons and receiving gift
  */
 async function sendBonusOffer(telegramId, isPerfect) {
-  // Show subscription plans with discount if perfect score
+  const user = await db.getUser(telegramId);
   const discountPercent = isPerfect ?
     parseInt(await db.getSetting('perfect_score_discount_percent') || '30') : 0;
 
@@ -2975,6 +2975,42 @@ async function sendBonusOffer(telegramId, isPerfect) {
     await db.updateUser(telegramId, { perfect_score_discount_available: discountPercent });
   }
 
+  // PITCH MESSAGE - emotional appeal and benefits
+  let pitchMessage = '';
+
+  if (isPerfect) {
+    pitchMessage = `🏆🏆🏆 <b>WOW! Siz haqiqiy talantli ekansiz!</b>\n\n` +
+      `Barcha testlardan 100% natija - bu kam odamda bor!\n\n` +
+      `Sizning bilim olishga bo'lgan ishtiyoqingiz meni hayratda qoldirdi! 🌟\n\n` +
+      `Shunday odamlarga biz maxsus <b>${discountPercent}% chegirma</b> beramiz!\n\n` +
+      `─────────────────\n\n` +
+      `📺 <b>Premium kanalda nimalar bor?</b>\n\n` +
+      `✅ Har hafta yangi strategiyalar va taktikalar\n` +
+      `✅ Real case-studylar va tahlillar\n` +
+      `✅ Ekskluziv shablonlar va resurslar\n` +
+      `✅ Savollaringizga tezkor javoblar\n` +
+      `✅ Premium hamjamiyat a'zoligi\n\n` +
+      `🎯 <b>Bu investitsiya o'zini 1 oyda qaytaradi!</b>`;
+  } else {
+    pitchMessage = `💼 <b>Keyingi qadam!</b>\n\n` +
+      `${user?.full_name || 'Do\'stim'}, siz bepul darslarni muvaffaqiyatli tugatdingiz!\n\n` +
+      `Lekin bu faqat boshlanishi... 🚀\n\n` +
+      `Haqiqiy natijalar uchun chuqurroq bilim kerak!\n\n` +
+      `─────────────────\n\n` +
+      `📺 <b>Premium kanalda nimalar bor?</b>\n\n` +
+      `✅ Har hafta yangi strategiyalar va taktikalar\n` +
+      `✅ Real case-studylar va tahlillar\n` +
+      `✅ Ekskluziv shablonlar va resurslar\n` +
+      `✅ Savollaringizga tezkor javoblar\n` +
+      `✅ Premium hamjamiyat a'zoligi\n\n` +
+      `🎯 <b>Bu investitsiya o'zini 1 oyda qaytaradi!</b>`;
+  }
+
+  await bot.telegram.sendMessage(telegramId, pitchMessage, { parse_mode: 'HTML' });
+
+  await delay(3000);
+
+  // Now show subscription plans
   await sendSalesPitch(telegramId, discountPercent);
 }
 
