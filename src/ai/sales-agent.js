@@ -1,8 +1,13 @@
-// AI Sales Agent - Claude 3.5 Sonnet (JARVIS Mode)
+// AI Sales Agent - Claude Haiku 4.5 (JARVIS Mode)
 import Anthropic from '@anthropic-ai/sdk';
 import * as db from '../database.js';
 
-const client = new Anthropic({ apiKey: process.env.tg_bot_claude });
+// Check API key on startup
+const apiKey = process.env.tg_bot_claude || process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  console.error('WARNING: Claude API key not found! Check environment variables: tg_bot_claude, CLAUDE_API_KEY, or ANTHROPIC_API_KEY');
+}
+const client = new Anthropic({ apiKey });
 
 // Available tools for Claude
 const AVAILABLE_TOOLS = [
@@ -375,7 +380,9 @@ export async function chatWithSalesAgent(telegramId, userMessage) {
     };
 
   } catch (error) {
-    console.error('JARVIS error:', error);
+    console.error('JARVIS error:', error.message);
+    console.error('Full error:', JSON.stringify(error, null, 2));
+    console.error('API Key exists:', !!process.env.tg_bot_claude);
     return {
       success: false,
       message: "Uzr, texnik nosozlik. Birozdan keyin qaytadan yozing.",
