@@ -1741,7 +1741,7 @@ Kanalda siz uchun foydali:
 
 Obuna bo'lgandan keyin "✅ Obuna bo'ldim" tugmasini bosing.`;
 
-  await bot.telegram.sendMessage(telegramId, msg, {
+  const sentMessage = await bot.telegram.sendMessage(telegramId, msg, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
       [Markup.button.url('📢 Kanalga o\'tish', channelLink)],
@@ -1755,6 +1755,79 @@ Obuna bo'lgandan keyin "✅ Obuna bo'ldim" tugmasini bosing.`;
     pending_lesson: nextLesson,
     subscription_asked_at: new Date().toISOString()
   });
+
+  // Start automatic subscription checking in background
+  startSubscriptionCheck(telegramId, nextLesson, sentMessage.message_id);
+}
+
+// Automatic subscription checker - runs in background
+async function startSubscriptionCheck(telegramId, nextLesson, messageId) {
+  const maxChecks = 60; // Check for 5 minutes max (60 * 5 seconds)
+  const checkInterval = 5000; // 5 seconds
+
+  for (let i = 0; i < maxChecks; i++) {
+    await delay(checkInterval);
+
+    // Get fresh user data
+    const user = await db.getUser(telegramId);
+
+    // Stop if user already processed (button pressed or no longer waiting)
+    if (!user?.waiting_subscription) {
+      console.log(`🔍 Auto-check stopped for ${telegramId}: no longer waiting`);
+      return;
+    }
+
+    // Check subscription
+    const isSubscribed = await checkFreeChannelSubscription(telegramId);
+
+    if (isSubscribed) {
+      console.log(`🎉 Auto-detected subscription for ${telegramId}!`);
+
+      // Calculate subscription time
+      let celebrationMsg = '🎉 Ajoyib! Obuna uchun rahmat!';
+      if (user.subscription_asked_at) {
+        const askedAt = new Date(user.subscription_asked_at);
+        const now = new Date();
+        const seconds = Math.round((now - askedAt) / 1000);
+
+        if (seconds < 60) {
+          celebrationMsg = `🚀 Vooow! Atigi ${seconds} soniyada obuna bo'ldingiz! Tezkor ekansiz! 🎉`;
+        } else if (seconds < 300) {
+          const mins = Math.floor(seconds / 60);
+          celebrationMsg = `✨ Zo'r! ${mins} daqiqada obuna bo'ldingiz! Rahmat! 🎉`;
+        } else {
+          celebrationMsg = '🎉 Kanalimizga obuna bo\'lganingiz uchun katta rahmat!';
+        }
+      }
+
+      // Update user
+      await db.updateUser(telegramId, {
+        waiting_subscription: false,
+        subscribed_free_channel: true,
+        pending_lesson: null,
+        subscription_check_attempts: 0,
+        subscription_asked_at: null
+      });
+
+      // Try to edit the original message to remove buttons
+      try {
+        await bot.telegram.editMessageReplyMarkup(telegramId, messageId, undefined, { inline_keyboard: [] });
+      } catch (e) {
+        // Message might be too old or already edited
+      }
+
+      // Send celebration and continue
+      await bot.telegram.sendMessage(telegramId, celebrationMsg + '\n\nEndi davom etamiz...');
+      await delay(1500);
+
+      // Continue with lesson test
+      const prevLesson = nextLesson - 1;
+      await startLessonTest(telegramId, prevLesson);
+      return;
+    }
+  }
+
+  console.log(`⏰ Auto-check timeout for ${telegramId} after 5 minutes`);
 }
 
 // Check subscription button handler
