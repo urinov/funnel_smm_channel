@@ -1,6 +1,7 @@
 import { Telegraf, Markup } from 'telegraf';
 import * as db from './database.js';
 import { logAudit, AuditEvents } from './utils/security.js';
+import { chatWithSalesAgent } from './ai/sales-agent.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BASE_URL = process.env.BASE_URL;
@@ -1114,13 +1115,98 @@ bot.on('text', async (ctx, next) => {
       }
     }
 
-    if (user.funnel_step > 0 && user.funnel_step < 10 && !isAdmin(telegramId)) {
-      await ctx.reply('Darslar davom etmoqda...');
+    // AI Sales Agent - handle all other messages
+    if (user.funnel_step > 0 || user.current_lesson > 0) {
+      await handleAIChat(ctx, telegramId, text, user);
     }
   } catch (e) {
     console.error('Text error:', e);
   }
 });
+
+// AI Chat Handler
+async function handleAIChat(ctx, telegramId, text, user) {
+  try {
+    // Check if AI is enabled
+    const aiEnabled = await db.getBotMessage('ai_sales_enabled');
+    if (aiEnabled === 'false') {
+      // AI disabled - simple response
+      if (!isAdmin(telegramId)) {
+        await ctx.reply('Savollaringiz bo\'lsa, admin bilan bog\'laning: @admin');
+      }
+      return;
+    }
+
+    // Show typing indicator
+    await ctx.sendChatAction('typing');
+
+    // Get AI response
+    const response = await chatWithSalesAgent(telegramId, text);
+
+    if (!response.success) {
+      if (response.action === 'ai_disabled') {
+        return; // Silently ignore
+      }
+      await ctx.reply(response.message || 'Uzr, texnik nosozlik.');
+      return;
+    }
+
+    // Send AI message
+    if (response.message) {
+      await ctx.reply(response.message, { parse_mode: 'HTML' });
+    }
+
+    // Handle AI actions
+    if (response.action) {
+      await delay(500);
+      await handleAIAction(ctx, telegramId, response.action, response.params, user);
+    }
+
+  } catch (e) {
+    console.error('AI Chat error:', e);
+    // Fallback - don't crash
+  }
+}
+
+// Handle AI-triggered actions
+async function handleAIAction(ctx, telegramId, action, params, user) {
+  try {
+    switch (action) {
+      case 'show_payment':
+        await sendSalesPitch(telegramId, params.discount || 0);
+        break;
+
+      case 'show_plans':
+        await sendSalesPitch(telegramId, 0);
+        break;
+
+      case 'send_lesson_info':
+        const lesson = await db.getLesson(params.lesson_number || 1);
+        if (lesson) {
+          await ctx.reply(
+            `📚 <b>${params.lesson_number}-dars: ${lesson.title}</b>\n\n${lesson.content || ''}`,
+            { parse_mode: 'HTML' }
+          );
+        }
+        break;
+
+      case 'schedule_followup':
+        // Log for now - can implement scheduler later
+        console.log(`📅 AI scheduled followup for ${telegramId}: ${params.message_type} in ${params.delay_hours}h`);
+        break;
+
+      case 'end_conversation':
+        // Just log
+        console.log(`👋 AI ended conversation with ${telegramId}: ${params.reason}`);
+        break;
+
+      default:
+        console.log(`⚠️ Unknown AI action: ${action}`);
+    }
+  } catch (e) {
+    console.error('AI Action error:', e);
+  }
+}
 
 async function startLessons(telegramId) {
   await db.updateUser(telegramId, { funnel_step: 1 });

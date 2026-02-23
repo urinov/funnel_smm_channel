@@ -2642,6 +2642,51 @@ app.get('/api/promo-codes/:id/stats', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ AI AGENT API ============
+
+app.get('/api/ai-settings', authMiddleware, async (req, res) => {
+  try {
+    const { getBotMessage } = await import('./database.js');
+    const settings = {
+      enabled: (await getBotMessage('ai_sales_enabled')) !== 'false',
+      max_discount: parseInt(await getBotMessage('ai_max_discount')) || 30,
+      first_offer_discount: parseInt(await getBotMessage('ai_first_offer_discount')) || 0,
+      discount_rules: await getBotMessage('ai_discount_rules') || '',
+      sales_prompt: await getBotMessage('ai_sales_prompt') || ''
+    };
+    res.json(settings);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/ai-settings', authMiddleware, async (req, res) => {
+  try {
+    const { updateBotMessage } = await import('./database.js');
+    const { enabled, max_discount, first_offer_discount, discount_rules, sales_prompt } = req.body;
+
+    if (enabled !== undefined) await updateBotMessage('ai_sales_enabled', String(enabled));
+    if (max_discount !== undefined) await updateBotMessage('ai_max_discount', String(max_discount));
+    if (first_offer_discount !== undefined) await updateBotMessage('ai_first_offer_discount', String(first_offer_discount));
+    if (discount_rules !== undefined) await updateBotMessage('ai_discount_rules', discount_rules);
+    if (sales_prompt !== undefined) await updateBotMessage('ai_sales_prompt', sales_prompt);
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/ai-stats', authMiddleware, async (req, res) => {
+  try {
+    const { getAIConversationStats } = await import('./database.js');
+    const stats = await getAIConversationStats();
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ AUDIT LOG API ============
 
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {

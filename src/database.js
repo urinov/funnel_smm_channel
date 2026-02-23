@@ -635,6 +635,22 @@ export async function initDatabase() {
       await client.query(`CREATE INDEX IF NOT EXISTS idx_user_test_results_lesson ON user_test_results(telegram_id, lesson_number)`);
     } catch (e) {}
 
+    // ============ AI CONVERSATIONS TABLE ============
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ai_conversations (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        role VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations(telegram_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_ai_conversations_time ON ai_conversations(telegram_id, created_at)`);
+    } catch (e) {}
+
     // ============ REFERRAL SYSTEM MIGRATIONS ============
     await client.query(`
       CREATE TABLE IF NOT EXISTS referrals (
@@ -990,7 +1006,10 @@ const ALLOWED_USER_UPDATE_FIELDS = new Set([
   'test_1_score', 'test_1_passed', 'test_2_score', 'test_2_passed',
   'test_3_score', 'test_3_passed', 'total_test_score', 'perfect_score',
   'perfect_score_discount_used', 'bonus_claimed',
-  'current_test_lesson', 'current_test_question', 'test_mode'
+  'current_test_lesson', 'current_test_question', 'test_mode',
+  // AI Sales Agent
+  'last_discount_offered', 'last_offer_at', 'rejected_offers', 'ai_chat_enabled',
+  'test_1_attempt', 'test_2_attempt', 'test_3_attempt'
 ]);
 
 // Protected fields that require special functions to update
@@ -4124,4 +4143,45 @@ export async function getTestQuestionsCount() {
     ORDER BY lesson_number
   `);
   return rows;
+}
+
+// ============ AI CONVERSATION FUNCTIONS ============
+
+// Save AI conversation message
+export async function saveAIConversation(telegramId, role, content) {
+  await pool.query(`
+    INSERT INTO ai_conversations (telegram_id, role, content)
+    VALUES ($1, $2, $3)
+  `, [telegramId, role, content]);
+}
+
+// Get AI conversation history
+export async function getAIConversationHistory(telegramId, limit = 10) {
+  const { rows } = await pool.query(`
+    SELECT role, content, created_at
+    FROM ai_conversations
+    WHERE telegram_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2
+  `, [telegramId, limit]);
+  return rows.reverse(); // Return in chronological order
+}
+
+// Clear AI conversation history for user
+export async function clearAIConversation(telegramId) {
+  await pool.query('DELETE FROM ai_conversations WHERE telegram_id = $1', [telegramId]);
+}
+
+// Get AI conversation stats
+export async function getAIConversationStats() {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(DISTINCT telegram_id) as total_users,
+      COUNT(*) as total_messages,
+      COUNT(CASE WHEN role = 'user' THEN 1 END) as user_messages,
+      COUNT(CASE WHEN role = 'assistant' THEN 1 END) as ai_messages,
+      COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as messages_today
+    FROM ai_conversations
+  `);
+  return rows[0];
 }

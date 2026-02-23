@@ -3445,6 +3445,7 @@
       <div class="sidebar-item" data-tab="renewal" data-tooltip="Yangilash" aria-label="Yangilash"><span class="material-symbols-outlined" aria-hidden="true">autorenew</span><span class="sidebar-label">Yangilash</span></div>
       <div class="sidebar-item" data-tab="promo" data-tooltip="Promokodlar" aria-label="Promokodlar"><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span><span class="sidebar-label">Promokod</span></div>
       <div class="sidebar-item" data-tab="referrals" data-tooltip="Referallar" aria-label="Referallar"><span class="material-symbols-outlined" aria-hidden="true">share</span><span class="sidebar-label">Referallar</span></div>
+      <div class="sidebar-item" data-tab="ai-agent" data-tooltip="AI Agent" aria-label="AI Agent"><span class="material-symbols-outlined" aria-hidden="true">smart_toy</span><span class="sidebar-label">AI Agent</span></div>
       <div class="sidebar-item" data-tab="audit" data-tooltip="Audit" aria-label="Audit"><span class="material-symbols-outlined" aria-hidden="true">history</span><span class="sidebar-label">Audit</span></div>
     </nav>
 
@@ -5455,6 +5456,82 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
       </div>
     </div>
 
+    <!-- AI Agent Tab -->
+    <div id="tab-ai-agent" class="hidden">
+      <!-- AI Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-purple-600" id="aiTotalConversations">-</div>
+          <div class="text-sm text-gray-500">Jami suhbatlar</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-blue-600" id="aiTotalMessages">-</div>
+          <div class="text-sm text-gray-500">Jami xabarlar</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-green-600" id="aiMessagesToday">-</div>
+          <div class="text-sm text-gray-500">Bugun</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold" id="aiStatus">-</div>
+          <div class="text-sm text-gray-500">Holat</div>
+        </div>
+      </div>
+
+      <!-- AI Settings -->
+      <div class="card p-5 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🤖 AI Sales Agent Sozlamalari</h3>
+
+        <!-- Enable/Disable -->
+        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+          <input type="checkbox" id="aiSalesEnabled" class="w-6 h-6 accent-purple-600" onchange="toggleAISales()">
+          <div>
+            <label class="font-medium text-gray-800">AI Sales Agent yoqilgan</label>
+            <p class="text-sm text-gray-500">AI userlar bilan suhbatlashadi va sotishga yordam beradi</p>
+          </div>
+        </div>
+
+        <!-- Max Discount -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Maksimum chegirma (%)</label>
+            <input type="number" id="aiMaxDiscount" class="input" value="30" min="0" max="50">
+            <p class="text-xs text-gray-400 mt-1">AI bu foizdan ortiq chegirma bera olmaydi</p>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Birinchi taklif chegirmasi (%)</label>
+            <input type="number" id="aiFirstOfferDiscount" class="input" value="0" min="0" max="30">
+            <p class="text-xs text-gray-400 mt-1">Birinchi taklifda chegirma (0 = yo'q)</p>
+          </div>
+        </div>
+
+        <!-- Discount Rules -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-600 mb-1 block">Chegirma qoidalari</label>
+          <textarea id="aiDiscountRules" class="input h-32 resize-none font-mono text-sm" placeholder="Daromad bo'yicha:
+- '1 mln gacha' → max 30%
+- '1-3 mln' → max 25%
+- '3-7 mln' → max 15%"></textarea>
+          <p class="text-xs text-gray-400 mt-1">AI shu qoidalarga amal qiladi</p>
+        </div>
+      </div>
+
+      <!-- AI Prompt -->
+      <div class="card p-5 mb-6">
+        <h3 class="font-semibold text-gray-800 mb-4">📝 AI Prompt (Xulq-atvor)</h3>
+        <textarea id="aiSalesPrompt" class="input h-64 resize-none font-mono text-sm" placeholder="Sen professional SMM kurs sotuvchisisisan..."></textarea>
+        <p class="text-xs text-gray-400 mt-2">Bu prompt AI ning xulq-atvorini belgilaydi. O'zbek tilida yozing.</p>
+
+        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p class="text-sm text-blue-800"><b>Mavjud o'zgaruvchilar:</b></p>
+          <p class="text-xs text-blue-600 mt-1">{{name}}, {{income}}, {{budget}}, {{occupation}}, {{problem}}, {{lessons_watched}}, {{is_paid}}</p>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button onclick="saveAISettings()" class="btn btn-primary">💾 AI sozlamalarini saqlash</button>
+    </div>
+
     <!-- Audit Log Tab -->
     <div id="tab-audit" class="hidden">
       <div class="card p-5">
@@ -6559,7 +6636,8 @@ const TAB_META = {
   referrals: { title: 'Referallar', subtitle: 'Referral performance va leaderboard' },
   promo: { title: 'Promo kodlar', subtitle: 'Chegirma kodlari va limitlar' },
   audit: { title: 'Audit log', subtitle: 'Tizim bo\'yicha kuzatuv yozuvlari' },
-  settings: { title: 'Sozlamalar', subtitle: 'Global platforma parametrlari' }
+  settings: { title: 'Sozlamalar', subtitle: 'Global platforma parametrlari' },
+  'ai-agent': { title: 'AI Agent', subtitle: 'AI sotuvchi sozlamalari' }
 };
 
 // Charts
@@ -7647,6 +7725,7 @@ async function ensureTabData(tab, force = false) {
   if (tab === 'referrals') await loadReferralData();
   if (tab === 'audit') await loadAuditLogs();
   if (tab === 'tests') await loadTests();
+  if (tab === 'ai-agent') await loadAISettings();
   tabDataState[tab] = Date.now();
 }
 
@@ -12626,6 +12705,83 @@ function getAuditActionBadge(action) {
     'BROADCAST_SENT': '<span class="badge badge-purple">Xabar</span>'
   };
   return badges[action] || `<span class="badge badge-gray">${action}</span>`;
+}
+
+// ========== AI AGENT TAB ==========
+async function loadAISettings() {
+  try {
+    const data = await fetch('/api/ai-settings', { headers: { Authorization: auth } }).then(r => r.json());
+
+    document.getElementById('aiSalesEnabled').checked = data.enabled !== false;
+    document.getElementById('aiMaxDiscount').value = data.max_discount || 30;
+    document.getElementById('aiFirstOfferDiscount').value = data.first_offer_discount || 0;
+    document.getElementById('aiDiscountRules').value = data.discount_rules || '';
+    document.getElementById('aiSalesPrompt').value = data.sales_prompt || '';
+
+    // Update status indicator
+    const statusEl = document.getElementById('aiStatus');
+    if (statusEl) {
+      statusEl.textContent = data.enabled !== false ? 'Yoqilgan' : 'O\'chirilgan';
+      statusEl.className = 'text-3xl font-bold ' + (data.enabled !== false ? 'text-green-600' : 'text-red-500');
+    }
+
+    // Load stats
+    await loadAIStats();
+  } catch (e) {
+    console.error('loadAISettings error:', e);
+    addNotification('AI sozlamalarni yuklashda xato', 'error');
+  }
+}
+
+async function loadAIStats() {
+  try {
+    const stats = await fetch('/api/ai-stats', { headers: { Authorization: auth } }).then(r => r.json());
+
+    document.getElementById('aiTotalConversations').textContent = stats.total_conversations || 0;
+    document.getElementById('aiTotalMessages').textContent = stats.total_messages || 0;
+    document.getElementById('aiMessagesToday').textContent = stats.messages_today || 0;
+  } catch (e) {
+    console.error('loadAIStats error:', e);
+  }
+}
+
+async function saveAISettings() {
+  try {
+    const data = {
+      enabled: document.getElementById('aiSalesEnabled').checked,
+      max_discount: parseInt(document.getElementById('aiMaxDiscount').value) || 30,
+      first_offer_discount: parseInt(document.getElementById('aiFirstOfferDiscount').value) || 0,
+      discount_rules: document.getElementById('aiDiscountRules').value,
+      sales_prompt: document.getElementById('aiSalesPrompt').value
+    };
+
+    await fetch('/api/ai-settings', {
+      method: 'PUT',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    addNotification('AI sozlamalari saqlandi', 'success');
+
+    // Update status indicator
+    const statusEl = document.getElementById('aiStatus');
+    if (statusEl) {
+      statusEl.textContent = data.enabled ? 'Yoqilgan' : 'O\'chirilgan';
+      statusEl.className = 'text-3xl font-bold ' + (data.enabled ? 'text-green-600' : 'text-red-500');
+    }
+  } catch (e) {
+    console.error('saveAISettings error:', e);
+    addNotification('AI sozlamalarni saqlashda xato', 'error');
+  }
+}
+
+function toggleAISales() {
+  const enabled = document.getElementById('aiSalesEnabled').checked;
+  const statusEl = document.getElementById('aiStatus');
+  if (statusEl) {
+    statusEl.textContent = enabled ? 'Yoqilgan' : 'O\'chirilgan';
+    statusEl.className = 'text-3xl font-bold ' + (enabled ? 'text-green-600' : 'text-red-500');
+  }
 }
 
 async function exportCustDevAnswers() {
