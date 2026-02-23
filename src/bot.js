@@ -3253,22 +3253,31 @@ async function sendTestQuestion(telegramId, lessonNumber, questionOrder) {
 
   await db.updateUser(telegramId, { current_test_question: questionOrder });
 
+  // Compact buttons in one row
   const buttons = [
-    [Markup.button.callback(`A) ${question.option_a}`, `test_ans_${question.id}_a`)],
-    [Markup.button.callback(`B) ${question.option_b}`, `test_ans_${question.id}_b`)],
-    [Markup.button.callback(`C) ${question.option_c}`, `test_ans_${question.id}_c`)],
-    [Markup.button.callback(`D) ${question.option_d}`, `test_ans_${question.id}_d`)]
+    Markup.button.callback('  A  ', `test_ans_${question.id}_a`),
+    Markup.button.callback('  B  ', `test_ans_${question.id}_b`),
+    Markup.button.callback('  C  ', `test_ans_${question.id}_c`),
+    Markup.button.callback('  D  ', `test_ans_${question.id}_d`)
   ];
 
   const progressBar = generateProgressBar(questionOrder - 1, QUESTIONS_PER_TEST);
 
+  // Show answers in message text
+  const answersText =
+    `\n\n<b>A)</b> ${question.option_a}\n` +
+    `<b>B)</b> ${question.option_b}\n` +
+    `<b>C)</b> ${question.option_c}\n` +
+    `<b>D)</b> ${question.option_d}`;
+
   await bot.telegram.sendMessage(telegramId,
     `📝 <b>Savol ${questionOrder}/${QUESTIONS_PER_TEST}</b>\n` +
     `${progressBar} ${Math.round(((questionOrder - 1) / QUESTIONS_PER_TEST) * 100)}%\n\n` +
-    `${question.question_text}`,
+    `${question.question_text}` +
+    answersText,
     {
       parse_mode: 'HTML',
-      ...Markup.inlineKeyboard(buttons)
+      ...Markup.inlineKeyboard([buttons]) // All buttons in one row
     }
   );
 }
