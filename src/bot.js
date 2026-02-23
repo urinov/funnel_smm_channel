@@ -3135,12 +3135,33 @@ async function startLessonTest(telegramId, lessonNumber) {
 }
 
 /**
- * Generate progress bar
+ * Generate animated-style progress bar with emoji
  */
-function generateProgressBar(current, total, width = 10) {
+function generateProgressBar(current, total, width = 5) {
+  const percent = Math.round((current / total) * 100);
   const filled = Math.round((current / total) * width);
   const empty = width - filled;
-  return '▓'.repeat(filled) + '░'.repeat(empty);
+
+  // Different styles based on progress
+  if (percent === 100) {
+    // Completed - celebration style
+    return '🟢'.repeat(width) + ' ✨';
+  } else if (percent >= 80) {
+    // Almost done - green with sparkle
+    return '🟩'.repeat(filled) + '⬜'.repeat(empty);
+  } else if (percent >= 60) {
+    // Good progress - blue/green mix
+    return '🟦'.repeat(Math.ceil(filled/2)) + '🟩'.repeat(Math.floor(filled/2)) + '⬜'.repeat(empty);
+  } else if (percent >= 40) {
+    // Middle - blue
+    return '🟦'.repeat(filled) + '⬜'.repeat(empty);
+  } else if (percent >= 20) {
+    // Starting - purple/blue
+    return '🟪'.repeat(Math.ceil(filled/2)) + '🟦'.repeat(Math.floor(filled/2)) + '⬜'.repeat(empty);
+  } else {
+    // Beginning - purple
+    return '🟪'.repeat(filled) + '⬜'.repeat(empty);
+  }
 }
 
 /**
@@ -3459,9 +3480,15 @@ bot.action(/^test_ans_(\d+)_([abcd])$/, async (ctx) => {
 
     // Show loading animation on the message
     const progressBar = generateProgressBar(question.question_order, QUESTIONS_PER_TEST);
+    const percent = Math.round((question.question_order / QUESTIONS_PER_TEST) * 100);
+    const loadingEmoji = percent >= 80 ? '🚀' : percent >= 60 ? '⚡' : percent >= 40 ? '💫' : '⏳';
+    const statusText = percent >= 80 ? 'Deyarli tayyor!' : percent >= 60 ? 'Zo\'r ketayapsiz!' : percent >= 40 ? 'Davom etamiz...' : 'Javob saqlandi...';
+
     await ctx.editMessageText(
-      `⏳ <b>Javob saqlandi...</b>\n\n` +
-      `${progressBar} ${Math.round((question.question_order / QUESTIONS_PER_TEST) * 100)}%`,
+      `${loadingEmoji} <b>${statusText}</b>\n\n` +
+      `${progressBar}\n` +
+      `<code>━━━━━━━━━━━━━━━━━━━━</code>\n` +
+      `📊 <b>${percent}%</b> bajarildi`,
       { parse_mode: 'HTML' }
     );
 
