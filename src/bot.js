@@ -3165,6 +3165,40 @@ function generateProgressBar(current, total, width = 5) {
 }
 
 /**
+ * Generate smooth animated progress bar with gradient effect
+ */
+function generateAnimatedBar(percent, width = 10) {
+  const filled = Math.round((percent / 100) * width);
+  const empty = width - filled;
+
+  // Gradient colors based on fill level
+  let bar = '';
+  for (let i = 0; i < filled; i++) {
+    const pos = i / width;
+    if (pos < 0.3) bar += '🟪';
+    else if (pos < 0.5) bar += '🟦';
+    else if (pos < 0.7) bar += '🟩';
+    else bar += '🟢';
+  }
+
+  // Add "active" indicator at the edge
+  if (filled > 0 && empty > 0) {
+    bar += '▶️';
+    return bar + '⬜'.repeat(empty - 1);
+  }
+
+  // Empty slots
+  bar += '⬜'.repeat(empty);
+
+  // 100% special
+  if (percent >= 100) {
+    return '🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 ✨';
+  }
+
+  return bar;
+}
+
+/**
  * Send a test question
  */
 async function sendTestQuestion(telegramId, lessonNumber, questionOrder) {
@@ -3478,21 +3512,47 @@ bot.action(/^test_ans_(\d+)_([abcd])$/, async (ctx) => {
     // Don't show correct/incorrect - just acknowledge and show loading
     await ctx.answerCbQuery('✓ Javob qabul qilindi', { show_alert: false });
 
-    // Show loading animation on the message
-    const progressBar = generateProgressBar(question.question_order, QUESTIONS_PER_TEST);
-    const percent = Math.round((question.question_order / QUESTIONS_PER_TEST) * 100);
-    const loadingEmoji = percent >= 80 ? '🚀' : percent >= 60 ? '⚡' : percent >= 40 ? '💫' : '⏳';
-    const statusText = percent >= 80 ? 'Deyarli tayyor!' : percent >= 60 ? 'Zo\'r ketayapsiz!' : percent >= 40 ? 'Davom etamiz...' : 'Javob saqlandi...';
+    // Animated progress bar effect
+    const targetPercent = Math.round((question.question_order / QUESTIONS_PER_TEST) * 100);
+    const prevPercent = Math.round(((question.question_order - 1) / QUESTIONS_PER_TEST) * 100);
+
+    // Animation frames - progress bar "fills up"
+    const animationFrames = [
+      { emoji: '⏳', text: 'Yuklanmoqda', dots: '.  ' },
+      { emoji: '⏳', text: 'Yuklanmoqda', dots: '.. ' },
+      { emoji: '⏳', text: 'Yuklanmoqda', dots: '...' },
+    ];
+
+    // Show quick loading animation
+    for (let i = 0; i < animationFrames.length; i++) {
+      const frame = animationFrames[i];
+      const animPercent = prevPercent + Math.round((targetPercent - prevPercent) * ((i + 1) / animationFrames.length));
+      const animBar = generateAnimatedBar(animPercent);
+
+      await ctx.editMessageText(
+        `${frame.emoji} <b>${frame.text}${frame.dots}</b>\n\n` +
+        `${animBar}\n` +
+        `<code>━━━━━━━━━━━━━</code>\n` +
+        `📊 <b>${animPercent}%</b>`,
+        { parse_mode: 'HTML' }
+      );
+      await delay(150);
+    }
+
+    // Final state with celebration based on progress
+    const finalEmoji = targetPercent >= 80 ? '🚀' : targetPercent >= 60 ? '⚡' : targetPercent >= 40 ? '💫' : '✅';
+    const finalText = targetPercent >= 80 ? 'Deyarli tayyor!' : targetPercent >= 60 ? 'Zo\'r ketayapsiz!' : targetPercent >= 40 ? 'Davom etamiz!' : 'Saqlandi!';
+    const finalBar = generateAnimatedBar(targetPercent);
 
     await ctx.editMessageText(
-      `${loadingEmoji} <b>${statusText}</b>\n\n` +
-      `${progressBar}\n` +
-      `<code>━━━━━━━━━━━━━━━━━━━━</code>\n` +
-      `📊 <b>${percent}%</b> bajarildi`,
+      `${finalEmoji} <b>${finalText}</b>\n\n` +
+      `${finalBar}\n` +
+      `<code>━━━━━━━━━━━━━</code>\n` +
+      `📊 <b>${targetPercent}%</b> ✨`,
       { parse_mode: 'HTML' }
     );
 
-    await delay(800);
+    await delay(400);
 
     // Send next question
     await sendTestQuestion(telegramId, question.lesson_number, question.question_order + 1);
