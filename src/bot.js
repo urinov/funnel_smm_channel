@@ -165,7 +165,7 @@ export async function createInviteLink(telegramId, daysValid = 1, subscriptionId
     const expireDate = Math.floor(Date.now() / 1000) + (daysValid * 24 * 60 * 60);
     
     const inviteLink = await bot.telegram.createChatInviteLink(channelId, {
-      member_limit: 1,
+      member_limit: 2, // 2 clicks allowed in case of error/retry
       expire_date: expireDate,
       name: `User_${telegramId}_${Date.now()}`
     });
