@@ -716,9 +716,9 @@ bot.start(async (ctx) => {
       });
     }
 
-    if (user.funnel_step > 0) {
-      const currentLesson = userFunnel?.current_lesson ?? user.current_lesson ?? 0;
-      return ctx.reply(`Qaytganingiz bilan, ${user.full_name || "do'st"}!\n\nSiz ${currentLesson}-darsdasiz.\nDavom etish: /continue`);
+    if (user.funnel_step > 0 || user.current_lesson > 0) {
+      // Returning user - show smart progress and auto-continue
+      return handleReturningUser(ctx, telegramId, user);
     }
 
     await startLessons(telegramId);
@@ -771,11 +771,107 @@ async function handleLegacyStart(ctx, telegramId, tgUser, source = null, referra
     });
   }
 
-  if (user.funnel_step > 0) {
-    return ctx.reply(`Qaytganingiz bilan, ${user.full_name || "do'st"}!\n\nSiz ${user.current_lesson || 0}-darsdasiz.\nDavom etish: /continue`);
+  if (user.funnel_step > 0 || user.current_lesson > 0) {
+    // Returning user - show smart progress and auto-continue
+    return handleReturningUser(ctx, telegramId, user);
   }
 
   await startLessons(telegramId);
+}
+
+// Handle returning users with smart progress
+async function handleReturningUser(ctx, telegramId, user) {
+  const totalLessons = 3; // Fixed 3 lessons
+  const currentLesson = user.current_lesson || 0;
+  const userName = user.full_name || "do'st";
+
+  // Check test progress
+  const test1Passed = user.test_1_passed || false;
+  const test2Passed = user.test_2_passed || false;
+  const test3Passed = user.test_3_passed || false;
+
+  // Check if user is in the middle of a test
+  if (user.test_mode && user.current_test_lesson) {
+    await ctx.reply(
+      `👋 Qaytganingiz bilan, ${userName}!\n\n` +
+      `📝 Siz ${user.current_test_lesson}-dars testini yarim qoldirgan edingiz.\n\n` +
+      `Testni qaytadan boshlaysizmi?`,
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback('🚀 Testni boshlash', `test_start_${user.current_test_lesson}`)],
+          [Markup.button.callback('📚 Darsni qayta ko\'rish', `replay_lesson_${user.current_test_lesson}`)]
+        ])
+      }
+    );
+    return;
+  }
+
+  // Check if user completed all lessons and tests
+  if (test1Passed && test2Passed && test3Passed) {
+    await ctx.reply(
+      `👋 Qaytganingiz bilan, ${userName}!\n\n` +
+      `🎉 Siz barcha 3 ta darsni va testlarni muvaffaqiyatli tugatgansiz!\n\n` +
+      `${user.is_paid ? '💎 Premium obunangiz faol!' : '🛒 Kursni sotib olish uchun:'}`,
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard(
+          user.is_paid
+            ? [[Markup.button.url('📢 Premium kanalga o\'tish', 'https://t.me/+...')]]
+            : [[Markup.button.callback('💳 Kursni sotib olish', 'show_sales_pitch')]]
+        )
+      }
+    );
+    return;
+  }
+
+  // Build progress display
+  let progressText = '📊 <b>Sizning progressingiz:</b>\n\n';
+  progressText += `${test1Passed ? '✅' : (currentLesson >= 1 ? '📖' : '⬜')} 1-dars ${test1Passed ? '(Test o\'tdi)' : ''}\n`;
+  progressText += `${test2Passed ? '✅' : (currentLesson >= 2 ? '📖' : '⬜')} 2-dars ${test2Passed ? '(Test o\'tdi)' : ''}\n`;
+  progressText += `${test3Passed ? '✅' : (currentLesson >= 3 ? '📖' : '⬜')} 3-dars ${test3Passed ? '(Test o\'tdi)' : ''}\n`;
+
+  // Determine what to do next
+  let nextAction = '';
+  let buttons = [];
+
+  if (currentLesson === 0) {
+    nextAction = '\n🎯 1-darsdan boshlaymiz!';
+    buttons = [[Markup.button.callback('▶️ 1-darsni boshlash', 'start_lesson_1')]];
+  } else if (currentLesson === 1 && !test1Passed) {
+    nextAction = '\n🎯 1-dars testini topshiring!';
+    buttons = [
+      [Markup.button.callback('📝 1-dars testini boshlash', 'test_start_1')],
+      [Markup.button.callback('📚 1-darsni qayta ko\'rish', 'replay_lesson_1')]
+    ];
+  } else if (currentLesson === 1 && test1Passed) {
+    nextAction = '\n🎯 2-darsga o\'tamiz!';
+    buttons = [[Markup.button.callback('▶️ 2-darsni boshlash', 'start_lesson_2')]];
+  } else if (currentLesson === 2 && !test2Passed) {
+    nextAction = '\n🎯 2-dars testini topshiring!';
+    buttons = [
+      [Markup.button.callback('📝 2-dars testini boshlash', 'test_start_2')],
+      [Markup.button.callback('📚 2-darsni qayta ko\'rish', 'replay_lesson_2')]
+    ];
+  } else if (currentLesson === 2 && test2Passed) {
+    nextAction = '\n🎯 3-darsga o\'tamiz!';
+    buttons = [[Markup.button.callback('▶️ 3-darsni boshlash', 'start_lesson_3')]];
+  } else if (currentLesson === 3 && !test3Passed) {
+    nextAction = '\n🎯 3-dars testini topshiring!';
+    buttons = [
+      [Markup.button.callback('📝 3-dars testini boshlash', 'test_start_3')],
+      [Markup.button.callback('📚 3-darsni qayta ko\'rish', 'replay_lesson_3')]
+    ];
+  }
+
+  await ctx.reply(
+    `👋 Qaytganingiz bilan, ${userName}!\n\n` +
+    progressText + nextAction,
+    {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard(buttons)
+    }
+  );
 }
 
 // Send lesson from specific funnel
@@ -1101,6 +1197,34 @@ export async function sendLesson(telegramId, lessonNumber, opts = {}) {
     }
   }
 }
+
+// Start lesson callback (for returning users)
+bot.action(/^start_lesson_(\d+)$/, async (ctx) => {
+  try {
+    const lessonNumber = parseInt(ctx.match[1]);
+    const telegramId = ctx.from.id;
+    await ctx.answerCbQuery('Dars yuklanmoqda...');
+    await ctx.editMessageReplyMarkup(undefined);
+    await sendLesson(telegramId, lessonNumber);
+  } catch (e) {
+    console.error('Start lesson error:', e);
+    await ctx.answerCbQuery('Xatolik yuz berdi');
+  }
+});
+
+// Replay lesson callback (for returning users)
+bot.action(/^replay_lesson_(\d+)$/, async (ctx) => {
+  try {
+    const lessonNumber = parseInt(ctx.match[1]);
+    const telegramId = ctx.from.id;
+    await ctx.answerCbQuery('Dars yuklanmoqda...');
+    await ctx.editMessageReplyMarkup(undefined);
+    await sendLesson(telegramId, lessonNumber, { isReplay: true });
+  } catch (e) {
+    console.error('Replay lesson error:', e);
+    await ctx.answerCbQuery('Xatolik yuz berdi');
+  }
+});
 
 bot.action(/^watched_(\d+)$/, async (ctx) => {
   try {
@@ -2895,42 +3019,8 @@ bot.command('continue', async (ctx) => {
     const user = await db.getUser(telegramId);
     if (!user) return ctx.reply('/start bosing.');
 
-    const activeFunnel = await db.getUserActiveFunnel(telegramId);
-    if (activeFunnel) {
-      const current = activeFunnel.current_lesson || user.current_lesson || 0;
-      if (current <= 0) {
-        await ctx.reply('Darslar qayta boshlanadi. Birinchi darsdan boshlaymiz.');
-        await delay(500);
-        return sendFunnelLesson(telegramId, activeFunnel.funnel_id, 1);
-      }
-
-      const lessons = await db.getFunnelLessons(activeFunnel.funnel_id);
-      const history = formatLessonHistory(lessons, current);
-      const historyButtons = buildHistoryButtons(lessons, current, current, activeFunnel.funnel_id);
-      let msg = `Siz ${current}-darsda to'xtagansiz. Qayta ko'rib chiqamiz.\n`;
-      if (history) msg += `\n${history}\n`;
-      msg += '\nAgar oldingi darsni ko\'rmoqchi bo\'lsangiz, pastdan tanlang.';
-      await ctx.reply(msg, historyButtons ? { ...historyButtons } : undefined);
-      await delay(500);
-      return sendFunnelLesson(telegramId, activeFunnel.funnel_id, current);
-    }
-
-    const current = user.current_lesson || 0;
-    if (current <= 0) {
-      await ctx.reply('Darslar qayta boshlanadi. Birinchi darsdan boshlaymiz.');
-      await delay(500);
-      return startLessons(telegramId);
-    }
-
-    const lessons = await db.getAllLessons();
-    const history = formatLessonHistory(lessons, current);
-    const historyButtons = buildHistoryButtons(lessons, current, current);
-    let msg = `Siz ${current}-darsda to'xtagansiz. Qayta ko'rib chiqamiz.\n`;
-    if (history) msg += `\n${history}\n`;
-    msg += '\nAgar oldingi darsni ko\'rmoqchi bo\'lsangiz, pastdan tanlang.';
-    await ctx.reply(msg, historyButtons ? { ...historyButtons } : undefined);
-    await delay(500);
-    await sendLesson(telegramId, current);
+    // Use the same smart returning user handler
+    return handleReturningUser(ctx, telegramId, user);
   } catch (e) {
     console.error('Continue error:', e);
     await ctx.reply('Xatolik yuz berdi. /start bosing yoki birozdan keyin qayta urinib ko\'ring.');
