@@ -2304,6 +2304,20 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     if (data.referral_offer_delay_hours !== undefined) await db.setSetting('referral_offer_delay_hours', String(data.referral_offer_delay_hours));
     if (data.referral_offer_message !== undefined) await db.updateBotMessage('referral_offer_message', data.referral_offer_message);
 
+    // Gift system settings
+    if (data.gift_name !== undefined) await db.updateBotMessage('gift_name', data.gift_name);
+    if (data.gift_file_id !== undefined) await db.updateBotMessage('gift_file_id', data.gift_file_id);
+    if (data.gift_message !== undefined) await db.updateBotMessage('gift_message', data.gift_message);
+
+    // Test system settings
+    if (data.perfect_score_discount_percent !== undefined) await db.updateBotMessage('perfect_score_discount_percent', String(data.perfect_score_discount_percent));
+    if (data.test_passed !== undefined) await db.updateBotMessage('test_passed', data.test_passed);
+    if (data.test_failed !== undefined) await db.updateBotMessage('test_failed', data.test_failed);
+    if (data.test_perfect !== undefined) await db.updateBotMessage('test_perfect', data.test_perfect);
+
+    // Welcome message with gift
+    if (data.welcome_with_gift !== undefined) await db.updateBotMessage('welcome_with_gift', data.welcome_with_gift);
+
     // Log settings change
     const changedSettings = Object.keys(data).filter(k => data[k] !== undefined);
     logAudit(AuditEvents.settingsChanged('admin', changedSettings.join(', '), '-', 'updated'));

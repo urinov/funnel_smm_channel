@@ -718,6 +718,26 @@ export async function initDatabase() {
       } catch (e) {}
     }
 
+    // ============ DELETE LESSON 4 (only 3 lessons now) ============
+    try {
+      await client.query('DELETE FROM lessons WHERE lesson_number > 3');
+      await client.query('DELETE FROM test_questions WHERE lesson_number > 3');
+      console.log('Removed lessons and tests > 3');
+    } catch (e) {}
+
+    // ============ GIFT SYSTEM SETTINGS ============
+    await client.query(`
+      INSERT INTO bot_messages (key, text) VALUES
+        ('gift_name', 'SMM Cheat Sheet PDF'),
+        ('gift_message', '🎁 <b>Tabriklaymiz!</b>\n\nSiz barcha darslarni muvaffaqiyatli tugatdingiz!\n\nMana sizga {{gift_name}} sovg''amiz:'),
+        ('gift_file_id', ''),
+        ('welcome_with_gift', '🎓 <b>SMM Boshlang''ich Kurs</b>ga xush kelibsiz!\n\n📚 Sizni 3 ta BEPUL video dars kutmoqda!\n🎁 Oxirida sizga <b>{{gift_name}}</b> sovg''a qilamiz!\n\nBoshlash uchun ismingizni yozing:'),
+        ('test_passed', '🎉 <b>Ajoyib natija!</b>\n\n✅ Siz testdan muvaffaqiyatli o''tdingiz!\n📊 Natija: {{correct}}/{{total}}\n\n💪 Davom etamiz!'),
+        ('test_failed', '📚 <b>Biroz ko''proq o''rganish kerak</b>\n\n❌ Natija: {{correct}}/{{total}}\n✅ O''tish uchun: kamida 3 ta to''g''ri javob\n\n💡 Darsni qayta ko''ring va testni takrorlang.\nBu bilimlar sizga kelajakda juda kerak bo''ladi!'),
+        ('test_perfect', '🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to''g''ri javob berdingiz!\n📊 Natija: {{correct}}/{{total}} (100%)\n\n🎁 Sizga maxsus {{discount}}% chegirma taqdim etamiz!')
+      ON CONFLICT (key) DO NOTHING
+    `);
+
     // ============ PERFORMANCE INDEXES ============
     const indexMigrations = [
       // Users table indexes
@@ -887,10 +907,8 @@ async function seedDefaultData(client) {
   `);
   console.log('Referral and inactivity settings seeded');
 
-  // Seed test questions for 3 lessons (5 questions each)
-  const { rows: testCount } = await client.query('SELECT COUNT(*) FROM lesson_tests');
-  if (parseInt(testCount[0].count) === 0) {
-    const testQuestions = [
+  // Seed test questions for 3 lessons (5 questions each) - always ensure they exist
+  const testQuestions = [
       // Lesson 1: SMM nima va nima uchun kerak?
       { lesson: 1, order: 1, text: 'SMM qanday so\'zning qisqartmasi?', a: 'Social Media Marketing', b: 'Social Media Management', c: 'Simple Marketing Method', d: 'Sales Media Marketing', correct: 'a' },
       { lesson: 1, order: 2, text: 'SMM ning asosiy maqsadi nima?', a: 'Faqat rasm joylash', b: 'Auditoriya bilan aloqa va brendni rivojlantirish', c: 'Faqat reklama berish', d: 'Veb-sayt yaratish', correct: 'b' },
@@ -920,8 +938,7 @@ async function seedDefaultData(client) {
         ON CONFLICT (lesson_number, question_order) DO NOTHING
       `, [q.lesson, q.order, q.text, q.a, q.b, q.c, q.d, q.correct]);
     }
-    console.log('Test questions seeded (15 questions for 3 lessons)');
-  }
+  console.log('Test questions seeded (15 questions for 3 lessons)');
 }
 
 export async function getUser(telegramId) {

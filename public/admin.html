@@ -5562,6 +5562,65 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
           </div>
         </div>
 
+        <!-- Gift System Settings -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">🎁 Sovg'a tizimi</h3>
+          <p class="text-xs text-gray-500 mb-4">Barcha darslarni tugatgandan keyin beriladigan sovg'a</p>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Sovg'a nomi</label>
+              <input type="text" id="settingGiftName" class="input" placeholder="SMM Cheat Sheet PDF">
+              <p class="text-xs text-gray-400 mt-1">Bu nom welcome xabar va sovg'a xabarida ishlatiladi</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Sovg'a fayli (File ID)</label>
+              <input type="text" id="settingGiftFileId" class="input font-mono text-sm" placeholder="BQACAgIAAxk...">
+              <p class="text-xs text-gray-400 mt-1">Botga fayl yuboring va File ID oling</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Sovg'a xabari</label>
+              <textarea id="settingGiftMessage" class="input min-h-[80px]" placeholder="🎁 Tabriklaymiz! Mana sizga {{gift_name}} sovg'amiz:"></textarea>
+              <p class="text-xs text-gray-400 mt-1">{{gift_name}} - sovg'a nomi qo'yiladi</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Test System Settings -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">📝 Test tizimi sozlamalari</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Perfect score chegirma (%)</label>
+              <input type="number" id="settingPerfectScoreDiscount" class="input w-24" value="30" min="0" max="100">
+              <p class="text-xs text-gray-400 mt-1">Barcha testlardan 100% olganlar uchun chegirma</p>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Testdan o'tdi xabari</label>
+              <textarea id="settingTestPassed" class="input min-h-[60px]" placeholder="🎉 Ajoyib natija! Natija: {{correct}}/{{total}}"></textarea>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Testdan o'tmadi xabari</label>
+              <textarea id="settingTestFailed" class="input min-h-[60px]" placeholder="📚 Qayta urinib ko'ring. Natija: {{correct}}/{{total}}"></textarea>
+            </div>
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">100% natija xabari</label>
+              <textarea id="settingTestPerfect" class="input min-h-[60px]" placeholder="🏆 MUKAMMAL! {{discount}}% chegirma!"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-4">👋 Salom xabari</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-sm text-gray-600 mb-1 block">Welcome xabar (sovg'a nomi bilan)</label>
+              <textarea id="settingWelcomeWithGift" class="input min-h-[100px]" placeholder="🎓 SMM kursga xush kelibsiz! 3 ta bepul dars + {{gift_name}} sovg'a kutmoqda!"></textarea>
+              <p class="text-xs text-gray-400 mt-1">{{gift_name}} - sovg'a nomi qo'yiladi</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Admin Info -->
         <div class="card p-5">
           <h3 class="font-semibold text-gray-800 mb-4">👤 Admin</h3>
@@ -7564,6 +7623,20 @@ async function loadSettingsForm() {
     document.getElementById('settingReferralOfferEnabled').checked = data.referral_offer_enabled === 'true';
     document.getElementById('settingReferralOfferDelay').value = data.referral_offer_delay_hours || 24;
     document.getElementById('settingReferralOfferMessage').value = data.referral_offer_message || '';
+
+    // Gift system settings
+    document.getElementById('settingGiftName').value = data.gift_name || 'SMM Cheat Sheet PDF';
+    document.getElementById('settingGiftFileId').value = data.gift_file_id || '';
+    document.getElementById('settingGiftMessage').value = data.gift_message || '';
+
+    // Test system settings
+    document.getElementById('settingPerfectScoreDiscount').value = data.perfect_score_discount_percent || 30;
+    document.getElementById('settingTestPassed').value = data.test_passed || '';
+    document.getElementById('settingTestFailed').value = data.test_failed || '';
+    document.getElementById('settingTestPerfect').value = data.test_perfect || '';
+
+    // Welcome message with gift
+    document.getElementById('settingWelcomeWithGift').value = data.welcome_with_gift || '';
 
   } catch(e) { console.error('loadSettingsForm error:', e); }
 }
@@ -10978,7 +11051,18 @@ async function saveSettings() {
         // Referral offer settings
         referral_offer_enabled: document.getElementById('settingReferralOfferEnabled').checked ? 'true' : 'false',
         referral_offer_delay_hours: document.getElementById('settingReferralOfferDelay').value,
-        referral_offer_message: document.getElementById('settingReferralOfferMessage').value
+        referral_offer_message: document.getElementById('settingReferralOfferMessage').value,
+        // Gift system settings
+        gift_name: document.getElementById('settingGiftName').value,
+        gift_file_id: document.getElementById('settingGiftFileId').value,
+        gift_message: document.getElementById('settingGiftMessage').value,
+        // Test system settings
+        perfect_score_discount_percent: document.getElementById('settingPerfectScoreDiscount').value,
+        test_passed: document.getElementById('settingTestPassed').value,
+        test_failed: document.getElementById('settingTestFailed').value,
+        test_perfect: document.getElementById('settingTestPerfect').value,
+        // Welcome message with gift
+        welcome_with_gift: document.getElementById('settingWelcomeWithGift').value
       })
     });
 

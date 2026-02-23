@@ -646,8 +646,11 @@ bot.start(async (ctx) => {
       // Start user in this funnel
       await db.startUserInFunnel(telegramId, funnel.id, source);
       console.log('👤 New user started in funnel:', funnel.name, 'source:', source);
-      
-      const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
+
+      // Get gift name for welcome message
+      const giftName = await db.getBotMessage('gift_name') || 'maxsus sovg\'a';
+      let welcome = await db.getBotMessage('welcome_with_gift') || await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
+      welcome = welcome.replace(/\{\{gift_name\}\}/gi, giftName);
       await ctx.reply(welcome, { parse_mode: 'HTML' });
       await delay(500);
       const askName = await db.getBotMessage('ask_name') || 'Ism-familiyangizni kiriting:';
@@ -721,7 +724,10 @@ async function handleLegacyStart(ctx, telegramId, tgUser, source = null, referra
         console.log('👥 Referral created (legacy):', referrer.telegram_id, '->', telegramId);
       }
     }
-    const welcome = await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
+    // Get gift name for welcome message
+    const giftName = await db.getBotMessage('gift_name') || 'maxsus sovg\'a';
+    let welcome = await db.getBotMessage('welcome_with_gift') || await db.getBotMessage('welcome') || 'Assalomu alaykum! SMM kursga xush kelibsiz!';
+    welcome = welcome.replace(/\{\{gift_name\}\}/gi, giftName);
     await ctx.reply(welcome, { parse_mode: 'HTML' });
     await delay(500);
     const askName = await db.getBotMessage('ask_name') || 'Ism-familiyangizni kiriting:';
@@ -2944,7 +2950,7 @@ bot.on('video_note', async (ctx) => {
 // ============ BONUS OFFER SYSTEM ============
 
 /**
- * Send bonus offer to user after completing all lessons
+ * Send pitch/sales offer to user after completing all lessons and receiving gift
  */
 async function sendBonusOffer(telegramId, isPerfect) {
   const user = await db.getUser(telegramId);
@@ -2952,37 +2958,48 @@ async function sendBonusOffer(telegramId, isPerfect) {
     (await db.getSetting('perfect_score_discount_percent') || '30') :
     '0';
 
-  let message = `🎁 <b>Sizga maxsus taklif!</b>\n\n`;
+  let message = '';
 
   if (isPerfect) {
-    message += `🏆 Siz barcha testlardan 100% natija oldingiz!\n`;
-    message += `✨ Sizga <b>${discountPercent}% chegirma</b> taqdim etamiz!\n\n`;
+    message = `🔥🔥🔥\n\n` +
+      `<b>${user?.full_name || 'Do\'stim'}, siz haqiqiy talantli ekansiz!</b>\n\n` +
+      `🏆 Barcha testlardan 100% natija - bu kam odamda bor!\n\n` +
+      `Sizga maxsus <b>${discountPercent}% chegirma</b> taqdim etamiz!\n\n` +
+      `📚 <b>To'liq SMM Professional kursiga</b> kirish:\n\n` +
+      `✅ 50+ chuqur video darslar\n` +
+      `✅ Amaliy loyihalar va topshiriqlar\n` +
+      `✅ Shaxsiy mentor qo'llab-quvvatlashi\n` +
+      `✅ Premium hamjamiyat a'zoligi\n` +
+      `✅ Rasmiy sertifikat\n` +
+      `✅ Umrbod kirish huquqi\n\n` +
+      `⏰ <b>Bu chegirma faqat bugun amal qiladi!</b>`;
+  } else {
+    message = `💼 <b>Keyingi qadam!</b>\n\n` +
+      `${user?.full_name || 'Do\'stim'}, siz bepul darslarni muvaffaqiyatli tugatdingiz!\n\n` +
+      `Endi professional darajaga ko'tariling! 🚀\n\n` +
+      `📚 <b>To'liq SMM Professional kursida:</b>\n\n` +
+      `✅ 50+ chuqur video darslar\n` +
+      `✅ Amaliy loyihalar va topshiriqlar\n` +
+      `✅ Shaxsiy mentor qo'llab-quvvatlashi\n` +
+      `✅ Premium hamjamiyat a'zoligi\n` +
+      `✅ Rasmiy sertifikat\n` +
+      `✅ Umrbod kirish huquqi\n\n` +
+      `🎯 <b>Bu investitsiya o'zini 1 oyda qaytaradi!</b>`;
   }
-
-  message += `📚 <b>To'liq SMM kursiga</b> kirish uchun hoziroq ro'yxatdan o'ting!\n\n`;
-  message += `Kurs ichida:\n`;
-  message += `✅ 50+ video darslar\n`;
-  message += `✅ Amaliy topshiriqlar\n`;
-  message += `✅ Mentor qo'llab-quvvatlashi\n`;
-  message += `✅ Premium kanal a'zoligi\n`;
-  message += `✅ Sertifikat\n\n`;
 
   const buttons = [];
 
   if (isPerfect) {
-    buttons.push([Markup.button.callback(`🎁 ${discountPercent}% chegirma bilan sotib olish`, 'claim_perfect_discount')]);
+    buttons.push([Markup.button.callback(`🎁 ${discountPercent}% CHEGIRMA bilan olish`, 'claim_perfect_discount')]);
   }
 
-  buttons.push([Markup.button.callback('💳 Sotib olish', 'buy_course')]);
-  buttons.push([Markup.button.callback('📞 Batafsil ma\'lumot', 'course_info')]);
+  buttons.push([Markup.button.callback('💳 Hoziroq sotib olish', 'buy_course')]);
+  buttons.push([Markup.button.callback('❓ Savollarim bor', 'course_info')]);
 
   await bot.telegram.sendMessage(telegramId, message, {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard(buttons)
   });
-
-  // Mark bonus as offered
-  await db.updateUser(telegramId, { bonus_claimed: false });
 }
 
 // Claim perfect score discount
@@ -3173,66 +3190,131 @@ async function finishLessonTest(telegramId, lessonNumber) {
   // Calculate total test score
   await db.updateUser(telegramId, { total_test_score: totalCorrect });
 
+  const totalLessons = await db.getLessonsCount();
+  const isLastLesson = lessonNumber >= totalLessons;
+  const discountPercent = await db.getSetting('perfect_score_discount_percent') || '30';
+
+  // Check if all tests passed with perfect score
+  const isPerfect = isLastLesson && totalAnswered >= (totalLessons * QUESTIONS_PER_TEST) && totalCorrect === totalAnswered;
+
   if (passed) {
-    // User passed!
-    let message = `🎉 <b>Tabriklaymiz!</b>\n\n` +
-      `✅ Natija: <b>${correctCount}/${totalQuestions}</b>\n\n`;
+    let message = '';
 
+    // Perfect score on this test
     if (correctCount === totalQuestions) {
-      message += `⭐ Ajoyib! Barcha javoblar to'g'ri!\n\n`;
+      // Get perfect message from DB or use default
+      message = await db.getBotMessage('test_perfect') ||
+        `🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to'g'ri javob berdingiz!\n📊 Natija: {{correct}}/{{total}} (100%)\n\n🎁 Zo'r natija!`;
+      message = message.replace(/\{\{correct\}\}/gi, correctCount)
+        .replace(/\{\{total\}\}/gi, totalQuestions)
+        .replace(/\{\{discount\}\}/gi, discountPercent);
     } else {
-      message += `👏 Yaxshi natija! Testdan o'tdingiz!\n\n`;
+      // Get passed message from DB or use default
+      message = await db.getBotMessage('test_passed') ||
+        `🎉 <b>Ajoyib natija!</b>\n\n✅ Siz testdan muvaffaqiyatli o'tdingiz!\n📊 Natija: {{correct}}/{{total}}\n\n💪 Davom etamiz!`;
+      message = message.replace(/\{\{correct\}\}/gi, correctCount)
+        .replace(/\{\{total\}\}/gi, totalQuestions);
     }
 
-    const totalLessons = await db.getLessonsCount();
-    const isLastLesson = lessonNumber >= totalLessons;
+    await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-    // Check if all tests passed with perfect score
-    const isPerfect = totalAnswered >= (totalLessons * QUESTIONS_PER_TEST) && totalCorrect === totalAnswered;
-    if (isLastLesson && isPerfect) {
+    // If perfect score across ALL tests
+    if (isPerfect) {
       await db.updateUser(telegramId, { perfect_score: true });
-      const discountPercent = await db.getSetting('perfect_score_discount_percent') || '30';
-      message += `🏆 <b>SUPER!</b> Barcha testlardan 100% natija!\n` +
-        `🎁 Siz ${discountPercent}% maxsus chegirmaga ega bo'ldingiz!\n\n`;
+      await delay(1500);
+      await bot.telegram.sendMessage(telegramId,
+        `🏆🏆🏆 <b>AJOYIB!</b>\n\n` +
+        `Siz barcha 3 ta testdan 100% natija oldingiz!\n\n` +
+        `🎁 Sizga <b>${discountPercent}% maxsus chegirma</b> taqdim etamiz!\n` +
+        `Bu chegirma faqat siz uchun!`,
+        { parse_mode: 'HTML' }
+      );
     }
 
-    // If last lesson completed - send bonus offer
+    await delay(2000);
+
+    // If last lesson completed - send gift and pitch
     if (isLastLesson) {
-      message += `\n🎊 Barcha darslar va testlarni muvaffaqiyatli tugatdingiz!`;
-      await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
-
-      await delay(2000);
-
-      // Send bonus offer
-      const bonusEnabled = (await db.getSetting('bonus_enabled')) !== 'false';
-      if (bonusEnabled) {
-        await sendBonusOffer(telegramId, isPerfect);
-      } else {
-        await startCustDev(telegramId, lessonNumber);
-      }
+      await sendGiftAndPitch(telegramId, isPerfect);
     } else {
-      message += `Davom etamiz...`;
-      await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
-      await delay(2000);
       await startCustDev(telegramId, lessonNumber);
     }
   } else {
-    // User failed
-    await bot.telegram.sendMessage(telegramId,
-      `😔 <b>Afsuski, testdan o'ta olmadingiz</b>\n\n` +
-      `❌ Natija: <b>${correctCount}/${totalQuestions}</b>\n` +
+    // User failed - get message from DB or use default
+    let failMessage = await db.getBotMessage('test_failed') ||
+      `📚 <b>Biroz ko'proq o'rganish kerak</b>\n\n` +
+      `❌ Natija: {{correct}}/{{total}}\n` +
       `✅ O'tish uchun: kamida ${TEST_PASS_THRESHOLD} ta to'g'ri javob\n\n` +
-      `Darsni qayta ko'rib, testni takrorlang!\n\n` +
-      `💪 Siz albatta o'ta olasiz!`,
-      {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-          [Markup.button.callback('🔄 Testni qayta topshirish', `test_retry_${lessonNumber}`)],
-          [Markup.button.callback('📚 Darsni qayta ko\'rish', `rewatch_${lessonNumber}`)]
-        ])
-      }
-    );
+      `💡 Darsni qayta ko'ring va testni takrorlang.\n` +
+      `Bu bilimlar sizga kelajakda juda kerak bo'ladi!`;
+
+    failMessage = failMessage.replace(/\{\{correct\}\}/gi, correctCount)
+      .replace(/\{\{total\}\}/gi, totalQuestions);
+
+    await bot.telegram.sendMessage(telegramId, failMessage, {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback('🔄 Testni qayta topshirish', `test_retry_${lessonNumber}`)],
+        [Markup.button.callback('📚 Darsni qayta ko\'rish', `rewatch_${lessonNumber}`)]
+      ])
+    });
   }
+}
+
+/**
+ * Send gift and pitch after completing all lessons
+ */
+async function sendGiftAndPitch(telegramId, isPerfect) {
+  const user = await db.getUser(telegramId);
+  const giftName = await db.getBotMessage('gift_name') || 'maxsus sovg\'a';
+  const giftFileId = await db.getBotMessage('gift_file_id');
+  let giftMessage = await db.getBotMessage('gift_message') ||
+    `🎁 <b>Tabriklaymiz!</b>\n\nSiz barcha darslarni muvaffaqiyatli tugatdingiz!\n\nMana sizga {{gift_name}} sovg'amiz:`;
+
+  giftMessage = giftMessage.replace(/\{\{gift_name\}\}/gi, giftName);
+
+  // Send congratulations and gift
+  await bot.telegram.sendMessage(telegramId,
+    `🎊🎊🎊\n\n` +
+    `<b>${user?.full_name || 'Do\'stim'}, tabriklaymiz!</b>\n\n` +
+    `✅ Siz barcha 3 ta bepul darsni tugatdingiz!\n` +
+    `✅ Barcha testlardan muvaffaqiyatli o'tdingiz!\n\n` +
+    `Endi sizga va'da qilgan sovg'amizni beramiz! 👇`,
+    { parse_mode: 'HTML' }
+  );
+
+  await delay(2000);
+
+  // Send gift file if exists
+  if (giftFileId && giftFileId.trim()) {
+    try {
+      // Try to detect file type and send accordingly
+      if (giftFileId.startsWith('BQA')) {
+        await bot.telegram.sendDocument(telegramId, giftFileId, { caption: giftMessage, parse_mode: 'HTML' });
+      } else if (giftFileId.startsWith('BAA')) {
+        await bot.telegram.sendVideo(telegramId, giftFileId, { caption: giftMessage, parse_mode: 'HTML' });
+      } else if (giftFileId.startsWith('AgA')) {
+        await bot.telegram.sendPhoto(telegramId, giftFileId, { caption: giftMessage, parse_mode: 'HTML' });
+      } else if (giftFileId.startsWith('CQA')) {
+        await bot.telegram.sendAudio(telegramId, giftFileId, { caption: giftMessage, parse_mode: 'HTML' });
+      } else {
+        // Try as document by default
+        await bot.telegram.sendDocument(telegramId, giftFileId, { caption: giftMessage, parse_mode: 'HTML' });
+      }
+    } catch (e) {
+      console.error('Gift file send error:', e.message);
+      await bot.telegram.sendMessage(telegramId, giftMessage, { parse_mode: 'HTML' });
+    }
+  } else {
+    await bot.telegram.sendMessage(telegramId, giftMessage, { parse_mode: 'HTML' });
+  }
+
+  await db.updateUser(telegramId, { bonus_claimed: true });
+
+  await delay(3000);
+
+  // Now send the pitch
+  await sendBonusOffer(telegramId, isPerfect);
 }
 
 // Test start callback
