@@ -15,7 +15,14 @@ if (!BOT_TOKEN) throw new Error('BOT_TOKEN kerak');
 export const bot = new Telegraf(BOT_TOKEN);
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
-const isAdmin = (id) => ADMIN_IDS.includes(id);
+const isAdmin = (id) => {
+  const numId = Number(id);
+  const result = ADMIN_IDS.includes(numId);
+  if (!result && ADMIN_IDS.length > 0) {
+    console.log(`🔍 isAdmin check: ${id} (type: ${typeof id}) not in [${ADMIN_IDS.join(', ')}]`);
+  }
+  return result;
+};
 const formatMoney = (t) => (t / 100).toLocaleString('uz-UZ') + " so'm";
 
 export async function setupAdminWebAppMenu() {
@@ -564,6 +571,21 @@ bot.command('myref', async (ctx) => {
     console.error('myref error:', e);
     await ctx.reply('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
   }
+});
+
+// /myid - show user's Telegram ID and admin status
+bot.command('myid', async (ctx) => {
+  const userId = ctx.from.id;
+  const isUserAdmin = isAdmin(userId);
+  const adminList = ADMIN_IDS.length > 0 ? ADMIN_IDS.join(', ') : '(bo\'sh)';
+
+  await ctx.reply(
+    `🆔 <b>Sizning Telegram ID:</b>\n<code>${userId}</code>\n\n` +
+    `👤 Admin: ${isUserAdmin ? '✅ Ha' : '❌ Yo\'q'}\n` +
+    `📋 ADMIN_IDS: ${adminList}\n\n` +
+    `💡 Agar admin bo'lishingiz kerak bo'lsa, Render.com da ADMIN_IDS ga ${userId} ni qo'shing.`,
+    { parse_mode: 'HTML' }
+  );
 });
 
 bot.start(async (ctx) => {
@@ -2972,9 +2994,28 @@ bot.on('video_note', async (ctx) => {
   if (!isAdmin(ctx.from.id)) return;
   const fileId = ctx.message.video_note.file_id;
   const fileName = 'video_note_' + Date.now();
-  
+
   await db.saveMedia(fileId, 'video_note', fileName, '', ctx.from.id);
   await ctx.reply('✅ Video xabar saqlandi!\n\n📋 File ID:\n<code>' + fileId + '</code>\n\n💡 Dashboard > Media > ✏️ orqali izoh qo\'shing', { parse_mode: 'HTML' });
+});
+
+bot.on('document', async (ctx) => {
+  if (!isAdmin(ctx.from.id)) return;
+  const fileId = ctx.message.document.file_id;
+  const fileName = ctx.message.document.file_name || 'document_' + Date.now();
+  const mimeType = ctx.message.document.mime_type || 'unknown';
+  const caption = ctx.message.caption || '';
+
+  await db.saveMedia(fileId, 'document', fileName, caption, ctx.from.id);
+  await ctx.reply(
+    '✅ Fayl saqlandi!\n\n' +
+    '📄 Fayl: ' + fileName + '\n' +
+    '📦 Turi: ' + mimeType + '\n' +
+    '📝 Izoh: ' + (caption || '❌ Yo\'q') + '\n\n' +
+    '📋 File ID:\n<code>' + fileId + '</code>\n\n' +
+    '💡 Bu ID ni Dashboard > Darslar yoki Progrev bo\'limida ishlating',
+    { parse_mode: 'HTML' }
+  );
 });
 
 // ============ BONUS OFFER SYSTEM ============
