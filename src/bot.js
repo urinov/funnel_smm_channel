@@ -3227,6 +3227,20 @@ async function finishLessonTest(telegramId, lessonNumber) {
 
   await delay(2000);
 
+  // Check if user HAD perfect score on all previous tests but lost it now
+  const previousTestsCount = lessonNumber - 1;
+  let hadPerfectStreak = false;
+  let lostPerfectStreak = false;
+
+  if (previousTestsCount > 0 && correctCount < totalQuestions) {
+    // Check if all previous tests were 100%
+    const previousResults = allResults.filter(r => r.lesson_number < lessonNumber);
+    const previousCorrect = previousResults.reduce((sum, r) => sum + r.correct_answers, 0);
+    const previousTotal = previousResults.reduce((sum, r) => sum + r.total_questions, 0);
+    hadPerfectStreak = previousTotal > 0 && previousCorrect === previousTotal;
+    lostPerfectStreak = hadPerfectStreak;
+  }
+
   if (passed) {
     let message = '';
 
@@ -3241,11 +3255,21 @@ async function finishLessonTest(telegramId, lessonNumber) {
         message = `🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to'g'ri javob berdingiz!\n📊 Natija: ${correctCount}/${totalQuestions} (100%)\n\n🎁 <i>Agar shunaqa tempda ketaversangiz, oxirida yana bir sovg'amiz ham bor!</i>`;
       }
     } else {
-      // Get passed message from DB or use default
-      message = await db.getBotMessage('test_passed') ||
-        `🎉 <b>Ajoyib natija!</b>\n\n✅ Siz testdan muvaffaqiyatli o'tdingiz!\n📊 Natija: {{correct}}/{{total}}\n\n💪 Davom etamiz!`;
-      message = message.replace(/\{\{correct\}\}/gi, correctCount)
-        .replace(/\{\{total\}\}/gi, totalQuestions);
+      // Check if they lost the perfect streak
+      if (lostPerfectStreak) {
+        // Gentle message about losing the special gift chance
+        message = `🎉 <b>Yaxshi natija!</b>\n\n` +
+          `✅ Siz testdan o'tdingiz!\n` +
+          `📊 Natija: ${correctCount}/${totalQuestions}\n\n` +
+          `💭 <i>Afsuski, maxsus sovg'a uchun barcha testlardan 100% kerak edi...</i>\n\n` +
+          `😊 <b>Lekin tashvishlanmang!</b> Asosiy sovg'a hali oldinda - davom eting! 💪`;
+      } else {
+        // Normal passed message
+        message = await db.getBotMessage('test_passed') ||
+          `🎉 <b>Ajoyib natija!</b>\n\n✅ Siz testdan muvaffaqiyatli o'tdingiz!\n📊 Natija: {{correct}}/{{total}}\n\n💪 Davom etamiz!`;
+        message = message.replace(/\{\{correct\}\}/gi, correctCount)
+          .replace(/\{\{total\}\}/gi, totalQuestions);
+      }
     }
 
     await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
