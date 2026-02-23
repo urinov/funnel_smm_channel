@@ -2030,12 +2030,22 @@ bot.action('feedback_yes', async (ctx) => {
 async function sendPitchInfo(telegramId) {
   const user = await db.getUser(telegramId);
 
+  // Check for perfect score bonus
+  const isPerfect = user?.perfect_score;
+  const discountPercent = isPerfect ?
+    parseInt(await db.getSetting('perfect_score_discount_percent') || '30') : 0;
+
   // Get pitch info text
-  const pitchInfoText = await db.getSetting('pitch_info_text') ||
-    '🎉 Ajoyib tanlov!\n\nTo\'liq kursda sizni kutmoqda:\n✅ 50+ dars\n✅ Amaliy topshiriqlar\n✅ Sertifikat\n\nHoziroq ro\'yxatdan o\'ting! 👇';
+  let pitchInfoText = await db.getSetting('pitch_info_text') ||
+    '🎉 Ajoyib tanlov!\n\nPremium kanalda sizni kutmoqda:\n✅ Har hafta yangi kontent\n✅ Ekskluziv resurslar\n✅ Premium hamjamiyat\n\nHoziroq ro\'yxatdan o\'ting! 👇';
+
+  // Add perfect score bonus message
+  if (isPerfect) {
+    pitchInfoText = `🏆 <b>MAXSUS BONUS!</b>\n\nSiz barcha testlardan 100% oldingiz!\n🎁 Sizga <b>${discountPercent}% chegirma</b> tayyorlangan!\n\n─────────────────\n\n` + pitchInfoText;
+  }
 
   // Get button text
-  const pitchBtnText = await db.getSetting('pitch_info_btn') || '🚀 Kursga yozilish';
+  const pitchBtnText = await db.getSetting('pitch_info_btn') || '🚀 Kanalga qo\'shilish';
 
   // Get pitch media
   const pitchMedia = await db.getPitchMedia();
@@ -2693,7 +2703,14 @@ bot.action('cancel_extend', async (ctx) => {
 // Show sales pitch from video pitch button
 bot.action('show_sales_pitch', async (ctx) => {
   await ctx.answerCbQuery();
-  await sendSalesPitch(ctx.from.id);
+  const telegramId = ctx.from.id;
+
+  // Check if user has perfect score discount
+  const user = await db.getUser(telegramId);
+  const discountPercent = user?.perfect_score ?
+    parseInt(await db.getSetting('perfect_score_discount_percent') || '30') : 0;
+
+  await sendSalesPitch(telegramId, discountPercent);
 });
 
 // Show extend options
@@ -3378,10 +3395,23 @@ async function sendGiftAndPitch(telegramId, isPerfect) {
 
   await db.updateUser(telegramId, { bonus_claimed: true });
 
+  // Store isPerfect flag for later use in feedback handlers
+  if (isPerfect) {
+    await db.updateUser(telegramId, { perfect_score: true });
+  }
+
   await delay(3000);
 
-  // Now send the pitch
-  await sendBonusOffer(telegramId, isPerfect);
+  // Check if feedback flow is enabled
+  const feedbackEnabled = await db.getSetting('feedback_enabled');
+
+  if (feedbackEnabled === 'true') {
+    // Send feedback question - pitch will come after response
+    await sendFeedbackQuestion(telegramId);
+  } else {
+    // Skip feedback, go directly to pitch
+    await sendBonusOffer(telegramId, isPerfect);
+  }
 }
 
 // Test start callback
