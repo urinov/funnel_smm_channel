@@ -3196,12 +3196,14 @@ async function finishLessonTest(telegramId, lessonNumber) {
 
     // Perfect score on this test
     if (correctCount === totalQuestions) {
-      // Get perfect message from DB or use default
-      message = await db.getBotMessage('test_perfect') ||
-        `🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to'g'ri javob berdingiz!\n📊 Natija: {{correct}}/{{total}} (100%)\n\n🎁 Zo'r natija!`;
-      message = message.replace(/\{\{correct\}\}/gi, correctCount)
-        .replace(/\{\{total\}\}/gi, totalQuestions)
-        .replace(/\{\{discount\}\}/gi, discountPercent);
+      // Different message based on whether it's the last lesson
+      if (isLastLesson) {
+        // Last lesson - will show discount in pitch
+        message = `🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to'g'ri javob berdingiz!\n📊 Natija: ${correctCount}/${totalQuestions} (100%)\n\n🎉 Zo'r natija!`;
+      } else {
+        // Not last lesson - encourage to continue for a gift
+        message = `🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to'g'ri javob berdingiz!\n📊 Natija: ${correctCount}/${totalQuestions} (100%)\n\n🎁 <i>Agar shunaqa tempda ketaversangiz, oxirida yana bir sovg'amiz ham bor!</i>`;
+      }
     } else {
       // Get passed message from DB or use default
       message = await db.getBotMessage('test_passed') ||

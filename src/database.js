@@ -737,7 +737,7 @@ export async function initDatabase() {
         ('welcome_with_gift', '🎓 <b>SMM Boshlang''ich Kurs</b>ga xush kelibsiz!\n\n📚 Sizni 3 ta BEPUL video dars kutmoqda!\n🎁 Oxirida sizga <b>{{gift_name}}</b> sovg''a qilamiz!\n\nBoshlash uchun ismingizni yozing:'),
         ('test_passed', '🎉 <b>Ajoyib natija!</b>\n\n✅ Siz testdan muvaffaqiyatli o''tdingiz!\n📊 Natija: {{correct}}/{{total}}\n\n💪 Davom etamiz!'),
         ('test_failed', '📚 <b>Biroz ko''proq o''rganish kerak</b>\n\n❌ Natija: {{correct}}/{{total}}\n✅ O''tish uchun: kamida 3 ta to''g''ri javob\n\n💡 Darsni qayta ko''ring va testni takrorlang.\nBu bilimlar sizga kelajakda juda kerak bo''ladi!'),
-        ('test_perfect', '🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to''g''ri javob berdingiz!\n📊 Natija: {{correct}}/{{total}} (100%)\n\n🎁 Sizga maxsus {{discount}}% chegirma taqdim etamiz!')
+        ('test_perfect', '🏆 <b>MUKAMMAL!</b>\n\n⭐ Siz barcha savollarga to''g''ri javob berdingiz!\n📊 Natija: {{correct}}/{{total}} (100%)\n\n🎁 Shunaqa tempda davom eting - oxirida sovg''a bor!')
       ON CONFLICT (key) DO NOTHING
     `);
 
