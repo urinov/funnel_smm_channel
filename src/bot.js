@@ -1676,17 +1676,9 @@ bot.action(/^check_subscription_?(\d*)$/, async (ctx) => {
     await ctx.reply(celebrationMsg + '\n\nEndi davom etamiz...');
     await delay(1500);
 
-    // Continue with CustDev or send lesson
+    // Continue with LESSON TEST first (test will handle custdev after passing)
     const prevLesson = nextLesson - 1;
-    const questions = await db.getCustDevQuestionsForLesson(prevLesson);
-
-    if (questions && questions.length > 0) {
-      // Has CustDev questions for previous lesson
-      await startCustDev(telegramId, prevLesson);
-    } else {
-      // No CustDev, send next lesson directly
-      await sendLesson(telegramId, nextLesson);
-    }
+    await startLessonTest(telegramId, prevLesson);
   } else {
     // Increment failed attempts
     const attempts = (user?.subscription_check_attempts || 0) + 1;
@@ -1712,14 +1704,9 @@ bot.action(/^check_subscription_?(\d*)$/, async (ctx) => {
       await ctx.reply('⏭️ Davom etamiz...');
       await delay(1000);
 
+      // Continue with LESSON TEST (test will handle custdev after passing)
       const prevLesson = nextLesson - 1;
-      const questions = await db.getCustDevQuestionsForLesson(prevLesson);
-
-      if (questions && questions.length > 0) {
-        await startCustDev(telegramId, prevLesson);
-      } else {
-        await sendLesson(telegramId, nextLesson);
-      }
+      await startLessonTest(telegramId, prevLesson);
     } else {
       const remainingAttempts = bypassEnabled ? maxAttempts - attempts : null;
       let message = '❌ Siz hali obuna bo\'lmagansiz! Avval kanalga obuna bo\'ling.';
