@@ -2653,7 +2653,8 @@ app.get('/api/ai-settings', authMiddleware, async (req, res) => {
       first_offer_discount: parseInt(await getBotMessage('ai_first_offer_discount')) || 0,
       discount_rules: await getBotMessage('ai_discount_rules') || '',
       sales_prompt: await getBotMessage('ai_sales_prompt') || '',
-      fallback_message: await getBotMessage('ai_fallback_message') || ''
+      fallback_message: await getBotMessage('ai_fallback_message') || '',
+      testimonials: await getBotMessage('ai_testimonials') || ''
     };
     res.json(settings);
   } catch (e) {
@@ -2664,7 +2665,7 @@ app.get('/api/ai-settings', authMiddleware, async (req, res) => {
 app.put('/api/ai-settings', authMiddleware, async (req, res) => {
   try {
     const { updateBotMessage } = await import('./database.js');
-    const { enabled, max_discount, first_offer_discount, discount_rules, sales_prompt, fallback_message } = req.body;
+    const { enabled, max_discount, first_offer_discount, discount_rules, sales_prompt, fallback_message, testimonials } = req.body;
 
     if (enabled !== undefined) await updateBotMessage('ai_sales_enabled', String(enabled));
     if (max_discount !== undefined) await updateBotMessage('ai_max_discount', String(max_discount));
@@ -2672,6 +2673,7 @@ app.put('/api/ai-settings', authMiddleware, async (req, res) => {
     if (discount_rules !== undefined) await updateBotMessage('ai_discount_rules', discount_rules);
     if (sales_prompt !== undefined) await updateBotMessage('ai_sales_prompt', sales_prompt);
     if (fallback_message !== undefined) await updateBotMessage('ai_fallback_message', fallback_message);
+    if (testimonials !== undefined) await updateBotMessage('ai_testimonials', testimonials);
 
     res.json({ success: true });
   } catch (e) {

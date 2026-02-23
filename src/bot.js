@@ -1173,6 +1173,25 @@ async function handleAIChat(ctx, telegramId, text, user) {
 async function handleAIAction(ctx, telegramId, action, params, user) {
   try {
     switch (action) {
+      case 'send_free_lesson':
+        // Send free lesson to build trust
+        const lessonNum = params.lesson_number || 1;
+        await sendLesson(telegramId, lessonNum);
+        console.log(`📚 AI sent free lesson ${lessonNum} to ${telegramId}`);
+        break;
+
+      case 'show_testimonials':
+        // Show testimonials from paid subscribers
+        const testimonials = await db.getBotMessage('ai_testimonials') ||
+          `⭐️ <b>Obunachilarimiz fikrlari:</b>\n\n` +
+          `💬 "2 oyda 0 dan 50 ta mijozga chiqdim. Haqiqiy natija!" - Aziz\n\n` +
+          `💬 "Endi oyiga 3 mln topaman faqat SMM dan" - Nilufar\n\n` +
+          `💬 "Kursdan keyin o'z agentligimni ochdim" - Sardor`;
+
+        await ctx.reply(testimonials, { parse_mode: 'HTML' });
+        console.log(`⭐ AI showed testimonials to ${telegramId}`);
+        break;
+
       case 'show_payment':
         await sendSalesPitch(telegramId, params.discount || 0);
         break;

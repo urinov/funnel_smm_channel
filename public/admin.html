@@ -5521,6 +5521,17 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
           <input type="text" id="aiFallbackMessage" class="input" placeholder="Savollaringiz bo'lsa, yozing - tez orada javob beramiz!">
           <p class="text-xs text-gray-400 mt-1">AI o'chirilganda userga shu xabar yuboriladi</p>
         </div>
+
+        <!-- Testimonials -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-600 mb-1 block">Otzivlar (Testimonials)</label>
+          <textarea id="aiTestimonials" class="input h-32 resize-none text-sm" placeholder="⭐️ Obunachilarimiz fikrlari:
+
+💬 &quot;2 oyda 0 dan 50 ta mijozga chiqdim&quot; - Aziz
+
+💬 &quot;Endi oyiga 3 mln topaman&quot; - Nilufar"></textarea>
+          <p class="text-xs text-gray-400 mt-1">AI shubhalanuvchi userlarga shu otzivlarni ko'rsatadi. HTML ishlatsa bo'ladi.</p>
+        </div>
       </div>
 
       <!-- AI Prompt -->
@@ -12725,6 +12736,7 @@ async function loadAISettings() {
     document.getElementById('aiDiscountRules').value = data.discount_rules || '';
     document.getElementById('aiSalesPrompt').value = data.sales_prompt || '';
     document.getElementById('aiFallbackMessage').value = data.fallback_message || '';
+    document.getElementById('aiTestimonials').value = data.testimonials || '';
 
     // Update status indicator
     const statusEl = document.getElementById('aiStatus');
@@ -12761,7 +12773,8 @@ async function saveAISettings() {
       first_offer_discount: parseInt(document.getElementById('aiFirstOfferDiscount').value) || 0,
       discount_rules: document.getElementById('aiDiscountRules').value,
       sales_prompt: document.getElementById('aiSalesPrompt').value,
-      fallback_message: document.getElementById('aiFallbackMessage').value
+      fallback_message: document.getElementById('aiFallbackMessage').value,
+      testimonials: document.getElementById('aiTestimonials').value
     };
 
     await fetch('/api/ai-settings', {

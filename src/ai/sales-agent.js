@@ -12,8 +12,30 @@ const client = new Anthropic({ apiKey });
 // Available tools for Claude
 const AVAILABLE_TOOLS = [
   {
+    name: "send_free_lesson",
+    description: "Bepul darsni yuborish. User SMM haqida savol berganda BIRINCHI shu tool ishlat - ishonch hosil qilish uchun.",
+    input_schema: {
+      type: "object",
+      properties: {
+        lesson_number: { type: "number", enum: [1, 2, 3], description: "Qaysi bepul dars (1, 2 yoki 3)" },
+        reason: { type: "string", description: "Nima uchun bu darsni tavsiya qilyapsan" }
+      },
+      required: ["lesson_number"]
+    }
+  },
+  {
+    name: "show_testimonials",
+    description: "Pullik kanal obunachilarining otzivlarini ko'rsatish. User qiziqsa yoki shubhalansa ishlat.",
+    input_schema: {
+      type: "object",
+      properties: {
+        count: { type: "number", description: "Nechta otziv ko'rsatish (1-3)" }
+      }
+    }
+  },
+  {
     name: "show_payment",
-    description: "To'lov tugmalarini ko'rsatish. Faqat user tayyor bo'lganda yoki chegirma so'raganda ishlat.",
+    description: "To'lov tugmalarini ko'rsatish. Faqat user TAYYOR bo'lganda - bepul darslarni ko'rgan va qiziqgan bo'lsa.",
     input_schema: {
       type: "object",
       properties: {
@@ -171,10 +193,35 @@ Rad etgan: ${user.rejected_offers || 0} marta → Hozirgi taklif: ${Math.min((us
 6. Userning ismini ishlatib gapir
 7. Uning muammosiga reference qil
 
+## SOTUV FUNNELI (MUHIM!)
+
+### 1-QADAM: SMM savoli kelsa → BEPUL DARS
+User SMM haqida savol bersa (reels, algoritm, kontent, mijoz):
+→ BIRINCHI send_free_lesson() chaqir
+→ "Bu haqida 1-darsda batafsil tushuntiraman, mana ko'ring:"
+→ Hali sotishga OSHIQMA - avval ishonch hosil qil
+
+### 2-QADAM: Darsdan keyin → FEEDBACK SO'RA
+User darsni ko'rsa:
+→ "Qanday bo'ldi? Foydali bo'ldimi?"
+→ "Qaysi qismi eng qiziq bo'ldi?"
+
+### 3-QADAM: Ijobiy feedback → OTZIVLAR
+User yoqdi desa yoki davom etmoqchi bo'lsa:
+→ show_testimonials() chaqir
+→ "Boshqalar nima deyishyapti ko'ring:"
+
+### 4-QADAM: Qiziqish yuqori → SOTISH
+User "davom etmoqchiman" yoki "qanday olaman" desa:
+→ show_plans() yoki show_payment()
+
 ## QACHON NIMA QILASAN
 
-User "narx/qancha" desa → show_plans() chaqir
-User "olaman/tayyor" desa → show_payment(plan, discount) chaqir
+SMM savoli (reels, algoritm, kontent) → send_free_lesson(1) - ishonch uchun
+User darsni yoqtirdi → show_testimonials() - social proof
+User "narx/qancha" desa → show_plans()
+User "olaman/tayyor" desa → show_payment(plan, discount)
+User shubhalansa → show_testimonials() - ishonch oshirish
 User rad etsa → Chegirmani oshir (max gacha), show_payment()
 User qiziqmasa → schedule_followup(24, "special_offer")
 User "keyinroq" desa → schedule_followup(48, "reminder")
