@@ -1017,6 +1017,19 @@ export async function sendLesson(telegramId, lessonNumber, opts = {}) {
     return;
   }
 
+  const totalLessonsCount = await db.getLessonsCount();
+  const progressBar = generateProgressBar(lessonNumber - 1, totalLessonsCount);
+  const progressPercent = Math.round(((lessonNumber - 1) / totalLessonsCount) * 100);
+
+  // Send progress indicator first
+  await bot.telegram.sendMessage(telegramId,
+    `📚 <b>Kurs progressi</b>\n` +
+    `${progressBar} ${progressPercent}%\n\n` +
+    `📖 ${lessonNumber}/${totalLessonsCount} dars`,
+    { parse_mode: 'HTML' }
+  );
+  await delay(1000);
+
   const header = lessonNumber + '-DARS: ' + lesson.title + '\n\n';
   const content = lesson.content || '';
   const caption = header + content;
@@ -3106,18 +3119,26 @@ async function startLessonTest(telegramId, lessonNumber) {
     return;
   }
 
+  // Get current attempt number
+  const user = await db.getUser(telegramId);
+  const attemptField = `test_${lessonNumber}_attempt`;
+  const currentAttempt = (user?.[attemptField] || 0) + 1;
+
   // Reset any previous test results for this lesson
   await db.resetUserLessonTest(telegramId, lessonNumber);
 
-  // Set user to test mode
+  // Set user to test mode and increment attempt
   await db.updateUser(telegramId, {
     test_mode: true,
     current_test_lesson: lessonNumber,
-    current_test_question: 1
+    current_test_question: 1,
+    [attemptField]: currentAttempt
   });
 
+  const attemptText = currentAttempt > 1 ? `\n🔄 ${currentAttempt}-urinish` : '';
+
   await bot.telegram.sendMessage(telegramId,
-    `📝 <b>${lessonNumber}-dars testi</b>\n\n` +
+    `📝 <b>${lessonNumber}-dars testi</b>${attemptText}\n\n` +
     `Darsni qanchalik tushunganingizni tekshiramiz!\n\n` +
     `📊 ${tests.length} ta savol\n` +
     `✅ O'tish uchun: kamida ${TEST_PASS_THRESHOLD} ta to'g'ri javob\n\n` +
@@ -3129,6 +3150,15 @@ async function startLessonTest(telegramId, lessonNumber) {
       ])
     }
   );
+}
+
+/**
+ * Generate progress bar
+ */
+function generateProgressBar(current, total, width = 10) {
+  const filled = Math.round((current / total) * width);
+  const empty = width - filled;
+  return '▓'.repeat(filled) + '░'.repeat(empty);
 }
 
 /**
@@ -3152,8 +3182,11 @@ async function sendTestQuestion(telegramId, lessonNumber, questionOrder) {
     [Markup.button.callback(`D) ${question.option_d}`, `test_ans_${question.id}_d`)]
   ];
 
+  const progressBar = generateProgressBar(questionOrder - 1, QUESTIONS_PER_TEST);
+
   await bot.telegram.sendMessage(telegramId,
-    `📝 <b>Savol ${questionOrder}/${QUESTIONS_PER_TEST}</b>\n\n` +
+    `📝 <b>Savol ${questionOrder}/${QUESTIONS_PER_TEST}</b>\n` +
+    `${progressBar} ${Math.round(((questionOrder - 1) / QUESTIONS_PER_TEST) * 100)}%\n\n` +
     `${question.question_text}`,
     {
       parse_mode: 'HTML',
@@ -3171,6 +3204,11 @@ async function finishLessonTest(telegramId, lessonNumber) {
   const totalQuestions = score.total_questions;
   const passed = correctCount >= TEST_PASS_THRESHOLD;
 
+  // Get user's current attempt number
+  const user = await db.getUser(telegramId);
+  const attemptField = `test_${lessonNumber}_attempt`;
+  const currentAttempt = user?.[attemptField] || 1;
+
   // Update user scores
   const scoreField = `test_${lessonNumber}_score`;
   const passedField = `test_${lessonNumber}_passed`;
@@ -3181,6 +3219,22 @@ async function finishLessonTest(telegramId, lessonNumber) {
     test_mode: false,
     current_test_question: 0
   });
+
+  // Get test results with questions for summary
+  const testResults = await db.getUserLessonTestResults(telegramId, lessonNumber);
+
+  // Build summary of answers
+  let summaryText = '';
+  const wrongAnswers = [];
+
+  for (const result of testResults) {
+    if (result.is_correct) {
+      summaryText += `✅ ${result.question_order}. To'g'ri\n`;
+    } else {
+      summaryText += `❌ ${result.question_order}. Noto'g'ri\n`;
+      wrongAnswers.push(result);
+    }
+  }
 
   // Check for perfect score (all questions across all tests)
   const allResults = await db.getUserAllTestResults(telegramId);
@@ -3196,6 +3250,17 @@ async function finishLessonTest(telegramId, lessonNumber) {
 
   // Check if all tests passed with perfect score
   const isPerfect = isLastLesson && totalAnswered >= (totalLessons * QUESTIONS_PER_TEST) && totalCorrect === totalAnswered;
+
+  // Show completion animation
+  await bot.telegram.sendMessage(telegramId,
+    `${generateProgressBar(QUESTIONS_PER_TEST, QUESTIONS_PER_TEST)} 100%\n\n` +
+    `📊 <b>Test yakunlandi!</b>\n\n` +
+    `${summaryText}\n` +
+    `<b>Natija: ${correctCount}/${totalQuestions}</b>`,
+    { parse_mode: 'HTML' }
+  );
+
+  await delay(2000);
 
   if (passed) {
     let message = '';
@@ -3240,16 +3305,35 @@ async function finishLessonTest(telegramId, lessonNumber) {
       await startCustDev(telegramId, lessonNumber);
     }
   } else {
-    // User failed - get message from DB or use default
-    let failMessage = await db.getBotMessage('test_failed') ||
-      `📚 <b>Biroz ko'proq o'rganish kerak</b>\n\n` +
-      `❌ Natija: {{correct}}/{{total}}\n` +
-      `✅ O'tish uchun: kamida ${TEST_PASS_THRESHOLD} ta to'g'ri javob\n\n` +
-      `💡 Darsni qayta ko'ring va testni takrorlang.\n` +
-      `Bu bilimlar sizga kelajakda juda kerak bo'ladi!`;
+    // User failed
+    let failMessage = '';
 
-    failMessage = failMessage.replace(/\{\{correct\}\}/gi, correctCount)
-      .replace(/\{\{total\}\}/gi, totalQuestions);
+    // On 2nd+ attempt, show correct answers
+    if (currentAttempt >= 2 && wrongAnswers.length > 0) {
+      failMessage = `📚 <b>Afsuski, yana o'tmadingiz</b>\n\n` +
+        `❌ Natija: ${correctCount}/${totalQuestions}\n\n` +
+        `📖 <b>To'g'ri javoblar:</b>\n\n`;
+
+      for (const wrong of wrongAnswers) {
+        const correctLetter = wrong.correct_answer?.toUpperCase() || '?';
+        const correctOption = wrong[`option_${wrong.correct_answer?.toLowerCase()}`] || '';
+        failMessage += `${wrong.question_order}. ${wrong.question_text?.substring(0, 50)}...\n`;
+        failMessage += `   ✅ <b>${correctLetter}) ${correctOption}</b>\n\n`;
+      }
+
+      failMessage += `💡 Darsni qayta ko'ring va yana urinib ko'ring!`;
+    } else {
+      // First attempt - don't show correct answers
+      failMessage = await db.getBotMessage('test_failed') ||
+        `📚 <b>Biroz ko'proq o'rganish kerak</b>\n\n` +
+        `❌ Natija: {{correct}}/{{total}}\n` +
+        `✅ O'tish uchun: kamida ${TEST_PASS_THRESHOLD} ta to'g'ri javob\n\n` +
+        `💡 Darsni qayta ko'ring va testni takrorlang.\n` +
+        `Bu bilimlar sizga kelajakda juda kerak bo'ladi!`;
+
+      failMessage = failMessage.replace(/\{\{correct\}\}/gi, correctCount)
+        .replace(/\{\{total\}\}/gi, totalQuestions);
+    }
 
     await bot.telegram.sendMessage(telegramId, failMessage, {
       parse_mode: 'HTML',
@@ -3357,27 +3441,18 @@ bot.action(/^test_ans_(\d+)_([abcd])$/, async (ctx) => {
       questionId
     );
 
-    // Show result
-    const correctOption = question[`option_${question.correct_answer.toLowerCase()}`];
+    // Don't show correct/incorrect - just acknowledge and show loading
+    await ctx.answerCbQuery('✓ Javob qabul qilindi', { show_alert: false });
 
-    if (isCorrect) {
-      await ctx.answerCbQuery('✅ To\'g\'ri!', { show_alert: false });
-      await ctx.editMessageText(
-        `${ctx.update.callback_query.message.text}\n\n` +
-        `✅ <b>To'g'ri javob!</b>`,
-        { parse_mode: 'HTML' }
-      );
-    } else {
-      await ctx.answerCbQuery('❌ Noto\'g\'ri', { show_alert: false });
-      await ctx.editMessageText(
-        `${ctx.update.callback_query.message.text}\n\n` +
-        `❌ <b>Noto'g'ri.</b>\n` +
-        `✅ To'g'ri javob: <b>${question.correct_answer.toUpperCase()}) ${correctOption}</b>`,
-        { parse_mode: 'HTML' }
-      );
-    }
+    // Show loading animation on the message
+    const progressBar = generateProgressBar(question.question_order, QUESTIONS_PER_TEST);
+    await ctx.editMessageText(
+      `⏳ <b>Javob saqlandi...</b>\n\n` +
+      `${progressBar} ${Math.round((question.question_order / QUESTIONS_PER_TEST) * 100)}%`,
+      { parse_mode: 'HTML' }
+    );
 
-    await delay(1500);
+    await delay(800);
 
     // Send next question
     await sendTestQuestion(telegramId, question.lesson_number, question.question_order + 1);
