@@ -2966,137 +2966,66 @@ bot.on('video_note', async (ctx) => {
  * Send pitch/sales offer to user after completing all lessons and receiving gift
  */
 async function sendBonusOffer(telegramId, isPerfect) {
-  const user = await db.getUser(telegramId);
+  // Show subscription plans with discount if perfect score
   const discountPercent = isPerfect ?
-    (await db.getSetting('perfect_score_discount_percent') || '30') :
-    '0';
+    parseInt(await db.getSetting('perfect_score_discount_percent') || '30') : 0;
 
-  let message = '';
-
+  // If perfect score, mark discount as available for this user
   if (isPerfect) {
-    message = `🔥🔥🔥\n\n` +
-      `<b>${user?.full_name || 'Do\'stim'}, siz haqiqiy talantli ekansiz!</b>\n\n` +
-      `🏆 Barcha testlardan 100% natija - bu kam odamda bor!\n\n` +
-      `Sizga maxsus <b>${discountPercent}% chegirma</b> taqdim etamiz!\n\n` +
-      `📚 <b>To'liq SMM Professional kursiga</b> kirish:\n\n` +
-      `✅ 50+ chuqur video darslar\n` +
-      `✅ Amaliy loyihalar va topshiriqlar\n` +
-      `✅ Shaxsiy mentor qo'llab-quvvatlashi\n` +
-      `✅ Premium hamjamiyat a'zoligi\n` +
-      `✅ Rasmiy sertifikat\n` +
-      `✅ Umrbod kirish huquqi\n\n` +
-      `⏰ <b>Bu chegirma faqat bugun amal qiladi!</b>`;
-  } else {
-    message = `💼 <b>Keyingi qadam!</b>\n\n` +
-      `${user?.full_name || 'Do\'stim'}, siz bepul darslarni muvaffaqiyatli tugatdingiz!\n\n` +
-      `Endi professional darajaga ko'tariling! 🚀\n\n` +
-      `📚 <b>To'liq SMM Professional kursida:</b>\n\n` +
-      `✅ 50+ chuqur video darslar\n` +
-      `✅ Amaliy loyihalar va topshiriqlar\n` +
-      `✅ Shaxsiy mentor qo'llab-quvvatlashi\n` +
-      `✅ Premium hamjamiyat a'zoligi\n` +
-      `✅ Rasmiy sertifikat\n` +
-      `✅ Umrbod kirish huquqi\n\n` +
-      `🎯 <b>Bu investitsiya o'zini 1 oyda qaytaradi!</b>`;
+    await db.updateUser(telegramId, { perfect_score_discount_available: discountPercent });
   }
 
-  const buttons = [];
-
-  if (isPerfect) {
-    buttons.push([Markup.button.callback(`🎁 ${discountPercent}% CHEGIRMA bilan olish`, 'claim_perfect_discount')]);
-  }
-
-  buttons.push([Markup.button.callback('💳 Hoziroq sotib olish', 'buy_course')]);
-  buttons.push([Markup.button.callback('❓ Savollarim bor', 'course_info')]);
-
-  await bot.telegram.sendMessage(telegramId, message, {
-    parse_mode: 'HTML',
-    ...Markup.inlineKeyboard(buttons)
-  });
+  await sendSalesPitch(telegramId, discountPercent);
 }
 
-// Claim perfect score discount
-bot.action('claim_perfect_discount', async (ctx) => {
+// Buy course / subscription - redirect to sales pitch
+bot.action('buy_course', async (ctx) => {
   try {
     const telegramId = ctx.from.id;
+    await ctx.answerCbQuery();
+
+    // Check if user has perfect score discount
     const user = await db.getUser(telegramId);
+    const discountPercent = user?.perfect_score ?
+      parseInt(await db.getSetting('perfect_score_discount_percent') || '30') : 0;
 
-    if (!user?.perfect_score) {
-      await ctx.answerCbQuery('Bu chegirma faqat barcha testlardan 100% olganlar uchun!');
-      return;
-    }
-
-    if (user?.perfect_score_discount_used) {
-      await ctx.answerCbQuery('Siz bu chegirmadan allaqachon foydalangansiz!');
-      return;
-    }
-
-    await ctx.answerCbQuery('Chegirma qo\'llanildi!');
-    await ctx.editMessageReplyMarkup(undefined);
-
-    const discountPercent = await db.getSetting('perfect_score_discount_percent') || '30';
-
-    await ctx.reply(
-      `🎉 <b>${discountPercent}% chegirma qo'llanildi!</b>\n\n` +
-      `Endi to'lov sahifasiga o'ting va chegirma avtomatik hisobga olinadi.\n\n` +
-      `To'lov uchun quyidagi tugmani bosing:`,
-      {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-          [Markup.button.callback('💳 To\'lovga o\'tish', 'checkout_with_discount')]
-        ])
-      }
-    );
-
+    await sendSalesPitch(telegramId, discountPercent);
   } catch (e) {
-    console.error('Claim discount error:', e);
+    console.error('Buy course error:', e);
     await ctx.answerCbQuery('Xatolik yuz berdi');
   }
 });
 
-// Handle checkout with perfect score discount
-bot.action('checkout_with_discount', async (ctx) => {
+// Course info - redirect to question handler
+bot.action('course_info', async (ctx) => {
   try {
-    const telegramId = ctx.from.id;
-    const user = await db.getUser(telegramId);
-
-    if (!user?.perfect_score || user?.perfect_score_discount_used) {
-      await ctx.answerCbQuery('Chegirma mavjud emas');
-      // Redirect to normal checkout
-      await handleCheckout(telegramId);
-      return;
-    }
-
-    // Get discount percent and apply
-    const discountPercent = parseInt(await db.getSetting('perfect_score_discount_percent') || '30');
-    const originalPrice = DEFAULT_PRICE;
-    const discountedPrice = Math.round(originalPrice * (100 - discountPercent) / 100);
-
     await ctx.answerCbQuery();
-    await ctx.editMessageReplyMarkup(undefined);
-
-    // Show payment options with discounted price
-    const buttons = [
-      [Markup.button.callback(`💳 Payme (${formatMoney(discountedPrice)})`, `pay_payme_perfect`)],
-      [Markup.button.callback(`💳 Click (${formatMoney(discountedPrice)})`, `pay_click_perfect`)],
-      [Markup.button.callback('🔙 Orqaga', 'buy_course')]
-    ];
-
+    // Trigger the question flow
     await ctx.reply(
-      `💰 <b>To'lov</b>\n\n` +
-      `📦 To'liq SMM kurs\n` +
-      `💵 Narxi: <s>${formatMoney(originalPrice)}</s>\n` +
-      `🎁 Chegirma: <b>${discountPercent}%</b>\n` +
-      `✅ Yangi narx: <b>${formatMoney(discountedPrice)}</b>\n\n` +
-      `To'lov usulini tanlang:`,
+      `❓ <b>Savollaringiz bormi?</b>\n\n` +
+      `Savollaringizni yozing, biz sizga tez orada javob beramiz!\n\n` +
+      `Yoki quyidagi tugmani bosing:`,
       {
         parse_mode: 'HTML',
-        ...Markup.inlineKeyboard(buttons)
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback('📋 Obuna turlari', 'show_plans')],
+          [Markup.button.callback('💬 Admin bilan bog\'lanish', 'contact_admin')]
+        ])
       }
     );
-
   } catch (e) {
-    console.error('Checkout with discount error:', e);
+    console.error('Course info error:', e);
+    await ctx.answerCbQuery('Xatolik yuz berdi');
+  }
+});
+
+// Show subscription plans
+bot.action('show_plans', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await sendSalesPitch(ctx.from.id);
+  } catch (e) {
+    console.error('Show plans error:', e);
     await ctx.answerCbQuery('Xatolik yuz berdi');
   }
 });
@@ -3283,17 +3212,9 @@ async function finishLessonTest(telegramId, lessonNumber) {
 
     await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-    // If perfect score across ALL tests
+    // If perfect score across ALL tests - just mark, don't show message (will show in pitch)
     if (isPerfect) {
       await db.updateUser(telegramId, { perfect_score: true });
-      await delay(1500);
-      await bot.telegram.sendMessage(telegramId,
-        `🏆🏆🏆 <b>AJOYIB!</b>\n\n` +
-        `Siz barcha 3 ta testdan 100% natija oldingiz!\n\n` +
-        `🎁 Sizga <b>${discountPercent}% maxsus chegirma</b> taqdim etamiz!\n` +
-        `Bu chegirma faqat siz uchun!`,
-        { parse_mode: 'HTML' }
-      );
     }
 
     await delay(2000);
