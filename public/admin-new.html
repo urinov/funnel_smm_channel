@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funnel Dashboard</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              200: '#ddd6fe',
+              300: '#c4b5fd',
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            },
+            surface: {
+              0: '#ffffff',
+              50: '#fafafa',
+              100: '#f4f4f5',
+              200: '#e4e4e7',
+            }
+          },
+          boxShadow: {
+            'soft': '0 2px 8px rgba(0, 0, 0, 0.04)',
+            'card': '0 4px 24px rgba(0, 0, 0, 0.06)',
+            'hover': '0 8px 32px rgba(0, 0, 0, 0.08)',
+            'glow': '0 0 40px rgba(139, 92, 246, 0.15)',
+          },
+          borderRadius: {
+            '2xl': '16px',
+            '3xl': '24px',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+
+    /* Smooth scrolling */
+    html { scroll-behavior: smooth; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #d4d4d8; }
+
+    /* Page background */
+    body {
+      background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 50%, #f5f3ff 100%);
+      min-height: 100vh;
+    }
+
+    /* Glass effect */
+    .glass {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Card hover effect */
+    .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Stat card */
+    .stat-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hero gradient */
+    .hero-gradient {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%);
+    }
+
+    /* Nav pill */
+    .nav-pill {
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #71717a;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .nav-pill:hover {
+      color: #18181b;
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .nav-pill.active {
+      color: white;
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Activity item */
+    .activity-item {
+      padding: 16px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .activity-item:hover {
+      background: #fafafa;
+    }
+
+    /* Quick action button */
+    .quick-action {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: white;
+      border: 1px solid #e4e4e7;
+      border-radius: 14px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #3f3f46;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .quick-action:hover {
+      border-color: #8b5cf6;
+      color: #7c3aed;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-success { background: #dcfce7; color: #16a34a; }
+    .badge-warning { background: #fef3c7; color: #d97706; }
+    .badge-info { background: #e0e7ff; color: #4f46e5; }
+
+    /* Number animation */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-number {
+      animation: countUp 0.5s ease-out forwards;
+    }
+
+    /* Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg, #f4f4f5 0%, #fafafa 50%, #f4f4f5 100%);
+      background-size: 200% 100%;
+      animation: skeleton 1.5s ease-in-out infinite;
+      border-radius: 8px;
+    }
+    @keyframes skeleton {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 16px 24px;
+      background: #18181b;
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Modal content */
+    .modal-content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: auto;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 101;
+    }
+    .modal-overlay.show .modal-content {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    /* Table styles */
+    .data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #71717a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e4e4e7;
+    }
+    .data-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f4f4f5;
+    }
+    .data-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .data-table tbody tr:hover {
+      background: #fafafa;
+    }
+
+    /* Chart container */
+    .chart-container {
+      position: relative;
+      height: 280px;
+    }
+
+    /* Input styles */
+    .input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #fafafa;
+      border: 1px solid #e4e4e7;
+      border-radius: 12px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    .input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Button styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: white;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    }
+    .btn-secondary {
+      background: white;
+      color: #3f3f46;
+      border: 1px solid #e4e4e7;
+    }
+    .btn-secondary:hover {
+      border-color: #8b5cf6;
+      color: #7c3aed;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-container { padding: 12px 16px; }
+      .main-content { padding: 16px; }
+      .stat-card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 hero-gradient rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-glow">
+        <span class="text-white text-3xl font-bold">F</span>
+      </div>
+      <h1 class="text-2xl font-bold text-zinc-900 mb-2">Funnel Dashboard</h1>
+      <p class="text-zinc-500">Admin paneliga kirish</p>
+    </div>
+
+    <div class="bg-white rounded-3xl p-8 shadow-card">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Login</label>
+          <input type="text" id="loginUser" class="input" placeholder="admin">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Parol</label>
+          <input type="password" id="loginPass" class="input" placeholder="••••••••">
+        </div>
+        <button onclick="login()" class="btn btn-primary w-full mt-6">
+          <span class="material-symbols-outlined text-lg">login</span>
+          Kirish
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Dashboard -->
+<div id="dashboard" class="hidden">
+
+  <!-- Top Navigation -->
+  <nav class="sticky top-0 z-50 glass border-b border-zinc-200/50">
+    <div class="max-w-[1600px] mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+
+        <!-- Logo & Nav -->
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 hero-gradient rounded-xl flex items-center justify-center shadow-soft">
+              <span class="text-white font-bold">F</span>
+            </div>
+            <span class="font-bold text-zinc-900 hidden sm:block">Funnel</span>
+          </div>
+
+          <div class="flex items-center gap-1 bg-zinc-100 p-1.5 rounded-2xl">
+            <div class="nav-pill active" data-tab="home" onclick="showTab('home')">
+              <span class="material-symbols-outlined text-lg align-middle mr-1">home</span>
+              Home
+            </div>
+            <div class="nav-pill" data-tab="audience" onclick="showTab('audience')">
+              <span class="material-symbols-outlined text-lg align-middle mr-1">group</span>
+              Odamlar
+            </div>
+            <div class="nav-pill" data-tab="content" onclick="showTab('content')">
+              <span class="material-symbols-outlined text-lg align-middle mr-1">school</span>
+              Kontent
+            </div>
+            <div class="nav-pill" data-tab="sales" onclick="showTab('sales')">
+              <span class="material-symbols-outlined text-lg align-middle mr-1">payments</span>
+              Sotuvlar
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center gap-3">
+          <button onclick="openSearch()" class="flex items-center gap-2 px-4 py-2.5 bg-zinc-100 rounded-xl text-zinc-500 hover:bg-zinc-200 transition-all">
+            <span class="material-symbols-outlined text-lg">search</span>
+            <span class="text-sm hidden sm:block">Qidirish...</span>
+            <kbd class="text-xs bg-white px-2 py-0.5 rounded-md shadow-soft hidden sm:block">⌘K</kbd>
+          </button>
+
+          <button onclick="openNotifications()" class="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-zinc-100 transition-all">
+            <span class="material-symbols-outlined text-zinc-600">notifications</span>
+            <span id="notifBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center hidden">3</span>
+          </button>
+
+          <button onclick="openSettings()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-zinc-100 transition-all">
+            <span class="material-symbols-outlined text-zinc-600">settings</span>
+          </button>
+
+          <div class="w-10 h-10 hero-gradient rounded-xl flex items-center justify-center text-white font-semibold cursor-pointer">
+            A
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-[1600px] mx-auto px-6 py-8">
+
+    <!-- HOME TAB -->
+    <div id="tab-home">
+
+      <!-- Hero Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+        <!-- Welcome Card -->
+        <div class="lg:col-span-2 hero-gradient rounded-3xl p-8 text-white relative overflow-hidden">
+          <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-32 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
+          <div class="relative">
+            <p class="text-white/80 mb-2">Xush kelibsiz!</p>
+            <h1 class="text-3xl font-bold mb-4">Salom, Admin! 👋</h1>
+
+            <div class="flex items-end gap-2 mb-6">
+              <span class="text-5xl font-bold" id="heroRevenue">455,900</span>
+              <span class="text-xl mb-2">so'm</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+              <span class="badge badge-success">
+                <span class="material-symbols-outlined text-sm">trending_up</span>
+                +12% bu hafta
+              </span>
+              <span class="text-white/70 text-sm">Bu oylik daromad</span>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="mt-6">
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-white/70">Oylik maqsad</span>
+                <span class="font-semibold">65%</span>
+              </div>
+              <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                <div class="h-full bg-white rounded-full" style="width: 65%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="stat-card">
+            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-blue-600">group</span>
+            </div>
+            <p class="text-sm text-zinc-500 mb-1">Jami userlar</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statTotalUsers">930</p>
+            <p class="text-xs text-green-600 mt-1">+47 bugun</p>
+          </div>
+
+          <div class="stat-card">
+            <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-purple-600">diamond</span>
+            </div>
+            <p class="text-sm text-zinc-500 mb-1">Pullik a'zolar</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statPaidUsers">3</p>
+            <p class="text-xs text-green-600 mt-1">+1 bu hafta</p>
+          </div>
+
+          <div class="stat-card">
+            <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-green-600">trending_up</span>
+            </div>
+            <p class="text-sm text-zinc-500 mb-1">Konversiya</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statCR">0.3%</p>
+            <p class="text-xs text-zinc-400 mt-1">user → pullik</p>
+          </div>
+
+          <div class="stat-card">
+            <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-orange-600">bolt</span>
+            </div>
+            <p class="text-sm text-zinc-500 mb-1">Faol hozir</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statActiveNow">928</p>
+            <p class="text-xs text-zinc-400 mt-1">24 soat ichida</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts & Activity Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+        <!-- Chart -->
+        <div class="lg:col-span-2 bg-white rounded-3xl p-6 shadow-card">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-semibold text-zinc-900">Haftalik o'sish</h3>
+              <p class="text-sm text-zinc-500">Yangi userlar va to'lovlar</p>
+            </div>
+            <select class="input w-auto" id="chartPeriod" onchange="updateChart()">
+              <option value="7">7 kun</option>
+              <option value="30">30 kun</option>
+              <option value="90">90 kun</option>
+            </select>
+          </div>
+          <div class="chart-container">
+            <canvas id="growthChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-3xl p-6 shadow-card">
+          <h3 class="font-semibold text-zinc-900 mb-4">Tez harakatlar</h3>
+
+          <div class="space-y-3">
+            <button onclick="openBroadcast()" class="quick-action w-full">
+              <span class="material-symbols-outlined text-purple-500">campaign</span>
+              Xabar yuborish
+            </button>
+
+            <button onclick="showTab('audience')" class="quick-action w-full">
+              <span class="material-symbols-outlined text-blue-500">person_search</span>
+              User qidirish
+            </button>
+
+            <button onclick="showTab('sales')" class="quick-action w-full">
+              <span class="material-symbols-outlined text-green-500">receipt_long</span>
+              To'lovlarni ko'rish
+            </button>
+
+            <button onclick="exportReport()" class="quick-action w-full">
+              <span class="material-symbols-outlined text-orange-500">download</span>
+              Hisobot olish
+            </button>
+          </div>
+
+          <div class="mt-6 p-4 bg-purple-50 rounded-2xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-purple-600">smart_toy</span>
+              </div>
+              <div>
+                <p class="font-medium text-zinc-900">AI Agent</p>
+                <p class="text-xs text-green-600">Yoqilgan</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity & Funnel Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-3xl p-6 shadow-card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-zinc-900">So'nggi faoliyat</h3>
+            <button class="text-sm text-purple-600 font-medium">Barchasini ko'rish</button>
+          </div>
+
+          <div class="space-y-1" id="activityFeed">
+            <div class="activity-item flex items-center gap-4">
+              <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-green-600 text-lg">payments</span>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-zinc-900">Nilufar Mo'minova</p>
+                <p class="text-sm text-zinc-500">To'lov qildi - 97,000 so'm</p>
+              </div>
+              <span class="text-xs text-zinc-400">5 min oldin</span>
+            </div>
+
+            <div class="activity-item flex items-center gap-4">
+              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-blue-600 text-lg">school</span>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-zinc-900">Aziz Karimov</p>
+                <p class="text-sm text-zinc-500">3-darsni ko'rdi</p>
+              </div>
+              <span class="text-xs text-zinc-400">12 min oldin</span>
+            </div>
+
+            <div class="activity-item flex items-center gap-4">
+              <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-purple-600 text-lg">person_add</span>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-zinc-900">Jasur Toshev</p>
+                <p class="text-sm text-zinc-500">Ro'yxatdan o'tdi</p>
+              </div>
+              <span class="text-xs text-zinc-400">23 min oldin</span>
+            </div>
+
+            <div class="activity-item flex items-center gap-4">
+              <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-orange-600 text-lg">quiz</span>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-zinc-900">Malika Rahimova</p>
+                <p class="text-sm text-zinc-500">1-test topshirdi (80%)</p>
+              </div>
+              <span class="text-xs text-zinc-400">45 min oldin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnel Chart -->
+        <div class="bg-white rounded-3xl p-6 shadow-card">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-semibold text-zinc-900">Sotuv voronkasi</h3>
+            <span class="badge badge-info">Bu oy</span>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="text-sm text-zinc-600">Jami userlar</span>
+                <span class="font-semibold">930</span>
+              </div>
+              <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div class="h-full bg-purple-500 rounded-full" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="text-sm text-zinc-600">Dars ko'rgan</span>
+                <span class="font-semibold">456</span>
+              </div>
+              <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 rounded-full" style="width: 49%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="text-sm text-zinc-600">Pitch ko'rgan</span>
+                <span class="font-semibold">89</span>
+              </div>
+              <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500 rounded-full" style="width: 9.5%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="text-sm text-zinc-600">To'lov qilgan</span>
+                <span class="font-semibold">3</span>
+              </div>
+              <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div class="h-full bg-orange-500 rounded-full" style="width: 0.3%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 p-4 bg-zinc-50 rounded-2xl">
+            <div class="flex items-center gap-2 text-sm">
+              <span class="material-symbols-outlined text-orange-500 text-lg">lightbulb</span>
+              <span class="text-zinc-600">Eng katta yo'qotish: <strong>Dars → Pitch</strong> (80%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIENCE TAB -->
+    <div id="tab-audience" class="hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-zinc-900">Odamlar</h2>
+          <p class="text-zinc-500">Foydalanuvchilar va suhbatlar</p>
+        </div>
+        <button class="btn btn-primary">
+          <span class="material-symbols-outlined">download</span>
+          Export
+        </button>
+      </div>
+
+      <!-- Sub tabs -->
+      <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <button class="nav-pill active" onclick="showSubTab('audience', 'users')">Userlar</button>
+        <button class="nav-pill" onclick="showSubTab('audience', 'chats')">Suhbatlar</button>
+        <button class="nav-pill" onclick="showSubTab('audience', 'feedback')">Feedback</button>
+        <button class="nav-pill" onclick="showSubTab('audience', 'referrals')">Referallar</button>
+      </div>
+
+      <!-- Users subtab content -->
+      <div id="subtab-users" class="bg-white rounded-3xl shadow-card overflow-hidden">
+        <div class="p-6 border-b border-zinc-100">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+              <input type="text" class="input" placeholder="User qidirish..." id="userSearch">
+            </div>
+            <select class="input w-auto">
+              <option>Barcha userlar</option>
+              <option>Pullik</option>
+              <option>Bepul</option>
+              <option>Faol</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Dars</th>
+                <th>Status</th>
+                <th>Sana</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td>
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">A</div>
+                    <div>
+                      <p class="font-medium">Aziz Karimov</p>
+                      <p class="text-sm text-zinc-500">@aziz_k</p>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge badge-info">3-dars</span></td>
+                <td><span class="badge badge-warning">Bepul</span></td>
+                <td class="text-zinc-500">24.02.2026</td>
+                <td>
+                  <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+                    <span class="material-symbols-outlined text-zinc-400">more_vert</span>
+                  </button>
+                </td>
+              </tr>
+              <!-- More rows will be loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-4 border-t border-zinc-100 flex items-center justify-between">
+          <span class="text-sm text-zinc-500">1-20 / 930 user</span>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary">← Oldingi</button>
+            <button class="btn btn-secondary">Keyingi →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT TAB -->
+    <div id="tab-content" class="hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-zinc-900">Kontent</h2>
+          <p class="text-zinc-500">Darslar va xabarlar</p>
+        </div>
+      </div>
+
+      <!-- Sub tabs -->
+      <div class="flex gap-2 mb-6">
+        <button class="nav-pill active" onclick="showSubTab('content', 'lessons')">Darslar</button>
+        <button class="nav-pill" onclick="showSubTab('content', 'tests')">Testlar</button>
+        <button class="nav-pill" onclick="showSubTab('content', 'progrev')">Progrev</button>
+        <button class="nav-pill" onclick="showSubTab('content', 'broadcast')">Xabar yuborish</button>
+      </div>
+
+      <div class="bg-white rounded-3xl p-6 shadow-card">
+        <p class="text-zinc-500">Kontent sahifasi tez orada...</p>
+      </div>
+    </div>
+
+    <!-- SALES TAB -->
+    <div id="tab-sales" class="hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-zinc-900">Sotuvlar</h2>
+          <p class="text-zinc-500">To'lovlar va marketing</p>
+        </div>
+      </div>
+
+      <!-- Sub tabs -->
+      <div class="flex gap-2 mb-6">
+        <button class="nav-pill active" onclick="showSubTab('sales', 'payments')">To'lovlar</button>
+        <button class="nav-pill" onclick="showSubTab('sales', 'analytics')">Analitika</button>
+        <button class="nav-pill" onclick="showSubTab('sales', 'ai-agent')">AI Agent</button>
+        <button class="nav-pill" onclick="showSubTab('sales', 'promo')">Promo kodlar</button>
+      </div>
+
+      <div class="bg-white rounded-3xl p-6 shadow-card">
+        <p class="text-zinc-500">Sotuvlar sahifasi tez orada...</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<!-- Scripts -->
+<script>
+let auth = '';
+let currentTab = 'home';
+
+// Login
+function login() {
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+
+  if (!user || !pass) {
+    showToast('Login va parolni kiriting');
+    return;
+  }
+
+  auth = 'Basic ' + btoa(user + ':' + pass);
+
+  fetch('/api/stats', { headers: { Authorization: auth } })
+    .then(r => {
+      if (!r.ok) throw new Error('Unauthorized');
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      loadDashboard();
+    })
+    .catch(e => {
+      showToast('Login yoki parol noto\'g\'ri');
+    });
+}
+
+// Show tab
+function showTab(tab) {
+  currentTab = tab;
+
+  // Hide all tabs
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-' + tab)?.classList.remove('hidden');
+
+  // Update nav pills
+  document.querySelectorAll('.nav-pill[data-tab]').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+
+  // Load tab data
+  if (tab === 'home') loadHomeData();
+  if (tab === 'audience') loadAudienceData();
+}
+
+// Show sub tab
+function showSubTab(parent, subtab) {
+  // Implementation for sub tabs
+}
+
+// Load dashboard
+function loadDashboard() {
+  loadHomeData();
+  initChart();
+}
+
+// Load home data
+async function loadHomeData() {
+  try {
+    const stats = await fetch('/api/stats', { headers: { Authorization: auth } }).then(r => r.json());
+
+    // Update stats
+    document.getElementById('heroRevenue').textContent = formatNumber(stats.monthly_revenue || 455900);
+    document.getElementById('statTotalUsers').textContent = formatNumber(stats.total_users || 0);
+    document.getElementById('statPaidUsers').textContent = stats.paid_users || 0;
+    document.getElementById('statCR').textContent = ((stats.paid_users / stats.total_users) * 100).toFixed(1) + '%';
+    document.getElementById('statActiveNow').textContent = stats.active_today || 0;
+
+  } catch (e) {
+    console.error('loadHomeData error:', e);
+  }
+}
+
+// Load audience data
+async function loadAudienceData() {
+  try {
+    const users = await fetch('/api/users?limit=20', { headers: { Authorization: auth } }).then(r => r.json());
+    renderUsersTable(users);
+  } catch (e) {
+    console.error('loadAudienceData error:', e);
+  }
+}
+
+// Render users table
+function renderUsersTable(users) {
+  const tbody = document.getElementById('usersTableBody');
+  if (!users || !users.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-zinc-400">Userlar topilmadi</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">
+            ${(u.first_name || 'U')[0].toUpperCase()}
+          </div>
+          <div>
+            <p class="font-medium">${escapeHtml(u.first_name || 'User')} ${escapeHtml(u.last_name || '')}</p>
+            <p class="text-sm text-zinc-500">${u.username ? '@' + u.username : u.telegram_id}</p>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-info">${u.current_lesson || 0}-dars</span></td>
+      <td><span class="badge ${u.is_paid ? 'badge-success' : 'badge-warning'}">${u.is_paid ? 'Pullik' : 'Bepul'}</span></td>
+      <td class="text-zinc-500">${formatDate(u.created_at)}</td>
+      <td>
+        <button onclick="openUserModal(${u.telegram_id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+          <span class="material-symbols-outlined text-zinc-400">more_vert</span>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Initialize chart
+function initChart() {
+  const ctx = document.getElementById('growthChart')?.getContext('2d');
+  if (!ctx) return;
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'],
+      datasets: [{
+        label: 'Yangi userlar',
+        data: [12, 19, 15, 25, 22, 30, 47],
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#8b5cf6',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#a1a1aa' }
+        },
+        y: {
+          grid: { color: '#f4f4f5' },
+          ticks: { color: '#a1a1aa' },
+          beginAtZero: true
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      }
+    }
+  });
+}
+
+// Toast notification
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Utility functions
+function formatNumber(num) {
+  return new Intl.NumberFormat('uz-UZ').format(num);
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('uz-UZ');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+// Placeholder functions
+function openSearch() { showToast('Qidiruv tez orada...'); }
+function openNotifications() { showToast('Bildirishnomalar tez orada...'); }
+function openSettings() { showTab('settings'); }
+function openBroadcast() { showToast('Xabar yuborish tez orada...'); }
+function exportReport() { showToast('Hisobot tez orada...'); }
+function openUserModal(id) { showToast('User: ' + id); }
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openSearch();
+  }
+});
+
+// Auto login check
+document.addEventListener('DOMContentLoaded', () => {
+  // Try to login with stored credentials or show login screen
+});
+</script>
+
+</body>
+</html>
