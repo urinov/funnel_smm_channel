@@ -1187,19 +1187,20 @@ export async function createLesson(data) {
   return rows[0];
 }
 
-export async function updateLesson(lessonNumber, data) {
+export async function updateLesson(lessonIdentifier, data) {
   const fields = Object.keys(data);
   const values = Object.values(data);
-  
+
   if (fields.length === 0) {
     return null;
   }
-  
+
   const setClause = fields.map((f, i) => f + ' = $' + (i + 2)).join(', ');
-  
+
+  // Support both id and lesson_number
   const { rows } = await pool.query(
-    'UPDATE lessons SET ' + setClause + ' WHERE lesson_number = $1 RETURNING *', 
-    [lessonNumber, ...values]
+    'UPDATE lessons SET ' + setClause + ' WHERE id = $1 OR lesson_number = $1 RETURNING *',
+    [lessonIdentifier, ...values]
   );
   return rows[0];
 }
@@ -3114,25 +3115,20 @@ export async function getAllCustDevAnswers() {
       ca.id,
       ca.telegram_id,
       ca.question_id,
-      ca.answer as answer_text,
+      ca.answer as answer,
       ca.created_at,
       cq.question_text,
-      cq.field_name
+      cq.field_name,
+      u.full_name,
+      u.username
     FROM custdev_answers ca
     JOIN custdev_questions cq ON cq.id = ca.question_id
+    LEFT JOIN users u ON u.telegram_id = ca.telegram_id
     ORDER BY ca.created_at DESC
+    LIMIT 100
   `);
 
-  // Group by question_id
-  const grouped = {};
-  for (const row of rows) {
-    if (!grouped[row.question_id]) {
-      grouped[row.question_id] = [];
-    }
-    grouped[row.question_id].push(row);
-  }
-
-  return grouped;
+  return rows;
 }
 
 // Get user's custdev answers

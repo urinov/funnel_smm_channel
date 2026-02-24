@@ -620,7 +620,7 @@
         <div class="bg-white rounded-3xl p-6 shadow-card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-zinc-900">So'nggi faoliyat</h3>
-            <button class="text-sm text-purple-600 font-medium">Barchasini ko'rish</button>
+            <button onclick="showTab('audience'); showSubTab('audience', 'users');" class="text-sm text-purple-600 font-medium hover:text-purple-700">Barchasini ko'rish →</button>
           </div>
 
           <div class="space-y-1" id="activityFeed">
@@ -756,7 +756,7 @@
           <h2 class="text-2xl font-bold text-zinc-900">Odamlar</h2>
           <p class="text-zinc-500">Foydalanuvchilar va suhbatlar</p>
         </div>
-        <button class="btn btn-primary">
+        <button onclick="exportUsers()" class="btn btn-primary">
           <span class="material-symbols-outlined">download</span>
           Export
         </button>
@@ -1488,7 +1488,12 @@
               <div>
                 <label class="block text-sm font-medium text-zinc-700 mb-2">Tugmalar (ixtiyoriy)</label>
                 <div class="space-y-2" id="broadcastButtons">
-                  <div class="flex gap-2">
+                  <div class="flex gap-2 items-center">
+                    <select class="input w-28 text-sm" id="broadcastBtnType1" onchange="updateBtnFields(1)">
+                      <option value="url">URL</option>
+                      <option value="payme">Payme</option>
+                      <option value="click">Click</option>
+                    </select>
                     <input type="text" class="input flex-1" placeholder="Tugma matni" id="broadcastBtnText1">
                     <input type="text" class="input flex-1" placeholder="URL" id="broadcastBtnUrl1">
                   </div>
@@ -1497,6 +1502,30 @@
                   <span class="material-symbols-outlined text-sm">add</span>
                   Tugma qo'shish
                 </button>
+              </div>
+
+              <!-- Payment button settings -->
+              <div class="p-4 bg-green-50 rounded-2xl space-y-3" id="broadcastPaymentSettings" style="display:none;">
+                <p class="text-sm font-medium text-green-700 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-lg">payments</span>
+                  To'lov sozlamalari
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-zinc-600 mb-1">Narx (so'm)</label>
+                    <input type="number" class="input text-sm" id="broadcastPaymentAmount" value="97000" placeholder="97000">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-zinc-600 mb-1">Obuna muddati</label>
+                    <select class="input text-sm" id="broadcastPaymentDuration">
+                      <option value="1month">1 oy</option>
+                      <option value="3month">3 oy</option>
+                      <option value="6month">6 oy</option>
+                      <option value="1year">1 yil</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="text-xs text-green-600">Maxsus narx va muddat bilan to'lov havolasi yaratiladi</p>
               </div>
 
               <div class="flex gap-3 pt-4">
@@ -2408,7 +2437,7 @@
       </div>
     </div>
 
-    <div class="p-6 space-y-4">
+    <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
       <input type="hidden" id="editLessonId">
 
       <div>
@@ -2417,19 +2446,63 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-zinc-700 mb-2">Video/Matn kontenti</label>
-        <textarea class="input min-h-[120px]" id="editLessonContent" placeholder="Video URL yoki matn..."></textarea>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Dars matni</label>
+        <textarea class="input min-h-[80px]" id="editLessonContent" placeholder="Dars matni (HTML yoki oddiy matn)..."></textarea>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <!-- Media File IDs Section -->
+      <div class="p-4 bg-purple-50 rounded-2xl space-y-3">
+        <p class="text-sm font-medium text-purple-700 flex items-center gap-2">
+          <span class="material-symbols-outlined text-lg">attach_file</span>
+          Media fayllari (Telegram File ID)
+        </p>
+
+        <div class="grid grid-cols-1 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-zinc-600 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">videocam</span> Video File ID
+            </label>
+            <input type="text" class="input text-sm" id="editLessonVideoFileId" placeholder="AgACAgIAAxkB...">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-600 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">image</span> Rasm File ID
+            </label>
+            <input type="text" class="input text-sm" id="editLessonImageFileId" placeholder="AgACAgIAAxkB...">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-600 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">mic</span> Audio File ID
+            </label>
+            <input type="text" class="input text-sm" id="editLessonAudioFileId" placeholder="AwACAgIAAxkB...">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-600 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">description</span> Dokument File ID
+            </label>
+            <input type="text" class="input text-sm" id="editLessonDocumentFileId" placeholder="BQACAgIAAxkB...">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="block text-sm font-medium text-zinc-700 mb-2">Keyingi dars (soat)</label>
-          <input type="number" class="input" id="editLessonDelay" value="24" min="0">
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Keyingi dars vaqti</label>
+          <input type="number" class="input" id="editLessonDelayValue" value="24" min="0">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Birlik</label>
+          <select class="input" id="editLessonDelayUnit">
+            <option value="immediately">Darxol</option>
+            <option value="minutes">Daqiqa</option>
+            <option value="hours" selected>Soat</option>
+            <option value="days">Kun</option>
+          </select>
         </div>
         <div>
           <label class="flex items-center gap-2 h-full pt-6">
             <input type="checkbox" id="editLessonShowButton" class="w-5 h-5 rounded border-zinc-300 text-purple-600 focus:ring-purple-500">
-            <span class="text-sm text-zinc-700">Ko'rish tugmasini ko'rsat</span>
+            <span class="text-sm text-zinc-700">Ko'rish tugmasi</span>
           </label>
         </div>
       </div>
@@ -2443,6 +2516,8 @@
         <label class="block text-sm font-medium text-zinc-700 mb-2">Tugma xabari</label>
         <input type="text" class="input" id="editLessonMessage" placeholder="Videoni ko'rib bo'lganingizdan keyin tugmani bosing:">
       </div>
+
+      <input type="hidden" id="editLessonDelay">
     </div>
 
     <div class="p-6 border-t border-zinc-100 flex gap-3">
@@ -3063,15 +3138,16 @@ function renderUsersTable(users) {
   const colors = ['purple', 'blue', 'green', 'orange', 'pink'];
   tbody.innerHTML = users.map((u, i) => {
     const color = colors[i % colors.length];
+    const displayName = u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Foydalanuvchi';
     return `
-    <tr class="hover:bg-zinc-50 transition-all">
+    <tr class="hover:bg-zinc-50 transition-all cursor-pointer" onclick="openUserModal('${u.telegram_id}')">
       <td>
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-${color}-100 rounded-xl flex items-center justify-center text-${color}-600 font-semibold">
-            ${(u.first_name || 'U')[0].toUpperCase()}
+            ${displayName[0].toUpperCase()}
           </div>
           <div>
-            <p class="font-medium">${escapeHtml(u.first_name || 'User')} ${escapeHtml(u.last_name || '')}</p>
+            <p class="font-medium">${escapeHtml(displayName)}</p>
             <p class="text-sm text-zinc-500">${u.username ? '@' + u.username : u.telegram_id}</p>
           </div>
         </div>
@@ -3080,7 +3156,7 @@ function renderUsersTable(users) {
       <td><span class="badge ${u.is_paid ? 'badge-success' : 'badge-warning'}">${u.is_paid ? 'Pullik' : 'Bepul'}</span></td>
       <td class="text-zinc-500">${formatDate(u.created_at)}</td>
       <td>
-        <button onclick="openUserModal('${u.telegram_id}')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+        <button onclick="event.stopPropagation(); openUserModal('${u.telegram_id}')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
           <span class="material-symbols-outlined text-zinc-400">more_vert</span>
         </button>
       </td>
@@ -3534,9 +3610,9 @@ async function loadUserCustdevAnswers(userId) {
 
     container.innerHTML = answers.map(a => `
       <div class="p-3 bg-zinc-50 rounded-xl">
-        <p class="text-sm text-purple-600 font-medium mb-1">${escapeHtml(a.question || 'Savol')}</p>
-        <p class="text-zinc-900">${escapeHtml(a.answer || a.response || '-')}</p>
-        <p class="text-xs text-zinc-400 mt-1">${formatTimeAgo(a.answered_at || a.created_at)}</p>
+        <p class="text-sm text-purple-600 font-medium mb-1">${escapeHtml(a.question_text || a.question || 'Savol')}</p>
+        <p class="text-zinc-900">${escapeHtml(a.answer_text || a.answer || a.response || '-')}</p>
+        <p class="text-xs text-zinc-400 mt-1">${formatTimeAgo(a.created_at)}</p>
       </div>
     `).join('');
   } catch (e) {
@@ -4219,7 +4295,8 @@ async function loadChatMessages(telegramId) {
 
     messagesEl.innerHTML = sortedMessages.map(m => {
       const meta = typeof m.meta === 'string' ? JSON.parse(m.meta || '{}') : (m.meta || {});
-      const isOutgoing = m.message_type === 'bot_response' || m.message_type === 'admin_message' || meta.is_bot;
+      const outgoingTypes = ['bot_response', 'admin_message', 'admin_outgoing', 'admin_outgoing_sticker', 'lesson_sent', 'pitch_sent'];
+      const isOutgoing = outgoingTypes.includes(m.message_type) || meta.is_bot || meta.source === 'dashboard';
       const isAI = m.message_type === 'bot_response' || meta.is_ai;
       const time = new Date(m.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
       const content = m.text_content || m.text || m.message || '';
@@ -4383,21 +4460,51 @@ function renderLessonsList(lessons) {
   const colors = ['purple', 'blue', 'green', 'orange', 'pink'];
   listEl.innerHTML = lessons.map((l, i) => {
     const color = colors[i % colors.length];
+
+    // Media indicators
+    const hasVideo = l.video_file_id;
+    const hasImage = l.image_file_id || l.photo_file_id;
+    const hasAudio = l.audio_file_id;
+    const hasDocument = l.document_file_id;
+
+    // Delay display
+    let delayText = '';
+    const delayHours = l.delay_hours || 24;
+    if (delayHours === 0) {
+      delayText = 'Darxol';
+    } else if (delayHours < 1) {
+      delayText = Math.round(delayHours * 60) + ' daqiqa';
+    } else if (delayHours >= 24 && delayHours % 24 === 0) {
+      delayText = (delayHours / 24) + ' kun';
+    } else {
+      delayText = delayHours + ' soat';
+    }
+
     return `
-    <div class="p-4 flex items-center gap-4 hover:bg-zinc-50 transition-all">
+    <div class="p-4 flex items-center gap-4 hover:bg-zinc-50 transition-all cursor-pointer" onclick="editLesson(${l.id})">
       <div class="w-16 h-16 bg-gradient-to-br from-${color}-500 to-${color}-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
         ${l.lesson_number || i + 1}
       </div>
       <div class="flex-1">
         <h4 class="font-semibold text-zinc-900">${escapeHtml(l.title || 'Dars ' + (i + 1))}</h4>
-        <p class="text-sm text-zinc-500">${escapeHtml(l.description || '')}</p>
+        <div class="flex items-center gap-2 mt-1">
+          ${hasVideo ? '<span class="w-6 h-6 bg-red-100 rounded-md flex items-center justify-center" title="Video"><span class="material-symbols-outlined text-red-600 text-sm">videocam</span></span>' : ''}
+          ${hasImage ? '<span class="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center" title="Rasm"><span class="material-symbols-outlined text-blue-600 text-sm">image</span></span>' : ''}
+          ${hasAudio ? '<span class="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center" title="Audio"><span class="material-symbols-outlined text-purple-600 text-sm">mic</span></span>' : ''}
+          ${hasDocument ? '<span class="w-6 h-6 bg-orange-100 rounded-md flex items-center justify-center" title="Dokument"><span class="material-symbols-outlined text-orange-600 text-sm">description</span></span>' : ''}
+          ${!hasVideo && !hasImage && !hasAudio && !hasDocument ? '<span class="text-xs text-zinc-400">Faqat matn</span>' : ''}
+        </div>
         <div class="flex items-center gap-4 mt-2">
           <span class="text-xs text-zinc-400 flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm">visibility</span> ${l.views || 0} ko'rish
+            <span class="material-symbols-outlined text-sm">schedule</span> ${delayText} keyin
+          </span>
+          <span class="text-xs text-zinc-400 flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">${l.show_watched_button !== false ? 'check_circle' : 'cancel'}</span>
+            ${l.show_watched_button !== false ? 'Tugma bor' : 'Tugma yo\'q'}
           </span>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2" onclick="event.stopPropagation()">
         <button onclick="editLesson(${l.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-purple-600">
           <span class="material-symbols-outlined">edit</span>
         </button>
@@ -4424,10 +4531,34 @@ async function editLesson(lessonId) {
     document.getElementById('editLessonId').value = lesson.id || lesson.lesson_number;
     document.getElementById('editLessonTitle').value = lesson.title || '';
     document.getElementById('editLessonContent').value = lesson.content || '';
-    document.getElementById('editLessonDelay').value = lesson.delay_hours || 24;
     document.getElementById('editLessonShowButton').checked = lesson.show_watched_button !== false;
     document.getElementById('editLessonButtonText').value = lesson.watched_button_text || '';
     document.getElementById('editLessonMessage').value = lesson.watched_message || '';
+
+    // Media file IDs
+    document.getElementById('editLessonVideoFileId').value = lesson.video_file_id || '';
+    document.getElementById('editLessonImageFileId').value = lesson.image_file_id || lesson.photo_file_id || '';
+    document.getElementById('editLessonAudioFileId').value = lesson.audio_file_id || '';
+    document.getElementById('editLessonDocumentFileId').value = lesson.document_file_id || '';
+
+    // Parse delay to value and unit
+    const delayHours = lesson.delay_hours || 24;
+    let delayValue = delayHours;
+    let delayUnit = 'hours';
+
+    if (delayHours === 0) {
+      delayValue = 0;
+      delayUnit = 'immediately';
+    } else if (delayHours >= 24 && delayHours % 24 === 0) {
+      delayValue = delayHours / 24;
+      delayUnit = 'days';
+    } else if (delayHours < 1) {
+      delayValue = Math.round(delayHours * 60);
+      delayUnit = 'minutes';
+    }
+
+    document.getElementById('editLessonDelayValue').value = delayValue;
+    document.getElementById('editLessonDelayUnit').value = delayUnit;
 
     // Show modal
     document.getElementById('editLessonModal').classList.add('show');
@@ -4445,13 +4576,30 @@ async function saveLesson() {
   const lessonId = document.getElementById('editLessonId').value;
   if (!lessonId) return;
 
+  // Calculate delay in hours
+  const delayValue = parseInt(document.getElementById('editLessonDelayValue').value) || 0;
+  const delayUnit = document.getElementById('editLessonDelayUnit').value;
+
+  let delayHours = delayValue;
+  if (delayUnit === 'immediately') {
+    delayHours = 0;
+  } else if (delayUnit === 'minutes') {
+    delayHours = delayValue / 60;
+  } else if (delayUnit === 'days') {
+    delayHours = delayValue * 24;
+  }
+
   const data = {
     title: document.getElementById('editLessonTitle').value,
     content: document.getElementById('editLessonContent').value,
-    delay_hours: parseInt(document.getElementById('editLessonDelay').value) || 24,
+    delay_hours: delayHours,
     show_watched_button: document.getElementById('editLessonShowButton').checked,
     watched_button_text: document.getElementById('editLessonButtonText').value,
-    watched_message: document.getElementById('editLessonMessage').value
+    watched_message: document.getElementById('editLessonMessage').value,
+    video_file_id: document.getElementById('editLessonVideoFileId').value || null,
+    image_file_id: document.getElementById('editLessonImageFileId').value || null,
+    audio_file_id: document.getElementById('editLessonAudioFileId').value || null,
+    document_file_id: document.getElementById('editLessonDocumentFileId').value || null
   };
 
   try {
@@ -4810,7 +4958,14 @@ async function loadCustdevAnswers() {
   if (!answersEl) return;
 
   try {
-    const answers = await fetch('/api/custdev/answers?limit=50', { headers: { Authorization: auth } }).then(r => r.json());
+    const data = await fetch('/api/custdev/answers?limit=50', { headers: { Authorization: auth } }).then(r => r.json());
+
+    // Handle both array and object responses
+    let answers = Array.isArray(data) ? data : [];
+    if (!Array.isArray(data) && typeof data === 'object') {
+      // Flatten grouped object to array
+      answers = Object.values(data).flat();
+    }
 
     if (!answers || !answers.length) {
       answersEl.innerHTML = '<div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">chat_bubble_outline</span><p class="text-sm">Javoblar yo\'q</p></div>';
@@ -4819,26 +4974,30 @@ async function loadCustdevAnswers() {
     }
 
     countEl.textContent = answers.length;
-    answersEl.innerHTML = answers.map(a => `
-      <div class="p-4 hover:bg-zinc-50">
+    answersEl.innerHTML = answers.map(a => {
+      const displayName = a.full_name || 'Foydalanuvchi';
+      const answerText = a.answer || a.answer_text || '';
+      return `
+      <div class="p-4 hover:bg-zinc-50 cursor-pointer" onclick="openUserModal('${a.telegram_id}')">
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">
-            ${(a.full_name || 'U')[0].toUpperCase()}
+            ${displayName[0].toUpperCase()}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <p class="font-medium text-zinc-900">${escapeHtml(a.full_name || 'Foydalanuvchi')}</p>
+              <p class="font-medium text-zinc-900">${escapeHtml(displayName)}</p>
               <span class="text-xs text-zinc-400">${formatTimeAgo(a.created_at)}</span>
             </div>
             <p class="text-sm text-zinc-500 mb-1">${escapeHtml(a.question_text || '')}</p>
-            <p class="text-zinc-900 bg-zinc-100 px-3 py-1 rounded-lg inline-block">${escapeHtml(a.answer || '')}</p>
+            <p class="text-zinc-900 bg-zinc-100 px-3 py-1 rounded-lg inline-block">${escapeHtml(answerText)}</p>
           </div>
         </div>
       </div>
-    `).join('');
+    `}).join('');
 
   } catch (e) {
     console.error('loadCustdevAnswers error:', e);
+    answersEl.innerHTML = '<div class="p-4 text-center text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
   }
 }
 
@@ -4955,8 +5114,18 @@ function updateBroadcastPreview() {
 
   for (let i = 1; i <= broadcastButtonCount; i++) {
     const btnText = document.getElementById(`broadcastBtnText${i}`)?.value;
+    const btnType = document.getElementById(`broadcastBtnType${i}`)?.value || 'url';
     if (btnText) {
-      buttonsContainer.innerHTML += `<button class="w-full bg-[#5865f2] text-white text-sm py-2 px-4 rounded-lg">${escapeHtml(btnText)}</button>`;
+      let btnClass = 'bg-[#5865f2]'; // Default URL button
+      let icon = '';
+      if (btnType === 'payme') {
+        btnClass = 'bg-[#00CCCC]'; // Payme turquoise
+        icon = '💳 ';
+      } else if (btnType === 'click') {
+        btnClass = 'bg-[#4169E1]'; // Click blue
+        icon = '💳 ';
+      }
+      buttonsContainer.innerHTML += `<button class="w-full ${btnClass} text-white text-sm py-2 px-4 rounded-lg">${icon}${escapeHtml(btnText)}</button>`;
     }
   }
 }
@@ -4969,15 +5138,60 @@ function addBroadcastButton() {
   broadcastButtonCount++;
   const container = document.getElementById('broadcastButtons');
   const newRow = document.createElement('div');
-  newRow.className = 'flex gap-2';
+  newRow.className = 'flex gap-2 items-center';
   newRow.innerHTML = `
+    <select class="input w-28 text-sm" id="broadcastBtnType${broadcastButtonCount}" onchange="updateBtnFields(${broadcastButtonCount})">
+      <option value="url">URL</option>
+      <option value="payme">Payme</option>
+      <option value="click">Click</option>
+    </select>
     <input type="text" class="input flex-1" placeholder="Tugma matni" id="broadcastBtnText${broadcastButtonCount}" oninput="updateBroadcastPreview()">
     <input type="text" class="input flex-1" placeholder="URL" id="broadcastBtnUrl${broadcastButtonCount}">
-    <button onclick="this.parentElement.remove();updateBroadcastPreview()" class="btn btn-secondary px-2">
+    <button onclick="this.parentElement.remove();broadcastButtonCount--;checkPaymentButtonsExist();updateBroadcastPreview()" class="btn btn-secondary px-2">
       <span class="material-symbols-outlined text-sm">close</span>
     </button>
   `;
   container.appendChild(newRow);
+}
+
+function updateBtnFields(btnNum) {
+  const typeEl = document.getElementById(`broadcastBtnType${btnNum}`);
+  const urlEl = document.getElementById(`broadcastBtnUrl${btnNum}`);
+  const textEl = document.getElementById(`broadcastBtnText${btnNum}`);
+
+  if (!typeEl || !urlEl) return;
+
+  const type = typeEl.value;
+  if (type === 'payme') {
+    urlEl.style.display = 'none';
+    urlEl.value = '__PAYME__';
+    textEl.placeholder = '💳 Payme orqali to\'lash';
+    if (!textEl.value) textEl.value = '💳 Payme orqali to\'lash';
+  } else if (type === 'click') {
+    urlEl.style.display = 'none';
+    urlEl.value = '__CLICK__';
+    textEl.placeholder = '💳 Click orqali to\'lash';
+    if (!textEl.value) textEl.value = '💳 Click orqali to\'lash';
+  } else {
+    urlEl.style.display = 'block';
+    urlEl.value = '';
+    textEl.placeholder = 'Tugma matni';
+  }
+
+  checkPaymentButtonsExist();
+  updateBroadcastPreview();
+}
+
+function checkPaymentButtonsExist() {
+  let hasPaymentBtn = false;
+  for (let i = 1; i <= broadcastButtonCount; i++) {
+    const typeEl = document.getElementById(`broadcastBtnType${i}`);
+    if (typeEl && (typeEl.value === 'payme' || typeEl.value === 'click')) {
+      hasPaymentBtn = true;
+      break;
+    }
+  }
+  document.getElementById('broadcastPaymentSettings').style.display = hasPaymentBtn ? 'block' : 'none';
 }
 
 function previewBroadcast() {
@@ -4988,10 +5202,19 @@ function previewBroadcast() {
 function getBroadcastButtons() {
   const buttons = [];
   for (let i = 1; i <= broadcastButtonCount; i++) {
+    const typeEl = document.getElementById(`broadcastBtnType${i}`);
     const text = document.getElementById(`broadcastBtnText${i}`)?.value;
     const url = document.getElementById(`broadcastBtnUrl${i}`)?.value;
-    if (text && url) {
-      buttons.push({ text, url });
+    const type = typeEl?.value || 'url';
+
+    if (text) {
+      if (type === 'payme') {
+        buttons.push({ text, type: 'payme' });
+      } else if (type === 'click') {
+        buttons.push({ text, type: 'click' });
+      } else if (url) {
+        buttons.push({ text, url });
+      }
     }
   }
   return buttons;
@@ -5016,6 +5239,13 @@ async function sendBroadcast() {
     }
     if (buttons.length > 0) {
       payload.buttons = buttons;
+
+      // Check if there are payment buttons and include payment settings
+      const hasPaymentBtn = buttons.some(b => b.type === 'payme' || b.type === 'click');
+      if (hasPaymentBtn) {
+        payload.payment_amount = parseInt(document.getElementById('broadcastPaymentAmount').value) || 97000;
+        payload.payment_duration = document.getElementById('broadcastPaymentDuration').value || '1month';
+      }
     }
 
     const res = await fetch('/api/broadcast', {
@@ -5028,9 +5258,15 @@ async function sendBroadcast() {
       showToast(`Xabar yuborildi! ${result.sent || 0} ta userga`, 'success');
       document.getElementById('broadcastText').value = '';
       document.getElementById('broadcastFileId').value = '';
+      document.getElementById('broadcastPaymentSettings').style.display = 'none';
       // Clear buttons
       document.getElementById('broadcastButtons').innerHTML = `
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+          <select class="input w-28 text-sm" id="broadcastBtnType1" onchange="updateBtnFields(1)">
+            <option value="url">URL</option>
+            <option value="payme">Payme</option>
+            <option value="click">Click</option>
+          </select>
           <input type="text" class="input flex-1" placeholder="Tugma matni" id="broadcastBtnText1" oninput="updateBroadcastPreview()">
           <input type="text" class="input flex-1" placeholder="URL" id="broadcastBtnUrl1">
         </div>
