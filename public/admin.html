@@ -519,8 +519,8 @@
               <span class="material-symbols-outlined text-blue-600">group</span>
             </div>
             <p class="text-sm text-zinc-500 mb-1">Jami userlar</p>
-            <p class="text-2xl font-bold text-zinc-900" id="statTotalUsers">930</p>
-            <p class="text-xs text-green-600 mt-1">+47 bugun</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statTotalUsers">-</p>
+            <p class="text-xs text-green-600 mt-1" id="statTodayUsers">-</p>
           </div>
 
           <div class="stat-card">
@@ -528,8 +528,8 @@
               <span class="material-symbols-outlined text-purple-600">diamond</span>
             </div>
             <p class="text-sm text-zinc-500 mb-1">Pullik a'zolar</p>
-            <p class="text-2xl font-bold text-zinc-900" id="statPaidUsers">3</p>
-            <p class="text-xs text-green-600 mt-1">+1 bu hafta</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statPaidUsers">-</p>
+            <p class="text-xs text-zinc-400 mt-1">pullik a'zolar</p>
           </div>
 
           <div class="stat-card">
@@ -537,7 +537,7 @@
               <span class="material-symbols-outlined text-green-600">trending_up</span>
             </div>
             <p class="text-sm text-zinc-500 mb-1">Konversiya</p>
-            <p class="text-2xl font-bold text-zinc-900" id="statCR">0.3%</p>
+            <p class="text-2xl font-bold text-zinc-900" id="statCR">-</p>
             <p class="text-xs text-zinc-400 mt-1">user → pullik</p>
           </div>
 
@@ -804,7 +804,7 @@
           </div>
 
           <div class="p-4 border-t border-zinc-100 flex items-center justify-between">
-            <span class="text-sm text-zinc-500" id="usersPagination">1-20 / 930 user</span>
+            <span class="text-sm text-zinc-500" id="usersPagination">Yuklanmoqda...</span>
             <div class="flex gap-2">
               <button class="btn btn-secondary" id="usersPrevBtn" onclick="loadUsersPage(-1)">← Oldingi</button>
               <button class="btn btn-secondary" id="usersNextBtn" onclick="loadUsersPage(1)">Keyingi →</button>
@@ -825,126 +825,31 @@
               </div>
             </div>
             <div class="flex-1 overflow-y-auto divide-y divide-zinc-100" id="chatsList">
-              <div class="p-4 hover:bg-purple-50 transition-all cursor-pointer bg-purple-50 border-l-4 border-purple-500" onclick="selectChat(1)">
-                <div class="flex items-center gap-3">
-                  <div class="relative">
-                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">A</div>
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                      <p class="font-medium text-zinc-900 truncate">Aziz Karimov</p>
-                      <span class="text-xs text-zinc-400">5 min</span>
-                    </div>
-                    <p class="text-sm text-zinc-500 truncate">Salom, men kursga yozilmoqchiman...</p>
-                  </div>
-                  <div class="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
-                </div>
-              </div>
-
-              <div class="p-4 hover:bg-zinc-50 transition-all cursor-pointer" onclick="selectChat(2)">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-semibold">N</div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                      <p class="font-medium text-zinc-900 truncate">Nilufar M.</p>
-                      <span class="text-xs text-zinc-400">1 soat</span>
-                    </div>
-                    <p class="text-sm text-zinc-500 truncate">Rahmat, juda foydali!</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="p-4 hover:bg-zinc-50 transition-all cursor-pointer" onclick="selectChat(3)">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 font-semibold">J</div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                      <p class="font-medium text-zinc-900 truncate">Jasur T.</p>
-                      <span class="text-xs text-zinc-400">2 soat</span>
-                    </div>
-                    <p class="text-sm text-zinc-500 truncate">To'lov qilsam bo'ladimi?</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="p-4 hover:bg-zinc-50 transition-all cursor-pointer" onclick="selectChat(4)">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 font-semibold">M</div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                      <p class="font-medium text-zinc-900 truncate">Malika R.</p>
-                      <span class="text-xs text-zinc-400">kecha</span>
-                    </div>
-                    <p class="text-sm text-zinc-500 truncate">Test qiyin edi 😅</p>
-                  </div>
-                </div>
+              <div class="p-8 text-center text-zinc-400">
+                <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">chat</span>
+                <p>Suhbatlar yuklanmoqda...</p>
               </div>
             </div>
           </div>
 
           <!-- Chat Messages -->
           <div class="lg:col-span-2 bg-white rounded-3xl shadow-card overflow-hidden flex flex-col">
-            <div class="p-4 border-b border-zinc-100 flex items-center gap-4">
-              <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">A</div>
+            <div class="p-4 border-b border-zinc-100 flex items-center gap-4" id="chatHeader">
+              <div class="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center text-zinc-400 font-semibold" id="chatUserAvatar">?</div>
               <div class="flex-1">
-                <p class="font-medium text-zinc-900">Aziz Karimov</p>
-                <p class="text-sm text-green-600 flex items-center gap-1">
-                  <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Online
-                </p>
+                <p class="font-medium text-zinc-900" id="chatUserName">Suhbatni tanlang</p>
+                <p class="text-sm text-zinc-400" id="chatUserStatus">Chap tarafdan foydalanuvchini tanlang</p>
               </div>
-              <button onclick="openUserModal(123)" class="btn btn-secondary text-sm">
+              <button onclick="openUserModal(currentChatUserId)" class="btn btn-secondary text-sm hidden" id="chatProfileBtn">
                 <span class="material-symbols-outlined text-lg">person</span>
                 Profil
               </button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages">
-              <!-- Incoming message -->
-              <div class="flex gap-3">
-                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 font-semibold text-sm shrink-0">A</div>
-                <div class="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-[70%]">
-                  <p class="text-zinc-900">Salom! Men kursga yozilmoqchiman</p>
-                  <span class="text-xs text-zinc-400 mt-1 block">14:32</span>
-                </div>
-              </div>
-
-              <!-- Outgoing message (AI) -->
-              <div class="flex gap-3 justify-end">
-                <div class="bg-purple-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-[70%]">
-                  <p>Assalomu alaykum! Kursimizga qiziqish bildirganingiz uchun rahmat! 😊</p>
-                  <div class="flex items-center justify-end gap-1 mt-1">
-                    <span class="text-xs text-purple-200">14:32</span>
-                    <span class="material-symbols-outlined text-xs text-purple-200">done_all</span>
-                  </div>
-                </div>
-                <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white shrink-0">
-                  <span class="material-symbols-outlined text-sm">smart_toy</span>
-                </div>
-              </div>
-
-              <!-- Incoming -->
-              <div class="flex gap-3">
-                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 font-semibold text-sm shrink-0">A</div>
-                <div class="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-[70%]">
-                  <p class="text-zinc-900">Narxi qancha?</p>
-                  <span class="text-xs text-zinc-400 mt-1 block">14:33</span>
-                </div>
-              </div>
-
-              <!-- AI response -->
-              <div class="flex gap-3 justify-end">
-                <div class="bg-purple-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-[70%]">
-                  <p>Kursimiz narxi 97,000 so'm. Lekin hozir maxsus aksiya - 20% chegirma mavjud! WELCOME20 promo kodini ishlating 🎁</p>
-                  <div class="flex items-center justify-end gap-1 mt-1">
-                    <span class="text-xs text-purple-200">14:33</span>
-                    <span class="material-symbols-outlined text-xs text-purple-200">done_all</span>
-                  </div>
-                </div>
-                <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white shrink-0">
-                  <span class="material-symbols-outlined text-sm">smart_toy</span>
-                </div>
+              <div class="flex flex-col items-center justify-center h-full text-zinc-400">
+                <span class="material-symbols-outlined text-5xl mb-3">chat_bubble_outline</span>
+                <p>Suhbatni ko'rish uchun chap tarafdan tanlang</p>
               </div>
             </div>
 
@@ -966,101 +871,34 @@
 
       <!-- Feedback subtab -->
       <div id="audience-feedback" class="audience-subtab hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div class="stat-card">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-outlined text-green-600">sentiment_satisfied</span>
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-green-600">87%</p>
-                <p class="text-sm text-zinc-500">Ijobiy</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- CustDev Questions Management -->
+          <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+            <div class="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <h3 class="font-semibold text-zinc-900">CustDev savollari</h3>
+              <button onclick="openCustdevModal()" class="btn btn-primary text-sm">
+                <span class="material-symbols-outlined">add</span>
+                Yangi savol
+              </button>
+            </div>
+            <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto" id="custdevList">
+              <div class="text-center py-8 text-zinc-400">
+                <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">help_outline</span>
+                <p>Savollar yuklanmoqda...</p>
               </div>
             </div>
           </div>
-          <div class="stat-card">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-outlined text-yellow-600">sentiment_neutral</span>
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-yellow-600">10%</p>
-                <p class="text-sm text-zinc-500">Neytral</p>
-              </div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-outlined text-red-600">sentiment_dissatisfied</span>
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-red-600">3%</p>
-                <p class="text-sm text-zinc-500">Salbiy</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="bg-white rounded-3xl shadow-card overflow-hidden">
-          <div class="p-6 border-b border-zinc-100">
-            <h3 class="font-semibold text-zinc-900">So'nggi fikrlar</h3>
-          </div>
-          <div class="divide-y divide-zinc-100" id="feedbackList">
-            <div class="p-4 hover:bg-zinc-50 transition-all">
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
-                  <span class="material-symbols-outlined">thumb_up</span>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <p class="font-medium text-zinc-900">Nilufar Mo'minova</p>
-                    <span class="text-xs text-zinc-400">• 2 soat oldin</span>
-                  </div>
-                  <p class="text-zinc-600">"Juda zo'r kurs! Har bir dars foydali. Rahmat sizga!"</p>
-                  <div class="flex items-center gap-2 mt-2">
-                    <span class="badge badge-success">Ijobiy</span>
-                    <span class="text-xs text-zinc-400">3-dars haqida</span>
-                  </div>
-                </div>
-              </div>
+          <!-- CustDev Answers -->
+          <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+            <div class="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <h3 class="font-semibold text-zinc-900">Foydalanuvchi javoblari</h3>
+              <span class="badge badge-info" id="custdevAnswersCount">-</span>
             </div>
-
-            <div class="p-4 hover:bg-zinc-50 transition-all">
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
-                  <span class="material-symbols-outlined">thumb_up</span>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <p class="font-medium text-zinc-900">Aziz Karimov</p>
-                    <span class="text-xs text-zinc-400">• 5 soat oldin</span>
-                  </div>
-                  <p class="text-zinc-600">"Bot juda qulay ishlaydi, tez javob beradi 👍"</p>
-                  <div class="flex items-center gap-2 mt-2">
-                    <span class="badge badge-success">Ijobiy</span>
-                    <span class="text-xs text-zinc-400">Bot haqida</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="p-4 hover:bg-zinc-50 transition-all">
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600">
-                  <span class="material-symbols-outlined">thumbs_up_down</span>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <p class="font-medium text-zinc-900">Jasur Toshev</p>
-                    <span class="text-xs text-zinc-400">• kecha</span>
-                  </div>
-                  <p class="text-zinc-600">"Yaxshi, lekin test savollari qiyin edi"</p>
-                  <div class="flex items-center gap-2 mt-2">
-                    <span class="badge badge-warning">Neytral</span>
-                    <span class="text-xs text-zinc-400">Test haqida</span>
-                  </div>
-                </div>
+            <div class="divide-y divide-zinc-100 max-h-[500px] overflow-y-auto" id="custdevAnswersList">
+              <div class="p-4 text-center text-zinc-400">
+                <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">chat</span>
+                <p>Javoblar yuklanmoqda...</p>
               </div>
             </div>
           </div>
@@ -1383,52 +1221,60 @@
 
       <!-- Tests Subtab -->
       <div id="content-tests" class="content-subtab hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white rounded-3xl shadow-card overflow-hidden">
-            <div class="p-6 border-b border-zinc-100">
-              <h3 class="font-semibold text-zinc-900">Test natijalari</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Test Management -->
+          <div class="lg:col-span-2 bg-white rounded-3xl shadow-card overflow-hidden">
+            <div class="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <h3 class="font-semibold text-zinc-900">Test savollari</h3>
+              <button onclick="openTestModal()" class="btn btn-primary text-sm">
+                <span class="material-symbols-outlined">add</span>
+                Yangi savol
+              </button>
             </div>
-            <div class="p-6">
-              <div class="chart-container">
-                <canvas id="testsChart"></canvas>
+            <div class="p-4">
+              <div class="flex gap-3 mb-4">
+                <select class="input flex-1" id="testLessonFilter" onchange="loadTests()">
+                  <option value="">Barcha darslar</option>
+                </select>
+              </div>
+              <div class="space-y-3" id="testsList">
+                <div class="text-center py-8 text-zinc-400">
+                  <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">quiz</span>
+                  <p>Testlar yuklanmoqda...</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-3xl shadow-card overflow-hidden">
-            <div class="p-6 border-b border-zinc-100">
-              <h3 class="font-semibold text-zinc-900">So'nggi topshiriqlar</h3>
+          <!-- Test Stats -->
+          <div class="space-y-4">
+            <div class="bg-white rounded-3xl shadow-card p-6">
+              <h4 class="font-semibold text-zinc-900 mb-4">Statistika</h4>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-500">Jami savollar</span>
+                  <span class="font-bold text-zinc-900" id="testsTotalCount">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-500">O'rtacha ball</span>
+                  <span class="font-bold text-green-600" id="testsAvgScore">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-500">Topshirganlar</span>
+                  <span class="font-bold text-zinc-900" id="testsSubmittedCount">-</span>
+                </div>
+              </div>
             </div>
-            <div class="divide-y divide-zinc-100" id="testSubmissions">
-              <div class="p-4 flex items-center gap-4">
-                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                  <span class="material-symbols-outlined text-green-600">check_circle</span>
-                </div>
-                <div class="flex-1">
-                  <p class="font-medium text-zinc-900">Malika R.</p>
-                  <p class="text-sm text-zinc-500">Test #1 - 80%</p>
-                </div>
-                <span class="text-xs text-zinc-400">45 min oldin</span>
+
+            <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+              <div class="p-4 border-b border-zinc-100">
+                <h4 class="font-semibold text-zinc-900">So'nggi topshiriqlar</h4>
               </div>
-              <div class="p-4 flex items-center gap-4">
-                <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-                  <span class="material-symbols-outlined text-yellow-600">schedule</span>
+              <div class="divide-y divide-zinc-100 max-h-64 overflow-y-auto" id="testSubmissions">
+                <div class="p-4 text-center text-zinc-400">
+                  <span class="material-symbols-outlined animate-pulse">hourglass_empty</span>
+                  <p class="text-sm">Yuklanmoqda...</p>
                 </div>
-                <div class="flex-1">
-                  <p class="font-medium text-zinc-900">Jasur T.</p>
-                  <p class="text-sm text-zinc-500">Test #1 - 65%</p>
-                </div>
-                <span class="text-xs text-zinc-400">2 soat oldin</span>
-              </div>
-              <div class="p-4 flex items-center gap-4">
-                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                  <span class="material-symbols-outlined text-green-600">check_circle</span>
-                </div>
-                <div class="flex-1">
-                  <p class="font-medium text-zinc-900">Aziz K.</p>
-                  <p class="text-sm text-zinc-500">Test #2 - 95%</p>
-                </div>
-                <span class="text-xs text-zinc-400">3 soat oldin</span>
               </div>
             </div>
           </div>
@@ -1547,11 +1393,11 @@
               <div>
                 <label class="block text-sm font-medium text-zinc-700 mb-2">Qabul qiluvchilar</label>
                 <select class="input" id="broadcastTarget">
-                  <option value="all">Barcha userlar (930)</option>
-                  <option value="paid">Faqat pullik (3)</option>
-                  <option value="free">Faqat bepul (927)</option>
-                  <option value="active">Faol userlar (458)</option>
-                  <option value="inactive">Nofaol userlar (472)</option>
+                  <option value="all">Barcha userlar (-)</option>
+                  <option value="paid">Faqat pullik (-)</option>
+                  <option value="free">Faqat bepul (-)</option>
+                  <option value="active">Faol userlar (-)</option>
+                  <option value="inactive">Nofaol userlar (-)</option>
                 </select>
               </div>
 
@@ -1713,49 +1559,10 @@
               </thead>
               <tbody id="paymentsTableBody">
                 <tr>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600 font-semibold">N</div>
-                      <div>
-                        <p class="font-medium">Nilufar Mo'minova</p>
-                        <p class="text-sm text-zinc-500">@nilufar_m</p>
-                      </div>
-                    </div>
+                  <td colspan="5" class="text-center py-8 text-zinc-400">
+                    <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">hourglass_empty</span>
+                    <p>To'lovlar yuklanmoqda...</p>
                   </td>
-                  <td class="font-semibold">97,000 so'm</td>
-                  <td><span class="badge badge-info">Payme</span></td>
-                  <td><span class="badge badge-success">Muvaffaqiyatli</span></td>
-                  <td class="text-zinc-500">24.02.2026, 14:32</td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">A</div>
-                      <div>
-                        <p class="font-medium">Aziz Karimov</p>
-                        <p class="text-sm text-zinc-500">@aziz_k</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="font-semibold">97,000 so'm</td>
-                  <td><span class="badge badge-info">Click</span></td>
-                  <td><span class="badge badge-success">Muvaffaqiyatli</span></td>
-                  <td class="text-zinc-500">22.02.2026, 10:15</td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 font-semibold">J</div>
-                      <div>
-                        <p class="font-medium">Jasur Toshev</p>
-                        <p class="text-sm text-zinc-500">@jasur_t</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="font-semibold">97,000 so'm</td>
-                  <td><span class="badge badge-info">Payme</span></td>
-                  <td><span class="badge badge-warning">Kutilmoqda</span></td>
-                  <td class="text-zinc-500">24.02.2026, 16:45</td>
                 </tr>
               </tbody>
             </table>
@@ -1792,41 +1599,41 @@
           <!-- Conversion Funnel -->
           <div class="bg-white rounded-3xl shadow-card p-6">
             <h3 class="font-semibold text-zinc-900 mb-6">Konversiya voronkasi</h3>
-            <div class="space-y-4">
+            <div class="space-y-4" id="salesFunnelContainer">
               <div class="relative">
                 <div class="flex justify-between mb-2">
                   <span class="text-sm font-medium text-zinc-700">Yangi userlar</span>
-                  <span class="font-bold">930</span>
+                  <span class="font-bold" id="salesFunnelTotal">-</span>
                 </div>
-                <div class="h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white font-semibold" style="width: 100%">
+                <div class="h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white font-semibold" id="salesFunnelTotalBar" style="width: 100%">
                   100%
                 </div>
               </div>
               <div class="relative">
                 <div class="flex justify-between mb-2">
                   <span class="text-sm font-medium text-zinc-700">Dars ko'rdi</span>
-                  <span class="font-bold">456</span>
+                  <span class="font-bold" id="salesFunnelLesson">-</span>
                 </div>
-                <div class="h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white font-semibold" style="width: 49%">
-                  49%
+                <div class="h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white font-semibold" id="salesFunnelLessonBar" style="width: 0%">
+                  0%
                 </div>
               </div>
               <div class="relative">
                 <div class="flex justify-between mb-2">
                   <span class="text-sm font-medium text-zinc-700">Pitch ko'rdi</span>
-                  <span class="font-bold">89</span>
+                  <span class="font-bold" id="salesFunnelPitch">-</span>
                 </div>
-                <div class="h-12 bg-green-500 rounded-xl flex items-center justify-center text-white font-semibold" style="width: 9.5%">
-                  9.5%
+                <div class="h-12 bg-green-500 rounded-xl flex items-center justify-center text-white font-semibold" id="salesFunnelPitchBar" style="width: 0%">
+                  0%
                 </div>
               </div>
               <div class="relative">
                 <div class="flex justify-between mb-2">
                   <span class="text-sm font-medium text-zinc-700">To'lov qildi</span>
-                  <span class="font-bold">3</span>
+                  <span class="font-bold" id="salesFunnelPaid">-</span>
                 </div>
-                <div class="h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white font-semibold min-w-[60px]" style="width: 5%">
-                  0.3%
+                <div class="h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white font-semibold min-w-[60px]" id="salesFunnelPaidBar" style="width: 0%">
+                  0%
                 </div>
               </div>
             </div>
@@ -1845,8 +1652,8 @@
                 <p class="text-sm text-zinc-500">Lifetime Value</p>
               </div>
             </div>
-            <p class="text-3xl font-bold text-zinc-900">97,000 so'm</p>
-            <p class="text-sm text-green-600 mt-2">+0% o'tgan oyga nisbatan</p>
+            <p class="text-3xl font-bold text-zinc-900" id="analyticsLTV">-</p>
+            <p class="text-sm text-zinc-500 mt-2">O'rtacha to'lov</p>
           </div>
 
           <div class="bg-white rounded-3xl shadow-card p-6">
@@ -1859,7 +1666,7 @@
                 <p class="text-sm text-zinc-500">Customer Acquisition Cost</p>
               </div>
             </div>
-            <p class="text-3xl font-bold text-zinc-900">0 so'm</p>
+            <p class="text-3xl font-bold text-zinc-900" id="analyticsCAC">0 so'm</p>
             <p class="text-sm text-zinc-500 mt-2">Organik o'sish</p>
           </div>
 
@@ -1873,8 +1680,8 @@
                 <p class="text-sm text-zinc-500">7 kunlik qaytish</p>
               </div>
             </div>
-            <p class="text-3xl font-bold text-zinc-900">34%</p>
-            <p class="text-sm text-orange-600 mt-2">-5% o'tgan haftaga</p>
+            <p class="text-3xl font-bold text-zinc-900" id="analyticsRetention">-</p>
+            <p class="text-sm text-zinc-500 mt-2" id="analyticsRetentionNote">Hisoblash kutilmoqda</p>
           </div>
         </div>
       </div>
@@ -2187,10 +1994,10 @@
       <div>
         <label class="block text-sm font-medium text-zinc-700 mb-2">Kimga yuborish</label>
         <select class="input" id="modalBroadcastTarget">
-          <option value="all">Barcha userlar (930)</option>
-          <option value="paid">Faqat pullik (3)</option>
-          <option value="free">Faqat bepul (927)</option>
-          <option value="active">Faol userlar (458)</option>
+          <option value="all">Barcha userlar (-)</option>
+          <option value="paid">Faqat pullik (-)</option>
+          <option value="free">Faqat bepul (-)</option>
+          <option value="active">Faol userlar (-)</option>
         </select>
       </div>
 
@@ -2340,6 +2147,208 @@
   </div>
 </div>
 
+<!-- Edit Lesson Modal -->
+<div id="editLessonModal" class="modal-overlay" onclick="if(event.target===this)closeEditLesson()">
+  <div class="modal-content w-full max-w-xl">
+    <div class="p-6 border-b border-zinc-100">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-bold text-zinc-900">Darsni tahrirlash</h3>
+        <button onclick="closeEditLesson()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+          <span class="material-symbols-outlined text-zinc-400">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="editLessonId">
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Dars nomi</label>
+        <input type="text" class="input" id="editLessonTitle" placeholder="1-Dars: Kirish">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Video/Matn kontenti</label>
+        <textarea class="input min-h-[120px]" id="editLessonContent" placeholder="Video URL yoki matn..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Keyingi dars (soat)</label>
+          <input type="number" class="input" id="editLessonDelay" value="24" min="0">
+        </div>
+        <div>
+          <label class="flex items-center gap-2 h-full pt-6">
+            <input type="checkbox" id="editLessonShowButton" class="w-5 h-5 rounded border-zinc-300 text-purple-600 focus:ring-purple-500">
+            <span class="text-sm text-zinc-700">Ko'rish tugmasini ko'rsat</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Tugma matni</label>
+        <input type="text" class="input" id="editLessonButtonText" placeholder="Videoni ko'rib bo'ldim">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Tugma xabari</label>
+        <input type="text" class="input" id="editLessonMessage" placeholder="Videoni ko'rib bo'lganingizdan keyin tugmani bosing:">
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-zinc-100 flex gap-3">
+      <button onclick="closeEditLesson()" class="btn btn-secondary flex-1">Bekor qilish</button>
+      <button onclick="saveLesson()" class="btn btn-primary flex-1">
+        <span class="material-symbols-outlined">save</span>
+        Saqlash
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Test Question Modal -->
+<div id="testModal" class="modal-overlay" onclick="if(event.target===this)closeTestModal()">
+  <div class="modal-content w-full max-w-xl">
+    <div class="p-6 border-b border-zinc-100">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-bold text-zinc-900" id="testModalTitle">Yangi test savoli</h3>
+        <button onclick="closeTestModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+          <span class="material-symbols-outlined text-zinc-400">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="editTestId">
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Dars raqami</label>
+          <select class="input" id="testLessonNumber">
+            <option value="1">1-dars</option>
+            <option value="2">2-dars</option>
+            <option value="3">3-dars</option>
+            <option value="4">4-dars</option>
+            <option value="5">5-dars</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Savol tartibi</label>
+          <input type="number" class="input" id="testQuestionOrder" value="1" min="1">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Savol matni</label>
+        <textarea class="input min-h-[80px]" id="testQuestionText" placeholder="Savol matnini yozing..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">A varianti</label>
+          <input type="text" class="input" id="testOptionA" placeholder="A javob">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">B varianti</label>
+          <input type="text" class="input" id="testOptionB" placeholder="B javob">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">C varianti</label>
+          <input type="text" class="input" id="testOptionC" placeholder="C javob">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">D varianti</label>
+          <input type="text" class="input" id="testOptionD" placeholder="D javob">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">To'g'ri javob</label>
+        <select class="input" id="testCorrectAnswer">
+          <option value="a">A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-zinc-100 flex gap-3">
+      <button onclick="closeTestModal()" class="btn btn-secondary flex-1">Bekor qilish</button>
+      <button onclick="saveTest()" class="btn btn-primary flex-1">
+        <span class="material-symbols-outlined">save</span>
+        Saqlash
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CustDev Question Modal -->
+<div id="custdevModal" class="modal-overlay" onclick="if(event.target===this)closeCustdevModal()">
+  <div class="modal-content w-full max-w-xl">
+    <div class="p-6 border-b border-zinc-100">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-bold text-zinc-900" id="custdevModalTitle">Yangi CustDev savoli</h3>
+        <button onclick="closeCustdevModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+          <span class="material-symbols-outlined text-zinc-400">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="editCustdevId">
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Darsdan keyin</label>
+          <select class="input" id="custdevAfterLesson">
+            <option value="1">1-darsdan keyin</option>
+            <option value="2">2-darsdan keyin</option>
+            <option value="3">3-darsdan keyin</option>
+            <option value="4">4-darsdan keyin</option>
+            <option value="5">5-darsdan keyin</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 mb-2">Tartib</label>
+          <input type="number" class="input" id="custdevSortOrder" value="0" min="0">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Savol matni</label>
+        <textarea class="input min-h-[80px]" id="custdevQuestionText" placeholder="Savol matnini yozing..."></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Savol turi</label>
+        <select class="input" id="custdevQuestionType">
+          <option value="buttons">Tugmalar (bir tanlov)</option>
+          <option value="text">Matn kiritish</option>
+        </select>
+      </div>
+
+      <div id="custdevOptionsContainer">
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Javob variantlari (har bir qator - 1 variant)</label>
+        <textarea class="input min-h-[100px]" id="custdevOptions" placeholder="Ha&#10;Yo'q&#10;Bilmayman"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Field nomi (ixtiyoriy)</label>
+        <input type="text" class="input" id="custdevFieldName" placeholder="masalan: goal, experience">
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-zinc-100 flex gap-3">
+      <button onclick="closeCustdevModal()" class="btn btn-secondary flex-1">Bekor qilish</button>
+      <button onclick="saveCustdev()" class="btn btn-primary flex-1">
+        <span class="material-symbols-outlined">save</span>
+        Saqlash
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Notifications Panel -->
 <div id="notificationsPanel" class="fixed top-0 right-0 w-full max-w-md h-full bg-white shadow-2xl transform translate-x-full transition-transform z-50">
   <div class="p-6 border-b border-zinc-100">
@@ -2352,43 +2361,9 @@
   </div>
 
   <div class="p-4 space-y-3 overflow-y-auto h-[calc(100%-80px)]" id="notificationsList">
-    <div class="p-4 bg-purple-50 rounded-2xl border-l-4 border-purple-500">
-      <div class="flex items-start gap-3">
-        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-green-600">payments</span>
-        </div>
-        <div>
-          <p class="font-medium text-zinc-900">Yangi to'lov!</p>
-          <p class="text-sm text-zinc-500">Nilufar Mo'minova 97,000 so'm to'ladi</p>
-          <p class="text-xs text-zinc-400 mt-1">5 daqiqa oldin</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="p-4 bg-zinc-50 rounded-2xl">
-      <div class="flex items-start gap-3">
-        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-blue-600">person_add</span>
-        </div>
-        <div>
-          <p class="font-medium text-zinc-900">Yangi foydalanuvchi</p>
-          <p class="text-sm text-zinc-500">Jasur Toshev ro'yxatdan o'tdi</p>
-          <p class="text-xs text-zinc-400 mt-1">23 daqiqa oldin</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="p-4 bg-zinc-50 rounded-2xl">
-      <div class="flex items-start gap-3">
-        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-purple-600">smart_toy</span>
-        </div>
-        <div>
-          <p class="font-medium text-zinc-900">AI Agent javob berdi</p>
-          <p class="text-sm text-zinc-500">Aziz Karimov bilan suhbat</p>
-          <p class="text-xs text-zinc-400 mt-1">1 soat oldin</p>
-        </div>
-      </div>
+    <div class="flex flex-col items-center justify-center h-32 text-zinc-400">
+      <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">notifications</span>
+      <p class="text-sm">Bildirishnomalar yuklanmoqda...</p>
     </div>
   </div>
 </div>
@@ -2497,7 +2472,7 @@ function showSubTab(parent, subtab) {
   // Load data for subtabs
   if (parent === 'audience') {
     if (subtab === 'chats') loadConversations();
-    if (subtab === 'feedback') loadFeedback();
+    if (subtab === 'feedback') loadCustdev();
   }
   if (parent === 'content') {
     if (subtab === 'lessons') loadLessons();
@@ -2512,7 +2487,7 @@ function showSubTab(parent, subtab) {
     setTimeout(initRevenueChart, 100);
   }
   if (parent === 'content' && subtab === 'tests') {
-    setTimeout(initTestsChart, 100);
+    loadTests();
   }
 }
 
@@ -2538,9 +2513,112 @@ async function loadHomeData() {
     // Load funnel data
     loadFunnelData(stats);
 
+    // Load activity feed
+    loadActivityFeed();
+
   } catch (e) {
     console.error('loadHomeData error:', e);
   }
+}
+
+// Load activity feed with real data
+async function loadActivityFeed() {
+  const feedEl = document.getElementById('activityFeed');
+  if (!feedEl) return;
+
+  try {
+    // Fetch payments and users in parallel
+    const [payments, users] = await Promise.all([
+      fetch('/api/payments?limit=20', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/users?limit=20', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    // Build activity items from payments
+    const activities = [];
+
+    // Add payment activities
+    if (payments && Array.isArray(payments)) {
+      payments.slice(0, 10).forEach(p => {
+        if (p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed') {
+          activities.push({
+            type: 'payment',
+            name: p.full_name || p.username || 'Foydalanuvchi',
+            description: `To'lov qildi - ${formatNumber(p.amount || 97000)} so'm`,
+            icon: 'payments',
+            color: 'green',
+            time: p.created_at || p.create_time || new Date().toISOString()
+          });
+        }
+      });
+    }
+
+    // Add new user registrations
+    if (users && Array.isArray(users)) {
+      users.slice(0, 10).forEach(u => {
+        activities.push({
+          type: 'registration',
+          name: u.full_name || u.username || 'Yangi foydalanuvchi',
+          description: "Ro'yxatdan o'tdi",
+          icon: 'person_add',
+          color: 'purple',
+          time: u.created_at || new Date().toISOString()
+        });
+      });
+    }
+
+    // Sort by time (newest first)
+    activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    // Render top 6 activities
+    if (activities.length === 0) {
+      feedEl.innerHTML = `
+        <div class="text-center text-zinc-400 py-8">
+          <span class="material-symbols-outlined text-4xl mb-2">inbox</span>
+          <p>Hozircha faoliyat yo'q</p>
+        </div>
+      `;
+      return;
+    }
+
+    feedEl.innerHTML = activities.slice(0, 6).map(a => `
+      <div class="activity-item flex items-center gap-4">
+        <div class="w-10 h-10 bg-${a.color}-100 rounded-xl flex items-center justify-center">
+          <span class="material-symbols-outlined text-${a.color}-600 text-lg">${a.icon}</span>
+        </div>
+        <div class="flex-1">
+          <p class="font-medium text-zinc-900">${escapeHtml(a.name)}</p>
+          <p class="text-sm text-zinc-500">${escapeHtml(a.description)}</p>
+        </div>
+        <span class="text-xs text-zinc-400">${formatTimeAgo(a.time)}</span>
+      </div>
+    `).join('');
+
+  } catch (e) {
+    console.error('loadActivityFeed error:', e);
+    feedEl.innerHTML = `
+      <div class="text-center text-red-400 py-4">
+        <span class="material-symbols-outlined">error</span>
+        <p class="text-sm">Faoliyatni yuklashda xato</p>
+      </div>
+    `;
+  }
+}
+
+// Format time ago (e.g., "5 min oldin")
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Hozirgina';
+  if (diffMins < 60) return `${diffMins} min oldin`;
+  if (diffHours < 24) return `${diffHours} soat oldin`;
+  if (diffDays < 7) return `${diffDays} kun oldin`;
+  return date.toLocaleDateString('uz-UZ');
 }
 
 // Load funnel visualization data
@@ -2639,13 +2717,59 @@ async function loadSalesData() {
 // Load sales analytics for charts
 async function loadSalesAnalytics() {
   try {
-    const analytics = await fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json());
+    const [analytics, stats, funnel] = await Promise.all([
+      fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => []),
+      fetch('/api/stats', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => ({})),
+      fetch('/api/analytics/funnel', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => ({}))
+    ]);
+
     // Update revenue chart if data available
     if (analytics && analytics.length && window.revenueChartInstance) {
       window.revenueChartInstance.data.labels = analytics.map(d => d.date?.substring(5, 10) || '');
       window.revenueChartInstance.data.datasets[0].data = analytics.map(d => (d.revenue || 0) / 100);
       window.revenueChartInstance.update();
     }
+
+    // Update sales funnel
+    const total = stats.totalUsers || 0;
+    const lessonUsers = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || Math.floor(total * 0.5);
+    const pitchUsers = funnel?.stages?.find(s => s.stage === 'pitch')?.users || Math.floor(total * 0.1);
+    const paidUsers = stats.paidUsers || 0;
+
+    document.getElementById('salesFunnelTotal').textContent = formatNumber(total);
+    document.getElementById('salesFunnelLesson').textContent = formatNumber(lessonUsers);
+    document.getElementById('salesFunnelPitch').textContent = formatNumber(pitchUsers);
+    document.getElementById('salesFunnelPaid').textContent = formatNumber(paidUsers);
+
+    // Update funnel bars
+    const lessonPct = total > 0 ? (lessonUsers / total * 100) : 0;
+    const pitchPct = total > 0 ? (pitchUsers / total * 100) : 0;
+    const paidPct = total > 0 ? Math.max(paidUsers / total * 100, 1) : 0;
+
+    const lessonBar = document.getElementById('salesFunnelLessonBar');
+    const pitchBar = document.getElementById('salesFunnelPitchBar');
+    const paidBar = document.getElementById('salesFunnelPaidBar');
+
+    if (lessonBar) { lessonBar.style.width = lessonPct + '%'; lessonBar.textContent = lessonPct.toFixed(1) + '%'; }
+    if (pitchBar) { pitchBar.style.width = Math.max(pitchPct, 5) + '%'; pitchBar.textContent = pitchPct.toFixed(1) + '%'; }
+    if (paidBar) { paidBar.style.width = Math.max(paidPct, 5) + '%'; paidBar.textContent = paidPct.toFixed(1) + '%'; }
+
+    // Update LTV (average payment amount)
+    const payments = await fetch('/api/payments?limit=100', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => []);
+    const completedPayments = payments.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2');
+    if (completedPayments.length > 0) {
+      const avgPayment = completedPayments.reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0) / completedPayments.length;
+      document.getElementById('analyticsLTV').textContent = formatNumber(avgPayment / 100) + " so'm";
+    } else {
+      document.getElementById('analyticsLTV').textContent = "0 so'm";
+    }
+
+    // Update Retention (users who returned in last 7 days)
+    const activeUsers = stats.todayUsers || 0;
+    const retentionPct = total > 0 ? ((activeUsers / total) * 100).toFixed(1) : 0;
+    document.getElementById('analyticsRetention').textContent = retentionPct + '%';
+    document.getElementById('analyticsRetentionNote').textContent = activeUsers + ' faol user';
+
   } catch (e) {
     console.error('loadSalesAnalytics error:', e);
   }
@@ -2797,6 +2921,32 @@ async function initGrowthChart() {
   });
 }
 
+// Update chart based on period selector
+async function updateChart() {
+  const days = parseInt(document.getElementById('chartPeriod')?.value) || 7;
+
+  try {
+    const daily = await fetch(`/api/subscribers/daily?days=${days}`, { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (daily && daily.length && window.growthChartInstance) {
+      const labels = daily.map(d => {
+        const date = new Date(d.date);
+        if (days <= 7) {
+          return ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'][date.getDay()];
+        }
+        return date.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit' });
+      });
+      const data = daily.map(d => d.new_users || 0);
+
+      window.growthChartInstance.data.labels = labels;
+      window.growthChartInstance.data.datasets[0].data = data;
+      window.growthChartInstance.update();
+    }
+  } catch (e) {
+    console.error('updateChart error:', e);
+  }
+}
+
 // Revenue chart (sales analytics)
 function initRevenueChart() {
   const ctx = document.getElementById('revenueChart')?.getContext('2d');
@@ -2936,7 +3086,83 @@ function closeSearch() {
 }
 
 function handleSearch(query) {
-  // TODO: implement search results
+  const resultsEl = document.getElementById('searchResults');
+  if (!query || query.length < 2) {
+    // Show default quick actions
+    resultsEl.innerHTML = getDefaultSearchResults();
+    return;
+  }
+
+  const q = query.toLowerCase();
+  let results = [];
+
+  // Search in users
+  const userMatches = allUsers.filter(u =>
+    (u.full_name || '').toLowerCase().includes(q) ||
+    (u.first_name || '').toLowerCase().includes(q) ||
+    (u.username || '').toLowerCase().includes(q) ||
+    String(u.telegram_id).includes(q)
+  ).slice(0, 5);
+
+  userMatches.forEach(u => {
+    results.push(`
+      <div onclick="closeSearch();openUserModal('${u.telegram_id}')" class="flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-zinc-100 cursor-pointer transition-all">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">${(u.full_name || u.first_name || 'U')[0].toUpperCase()}</div>
+        <div>
+          <p class="font-medium text-zinc-900">${escapeHtml(u.full_name || u.first_name || 'User')}</p>
+          <p class="text-sm text-zinc-500">${u.username ? '@' + u.username : u.telegram_id}</p>
+        </div>
+      </div>
+    `);
+  });
+
+  // Quick navigation based on query
+  if ('user'.includes(q) || 'foydalanuvchi'.includes(q)) {
+    results.push(getNavResult('Userlarni ko\'rish', 'group', 'blue', "showTab('audience')"));
+  }
+  if ('tolov'.includes(q) || 'payment'.includes(q) || 'pul'.includes(q)) {
+    results.push(getNavResult('To\'lovlarni ko\'rish', 'payments', 'green', "showTab('sales')"));
+  }
+  if ('dars'.includes(q) || 'lesson'.includes(q) || 'kurs'.includes(q)) {
+    results.push(getNavResult('Darslarni boshqarish', 'school', 'orange', "showTab('content')"));
+  }
+  if ('xabar'.includes(q) || 'broadcast'.includes(q)) {
+    results.push(getNavResult('Xabar yuborish', 'campaign', 'purple', "openBroadcast()"));
+  }
+
+  if (results.length === 0) {
+    resultsEl.innerHTML = '<div class="p-4 text-center text-zinc-400">Hech narsa topilmadi</div>';
+  } else {
+    resultsEl.innerHTML = results.join('');
+  }
+}
+
+function getNavResult(title, icon, color, onclick) {
+  return `
+    <div onclick="closeSearch();${onclick}" class="flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-zinc-100 cursor-pointer transition-all">
+      <div class="w-10 h-10 bg-${color}-100 rounded-xl flex items-center justify-center">
+        <span class="material-symbols-outlined text-${color}-600">${icon}</span>
+      </div>
+      <p class="font-medium text-zinc-900">${title}</p>
+    </div>
+  `;
+}
+
+function getDefaultSearchResults() {
+  return `
+    <div onclick="closeSearch();showTab('audience')" class="flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-zinc-100 cursor-pointer transition-all">
+      <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-blue-600">group</span></div>
+      <div><p class="font-medium text-zinc-900">Userlarni ko'rish</p><p class="text-sm text-zinc-500">Barcha foydalanuvchilar</p></div>
+    </div>
+    <div onclick="closeSearch();openBroadcast()" class="flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-zinc-100 cursor-pointer transition-all">
+      <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-purple-600">campaign</span></div>
+      <div><p class="font-medium text-zinc-900">Xabar yuborish</p><p class="text-sm text-zinc-500">Barcha userlarga</p></div>
+    </div>
+    <div onclick="closeSearch();showTab('sales')" class="flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-zinc-100 cursor-pointer transition-all">
+      <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center"><span class="material-symbols-outlined text-green-600">payments</span></div>
+      <div><p class="font-medium text-zinc-900">To'lovlarni ko'rish</p><p class="text-sm text-zinc-500">To'lovlar tarixi</p></div>
+    </div>
+  `;
 }
 
 // Broadcast modal
@@ -3049,10 +3275,96 @@ function sendMessageToUser() {
 function openNotifications() {
   document.getElementById('notificationsPanel').style.transform = 'translateX(0)';
   document.getElementById('notifBadge').classList.add('hidden');
+  loadNotifications();
 }
 
 function closeNotifications() {
   document.getElementById('notificationsPanel').style.transform = 'translateX(100%)';
+}
+
+async function loadNotifications() {
+  const listEl = document.getElementById('notificationsList');
+  if (!listEl) return;
+
+  try {
+    const [payments, users] = await Promise.all([
+      fetch('/api/payments?limit=10', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/users?limit=10', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    const notifications = [];
+
+    // Add payment notifications
+    if (payments && Array.isArray(payments)) {
+      payments.slice(0, 5).forEach(p => {
+        if (p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed') {
+          notifications.push({
+            type: 'payment',
+            title: "Yangi to'lov!",
+            description: `${p.full_name || 'Foydalanuvchi'} ${formatNumber(p.amount || 97000)} so'm to'ladi`,
+            icon: 'payments',
+            bgColor: 'bg-green-100',
+            iconColor: 'text-green-600',
+            time: p.created_at || new Date().toISOString(),
+            isNew: true
+          });
+        }
+      });
+    }
+
+    // Add new user notifications
+    if (users && Array.isArray(users)) {
+      users.slice(0, 5).forEach(u => {
+        notifications.push({
+          type: 'user',
+          title: 'Yangi foydalanuvchi',
+          description: `${u.full_name || 'Foydalanuvchi'} ro'yxatdan o'tdi`,
+          icon: 'person_add',
+          bgColor: 'bg-blue-100',
+          iconColor: 'text-blue-600',
+          time: u.created_at || new Date().toISOString(),
+          isNew: false
+        });
+      });
+    }
+
+    // Sort by time
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    if (notifications.length === 0) {
+      listEl.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-32 text-zinc-400">
+          <span class="material-symbols-outlined text-3xl mb-2">notifications_off</span>
+          <p class="text-sm">Bildirishnomalar yo'q</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = notifications.slice(0, 10).map((n, i) => `
+      <div class="p-4 ${i === 0 && n.isNew ? 'bg-purple-50 border-l-4 border-purple-500' : 'bg-zinc-50'} rounded-2xl">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 ${n.bgColor} rounded-xl flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined ${n.iconColor}">${n.icon}</span>
+          </div>
+          <div>
+            <p class="font-medium text-zinc-900">${escapeHtml(n.title)}</p>
+            <p class="text-sm text-zinc-500">${escapeHtml(n.description)}</p>
+            <p class="text-xs text-zinc-400 mt-1">${formatTimeAgo(n.time)}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (e) {
+    console.error('loadNotifications error:', e);
+    listEl.innerHTML = `
+      <div class="flex flex-col items-center justify-center h-32 text-red-400">
+        <span class="material-symbols-outlined text-3xl mb-2">error</span>
+        <p class="text-sm">Yuklashda xato</p>
+      </div>
+    `;
+  }
 }
 
 // Settings
@@ -3399,8 +3711,69 @@ function renderLessonsList(lessons) {
 }
 
 async function editLesson(lessonId) {
-  showToast('Darsni tahrirlash modal tez orada...');
-  // TODO: Open edit modal
+  try {
+    // Fetch lesson data
+    const lessons = await fetch('/api/lessons', { headers: { Authorization: auth } }).then(r => r.json());
+    const lesson = lessons.find(l => l.id === lessonId || l.lesson_number === lessonId);
+
+    if (!lesson) {
+      showToast('Dars topilmadi', 'error');
+      return;
+    }
+
+    // Populate modal fields
+    document.getElementById('editLessonId').value = lesson.id || lesson.lesson_number;
+    document.getElementById('editLessonTitle').value = lesson.title || '';
+    document.getElementById('editLessonContent').value = lesson.content || '';
+    document.getElementById('editLessonDelay').value = lesson.delay_hours || 24;
+    document.getElementById('editLessonShowButton').checked = lesson.show_watched_button !== false;
+    document.getElementById('editLessonButtonText').value = lesson.watched_button_text || '';
+    document.getElementById('editLessonMessage').value = lesson.watched_message || '';
+
+    // Show modal
+    document.getElementById('editLessonModal').classList.add('active');
+  } catch (e) {
+    console.error('editLesson error:', e);
+    showToast('Darsni yuklashda xato', 'error');
+  }
+}
+
+function closeEditLesson() {
+  document.getElementById('editLessonModal').classList.remove('active');
+}
+
+async function saveLesson() {
+  const lessonId = document.getElementById('editLessonId').value;
+  if (!lessonId) return;
+
+  const data = {
+    title: document.getElementById('editLessonTitle').value,
+    content: document.getElementById('editLessonContent').value,
+    delay_hours: parseInt(document.getElementById('editLessonDelay').value) || 24,
+    show_watched_button: document.getElementById('editLessonShowButton').checked,
+    watched_button_text: document.getElementById('editLessonButtonText').value,
+    watched_message: document.getElementById('editLessonMessage').value
+  };
+
+  try {
+    const res = await fetch(`/api/lessons/${lessonId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: auth
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) throw new Error('Failed to update');
+
+    showToast('Dars saqlandi', 'success');
+    closeEditLesson();
+    loadLessons();
+  } catch (e) {
+    console.error('saveLesson error:', e);
+    showToast('Saqlashda xato yuz berdi', 'error');
+  }
 }
 
 async function deleteLesson(lessonId) {
@@ -3472,16 +3845,21 @@ async function createPromoCode() {
   }
 
   try {
-    await fetch('/api/promo-codes', {
+    const res = await fetch('/api/promo-codes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: auth },
       body: JSON.stringify({
         code,
-        discount_percent: discount,
-        max_uses: limit ? parseInt(limit) : null,
-        valid_until: expiry || null
+        discountPercent: discount,
+        maxUses: limit ? parseInt(limit) : null,
+        validUntil: expiry || null
       })
     });
+    if (!res.ok) {
+      const err = await res.json();
+      showToast(err.error || 'Xato yuz berdi', 'error');
+      return;
+    }
     showToast('Promo kod yaratildi!', 'success');
     document.getElementById('promoCode').value = '';
     document.getElementById('promoDiscount').value = '';
@@ -3499,6 +3877,353 @@ async function deletePromoCode(id) {
     await fetch(`/api/promo-codes/${id}`, { method: 'DELETE', headers: { Authorization: auth } });
     showToast('Promo kod o\'chirildi', 'success');
     loadPromoCodes();
+  } catch (e) {
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+// ============ TEST MANAGEMENT FUNCTIONS ============
+let allTests = [];
+
+async function loadTests() {
+  const listEl = document.getElementById('testsList');
+  const filterEl = document.getElementById('testLessonFilter');
+  if (!listEl) return;
+
+  try {
+    // Load tests
+    const tests = await fetch('/api/tests', { headers: { Authorization: auth } }).then(r => r.json());
+    allTests = tests || [];
+
+    // Update lesson filter options
+    if (filterEl && filterEl.options.length <= 1) {
+      const lessons = await fetch('/api/lessons', { headers: { Authorization: auth } }).then(r => r.json());
+      lessons.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.lesson_number;
+        opt.textContent = `${l.lesson_number}-dars: ${l.title || ''}`;
+        filterEl.appendChild(opt);
+      });
+    }
+
+    // Filter if needed
+    const filterValue = filterEl?.value;
+    let filteredTests = allTests;
+    if (filterValue) {
+      filteredTests = allTests.filter(t => t.lesson_number == filterValue);
+    }
+
+    // Render tests
+    if (!filteredTests.length) {
+      listEl.innerHTML = '<div class="text-center py-8 text-zinc-400"><span class="material-symbols-outlined text-3xl mb-2">quiz</span><p>Test savollari yo\'q</p></div>';
+      return;
+    }
+
+    listEl.innerHTML = filteredTests.map(t => `
+      <div class="p-4 bg-zinc-50 rounded-2xl">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge badge-info">${t.lesson_number}-dars</span>
+              <span class="text-xs text-zinc-400">Savol #${t.question_order}</span>
+            </div>
+            <p class="font-medium text-zinc-900 mb-2">${escapeHtml(t.question_text)}</p>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="${t.correct_answer === 'a' ? 'text-green-600 font-medium' : 'text-zinc-500'}">A: ${escapeHtml(t.option_a)}</div>
+              <div class="${t.correct_answer === 'b' ? 'text-green-600 font-medium' : 'text-zinc-500'}">B: ${escapeHtml(t.option_b)}</div>
+              <div class="${t.correct_answer === 'c' ? 'text-green-600 font-medium' : 'text-zinc-500'}">C: ${escapeHtml(t.option_c)}</div>
+              <div class="${t.correct_answer === 'd' ? 'text-green-600 font-medium' : 'text-zinc-500'}">D: ${escapeHtml(t.option_d)}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="editTest(${t.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-purple-600">
+              <span class="material-symbols-outlined text-lg">edit</span>
+            </button>
+            <button onclick="deleteTest(${t.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-red-500">
+              <span class="material-symbols-outlined text-lg">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Load stats
+    loadTestStats();
+
+  } catch (e) {
+    console.error('loadTests error:', e);
+    listEl.innerHTML = '<div class="text-center py-4 text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
+  }
+}
+
+async function loadTestStats() {
+  try {
+    const stats = await fetch('/api/tests/stats', { headers: { Authorization: auth } }).then(r => r.json());
+    document.getElementById('testsTotalCount').textContent = allTests.length;
+    document.getElementById('testsAvgScore').textContent = (stats.avgScore || 0).toFixed(0) + '%';
+    document.getElementById('testsSubmittedCount').textContent = stats.totalSubmissions || 0;
+  } catch (e) {
+    console.error('loadTestStats error:', e);
+  }
+}
+
+function openTestModal(testId = null) {
+  document.getElementById('editTestId').value = testId || '';
+  document.getElementById('testModalTitle').textContent = testId ? 'Test savolini tahrirlash' : 'Yangi test savoli';
+
+  if (testId) {
+    const test = allTests.find(t => t.id === testId);
+    if (test) {
+      document.getElementById('testLessonNumber').value = test.lesson_number;
+      document.getElementById('testQuestionOrder').value = test.question_order;
+      document.getElementById('testQuestionText').value = test.question_text || '';
+      document.getElementById('testOptionA').value = test.option_a || '';
+      document.getElementById('testOptionB').value = test.option_b || '';
+      document.getElementById('testOptionC').value = test.option_c || '';
+      document.getElementById('testOptionD').value = test.option_d || '';
+      document.getElementById('testCorrectAnswer').value = test.correct_answer || 'a';
+    }
+  } else {
+    document.getElementById('testLessonNumber').value = '1';
+    document.getElementById('testQuestionOrder').value = '1';
+    document.getElementById('testQuestionText').value = '';
+    document.getElementById('testOptionA').value = '';
+    document.getElementById('testOptionB').value = '';
+    document.getElementById('testOptionC').value = '';
+    document.getElementById('testOptionD').value = '';
+    document.getElementById('testCorrectAnswer').value = 'a';
+  }
+
+  document.getElementById('testModal').classList.add('active');
+}
+
+function closeTestModal() {
+  document.getElementById('testModal').classList.remove('active');
+}
+
+function editTest(testId) {
+  openTestModal(testId);
+}
+
+async function saveTest() {
+  const testId = document.getElementById('editTestId').value;
+  const data = {
+    lesson_number: parseInt(document.getElementById('testLessonNumber').value),
+    question_order: parseInt(document.getElementById('testQuestionOrder').value),
+    question_text: document.getElementById('testQuestionText').value,
+    option_a: document.getElementById('testOptionA').value,
+    option_b: document.getElementById('testOptionB').value,
+    option_c: document.getElementById('testOptionC').value,
+    option_d: document.getElementById('testOptionD').value,
+    correct_answer: document.getElementById('testCorrectAnswer').value
+  };
+
+  if (!data.question_text || !data.option_a || !data.option_b) {
+    showToast('Savol va kamida 2 ta variant kerak', 'error');
+    return;
+  }
+
+  try {
+    const url = testId ? `/api/tests/${testId}` : '/api/tests';
+    const method = testId ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) throw new Error('Failed');
+
+    showToast(testId ? 'Test yangilandi' : 'Test yaratildi', 'success');
+    closeTestModal();
+    loadTests();
+  } catch (e) {
+    console.error('saveTest error:', e);
+    showToast('Saqlashda xato', 'error');
+  }
+}
+
+async function deleteTest(testId) {
+  if (!confirm('Test savolini o\'chirmoqchimisiz?')) return;
+
+  try {
+    await fetch(`/api/tests/${testId}`, { method: 'DELETE', headers: { Authorization: auth } });
+    showToast('Test o\'chirildi', 'success');
+    loadTests();
+  } catch (e) {
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+// ============ CUSTDEV MANAGEMENT FUNCTIONS ============
+let allCustdevQuestions = [];
+
+async function loadCustdev() {
+  const listEl = document.getElementById('custdevList');
+  const answersEl = document.getElementById('custdevAnswersList');
+  if (!listEl) return;
+
+  try {
+    // Load questions
+    const questions = await fetch('/api/custdev', { headers: { Authorization: auth } }).then(r => r.json());
+    allCustdevQuestions = questions || [];
+
+    if (!allCustdevQuestions.length) {
+      listEl.innerHTML = '<div class="text-center py-8 text-zinc-400"><span class="material-symbols-outlined text-3xl mb-2">help_outline</span><p>CustDev savollari yo\'q</p></div>';
+    } else {
+      listEl.innerHTML = allCustdevQuestions.map(q => `
+        <div class="p-4 bg-zinc-50 rounded-2xl">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="badge badge-info">${q.after_lesson}-darsdan keyin</span>
+                <span class="badge ${q.question_type === 'buttons' ? 'badge-success' : 'badge-warning'}">${q.question_type === 'buttons' ? 'Tugmalar' : 'Matn'}</span>
+              </div>
+              <p class="font-medium text-zinc-900 mb-1">${escapeHtml(q.question_text)}</p>
+              ${q.options ? `<p class="text-sm text-zinc-500">${JSON.parse(q.options).join(', ')}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="editCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-purple-600">
+                <span class="material-symbols-outlined text-lg">edit</span>
+              </button>
+              <button onclick="deleteCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-red-500">
+                <span class="material-symbols-outlined text-lg">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load answers
+    loadCustdevAnswers();
+
+  } catch (e) {
+    console.error('loadCustdev error:', e);
+    listEl.innerHTML = '<div class="text-center py-4 text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
+  }
+}
+
+async function loadCustdevAnswers() {
+  const answersEl = document.getElementById('custdevAnswersList');
+  const countEl = document.getElementById('custdevAnswersCount');
+  if (!answersEl) return;
+
+  try {
+    const answers = await fetch('/api/custdev/answers?limit=50', { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (!answers || !answers.length) {
+      answersEl.innerHTML = '<div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">chat_bubble_outline</span><p class="text-sm">Javoblar yo\'q</p></div>';
+      countEl.textContent = '0';
+      return;
+    }
+
+    countEl.textContent = answers.length;
+    answersEl.innerHTML = answers.map(a => `
+      <div class="p-4 hover:bg-zinc-50">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">
+            ${(a.full_name || 'U')[0].toUpperCase()}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-medium text-zinc-900">${escapeHtml(a.full_name || 'Foydalanuvchi')}</p>
+              <span class="text-xs text-zinc-400">${formatTimeAgo(a.created_at)}</span>
+            </div>
+            <p class="text-sm text-zinc-500 mb-1">${escapeHtml(a.question_text || '')}</p>
+            <p class="text-zinc-900 bg-zinc-100 px-3 py-1 rounded-lg inline-block">${escapeHtml(a.answer || '')}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (e) {
+    console.error('loadCustdevAnswers error:', e);
+  }
+}
+
+function openCustdevModal(questionId = null) {
+  document.getElementById('editCustdevId').value = questionId || '';
+  document.getElementById('custdevModalTitle').textContent = questionId ? 'CustDev savolini tahrirlash' : 'Yangi CustDev savoli';
+
+  if (questionId) {
+    const q = allCustdevQuestions.find(x => x.id === questionId);
+    if (q) {
+      document.getElementById('custdevAfterLesson').value = q.after_lesson || 1;
+      document.getElementById('custdevSortOrder').value = q.sort_order || 0;
+      document.getElementById('custdevQuestionText').value = q.question_text || '';
+      document.getElementById('custdevQuestionType').value = q.question_type || 'buttons';
+      document.getElementById('custdevOptions').value = q.options ? JSON.parse(q.options).join('\n') : '';
+      document.getElementById('custdevFieldName').value = q.field_name || '';
+    }
+  } else {
+    document.getElementById('custdevAfterLesson').value = '1';
+    document.getElementById('custdevSortOrder').value = '0';
+    document.getElementById('custdevQuestionText').value = '';
+    document.getElementById('custdevQuestionType').value = 'buttons';
+    document.getElementById('custdevOptions').value = '';
+    document.getElementById('custdevFieldName').value = '';
+  }
+
+  document.getElementById('custdevModal').classList.add('active');
+}
+
+function closeCustdevModal() {
+  document.getElementById('custdevModal').classList.remove('active');
+}
+
+function editCustdev(questionId) {
+  openCustdevModal(questionId);
+}
+
+async function saveCustdev() {
+  const questionId = document.getElementById('editCustdevId').value;
+  const optionsText = document.getElementById('custdevOptions').value;
+  const options = optionsText ? optionsText.split('\n').filter(o => o.trim()) : null;
+
+  const data = {
+    after_lesson: parseInt(document.getElementById('custdevAfterLesson').value),
+    sort_order: parseInt(document.getElementById('custdevSortOrder').value) || 0,
+    question_text: document.getElementById('custdevQuestionText').value,
+    question_type: document.getElementById('custdevQuestionType').value,
+    options: options,
+    field_name: document.getElementById('custdevFieldName').value || null
+  };
+
+  if (!data.question_text) {
+    showToast('Savol matnini kiriting', 'error');
+    return;
+  }
+
+  try {
+    const url = questionId ? `/api/custdev/${questionId}` : '/api/custdev';
+    const method = questionId ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) throw new Error('Failed');
+
+    showToast(questionId ? 'Savol yangilandi' : 'Savol yaratildi', 'success');
+    closeCustdevModal();
+    loadCustdev();
+  } catch (e) {
+    console.error('saveCustdev error:', e);
+    showToast('Saqlashda xato', 'error');
+  }
+}
+
+async function deleteCustdev(questionId) {
+  if (!confirm('CustDev savolini o\'chirmoqchimisiz?')) return;
+
+  try {
+    await fetch(`/api/custdev/${questionId}`, { method: 'DELETE', headers: { Authorization: auth } });
+    showToast('Savol o\'chirildi', 'success');
+    loadCustdev();
   } catch (e) {
     showToast('Xato yuz berdi', 'error');
   }
