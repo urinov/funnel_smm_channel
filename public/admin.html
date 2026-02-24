@@ -2674,11 +2674,11 @@ function showTab(tab) {
     el.classList.toggle('active', el.dataset.tab === tab);
   });
 
-  // Load tab data
+  // Load tab data and show default subtabs
   if (tab === 'home') loadHomeData();
-  if (tab === 'audience') loadAudienceData();
-  if (tab === 'sales') loadSalesData();
-  if (tab === 'content') initContentTab();
+  if (tab === 'audience') { loadAudienceData(); showSubTab('audience', currentSubtabs.audience || 'users'); }
+  if (tab === 'sales') { loadSalesData(); showSubTab('sales', currentSubtabs.sales || 'payments'); }
+  if (tab === 'content') { initContentTab(); showSubTab('content', currentSubtabs.content || 'lessons'); }
 }
 
 // Show sub tab
