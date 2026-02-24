@@ -388,6 +388,7 @@ export async function initDatabase() {
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS plan_id VARCHAR(20) DEFAULT '1month'`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_10d BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_7d BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_5d BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_3d BOOLEAN DEFAULT FALSE`,
       `ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS reminder_sent_1d BOOLEAN DEFAULT FALSE`
@@ -890,7 +891,7 @@ async function seedDefaultData(client) {
   }
 
   // Seed subscription reminder messages
-  const reminderKeys = ['reminder_10d', 'reminder_5d', 'reminder_3d', 'reminder_1d', 'reminder_expired'];
+  const reminderKeys = ['reminder_10d', 'reminder_7d', 'reminder_5d', 'reminder_3d', 'reminder_1d', 'reminder_expired'];
   for (const key of reminderKeys) {
     const { rows: existing } = await client.query('SELECT 1 FROM bot_messages WHERE key = $1', [key]);
     if (existing.length === 0) {
@@ -1804,8 +1805,8 @@ export async function extendSubscription(telegramId, planId, additionalDays) {
     newEndDate.setDate(newEndDate.getDate() + additionalDays);
     
     await pool.query(`
-      UPDATE subscriptions SET end_date = $1, 
-        reminder_sent_10d = false, reminder_sent_5d = false, reminder_sent_3d = false, reminder_sent_1d = false
+      UPDATE subscriptions SET end_date = $1,
+        reminder_sent_10d = false, reminder_sent_7d = false, reminder_sent_5d = false, reminder_sent_3d = false, reminder_sent_1d = false
       WHERE id = $2
     `, [newEndDate, current.id]);
     
@@ -1818,6 +1819,7 @@ export async function extendSubscription(telegramId, planId, additionalDays) {
 // Whitelist of allowed reminder columns for security
 const ALLOWED_REMINDER_COLUMNS = {
   '10d': 'reminder_sent_10d',
+  '7d': 'reminder_sent_7d',
   '5d': 'reminder_sent_5d',
   '3d': 'reminder_sent_3d',
   '1d': 'reminder_sent_1d'
@@ -1825,7 +1827,7 @@ const ALLOWED_REMINDER_COLUMNS = {
 
 export async function getExpiringSubscriptions(daysRemaining) {
   // Map days to reminder column with whitelist validation
-  const reminderMap = { 10: '10d', 5: '5d', 3: '3d', 1: '1d' };
+  const reminderMap = { 10: '10d', 7: '7d', 5: '5d', 3: '3d', 1: '1d' };
   const reminderKey = reminderMap[daysRemaining] || '1d';
   const reminderColumn = ALLOWED_REMINDER_COLUMNS[reminderKey];
 
@@ -1864,6 +1866,7 @@ export async function markReminderSent(subscriptionId, reminderType) {
   await pool.query(`
     UPDATE subscriptions SET
       reminder_sent_10d = CASE WHEN $2 = '10d' THEN true ELSE reminder_sent_10d END,
+      reminder_sent_7d = CASE WHEN $2 = '7d' THEN true ELSE reminder_sent_7d END,
       reminder_sent_5d = CASE WHEN $2 = '5d' THEN true ELSE reminder_sent_5d END,
       reminder_sent_3d = CASE WHEN $2 = '3d' THEN true ELSE reminder_sent_3d END,
       reminder_sent_1d = CASE WHEN $2 = '1d' THEN true ELSE reminder_sent_1d END
@@ -2479,8 +2482,10 @@ export async function getDailyReportStats() {
   const { rows: userRows } = await pool.query(`
     SELECT
       COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) AS new_users_today,
+      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE - INTERVAL '1 day') AS new_users_yesterday,
       COUNT(*) AS total_users,
-      COUNT(*) FILTER (WHERE DATE(last_activity) = CURRENT_DATE) AS active_users_today
+      COUNT(*) FILTER (WHERE DATE(last_activity) = CURRENT_DATE) AS active_users_today,
+      COUNT(*) FILTER (WHERE is_paid = TRUE) AS total_paid
     FROM users
     WHERE is_blocked = FALSE
   `);
@@ -2497,6 +2502,14 @@ export async function getDailyReportStats() {
       COALESCE(SUM(amount), 0) AS revenue_today
     FROM payments
     WHERE state = ANY($1) AND DATE(created_at) = CURRENT_DATE
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const { rows: yesterdayPaymentRows } = await pool.query(`
+    SELECT
+      COUNT(*) AS successful_payments_yesterday,
+      COALESCE(SUM(amount), 0) AS revenue_yesterday
+    FROM payments
+    WHERE state = ANY($1) AND DATE(created_at) = CURRENT_DATE - INTERVAL '1 day'
   `, [SUCCESS_PAYMENT_STATES]);
 
   const { rows: subscriptionRows } = await pool.query(`
@@ -2522,18 +2535,51 @@ export async function getDailyReportStats() {
     LIMIT 10
   `);
 
+  // Funnel stats
+  const { rows: funnelRows } = await pool.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE current_lesson >= 1) AS lesson_1,
+      COUNT(*) FILTER (WHERE current_lesson >= 2) AS lesson_2,
+      COUNT(*) FILTER (WHERE current_lesson >= 3) AS lesson_3,
+      COUNT(*) FILTER (WHERE sales_pitch_seen_at IS NOT NULL OR funnel_step >= 9) AS pitch_seen
+    FROM users
+    WHERE is_blocked = FALSE
+  `);
+
+  // Referral stats
+  const { rows: referralRows } = await pool.query(`
+    SELECT
+      COUNT(*) AS total_referrals,
+      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) AS referrals_today
+    FROM referrals
+  `);
+
   return {
     newUsersToday: parseInt(userRows[0]?.new_users_today) || 0,
+    newUsersYesterday: parseInt(userRows[0]?.new_users_yesterday) || 0,
     totalUsers: parseInt(userRows[0]?.total_users) || 0,
+    totalPaid: parseInt(userRows[0]?.total_paid) || 0,
     activeUsersToday: parseInt(userRows[0]?.active_users_today) || 0,
     messagesToday: parseInt(messageRows[0]?.messages_today) || 0,
     successfulPaymentsToday: parseInt(paymentRows[0]?.successful_payments_today) || 0,
+    successfulPaymentsYesterday: parseInt(yesterdayPaymentRows[0]?.successful_payments_yesterday) || 0,
     revenueToday: parseInt(paymentRows[0]?.revenue_today) || 0,
+    revenueYesterday: parseInt(yesterdayPaymentRows[0]?.revenue_yesterday) || 0,
     newSubscriptionsToday: parseInt(subscriptionRows[0]?.new_subscriptions_today) || 0,
     feedbackTotalToday: parseInt(feedbackRows[0]?.feedback_total_today) || 0,
     feedbackPositiveToday: parseInt(feedbackRows[0]?.feedback_positive_today) || 0,
     feedbackNegativeToday: parseInt(feedbackRows[0]?.feedback_negative_today) || 0,
-    recentNewUsers: milestoneRows
+    recentNewUsers: milestoneRows,
+    funnel: {
+      lesson1: parseInt(funnelRows[0]?.lesson_1) || 0,
+      lesson2: parseInt(funnelRows[0]?.lesson_2) || 0,
+      lesson3: parseInt(funnelRows[0]?.lesson_3) || 0,
+      pitchSeen: parseInt(funnelRows[0]?.pitch_seen) || 0
+    },
+    referrals: {
+      total: parseInt(referralRows[0]?.total_referrals) || 0,
+      today: parseInt(referralRows[0]?.referrals_today) || 0
+    }
   };
 }
 

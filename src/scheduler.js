@@ -17,26 +17,47 @@ async function sendDailyAdminReport() {
     const stats = await db.getDailyReportStats();
     const day = new Date().toLocaleDateString('uz-UZ', { timeZone: REPORT_TIMEZONE });
 
+    // Calculate changes from yesterday
+    const userChange = stats.newUsersToday - stats.newUsersYesterday;
+    const userChangeIcon = userChange > 0 ? '📈' : userChange < 0 ? '📉' : '➡️';
+    const revenueChange = stats.revenueToday - stats.revenueYesterday;
+    const revenueChangeIcon = revenueChange > 0 ? '📈' : revenueChange < 0 ? '📉' : '➡️';
+
+    // Conversion rate
+    const conversionRate = stats.totalUsers > 0 ? ((stats.totalPaid / stats.totalUsers) * 100).toFixed(1) : 0;
+
     const latestUsersText = stats.recentNewUsers.length
       ? stats.recentNewUsers
+          .slice(0, 5)
           .map((u, i) => {
             const name = u.full_name || u.username || String(u.telegram_id);
-            return `${i + 1}. ${name} (${u.telegram_id})`;
+            return `${i + 1}. ${name}`;
           })
           .join('\n')
-      : 'Bugun yangi user yoq';
+      : 'Bugun yangi user yo\'q';
 
     const report =
-      `📊 <b>Kunlik otchot (${day})</b>\n\n` +
-      `👥 Yangi userlar: <b>${stats.newUsersToday}</b>\n` +
-      `👤 Jami userlar: <b>${stats.totalUsers}</b>\n` +
-      `🟢 Bugun aktiv userlar: <b>${stats.activeUsersToday}</b>\n` +
-      `💬 User xabarlari: <b>${stats.messagesToday}</b>\n\n` +
-      `💳 Bugungi to'lovlar: <b>${stats.successfulPaymentsToday}</b>\n` +
-      `💰 Bugungi tushum: <b>${formatMoney(stats.revenueToday)}</b>\n` +
-      `📦 Yangi obunalar: <b>${stats.newSubscriptionsToday}</b>\n\n` +
-      `📝 Feedback: <b>${stats.feedbackTotalToday}</b> (✅ ${stats.feedbackPositiveToday} / ❌ ${stats.feedbackNegativeToday})\n\n` +
-      `🆕 Oxirgi yangi userlar:\n${latestUsersText}`;
+      `📊 <b>Kunlik hisobot (${day})</b>\n\n` +
+      `<b>👥 USERLAR</b>\n` +
+      `├ Bugun yangi: <b>${stats.newUsersToday}</b> ${userChangeIcon}\n` +
+      `├ Jami: <b>${stats.totalUsers}</b>\n` +
+      `├ Pullik: <b>${stats.totalPaid}</b>\n` +
+      `└ Konversiya: <b>${conversionRate}%</b>\n\n` +
+      `<b>📚 FUNNEL</b>\n` +
+      `├ 1-dars: <b>${stats.funnel.lesson1}</b>\n` +
+      `├ 2-dars: <b>${stats.funnel.lesson2}</b>\n` +
+      `├ 3-dars: <b>${stats.funnel.lesson3}</b>\n` +
+      `└ Pitch: <b>${stats.funnel.pitchSeen}</b>\n\n` +
+      `<b>💰 DAROMAD</b>\n` +
+      `├ Bugun: <b>${formatMoney(stats.revenueToday)}</b> ${revenueChangeIcon}\n` +
+      `├ To'lovlar: <b>${stats.successfulPaymentsToday}</b>\n` +
+      `└ Yangi obunalar: <b>${stats.newSubscriptionsToday}</b>\n\n` +
+      `<b>📈 FAOLLIK</b>\n` +
+      `├ Aktiv userlar: <b>${stats.activeUsersToday}</b>\n` +
+      `├ Xabarlar: <b>${stats.messagesToday}</b>\n` +
+      `├ Referallar: <b>${stats.referrals.today}</b>/${stats.referrals.total}\n` +
+      `└ Feedback: ✅${stats.feedbackPositiveToday} / ❌${stats.feedbackNegativeToday}\n\n` +
+      `<b>🆕 Yangi userlar:</b>\n${latestUsersText}`;
 
     for (const adminId of ADMIN_IDS) {
       try {
@@ -157,15 +178,15 @@ async function checkSubscriptionReminders() {
       }
     }
 
-    // 5 days reminder
-    const expiring5Days = await db.getExpiringSubscriptions(5);
-    for (const sub of expiring5Days) {
+    // 7 days reminder (o'zgartirdim: 5 -> 7)
+    const expiring7Days = await db.getExpiringSubscriptions(7);
+    for (const sub of expiring7Days) {
       try {
-        await sendRenewalReminder(sub.telegram_id, 5, sub.id);
-        await db.markReminderSent(sub.id, '5d');
-        console.log(`Sent 5-day reminder to ${sub.telegram_id}`);
+        await sendRenewalReminder(sub.telegram_id, 7, sub.id);
+        await db.markReminderSent(sub.id, '7d');
+        console.log(`Sent 7-day reminder to ${sub.telegram_id}`);
       } catch (e) {
-        console.error(`5-day reminder error for ${sub.telegram_id}:`, e.message);
+        console.error(`7-day reminder error for ${sub.telegram_id}:`, e.message);
       }
     }
 

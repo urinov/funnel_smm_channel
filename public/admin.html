@@ -1641,6 +1641,40 @@
             </div>
           </div>
         </div>
+
+        <!-- Subscription Reminders Section -->
+        <div class="mt-6 bg-white rounded-3xl shadow-card p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-semibold text-zinc-900">Obuna eslatmalari</h3>
+              <p class="text-sm text-zinc-500">10, 7, 3, 1 kun oldin yuboriladi</p>
+            </div>
+            <button onclick="saveSubReminders()" class="btn btn-primary text-sm">
+              <span class="material-symbols-outlined">save</span>
+              Saqlash
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-zinc-700 mb-2">10 kun oldin</label>
+              <textarea id="subReminder10d" class="input min-h-[80px] text-sm" placeholder="10 kunlik eslatma..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-zinc-700 mb-2">7 kun oldin</label>
+              <textarea id="subReminder7d" class="input min-h-[80px] text-sm" placeholder="7 kunlik eslatma..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-zinc-700 mb-2">3 kun oldin</label>
+              <textarea id="subReminder3d" class="input min-h-[80px] text-sm" placeholder="3 kunlik eslatma..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-zinc-700 mb-2">1 kun oldin</label>
+              <textarea id="subReminder1d" class="input min-h-[80px] text-sm" placeholder="1 kunlik eslatma..."></textarea>
+            </div>
+          </div>
+          <p class="text-xs text-zinc-400 mt-4">Variablelar: {{ism}} - user ismi. Xabarlar har kuni ertalab 9:00 da yuboriladi.</p>
+        </div>
       </div>
     </div>
 
@@ -3836,6 +3870,9 @@ async function loadBotMessages() {
     document.getElementById('botMsgSalesDelay').value = messages.sales_delay || 1;
     document.getElementById('botMsgSoftDelay').value = messages.soft_attack_delay || 24;
     document.getElementById('botMsgSoftDisabled').checked = messages.soft_attack_disabled || false;
+
+    // Also load subscription reminders
+    loadSubReminders();
   } catch (e) {
     console.error('loadBotMessages error:', e);
   }
@@ -3875,6 +3912,41 @@ function previewBotMessage(type) {
     text = document.getElementById('botMsgSoftAttack').value || 'Soft attack matni...';
   }
   document.getElementById('botMsgPreview').textContent = text;
+}
+
+async function loadSubReminders() {
+  try {
+    const reminders = await fetch('/api/subscription-reminders', { headers: { Authorization: auth } }).then(r => r.json());
+
+    document.getElementById('subReminder10d').value = reminders.reminder_10d || '';
+    document.getElementById('subReminder7d').value = reminders.reminder_7d || '';
+    document.getElementById('subReminder3d').value = reminders.reminder_3d || '';
+    document.getElementById('subReminder1d').value = reminders.reminder_1d || '';
+  } catch (e) {
+    console.error('loadSubReminders error:', e);
+  }
+}
+
+async function saveSubReminders() {
+  try {
+    const data = {
+      reminder_10d: document.getElementById('subReminder10d').value,
+      reminder_7d: document.getElementById('subReminder7d').value,
+      reminder_3d: document.getElementById('subReminder3d').value,
+      reminder_1d: document.getElementById('subReminder1d').value
+    };
+
+    await fetch('/api/subscription-reminders', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify(data)
+    });
+
+    showToast('Obuna eslatmalari saqlandi!', 'success');
+  } catch (e) {
+    console.error('saveSubReminders error:', e);
+    showToast('Xato yuz berdi', 'error');
+  }
 }
 
 // ============ AI AGENT STATS ============

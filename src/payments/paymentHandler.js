@@ -40,8 +40,8 @@ export async function sendRenewalReminder(telegramId, daysLeft, subscriptionId) 
       // Default messages
       if (daysLeft === 10) {
         message = `📅 Hurmatli {{ism}}, premium kanaldagi obunangiz tugashiga <b>10 kun</b> qoldi.\n\nObunani uzaytirish uchun quyidagi tugmalardan birini tanlang:`;
-      } else if (daysLeft === 5) {
-        message = `⏰ Hurmatli {{ism}}, obunangiz tugashiga <b>5 kun</b> qoldi!\n\nObunani uzaytirish uchun quyidagi tugmani bosing:`;
+      } else if (daysLeft === 7) {
+        message = `⏰ Hurmatli {{ism}}, obunangiz tugashiga <b>7 kun</b> qoldi!\n\nObunani uzaytirish uchun quyidagi tugmani bosing:`;
       } else if (daysLeft === 3) {
         message = `⚠️ Hurmatli {{ism}}, obunangiz tugashiga <b>3 kun</b> qoldi!\n\nPremium kanalga kirishni davom ettirish uchun obunani uzaytiring:`;
       } else {
