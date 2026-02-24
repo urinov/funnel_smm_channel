@@ -2514,13 +2514,13 @@ async function loadHomeData() {
   try {
     const stats = await fetch('/api/stats', { headers: { Authorization: auth } }).then(r => r.json());
 
-    // Update stats
-    document.getElementById('heroRevenue').textContent = formatNumber(stats.monthly_revenue || 455900);
-    document.getElementById('statTotalUsers').textContent = formatNumber(stats.total_users || 0);
-    document.getElementById('statPaidUsers').textContent = stats.paid_users || 0;
-    const cr = stats.total_users > 0 ? ((stats.paid_users / stats.total_users) * 100).toFixed(1) : 0;
+    // Update stats - using correct camelCase field names from API
+    document.getElementById('heroRevenue').textContent = formatNumber(stats.monthRevenue || 0);
+    document.getElementById('statTotalUsers').textContent = formatNumber(stats.totalUsers || 0);
+    document.getElementById('statPaidUsers').textContent = stats.paidUsers || 0;
+    const cr = stats.totalUsers > 0 ? ((stats.paidUsers / stats.totalUsers) * 100).toFixed(1) : 0;
     document.getElementById('statCR').textContent = cr + '%';
-    document.getElementById('statActiveNow').textContent = stats.active_today || 0;
+    document.getElementById('statActiveNow').textContent = stats.todayUsers || 0;
 
   } catch (e) {
     console.error('loadHomeData error:', e);
@@ -2864,14 +2864,17 @@ function closeUserModal() {
 async function grantPaidAccess() {
   if (!currentUserId) return;
   try {
-    const res = await fetch(`/api/users/${currentUserId}/grant-access`, {
-      method: 'POST',
-      headers: { Authorization: auth }
+    const res = await fetch(`/api/users/${currentUserId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify({ is_paid: true })
     });
     if (res.ok) {
       showToast('Pullik qilindi!', 'success');
       closeUserModal();
       loadAudienceData();
+    } else {
+      showToast('Xato yuz berdi', 'error');
     }
   } catch (e) {
     showToast('Xato yuz berdi', 'error');
@@ -2918,15 +2921,13 @@ function exportPayments() {
 async function saveAISettings() {
   const settings = {
     enabled: document.getElementById('aiEnabled').checked,
-    notify: document.getElementById('aiNotify').checked,
-    model: document.getElementById('aiModel').value,
-    tone: document.getElementById('aiTone').value,
-    instructions: document.getElementById('aiInstructions').value
+    max_discount: 30,
+    sales_prompt: document.getElementById('aiInstructions')?.value || ''
   };
 
   try {
     const res = await fetch('/api/ai-settings', {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: auth },
       body: JSON.stringify(settings)
     });
