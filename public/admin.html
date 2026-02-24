@@ -3863,47 +3863,8 @@
   </div>
 
   <!-- Main Content -->
-  <main class="main-content flex-1 ml-[70px] p-6 pb-24 md:pb-6">
-
-    <!-- Header - Modern Style -->
-    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <!-- Search Bar -->
-      <div onclick="openCommandPalette()" class="flex items-center gap-3 bg-white px-5 py-3.5 rounded-2xl cursor-pointer transition-all hover:shadow-lg hover:border-indigo-500 border border-gray-100 min-w-[300px] md:min-w-[400px]" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-        <span class="material-symbols-outlined text-gray-400">search</span>
-        <span class="text-gray-400 font-medium flex-1">Qidirish...</span>
-        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">⌘K</span>
-      </div>
-
-      <!-- Right Actions -->
-      <div class="flex items-center gap-3">
-        <!-- Theme Toggle -->
-        <button onclick="toggleTheme()" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-500 border border-gray-100 transition-all" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-          <span class="material-symbols-outlined">dark_mode</span>
-        </button>
-
-        <!-- Notifications -->
-        <button onclick="toggleNotificationsPanel()" class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-500 border border-gray-100 transition-all relative" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-          <span class="material-symbols-outlined">notifications</span>
-          <span id="notifBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-pink-400 to-pink-600 text-white text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
-        </button>
-
-        <!-- Broadcast Button -->
-        <button onclick="openBroadcastModal()" class="btn btn-primary flex items-center gap-2 px-5">
-          <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
-          <span class="hidden sm:inline">Xabar yuborish</span>
-        </button>
-
-        <!-- Profile -->
-        <div class="flex items-center gap-3 bg-white px-3 py-2 rounded-2xl border border-gray-100 cursor-pointer hover:border-indigo-500 transition-all" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);">A</div>
-          <div class="hidden md:block">
-            <p class="text-sm font-semibold text-gray-800">Admin</p>
-            <p class="text-xs text-gray-400">Administrator</p>
-          </div>
-          <span class="material-symbols-outlined text-gray-400 hidden md:block">expand_more</span>
-        </div>
-      </div>
-    </header>
+  <main class="main-content flex-1 p-6 pb-24 md:pb-6">
+    <!-- Old header removed - replaced by cmd-nav -->
 
     <!-- Overview Tab -->
     <div id="tab-overview">
@@ -6775,8 +6736,8 @@ Ular birinchi darsni ko'rishni boshlashganda siz chegirmaga ega bo'lasiz! 🎉</
   </div>
 </aside>
 
-<!-- UX Quick Dock -->
-<div id="uxQuickDock" class="ux-quick-dock" aria-label="Quick navigation">
+<!-- UX Quick Dock - Hidden, replaced by cmd-nav -->
+<div id="uxQuickDock" class="ux-quick-dock" aria-label="Quick navigation" style="display: none !important;">
   <button class="ux-dock-chip active" data-quick-tab="overview" onclick="showTab('overview')">Umumiy</button>
   <button class="ux-dock-chip" data-quick-tab="analytics" onclick="showTab('analytics')">Analitika</button>
   <button class="ux-dock-chip" data-quick-tab="users" onclick="showTab('users')">Userlar</button>
