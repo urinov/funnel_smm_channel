@@ -3446,6 +3446,7 @@
       <div class="sidebar-item" data-tab="promo" data-tooltip="Promokodlar" aria-label="Promokodlar"><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span><span class="sidebar-label">Promokod</span></div>
       <div class="sidebar-item" data-tab="referrals" data-tooltip="Referallar" aria-label="Referallar"><span class="material-symbols-outlined" aria-hidden="true">share</span><span class="sidebar-label">Referallar</span></div>
       <div class="sidebar-item" data-tab="ai-agent" data-tooltip="AI Agent" aria-label="AI Agent"><span class="material-symbols-outlined" aria-hidden="true">smart_toy</span><span class="sidebar-label">AI Agent</span></div>
+      <div class="sidebar-item" data-tab="feedback" data-tooltip="Feedback" aria-label="Feedback"><span class="material-symbols-outlined" aria-hidden="true">rate_review</span><span class="sidebar-label">Feedback</span></div>
       <div class="sidebar-item" data-tab="audit" data-tooltip="Audit" aria-label="Audit"><span class="material-symbols-outlined" aria-hidden="true">history</span><span class="sidebar-label">Audit</span></div>
     </nav>
 
@@ -5550,6 +5551,67 @@ Kurs haqida savollaringiz bo'lsa yozing!"></textarea>
       <button onclick="saveAISettings()" class="btn btn-primary">💾 AI sozlamalarini saqlash</button>
     </div>
 
+    <!-- Feedback Tab -->
+    <div id="tab-feedback" class="hidden">
+      <!-- Feedback Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-purple-600" id="feedbackTotal">-</div>
+          <div class="text-sm text-gray-500">Jami feedback</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-green-600" id="feedbackPositive">-</div>
+          <div class="text-sm text-gray-500">Ijobiy</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-red-500" id="feedbackNegative">-</div>
+          <div class="text-sm text-gray-500">Salbiy</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="text-3xl font-bold text-blue-600" id="feedbackRate">-</div>
+          <div class="text-sm text-gray-500">Ijobiy %</div>
+        </div>
+      </div>
+
+      <!-- Feedback List -->
+      <div class="card p-5">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+          <h3 class="font-semibold text-gray-800">📝 Foydalanuvchi feedbacklari</h3>
+          <div class="flex gap-2 flex-wrap">
+            <select id="feedbackTypeFilter" class="input w-40" onchange="filterFeedback()">
+              <option value="">Barchasi</option>
+              <option value="liked">Ijobiy</option>
+              <option value="not_liked">Salbiy</option>
+              <option value="disliked_reason">Izoh bilan</option>
+            </select>
+            <button onclick="loadFeedback()" class="btn btn-secondary btn-sm">🔄 Yangilash</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-500 border-b">
+                <th class="pb-3">Vaqt</th>
+                <th class="pb-3">Foydalanuvchi</th>
+                <th class="pb-3">Turi</th>
+                <th class="pb-3">Izoh</th>
+              </tr>
+            </thead>
+            <tbody id="feedbackTable">
+              <tr><td colspan="4" class="py-4 text-center text-gray-400">Yuklanmoqda...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-center mt-4 gap-2">
+          <button onclick="feedbackPrevPage()" class="btn btn-secondary btn-sm" id="feedbackPrevBtn" disabled>← Oldingi</button>
+          <span class="px-4 py-2 text-sm text-gray-500" id="feedbackPageInfo">1-20</span>
+          <button onclick="feedbackNextPage()" class="btn btn-secondary btn-sm" id="feedbackNextBtn">Keyingi →</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Audit Log Tab -->
     <div id="tab-audit" class="hidden">
       <div class="card p-5">
@@ -6655,7 +6717,8 @@ const TAB_META = {
   promo: { title: 'Promo kodlar', subtitle: 'Chegirma kodlari va limitlar' },
   audit: { title: 'Audit log', subtitle: 'Tizim bo\'yicha kuzatuv yozuvlari' },
   settings: { title: 'Sozlamalar', subtitle: 'Global platforma parametrlari' },
-  'ai-agent': { title: 'AI Agent', subtitle: 'AI sotuvchi sozlamalari' }
+  'ai-agent': { title: 'AI Agent', subtitle: 'AI sotuvchi sozlamalari' },
+  'feedback': { title: 'Feedback', subtitle: 'Foydalanuvchi fikrlari va izohlar' }
 };
 
 // Charts
@@ -7744,6 +7807,7 @@ async function ensureTabData(tab, force = false) {
   if (tab === 'audit') await loadAuditLogs();
   if (tab === 'tests') await loadTests();
   if (tab === 'ai-agent') await loadAISettings();
+  if (tab === 'feedback') await loadFeedbackTab();
   tabDataState[tab] = Date.now();
 }
 
@@ -12804,6 +12868,110 @@ function toggleAISales() {
     statusEl.textContent = enabled ? 'Yoqilgan' : 'O\'chirilgan';
     statusEl.className = 'text-3xl font-bold ' + (enabled ? 'text-green-600' : 'text-red-500');
   }
+}
+
+// ========== FEEDBACK TAB FUNCTIONS ==========
+let allFeedbackData = [];
+let feedbackPage = 0;
+const feedbackPerPage = 20;
+
+async function loadFeedbackTab() {
+  try {
+    // Load stats
+    const statsResp = await fetch('/api/feedback/stats', { headers: { Authorization: auth } });
+    if (statsResp.ok) {
+      const stats = await statsResp.json();
+      let total = 0, positive = 0, negative = 0;
+      (stats || []).forEach(s => {
+        const count = parseInt(s.count) || 0;
+        total += count;
+        if (s.feedback_type === 'liked' || s.feedback_type === 'positive') positive += count;
+        if (s.feedback_type === 'not_liked' || s.feedback_type === 'negative' || s.feedback_type === 'disliked_reason') negative += count;
+      });
+
+      document.getElementById('feedbackTotal').textContent = total;
+      document.getElementById('feedbackPositive').textContent = positive;
+      document.getElementById('feedbackNegative').textContent = negative;
+      document.getElementById('feedbackRate').textContent = total > 0 ? Math.round((positive / total) * 100) + '%' : '-';
+    }
+
+    // Load feedback list
+    const listResp = await fetch('/api/feedback', { headers: { Authorization: auth } });
+    if (listResp.ok) {
+      allFeedbackData = await listResp.json();
+      feedbackPage = 0;
+      renderFeedbackTable();
+    }
+  } catch (e) {
+    console.error('loadFeedbackTab error:', e);
+  }
+}
+
+function filterFeedback() {
+  feedbackPage = 0;
+  renderFeedbackTable();
+}
+
+function renderFeedbackTable() {
+  const filter = document.getElementById('feedbackTypeFilter').value;
+  let filtered = allFeedbackData;
+
+  if (filter) {
+    filtered = allFeedbackData.filter(f => f.feedback_type === filter);
+  }
+
+  const start = feedbackPage * feedbackPerPage;
+  const end = start + feedbackPerPage;
+  const pageData = filtered.slice(start, end);
+
+  const tbody = document.getElementById('feedbackTable');
+  if (!pageData.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">Feedback topilmadi</td></tr>';
+  } else {
+    tbody.innerHTML = pageData.map(f => {
+      const date = new Date(f.created_at).toLocaleString('uz-UZ');
+      const typeLabel = getFeedbackTypeLabel(f.feedback_type);
+      const userName = f.first_name || f.username || f.telegram_id;
+      return `<tr class="border-b border-gray-100 hover:bg-gray-50">
+        <td class="py-3 text-gray-500">${escapeHtml(date)}</td>
+        <td class="py-3"><a href="#" onclick="openUserModal(${f.telegram_id}); return false;" class="text-purple-600 hover:underline">${escapeHtml(String(userName))}</a></td>
+        <td class="py-3">${typeLabel}</td>
+        <td class="py-3 text-gray-600">${escapeHtml(f.feedback_text || '-')}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Update pagination
+  document.getElementById('feedbackPageInfo').textContent = `${start + 1}-${Math.min(end, filtered.length)} / ${filtered.length}`;
+  document.getElementById('feedbackPrevBtn').disabled = feedbackPage === 0;
+  document.getElementById('feedbackNextBtn').disabled = end >= filtered.length;
+}
+
+function getFeedbackTypeLabel(type) {
+  switch (type) {
+    case 'liked':
+    case 'positive':
+      return '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Ijobiy</span>';
+    case 'not_liked':
+    case 'negative':
+      return '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Salbiy</span>';
+    case 'disliked_reason':
+      return '<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs">Izoh</span>';
+    default:
+      return '<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">' + escapeHtml(type) + '</span>';
+  }
+}
+
+function feedbackPrevPage() {
+  if (feedbackPage > 0) {
+    feedbackPage--;
+    renderFeedbackTable();
+  }
+}
+
+function feedbackNextPage() {
+  feedbackPage++;
+  renderFeedbackTable();
 }
 
 async function exportCustDevAnswers() {
