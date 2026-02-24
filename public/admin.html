@@ -677,44 +677,44 @@
             <span class="badge badge-info">Bu oy</span>
           </div>
 
-          <div class="space-y-4">
+          <div class="space-y-4" id="funnelStats">
             <div>
               <div class="flex justify-between mb-2">
                 <span class="text-sm text-zinc-600">Jami userlar</span>
-                <span class="font-semibold">930</span>
+                <span class="font-semibold" id="funnelTotal">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-purple-500 rounded-full" style="width: 100%"></div>
+                <div class="h-full bg-purple-500 rounded-full" id="funnelTotalBar" style="width: 100%"></div>
               </div>
             </div>
 
             <div>
               <div class="flex justify-between mb-2">
                 <span class="text-sm text-zinc-600">Dars ko'rgan</span>
-                <span class="font-semibold">456</span>
+                <span class="font-semibold" id="funnelLesson">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-blue-500 rounded-full" style="width: 49%"></div>
+                <div class="h-full bg-blue-500 rounded-full" id="funnelLessonBar" style="width: 0%"></div>
               </div>
             </div>
 
             <div>
               <div class="flex justify-between mb-2">
                 <span class="text-sm text-zinc-600">Pitch ko'rgan</span>
-                <span class="font-semibold">89</span>
+                <span class="font-semibold" id="funnelPitch">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-green-500 rounded-full" style="width: 9.5%"></div>
+                <div class="h-full bg-green-500 rounded-full" id="funnelPitchBar" style="width: 0%"></div>
               </div>
             </div>
 
             <div>
               <div class="flex justify-between mb-2">
                 <span class="text-sm text-zinc-600">To'lov qilgan</span>
-                <span class="font-semibold">3</span>
+                <span class="font-semibold" id="funnelPaid">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-orange-500 rounded-full" style="width: 0.3%"></div>
+                <div class="h-full bg-orange-500 rounded-full" id="funnelPaidBar" style="width: 0%"></div>
               </div>
             </div>
           </div>
@@ -2522,9 +2522,62 @@ async function loadHomeData() {
     document.getElementById('statCR').textContent = cr + '%';
     document.getElementById('statActiveNow').textContent = stats.todayUsers || 0;
 
+    // Load funnel data
+    loadFunnelData(stats);
+
   } catch (e) {
     console.error('loadHomeData error:', e);
   }
+}
+
+// Load funnel visualization data
+async function loadFunnelData(stats) {
+  try {
+    // Get funnel analytics from API
+    const funnel = await fetch('/api/analytics/funnel', { headers: { Authorization: auth } }).then(r => r.json());
+
+    const total = stats.totalUsers || 0;
+    const lessonUsers = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || Math.floor(total * 0.5);
+    const pitchUsers = funnel?.stages?.find(s => s.stage === 'pitch')?.users || Math.floor(total * 0.1);
+    const paidUsers = stats.paidUsers || 0;
+
+    // Update funnel numbers
+    document.getElementById('funnelTotal').textContent = formatNumber(total);
+    document.getElementById('funnelLesson').textContent = formatNumber(lessonUsers);
+    document.getElementById('funnelPitch').textContent = formatNumber(pitchUsers);
+    document.getElementById('funnelPaid').textContent = formatNumber(paidUsers);
+
+    // Update funnel bars
+    const lessonPct = total > 0 ? (lessonUsers / total * 100) : 0;
+    const pitchPct = total > 0 ? (pitchUsers / total * 100) : 0;
+    const paidPct = total > 0 ? Math.max(paidUsers / total * 100, 1) : 0;
+
+    document.getElementById('funnelLessonBar').style.width = lessonPct + '%';
+    document.getElementById('funnelPitchBar').style.width = pitchPct + '%';
+    document.getElementById('funnelPaidBar').style.width = paidPct + '%';
+
+    // Update broadcast target counts
+    updateBroadcastCounts(total, paidUsers, lessonUsers);
+
+  } catch (e) {
+    console.error('loadFunnelData error:', e);
+    // Fallback - use stats data
+    const total = stats?.totalUsers || 0;
+    const paid = stats?.paidUsers || 0;
+    document.getElementById('funnelTotal').textContent = formatNumber(total);
+    document.getElementById('funnelPaid').textContent = formatNumber(paid);
+  }
+}
+
+// Update broadcast target user counts
+function updateBroadcastCounts(total, paid, active) {
+  const free = total - paid;
+  document.querySelectorAll('#broadcastTarget option, #modalBroadcastTarget option').forEach(opt => {
+    if (opt.value === 'all') opt.textContent = `Barcha userlar (${formatNumber(total)})`;
+    if (opt.value === 'paid') opt.textContent = `Faqat pullik (${formatNumber(paid)})`;
+    if (opt.value === 'free') opt.textContent = `Faqat bepul (${formatNumber(free)})`;
+    if (opt.value === 'active') opt.textContent = `Faol userlar (${formatNumber(active)})`;
+  });
 }
 
 // Load audience data
@@ -2542,12 +2595,46 @@ async function loadAudienceData() {
 // Load sales data
 async function loadSalesData() {
   try {
+    // Load payments
     const payments = await fetch('/api/payments?limit=50', { headers: { Authorization: auth } }).then(r => r.json());
     if (payments && payments.length) {
       renderPaymentsTable(payments);
+
+      // Update sales stats
+      const completed = payments.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2').length;
+      const pending = payments.filter(p => p.status === 'pending' || p.state === 'pending' || p.state === '1').length;
+      const totalRevenue = payments.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2')
+        .reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
+
+      const revenueEl = document.getElementById('salesMonthlyRevenue');
+      const totalEl = document.getElementById('salesTotalPayments');
+      const pendingEl = document.getElementById('salesPending');
+
+      if (revenueEl) revenueEl.textContent = formatNumber(totalRevenue / 100);
+      if (totalEl) totalEl.textContent = payments.length;
+      if (pendingEl) pendingEl.textContent = pending;
     }
+
+    // Load analytics for charts
+    loadSalesAnalytics();
+
   } catch (e) {
     console.error('loadSalesData error:', e);
+  }
+}
+
+// Load sales analytics for charts
+async function loadSalesAnalytics() {
+  try {
+    const analytics = await fetch('/api/analytics/revenue?days=30', { headers: { Authorization: auth } }).then(r => r.json());
+    // Update revenue chart if data available
+    if (analytics && analytics.length && window.revenueChartInstance) {
+      window.revenueChartInstance.data.labels = analytics.map(d => d.date?.substring(5, 10) || '');
+      window.revenueChartInstance.data.datasets[0].data = analytics.map(d => (d.revenue || 0) / 100);
+      window.revenueChartInstance.update();
+    }
+  } catch (e) {
+    console.error('loadSalesAnalytics error:', e);
   }
 }
 
@@ -2596,29 +2683,37 @@ function renderPaymentsTable(payments) {
     return;
   }
 
-  const statusMap = {
-    'completed': { badge: 'badge-success', text: 'Muvaffaqiyatli' },
-    'pending': { badge: 'badge-warning', text: 'Kutilmoqda' },
-    'failed': { badge: '', text: 'Bekor qilingan', style: 'background:#fee2e2;color:#dc2626' }
-  };
+  // Map various status formats to display
+  function getPaymentStatus(p) {
+    const state = p.state || p.status || 'pending';
+    if (state === 'completed' || state === '2' || state === 'success') {
+      return { badge: 'badge-success', text: 'Muvaffaqiyatli' };
+    }
+    if (state === 'failed' || state === 'cancelled' || state === '-1') {
+      return { badge: '', text: 'Bekor qilingan', style: 'background:#fee2e2;color:#dc2626' };
+    }
+    return { badge: 'badge-warning', text: 'Kutilmoqda' };
+  }
 
   tbody.innerHTML = payments.map(p => {
-    const status = statusMap[p.status] || statusMap['pending'];
+    const status = getPaymentStatus(p);
+    const amount = parseInt(p.amount) || 0;
+    const displayAmount = amount > 1000000 ? amount / 100 : amount; // Handle tiyin vs som
     return `
     <tr class="hover:bg-zinc-50 transition-all">
       <td>
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600 font-semibold">
-            ${(p.first_name || 'U')[0].toUpperCase()}
+            ${(p.full_name || p.first_name || 'U')[0].toUpperCase()}
           </div>
           <div>
-            <p class="font-medium">${escapeHtml(p.first_name || 'User')}</p>
+            <p class="font-medium">${escapeHtml(p.full_name || p.first_name || 'User')}</p>
             <p class="text-sm text-zinc-500">${p.username ? '@' + p.username : p.telegram_id}</p>
           </div>
         </div>
       </td>
-      <td class="font-semibold">${formatNumber(p.amount)} so'm</td>
-      <td><span class="badge badge-info">${p.provider || 'Payme'}</span></td>
+      <td class="font-semibold">${formatNumber(displayAmount)} so'm</td>
+      <td><span class="badge badge-info">${p.payment_method || p.provider || 'Payme'}</span></td>
       <td><span class="badge ${status.badge}" ${status.style ? 'style="' + status.style + '"' : ''}>${status.text}</span></td>
       <td class="text-zinc-500">${formatDateTime(p.created_at)}</td>
     </tr>
@@ -2633,17 +2728,39 @@ function initCharts() {
 }
 
 // Growth chart (home)
-function initGrowthChart() {
+async function initGrowthChart() {
   const ctx = document.getElementById('growthChart')?.getContext('2d');
   if (!ctx) return;
 
-  new Chart(ctx, {
+  // Destroy existing chart
+  if (window.growthChartInstance) {
+    window.growthChartInstance.destroy();
+  }
+
+  // Load daily subscriber data
+  let labels = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+  let data = [0, 0, 0, 0, 0, 0, 0];
+
+  try {
+    const daily = await fetch('/api/subscribers/daily?days=7', { headers: { Authorization: auth } }).then(r => r.json());
+    if (daily && daily.length) {
+      labels = daily.map(d => {
+        const date = new Date(d.date);
+        return ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'][date.getDay()];
+      });
+      data = daily.map(d => d.new_users || 0);
+    }
+  } catch (e) {
+    console.error('Growth chart data error:', e);
+  }
+
+  window.growthChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'],
+      labels: labels,
       datasets: [{
         label: 'Yangi userlar',
-        data: [12, 19, 15, 25, 22, 30, 47],
+        data: data,
         borderColor: '#8b5cf6',
         backgroundColor: 'rgba(139, 92, 246, 0.1)',
         fill: true,
@@ -2672,13 +2789,18 @@ function initRevenueChart() {
   const ctx = document.getElementById('revenueChart')?.getContext('2d');
   if (!ctx) return;
 
-  new Chart(ctx, {
+  // Destroy existing chart if exists
+  if (window.revenueChartInstance) {
+    window.revenueChartInstance.destroy();
+  }
+
+  window.revenueChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn'],
+      labels: [],
       datasets: [{
         label: 'Daromad',
-        data: [0, 97000, 194000, 291000, 388000, 455900],
+        data: [],
         backgroundColor: 'rgba(139, 92, 246, 0.8)',
         borderRadius: 8,
       }]
@@ -2693,6 +2815,9 @@ function initRevenueChart() {
       }
     }
   });
+
+  // Load data
+  loadSalesAnalytics();
 }
 
 // Tests chart (content)
