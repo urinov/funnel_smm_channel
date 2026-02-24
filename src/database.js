@@ -140,6 +140,18 @@ export async function initDatabase() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS goals (
+        id SERIAL PRIMARY KEY,
+        goal_type VARCHAR(50) NOT NULL,
+        target_value INTEGER NOT NULL,
+        month_start DATE NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(goal_type, month_start)
+      )
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS pitch_media (
         id SERIAL PRIMARY KEY,
         media_type VARCHAR(50) DEFAULT 'text',
@@ -328,9 +340,19 @@ export async function initDatabase() {
         telegram_id BIGINT NOT NULL,
         feedback_type VARCHAR(50) NOT NULL,
         feedback_text TEXT,
+        rating INTEGER,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
+
+    await client.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS delay_seconds INTEGER`);
+    await client.query(`UPDATE lessons SET delay_seconds = COALESCE(delay_seconds, GREATEST(0, ROUND(COALESCE(delay_hours, 24) * 3600))::int)`);
+
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(255)`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(255)`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(50)`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active'`);
+    await client.query(`UPDATE users SET status = CASE WHEN is_blocked THEN 'blocked' ELSE COALESCE(status, 'active') END`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS user_messages (
@@ -962,7 +984,45 @@ async function seedDefaultData(client) {
 }
 
 export async function getUser(telegramId) {
-  const { rows } = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+  const { rows } = await pool.query(`
+    SELECT
+      u.*,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || u.telegram_id::text
+      ) AS display_name,
+      COALESCE(NULLIF(u.phone_number, ''), NULLIF(u.phone, '')) AS phone_number,
+      s.plan_id AS subscription_plan,
+      s.end_date AS subscription_end_date,
+      (
+        u.is_paid = TRUE
+        OR EXISTS (
+          SELECT 1
+          FROM payments p
+          WHERE p.telegram_id = u.telegram_id
+            AND p.state = ANY($2)
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM subscriptions sx
+          WHERE sx.telegram_id = u.telegram_id
+            AND sx.is_active = TRUE
+            AND sx.end_date > NOW()
+        )
+      ) AS is_paid
+    FROM users u
+    LEFT JOIN LATERAL (
+      SELECT s.plan_id, s.end_date
+      FROM subscriptions s
+      WHERE s.telegram_id = u.telegram_id
+      ORDER BY s.created_at DESC
+      LIMIT 1
+    ) s ON TRUE
+    WHERE u.telegram_id = $1
+    LIMIT 1
+  `, [telegramId, SUCCESS_PAYMENT_STATES]);
   return rows[0] || null;
 }
 
@@ -1102,6 +1162,15 @@ export async function getAllActiveUsers() {
   const { rows } = await pool.query(`
     SELECT
       u.*,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || u.telegram_id::text
+      ) AS display_name,
+      COALESCE(NULLIF(u.phone_number, ''), NULLIF(u.phone, '')) AS phone_number,
+      s.plan_id AS subscription_plan,
+      s.end_date AS subscription_end_date,
       (
         u.is_paid = TRUE
         OR EXISTS (
@@ -1119,6 +1188,13 @@ export async function getAllActiveUsers() {
         )
       ) AS is_paid
     FROM users u
+    LEFT JOIN LATERAL (
+      SELECT s.plan_id, s.end_date
+      FROM subscriptions s
+      WHERE s.telegram_id = u.telegram_id
+      ORDER BY s.created_at DESC
+      LIMIT 1
+    ) s ON TRUE
     WHERE u.is_blocked = FALSE
     ORDER BY u.created_at DESC
   `, [SUCCESS_PAYMENT_STATES]);
@@ -1130,6 +1206,15 @@ export async function getAllUsersForAdmin() {
   const { rows } = await pool.query(`
     SELECT
       u.*,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || u.telegram_id::text
+      ) AS display_name,
+      COALESCE(NULLIF(u.phone_number, ''), NULLIF(u.phone, '')) AS phone_number,
+      s.plan_id AS subscription_plan,
+      s.end_date AS subscription_end_date,
       (
         u.is_paid = TRUE
         OR EXISTS (
@@ -1147,18 +1232,35 @@ export async function getAllUsersForAdmin() {
         )
       ) AS is_paid
     FROM users u
+    LEFT JOIN LATERAL (
+      SELECT s.plan_id, s.end_date
+      FROM subscriptions s
+      WHERE s.telegram_id = u.telegram_id
+      ORDER BY s.created_at DESC
+      LIMIT 1
+    ) s ON TRUE
     ORDER BY u.created_at DESC
   `, [SUCCESS_PAYMENT_STATES]);
   return rows;
 }
 
 export async function getLesson(lessonNumber) {
-  const { rows } = await pool.query('SELECT * FROM lessons WHERE lesson_number = $1 AND is_active = TRUE', [lessonNumber]);
+  const { rows } = await pool.query(`
+    SELECT *,
+      COALESCE(delay_seconds, GREATEST(0, ROUND(COALESCE(delay_hours, 24) * 3600))::int) AS delay_seconds
+    FROM lessons
+    WHERE lesson_number = $1 AND is_active = TRUE
+  `, [lessonNumber]);
   return rows[0] || null;
 }
 
 export async function getAllLessons() {
-  const { rows } = await pool.query('SELECT * FROM lessons ORDER BY lesson_number');
+  const { rows } = await pool.query(`
+    SELECT *,
+      COALESCE(delay_seconds, GREATEST(0, ROUND(COALESCE(delay_hours, 24) * 3600))::int) AS delay_seconds
+    FROM lessons
+    ORDER BY lesson_number
+  `);
   return rows;
 }
 
@@ -1170,16 +1272,21 @@ export async function getLessonsCount() {
 export async function createLesson(data) {
   const { rows: maxRow } = await pool.query('SELECT COALESCE(MAX(lesson_number), 0) + 1 as next_num FROM lessons');
   const lessonNumber = maxRow[0].next_num;
+  const delaySeconds = data.delay_seconds !== undefined
+    ? Math.max(0, parseInt(data.delay_seconds) || 0)
+    : Math.max(0, Math.round((parseFloat(data.delay_hours) || 24) * 3600));
+  const delayHours = delaySeconds / 3600;
 
   const { rows } = await pool.query(`
-    INSERT INTO lessons (lesson_number, title, content, delay_hours, show_watched_button, watched_button_text, watched_message)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    INSERT INTO lessons (lesson_number, title, content, delay_hours, delay_seconds, show_watched_button, watched_button_text, watched_message)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *
   `, [
     lessonNumber,
     data.title || lessonNumber + '-Dars',
     data.content || '',
-    data.delay_hours || 24,
+    delayHours,
+    delaySeconds,
     data.show_watched_button !== false,
     data.watched_button_text || 'Videoni korib boldim',
     data.watched_message || 'Videoni korib bolganingizdan keyin tugmani bosing:'
@@ -1188,8 +1295,19 @@ export async function createLesson(data) {
 }
 
 export async function updateLesson(lessonIdentifier, data) {
-  const fields = Object.keys(data);
-  const values = Object.values(data);
+  const payload = { ...data };
+  if (payload.delay_seconds !== undefined) {
+    const seconds = Math.max(0, parseInt(payload.delay_seconds) || 0);
+    payload.delay_seconds = seconds;
+    payload.delay_hours = seconds / 3600;
+  } else if (payload.delay_hours !== undefined) {
+    const hours = parseFloat(payload.delay_hours) || 0;
+    payload.delay_hours = hours;
+    payload.delay_seconds = Math.max(0, Math.round(hours * 3600));
+  }
+
+  const fields = Object.keys(payload);
+  const values = Object.values(payload);
 
   if (fields.length === 0) {
     return null;
@@ -1262,6 +1380,86 @@ export async function updateCustDevQuestion(id, data) {
 
 export async function deleteCustDevQuestion(id) {
   await pool.query('DELETE FROM custdev_questions WHERE id = $1', [id]);
+}
+
+export async function getCustdevQuestionsWithResponseCounts() {
+  const { rows } = await pool.query(`
+    SELECT
+      q.*,
+      COALESCE(a.responses, 0)::int AS response_count,
+      COALESCE(u.total_users, 0)::int AS total_users
+    FROM custdev_questions q
+    LEFT JOIN (
+      SELECT question_id, COUNT(*)::int AS responses
+      FROM custdev_answers
+      GROUP BY question_id
+    ) a ON a.question_id = q.id
+    LEFT JOIN (
+      SELECT COUNT(*)::int AS total_users
+      FROM users
+      WHERE is_blocked = FALSE
+    ) u ON TRUE
+    ORDER BY q.after_lesson, q.sort_order, q.step
+  `);
+  return rows;
+}
+
+export async function getCustdevAnswersByQuestion(questionId, { q = null, limit = 50, page = 1 } = {}) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 200);
+  const safePage = Math.max(parseInt(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+  const values = [questionId];
+  const where = ['ca.question_id = $1'];
+  let i = 2;
+
+  if (q) {
+    where.push(`(
+      COALESCE(ca.answer, '') ILIKE $${i}
+      OR COALESCE(u.full_name, '') ILIKE $${i}
+      OR COALESCE(u.username, '') ILIKE $${i}
+      OR ca.telegram_id::text ILIKE $${i}
+    )`);
+    values.push(`%${q}%`);
+    i++;
+  }
+
+  const whereSql = `WHERE ${where.join(' AND ')}`;
+  const baseFrom = `
+    FROM custdev_answers ca
+    LEFT JOIN users u ON u.telegram_id = ca.telegram_id
+    ${whereSql}
+  `;
+
+  const { rows } = await pool.query(`
+    SELECT
+      ca.id,
+      ca.telegram_id,
+      ca.answer,
+      ca.created_at,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || ca.telegram_id::text
+      ) AS display_name,
+      u.username
+    ${baseFrom}
+    ORDER BY ca.created_at DESC
+    LIMIT $${i++} OFFSET $${i++}
+  `, [...values, safeLimit, offset]);
+
+  const { rows: cRows } = await pool.query(`SELECT COUNT(*)::int AS total ${baseFrom}`, values);
+  const total = cRows[0]?.total || 0;
+
+  return {
+    rows,
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      total,
+      total_pages: Math.max(Math.ceil(total / safeLimit), 1)
+    }
+  };
 }
 
 export async function saveCustDevAnswer(telegramId, questionId, answer) {
@@ -2586,30 +2784,459 @@ export async function getDailyReportStats() {
 
 export async function getAllFeedback() {
   const { rows } = await pool.query(`
-    SELECT 
+    SELECT
       f.id,
       f.telegram_id,
       f.feedback_type,
       f.feedback_text,
+      f.rating,
       f.created_at,
-      u.full_name,
       u.username,
-      u.phone
+      u.phone,
+      u.phone_number,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || u.telegram_id::text
+      ) AS display_name
     FROM user_feedback f
     LEFT JOIN users u ON f.telegram_id = u.telegram_id
     ORDER BY f.created_at DESC
+    LIMIT 500
   `);
   return rows;
 }
 
 export async function getFeedbackStats() {
   const { rows } = await pool.query(`
-    SELECT 
-      feedback_type,
-      COUNT(*) as count
+    SELECT
+      COALESCE(COUNT(*) FILTER (WHERE feedback_type = 'positive'), 0)::int AS positive,
+      COALESCE(COUNT(*) FILTER (WHERE feedback_type = 'neutral'), 0)::int AS neutral,
+      COALESCE(COUNT(*) FILTER (WHERE feedback_type = 'negative'), 0)::int AS negative,
+      COALESCE(COUNT(*), 0)::int AS total
     FROM user_feedback
-    GROUP BY feedback_type
   `);
+  return rows[0] || { positive: 0, neutral: 0, negative: 0, total: 0 };
+}
+
+export async function getFeedbackPage({
+  page = 1,
+  limit = 25,
+  type = null,
+  from = null,
+  to = null,
+  q = null
+} = {}) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 25, 1), 100);
+  const safePage = Math.max(parseInt(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const where = [];
+  const values = [];
+  let i = 1;
+
+  if (type && type !== 'all') {
+    where.push(`f.feedback_type = $${i++}`);
+    values.push(type);
+  }
+  if (from) {
+    where.push(`f.created_at >= $${i++}`);
+    values.push(from);
+  }
+  if (to) {
+    where.push(`f.created_at < ($${i++}::date + INTERVAL '1 day')`);
+    values.push(to);
+  }
+  if (q) {
+    where.push(`(
+      COALESCE(u.full_name, '') ILIKE $${i}
+      OR COALESCE(u.username, '') ILIKE $${i}
+      OR f.telegram_id::text ILIKE $${i}
+      OR COALESCE(f.feedback_text, '') ILIKE $${i}
+    )`);
+    values.push(`%${q}%`);
+    i++;
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const baseFrom = `
+    FROM user_feedback f
+    LEFT JOIN users u ON f.telegram_id = u.telegram_id
+    ${whereSql}
+  `;
+
+  const { rows } = await pool.query(`
+    SELECT
+      f.id,
+      f.telegram_id,
+      f.feedback_type,
+      f.feedback_text,
+      f.rating,
+      f.created_at,
+      u.username,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || f.telegram_id::text
+      ) AS display_name
+    ${baseFrom}
+    ORDER BY f.created_at DESC
+    LIMIT $${i++} OFFSET $${i++}
+  `, [...values, safeLimit, offset]);
+
+  const { rows: cRows } = await pool.query(`SELECT COUNT(*)::int AS total ${baseFrom}`, values);
+  const total = cRows[0]?.total || 0;
+
+  return {
+    rows,
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      total,
+      total_pages: Math.max(Math.ceil(total / safeLimit), 1)
+    }
+  };
+}
+
+export async function getMonthlyGoal(goalType) {
+  const { rows } = await pool.query(`
+    SELECT *
+    FROM goals
+    WHERE goal_type = $1
+      AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
+    LIMIT 1
+  `, [goalType]);
+  return rows[0] || null;
+}
+
+export async function setMonthlyGoal(goalType, targetValue) {
+  const { rows } = await pool.query(`
+    INSERT INTO goals (goal_type, target_value, month_start, created_at, updated_at)
+    VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE)::date, NOW(), NOW())
+    ON CONFLICT (goal_type, month_start)
+    DO UPDATE SET target_value = EXCLUDED.target_value, updated_at = NOW()
+    RETURNING *
+  `, [goalType, targetValue]);
+  return rows[0];
+}
+
+export async function getMonthlyGoalProgress(goalType) {
+  const goal = await getMonthlyGoal(goalType);
+  if (!goal) return null;
+
+  let currentValue = 0;
+  if (goalType === 'users') {
+    const { rows } = await pool.query(`
+      SELECT COUNT(*)::int AS n
+      FROM users
+      WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+    `);
+    currentValue = rows[0]?.n || 0;
+  } else if (goalType === 'sales') {
+    const { rows } = await pool.query(`
+      SELECT COUNT(*)::int AS n
+      FROM payments
+      WHERE state = ANY($1)
+        AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+    `, [SUCCESS_PAYMENT_STATES]);
+    currentValue = rows[0]?.n || 0;
+  } else if (goalType === 'revenue') {
+    const { rows } = await pool.query(`
+      SELECT COALESCE(SUM(amount), 0)::bigint AS n
+      FROM payments
+      WHERE state = ANY($1)
+        AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+    `, [SUCCESS_PAYMENT_STATES]);
+    currentValue = Math.floor((parseInt(rows[0]?.n, 10) || 0) / 100);
+  }
+
+  const targetValue = parseInt(goal.target_value, 10) || 0;
+  const percent = targetValue > 0 ? Math.min(Math.round((currentValue / targetValue) * 100), 999) : 0;
+  return { ...goal, current_value: currentValue, percent };
+}
+
+export async function getDashboardStats() {
+  const [overview, growth, sales, subtypes, recentUsers, recentPayments, recentFeedbacks] = await Promise.all([
+    pool.query(`
+      SELECT
+        COUNT(*)::int AS total_users,
+        COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE)::int AS new_users_today,
+        COUNT(*) FILTER (
+          WHERE EXISTS (
+            SELECT 1 FROM subscriptions s
+            WHERE s.telegram_id = users.telegram_id
+              AND s.is_active = TRUE
+              AND s.end_date > NOW()
+          )
+        )::int AS active_subscriptions
+      FROM users
+      WHERE is_blocked = FALSE
+    `),
+    pool.query(`
+      WITH d AS (
+        SELECT generate_series(CURRENT_DATE - INTERVAL '29 day', CURRENT_DATE, INTERVAL '1 day')::date AS day
+      )
+      SELECT d.day::text AS date, COALESCE(u.cnt, 0)::int AS users
+      FROM d
+      LEFT JOIN (
+        SELECT DATE(created_at) AS day, COUNT(*)::int AS cnt
+        FROM users
+        GROUP BY DATE(created_at)
+      ) u ON u.day = d.day
+      ORDER BY d.day
+    `),
+    pool.query(`
+      WITH d AS (
+        SELECT generate_series(CURRENT_DATE - INTERVAL '29 day', CURRENT_DATE, INTERVAL '1 day')::date AS day
+      )
+      SELECT d.day::text AS date, COALESCE(p.cnt, 0)::int AS sales, COALESCE(p.revenue, 0)::bigint AS revenue
+      FROM d
+      LEFT JOIN (
+        SELECT DATE(created_at) AS day, COUNT(*)::int AS cnt, COALESCE(SUM(amount), 0)::bigint AS revenue
+        FROM payments
+        WHERE state = ANY($1)
+        GROUP BY DATE(created_at)
+      ) p ON p.day = d.day
+      ORDER BY d.day
+    `, [SUCCESS_PAYMENT_STATES]),
+    pool.query(`
+      SELECT
+        plan_id,
+        COUNT(*)::int AS count
+      FROM subscriptions
+      WHERE is_active = TRUE AND end_date > NOW()
+      GROUP BY plan_id
+      ORDER BY count DESC
+    `),
+    pool.query(`
+      SELECT
+        telegram_id,
+        created_at,
+        COALESCE(NULLIF(full_name, ''), NULLIF(TRIM(CONCAT_WS(' ', first_name, last_name)), ''), NULLIF(username, ''), 'User #' || telegram_id::text) AS display_name,
+        username
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT 10
+    `),
+    pool.query(`
+      SELECT
+        p.id,
+        p.telegram_id,
+        p.amount,
+        p.created_at,
+        p.payment_method,
+        p.state,
+        COALESCE(NULLIF(u.full_name, ''), NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''), NULLIF(u.username, ''), 'User #' || p.telegram_id::text) AS display_name
+      FROM payments p
+      LEFT JOIN users u ON u.telegram_id = p.telegram_id
+      ORDER BY p.created_at DESC
+      LIMIT 10
+    `),
+    pool.query(`
+      SELECT
+        f.id,
+        f.telegram_id,
+        f.feedback_type,
+        f.feedback_text,
+        f.created_at,
+        COALESCE(NULLIF(u.full_name, ''), NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''), NULLIF(u.username, ''), 'User #' || f.telegram_id::text) AS display_name
+      FROM user_feedback f
+      LEFT JOIN users u ON u.telegram_id = f.telegram_id
+      ORDER BY f.created_at DESC
+      LIMIT 10
+    `)
+  ]);
+
+  const { rows: monthRevenueRows } = await pool.query(`
+    SELECT COALESCE(SUM(amount), 0)::bigint AS revenue
+    FROM payments
+    WHERE state = ANY($1)
+      AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  return {
+    metrics: {
+      total_users: overview.rows[0]?.total_users || 0,
+      new_users_today: overview.rows[0]?.new_users_today || 0,
+      active_subscriptions: overview.rows[0]?.active_subscriptions || 0,
+      revenue_month: Math.floor((parseInt(monthRevenueRows[0]?.revenue, 10) || 0) / 100)
+    },
+    charts: {
+      user_growth: growth.rows,
+      sales: sales.rows.map((r) => ({ ...r, revenue: Math.floor((parseInt(r.revenue, 10) || 0) / 100) })),
+      subscription_distribution: subtypes.rows
+    },
+    recent: {
+      users: recentUsers.rows,
+      payments: recentPayments.rows.map((r) => ({ ...r, amount: Math.floor((parseInt(r.amount, 10) || 0) / 100) })),
+      feedbacks: recentFeedbacks.rows
+    }
+  };
+}
+
+export async function getSalesStats() {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(*)::int AS total_sales,
+      COALESCE(SUM(amount), 0)::bigint AS total_revenue,
+      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE)::int AS today_sales,
+      COUNT(*) FILTER (WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE))::int AS month_sales,
+      COALESCE(AVG(amount), 0)::bigint AS avg_order_value
+    FROM payments
+    WHERE state = ANY($1)
+  `, [SUCCESS_PAYMENT_STATES]);
+
+  const row = rows[0] || {};
+  return {
+    total_sales: row.total_sales || 0,
+    total_revenue: Math.floor((parseInt(row.total_revenue, 10) || 0) / 100),
+    today_sales: row.today_sales || 0,
+    month_sales: row.month_sales || 0,
+    avg_order_value: Math.floor((parseInt(row.avg_order_value, 10) || 0) / 100)
+  };
+}
+
+export async function getSalesPage({
+  page = 1,
+  limit = 25,
+  sortBy = 'created_at',
+  sortDir = 'desc',
+  from = null,
+  to = null,
+  method = null,
+  status = null,
+  q = null
+} = {}) {
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 25, 1), 100);
+  const safePage = Math.max(parseInt(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+  const sortMap = {
+    created_at: 'p.created_at',
+    amount: 'p.amount',
+    payment_method: 'p.payment_method',
+    state: 'p.state'
+  };
+  const sortSql = sortMap[sortBy] || 'p.created_at';
+  const dirSql = String(sortDir || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+
+  const where = [];
+  const values = [];
+  let i = 1;
+
+  if (from) {
+    where.push(`p.created_at >= $${i++}`);
+    values.push(from);
+  }
+  if (to) {
+    where.push(`p.created_at < ($${i++}::date + INTERVAL '1 day')`);
+    values.push(to);
+  }
+  if (method && method !== 'all') {
+    where.push(`COALESCE(p.payment_method, 'unknown') = $${i++}`);
+    values.push(method);
+  }
+  if (status && status !== 'all') {
+    if (status === 'success') {
+      where.push(`p.state = ANY($${i++})`);
+      values.push(SUCCESS_PAYMENT_STATES);
+    } else if (status === 'pending') {
+      where.push(`p.state = ANY($${i++})`);
+      values.push(['new', 'pending', 'created', '1']);
+    } else if (status === 'failed') {
+      where.push(`p.state = ANY($${i++})`);
+      values.push(['cancelled', '-1', '-2', 'failed']);
+    }
+  }
+  if (q) {
+    where.push(`(
+      COALESCE(u.full_name, '') ILIKE $${i}
+      OR COALESCE(u.username, '') ILIKE $${i}
+      OR p.telegram_id::text ILIKE $${i}
+      OR p.order_id ILIKE $${i}
+    )`);
+    values.push(`%${q}%`);
+    i++;
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const baseFrom = `
+    FROM payments p
+    LEFT JOIN users u ON u.telegram_id = p.telegram_id
+    LEFT JOIN LATERAL (
+      SELECT s.plan_id, s.end_date
+      FROM subscriptions s
+      WHERE s.telegram_id = p.telegram_id
+      ORDER BY s.created_at DESC
+      LIMIT 1
+    ) s ON TRUE
+    ${whereSql}
+  `;
+
+  const { rows } = await pool.query(`
+    SELECT
+      p.*,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || p.telegram_id::text
+      ) AS display_name,
+      u.username,
+      s.plan_id AS subscription_type,
+      s.end_date AS subscription_end
+    ${baseFrom}
+    ORDER BY ${sortSql} ${dirSql}
+    LIMIT $${i++} OFFSET $${i++}
+  `, [...values, safeLimit, offset]);
+
+  const { rows: cRows } = await pool.query(`SELECT COUNT(*)::int AS total ${baseFrom}`, values);
+  const total = cRows[0]?.total || 0;
+
+  return {
+    rows: rows.map((r) => ({ ...r, amount_som: Math.floor((parseInt(r.amount, 10) || 0) / 100) })),
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      total,
+      total_pages: Math.max(Math.ceil(total / safeLimit), 1)
+    }
+  };
+}
+
+export async function getUsersExportRows() {
+  const { rows } = await pool.query(`
+    SELECT
+      u.telegram_id,
+      COALESCE(
+        NULLIF(u.full_name, ''),
+        NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+        NULLIF(u.username, ''),
+        'User #' || u.telegram_id::text
+      ) AS full_name,
+      COALESCE(u.username, '') AS username,
+      COALESCE(NULLIF(u.phone_number, ''), NULLIF(u.phone, ''), '') AS phone,
+      u.created_at,
+      u.last_activity,
+      CASE
+        WHEN u.is_blocked THEN 'Blocked'
+        WHEN u.is_paid THEN 'Paid'
+        ELSE 'Free'
+      END AS subscription_status
+    FROM users u
+    ORDER BY u.created_at DESC
+  `);
+  return rows;
+}
+
+export async function getSalesExportRows(filters = {}) {
+  const { rows } = await getSalesPage({ ...filters, page: 1, limit: 100000, sortBy: 'created_at', sortDir: 'desc' });
+  return rows;
+}
+
+export async function getFeedbackExportRows(filters = {}) {
+  const { rows } = await getFeedbackPage({ ...filters, page: 1, limit: 100000 });
   return rows;
 }
 

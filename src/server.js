@@ -269,6 +269,23 @@ const authMiddleware = (req, res, next) => {
 
 const upload = multer({ dest: '/tmp/uploads/' });
 
+function csvCell(value) {
+  const v = value === null || value === undefined ? '' : String(value);
+  if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+  return v;
+}
+
+function sendCsv(res, filename, headers, rows) {
+  const headerLine = headers.map((h) => csvCell(h.label)).join(',');
+  const bodyLines = rows.map((row) =>
+    headers.map((h) => csvCell(typeof h.value === 'function' ? h.value(row) : row[h.key])).join(',')
+  );
+  const csv = [headerLine, ...bodyLines].join('\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.status(200).send('\ufeff' + csv);
+}
+
 app.get('/health', (req, res) => res.send('ok'));
 app.get('/', (req, res) => res.send('Telegram Bot is running'));
 app.get('/api/auth/telegram-webapp', (req, res) => {
@@ -396,6 +413,47 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
+  try {
+    const { getDashboardStats } = await import('./database.js');
+    const data = await getDashboardStats();
+    res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/api/goals/monthly', authMiddleware, async (req, res) => {
+  try {
+    const { getMonthlyGoalProgress } = await import('./database.js');
+    const users = await getMonthlyGoalProgress('users');
+    const sales = await getMonthlyGoalProgress('sales');
+    const revenue = await getMonthlyGoalProgress('revenue');
+    res.json({ success: true, data: { users, sales, revenue } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.put('/api/goals/monthly', authMiddleware, async (req, res) => {
+  try {
+    const { setMonthlyGoal, getMonthlyGoalProgress } = await import('./database.js');
+    const { goal_type, target_value } = req.body || {};
+    if (!['users', 'sales', 'revenue'].includes(goal_type)) {
+      return res.status(400).json({ success: false, error: 'goal_type users|sales|revenue bo\'lishi kerak' });
+    }
+    const target = parseInt(target_value, 10);
+    if (!Number.isFinite(target) || target <= 0) {
+      return res.status(400).json({ success: false, error: 'target_value musbat son bo\'lishi kerak' });
+    }
+    await setMonthlyGoal(goal_type, target);
+    const data = await getMonthlyGoalProgress(goal_type);
+    res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.get('/api/bot-info', authMiddleware, async (req, res) => {
   try {
     const { bot } = await import('./bot.js');
@@ -411,6 +469,28 @@ app.get('/api/users', authMiddleware, async (req, res) => {
     const { getAllUsersForAdmin } = await import('./database.js');
     const users = await getAllUsersForAdmin();
     res.json(users);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/users/export', authMiddleware, async (req, res) => {
+  try {
+    const { getUsersExportRows } = await import('./database.js');
+    const rows = await getUsersExportRows();
+    sendCsv(
+      res,
+      `users_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { label: 'Full Name', key: 'full_name' },
+        { label: 'Username', value: (r) => r.username ? `@${r.username}` : '' },
+        { label: 'Phone', key: 'phone' },
+        { label: 'Joined Date', value: (r) => r.created_at ? new Date(r.created_at).toISOString() : '' },
+        { label: 'Subscription Status', key: 'subscription_status' },
+        { label: 'Last Activity', value: (r) => r.last_activity ? new Date(r.last_activity).toISOString() : '' }
+      ],
+      rows
+    );
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -719,6 +799,59 @@ app.get('/api/tests/submissions', authMiddleware, async (req, res) => {
     res.json(submissions);
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/custdev/questions', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const questions = await db.getCustdevQuestionsWithResponseCounts();
+    res.json({ success: true, data: questions });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/api/custdev/questions/:id/answers', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const q = req.query.q ? String(req.query.q) : null;
+    const result = await db.getCustdevAnswersByQuestion(parseInt(req.params.id), { page, limit, q });
+    res.json({ success: true, data: result.rows, pagination: result.pagination });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.post('/api/custdev/questions', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const question = await db.createCustDevQuestion(req.body || {});
+    res.json({ success: true, data: question });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.put('/api/custdev/questions/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.updateCustDevQuestion(parseInt(req.params.id), req.body || {});
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.delete('/api/custdev/questions/:id', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    await db.deleteCustDevQuestion(parseInt(req.params.id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 
@@ -1119,8 +1252,20 @@ app.post('/api/test/full-flow', authMiddleware, async (req, res) => {
 // ============ FEEDBACK API ============
 app.get('/api/feedback', authMiddleware, async (req, res) => {
   try {
-    const { getAllFeedback } = await import('./database.js');
-    const feedback = await getAllFeedback();
+    const db = await import('./database.js');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const type = req.query.type ? String(req.query.type) : null;
+    const from = req.query.from ? String(req.query.from) : null;
+    const to = req.query.to ? String(req.query.to) : null;
+    const q = req.query.q ? String(req.query.q) : null;
+
+    if (req.query.page || req.query.limit || req.query.type || req.query.from || req.query.to || req.query.q) {
+      const result = await db.getFeedbackPage({ page, limit, type, from, to, q });
+      return res.json({ success: true, data: result.rows, pagination: result.pagination });
+    }
+
+    const feedback = await db.getAllFeedback();
     res.json(feedback);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -1132,6 +1277,95 @@ app.get('/api/feedback/stats', authMiddleware, async (req, res) => {
     const { getFeedbackStats } = await import('./database.js');
     const stats = await getFeedbackStats();
     res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/feedback/export', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const type = req.query.type ? String(req.query.type) : null;
+    const from = req.query.from ? String(req.query.from) : null;
+    const to = req.query.to ? String(req.query.to) : null;
+    const q = req.query.q ? String(req.query.q) : null;
+    const rows = await db.getFeedbackExportRows({ type, from, to, q });
+
+    sendCsv(
+      res,
+      `feedback_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { label: 'User', key: 'display_name' },
+        { label: 'Username', value: (r) => r.username ? `@${r.username}` : '' },
+        { label: 'Type', key: 'feedback_type' },
+        { label: 'Rating', key: 'rating' },
+        { label: 'Text', key: 'feedback_text' },
+        { label: 'Date', value: (r) => r.created_at ? new Date(r.created_at).toISOString() : '' }
+      ],
+      rows
+    );
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/sales/stats', authMiddleware, async (req, res) => {
+  try {
+    const { getSalesStats } = await import('./database.js');
+    const data = await getSalesStats();
+    res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/api/sales', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const result = await db.getSalesPage({
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 25,
+      sortBy: req.query.sortBy ? String(req.query.sortBy) : 'created_at',
+      sortDir: req.query.sortDir ? String(req.query.sortDir) : 'desc',
+      from: req.query.from ? String(req.query.from) : null,
+      to: req.query.to ? String(req.query.to) : null,
+      method: req.query.method ? String(req.query.method) : null,
+      status: req.query.status ? String(req.query.status) : null,
+      q: req.query.q ? String(req.query.q) : null
+    });
+    res.json({ success: true, data: result.rows, pagination: result.pagination });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/api/sales/export', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const rows = await db.getSalesExportRows({
+      from: req.query.from ? String(req.query.from) : null,
+      to: req.query.to ? String(req.query.to) : null,
+      method: req.query.method ? String(req.query.method) : null,
+      status: req.query.status ? String(req.query.status) : null,
+      q: req.query.q ? String(req.query.q) : null
+    });
+
+    sendCsv(
+      res,
+      `sales_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { label: '#', key: 'id' },
+        { label: 'User', key: 'display_name' },
+        { label: 'Telegram ID', key: 'telegram_id' },
+        { label: 'Amount (UZS)', key: 'amount_som' },
+        { label: 'Method', key: 'payment_method' },
+        { label: 'State', key: 'state' },
+        { label: 'Plan', key: 'subscription_type' },
+        { label: 'Subscription End', value: (r) => r.subscription_end ? new Date(r.subscription_end).toISOString() : '' },
+        { label: 'Created At', value: (r) => r.created_at ? new Date(r.created_at).toISOString() : '' }
+      ],
+      rows
+    );
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

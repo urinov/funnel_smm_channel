@@ -502,11 +502,15 @@
             <!-- Progress bar -->
             <div class="mt-6">
               <div class="flex justify-between text-sm mb-2">
-                <span class="text-white/70">Oylik maqsad</span>
-                <span class="font-semibold">65%</span>
+                <span class="text-white/70" id="monthlyGoalLabel">Oylik maqsad</span>
+                <span class="font-semibold" id="monthlyGoalPercent">0%</span>
               </div>
               <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                <div class="h-full bg-white rounded-full" style="width: 65%"></div>
+                <div class="h-full bg-white rounded-full transition-all" id="monthlyGoalBar" style="width: 0%"></div>
+              </div>
+              <div class="mt-2 flex items-center justify-between text-xs text-white/80">
+                <span id="monthlyGoalValue">Maqsad belgilanmagan</span>
+                <button onclick="setMonthlyGoalPrompt()" class="underline hover:text-white">Set Monthly Goal</button>
               </div>
             </div>
           </div>
@@ -514,7 +518,7 @@
 
         <!-- Quick Stats Grid -->
         <div class="grid grid-cols-2 gap-4">
-          <div class="stat-card">
+          <div class="stat-card cursor-pointer" onclick="showTab('audience'); showSubTab('audience', 'users')">
             <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
               <span class="material-symbols-outlined text-blue-600">group</span>
             </div>
@@ -523,7 +527,7 @@
             <p class="text-xs text-green-600 mt-1" id="statTodayUsers">-</p>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card cursor-pointer" onclick="showTab('sales'); showSubTab('sales', 'payments')">
             <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-4">
               <span class="material-symbols-outlined text-purple-600">diamond</span>
             </div>
@@ -532,7 +536,7 @@
             <p class="text-xs text-zinc-400 mt-1">pullik a'zolar</p>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card cursor-pointer" onclick="showTab('sales'); showSubTab('sales', 'analytics')">
             <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
               <span class="material-symbols-outlined text-green-600">trending_up</span>
             </div>
@@ -541,7 +545,7 @@
             <p class="text-xs text-zinc-400 mt-1">user → pullik</p>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card cursor-pointer" onclick="showTab('audience'); showSubTab('audience', 'users')">
             <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-4">
               <span class="material-symbols-outlined text-orange-600">bolt</span>
             </div>
@@ -1514,6 +1518,7 @@
           </div>
         </div>
       </div>
+      </div>
 
       <!-- Bot Messages Subtab -->
       <div id="content-bot-messages" class="content-subtab hidden">
@@ -2419,6 +2424,7 @@
           <label class="block text-sm font-medium text-zinc-700 mb-2">Birlik</label>
           <select class="input" id="editLessonDelayUnit">
             <option value="immediately">Darxol</option>
+            <option value="seconds">Soniya</option>
             <option value="minutes">Daqiqa</option>
             <option value="hours" selected>Soat</option>
             <option value="days">Kun</option>
@@ -2783,15 +2789,73 @@ async function loadHomeData() {
     const cr = stats.totalUsers > 0 ? ((stats.paidUsers / stats.totalUsers) * 100).toFixed(1) : 0;
     document.getElementById('statCR').textContent = cr + '%';
     document.getElementById('statActiveNow').textContent = stats.todayUsers || 0;
+    const todayEl = document.getElementById('statTodayUsers');
+    if (todayEl) todayEl.textContent = `+${stats.todayUsers || 0} bugun`;
 
     // Load funnel data
     loadFunnelData(stats);
+    loadMonthlyGoal();
 
     // Load activity feed
     loadActivityFeed();
 
   } catch (e) {
     console.error('loadHomeData error:', e);
+  }
+}
+
+async function loadMonthlyGoal() {
+  const labelEl = document.getElementById('monthlyGoalLabel');
+  const valueEl = document.getElementById('monthlyGoalValue');
+  const pctEl = document.getElementById('monthlyGoalPercent');
+  const barEl = document.getElementById('monthlyGoalBar');
+
+  try {
+    const res = await fetch('/api/goals/monthly', { headers: { Authorization: auth } });
+    const payload = await res.json();
+    const goal = payload?.data?.users;
+    if (!goal) {
+      if (labelEl) labelEl.textContent = 'Oylik maqsad';
+      if (valueEl) valueEl.textContent = 'Maqsad belgilanmagan';
+      if (pctEl) pctEl.textContent = '0%';
+      if (barEl) barEl.style.width = '0%';
+      return;
+    }
+
+    const current = goal.current_value || 0;
+    const target = goal.target_value || 0;
+    const percent = goal.percent || 0;
+    if (labelEl) labelEl.textContent = 'Oylik user maqsadi';
+    if (valueEl) valueEl.textContent = `${formatNumber(current)} / ${formatNumber(target)} users (${percent}%)`;
+    if (pctEl) pctEl.textContent = `${percent}%`;
+    if (barEl) barEl.style.width = `${Math.min(percent, 100)}%`;
+  } catch (e) {
+    console.error('loadMonthlyGoal error:', e);
+    if (valueEl) valueEl.textContent = 'Maqsad yuklanmadi';
+  }
+}
+
+async function setMonthlyGoalPrompt() {
+  const raw = prompt('Oylik user maqsadini kiriting (masalan: 100)');
+  if (raw === null) return;
+  const target = parseInt(raw, 10);
+  if (!Number.isFinite(target) || target <= 0) {
+    showToast('Musbat son kiriting', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/goals/monthly', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify({ goal_type: 'users', target_value: target })
+    });
+    const payload = await res.json();
+    if (!res.ok || payload.error) throw new Error(payload.error || 'Saqlab bo\'lmadi');
+    showToast('Oylik maqsad saqlandi', 'success');
+    loadMonthlyGoal();
+  } catch (e) {
+    console.error('setMonthlyGoalPrompt error:', e);
+    showToast('Maqsadni saqlashda xatolik', 'error');
   }
 }
 
@@ -2816,7 +2880,7 @@ async function loadActivityFeed() {
         if (p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed') {
           activities.push({
             type: 'payment',
-            name: p.full_name || p.username || 'Foydalanuvchi',
+            name: getDisplayName(p),
             description: `To'lov qildi - ${formatNumber(p.amount || 97000)} so'm`,
             icon: 'payments',
             color: 'green',
@@ -2831,7 +2895,7 @@ async function loadActivityFeed() {
       users.slice(0, 10).forEach(u => {
         activities.push({
           type: 'registration',
-          name: u.full_name || u.username || 'Yangi foydalanuvchi',
+          name: getDisplayName(u),
           description: "Ro'yxatdan o'tdi",
           icon: 'person_add',
           color: 'purple',
@@ -3113,7 +3177,8 @@ function renderUsersTable(users) {
   const colors = ['purple', 'blue', 'green', 'orange', 'pink'];
   tbody.innerHTML = users.map((u, i) => {
     const color = colors[i % colors.length];
-    const displayName = u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Foydalanuvchi';
+    const displayName = getDisplayName(u);
+    const username = u.username ? '@' + u.username : 'No username';
     return `
     <tr class="hover:bg-zinc-50 transition-all cursor-pointer" onclick="openUserModal('${u.telegram_id}')">
       <td>
@@ -3123,7 +3188,7 @@ function renderUsersTable(users) {
           </div>
           <div>
             <p class="font-medium">${escapeHtml(displayName)}</p>
-            <p class="text-sm text-zinc-500">${u.username ? '@' + u.username : u.telegram_id}</p>
+            <p class="text-sm text-zinc-500">${username}</p>
           </div>
         </div>
       </td>
@@ -3164,16 +3229,17 @@ function renderPaymentsTable(payments) {
     const status = getPaymentStatus(p);
     const amount = parseInt(p.amount) || 0;
     const displayAmount = amount > 1000000 ? amount / 100 : amount; // Handle tiyin vs som
+    const displayName = getDisplayName(p);
     return `
-    <tr class="hover:bg-zinc-50 transition-all">
+    <tr class="hover:bg-zinc-50 transition-all cursor-pointer" onclick="openUserModal('${p.telegram_id}')">
       <td>
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600 font-semibold">
-            ${(p.full_name || p.first_name || 'U')[0].toUpperCase()}
+            ${displayName[0].toUpperCase()}
           </div>
           <div>
-            <p class="font-medium">${escapeHtml(p.full_name || p.first_name || 'User')}</p>
-            <p class="text-sm text-zinc-500">${p.username ? '@' + p.username : p.telegram_id}</p>
+            <p class="font-medium">${escapeHtml(displayName)}</p>
+            <p class="text-sm text-zinc-500">${p.username ? '@' + p.username : 'No username'}</p>
           </div>
         </div>
       </td>
@@ -3375,8 +3441,10 @@ function searchUsers(query) {
   }
   const q = query.toLowerCase();
   const filtered = allUsers.filter(u =>
+    (u.display_name || '').toLowerCase().includes(q) ||
     (u.first_name || '').toLowerCase().includes(q) ||
     (u.last_name || '').toLowerCase().includes(q) ||
+    (u.full_name || '').toLowerCase().includes(q) ||
     (u.username || '').toLowerCase().includes(q) ||
     String(u.telegram_id).includes(q)
   );
@@ -3433,12 +3501,13 @@ function handleSearch(query) {
   ).slice(0, 5);
 
   userMatches.forEach(u => {
+    const displayName = getDisplayName(u);
     results.push(`
       <div onclick="closeSearch();openUserModal('${u.telegram_id}')" class="flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-zinc-100 cursor-pointer transition-all">
-        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">${(u.full_name || u.first_name || 'U')[0].toUpperCase()}</div>
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">${displayName[0].toUpperCase()}</div>
         <div>
-          <p class="font-medium text-zinc-900">${escapeHtml(u.full_name || u.first_name || 'User')}</p>
-          <p class="text-sm text-zinc-500">${u.username ? '@' + u.username : u.telegram_id}</p>
+          <p class="font-medium text-zinc-900">${escapeHtml(displayName)}</p>
+          <p class="text-sm text-zinc-500">${u.username ? '@' + u.username : 'No username'}</p>
         </div>
       </div>
     `);
@@ -3546,10 +3615,10 @@ async function openUserModal(userId) {
   }
 
   if (user) {
-    const name = user.full_name || `${user.first_name || 'User'} ${user.last_name || ''}`.trim();
+    const name = getDisplayName(user);
     document.getElementById('userModalAvatar').textContent = name[0].toUpperCase();
     document.getElementById('userModalName').textContent = name;
-    document.getElementById('userModalUsername').textContent = user.username ? '@' + user.username : String(user.telegram_id);
+    document.getElementById('userModalUsername').textContent = user.username ? '@' + user.username : 'No username';
     document.getElementById('userModalStatus').textContent = user.is_paid ? 'Pullik' : 'Bepul';
     document.getElementById('userModalStatus').className = 'badge ' + (user.is_paid ? 'badge-success' : 'badge-warning');
     document.getElementById('userModalLesson').textContent = user.current_lesson || 0;
@@ -3586,7 +3655,7 @@ async function loadUserCustdevAnswers(userId) {
     container.innerHTML = answers.map(a => `
       <div class="p-3 bg-zinc-50 rounded-xl">
         <p class="text-sm text-purple-600 font-medium mb-1">${escapeHtml(a.question_text || a.question || 'Savol')}</p>
-        <p class="text-zinc-900">${escapeHtml(a.answer_text || a.answer || a.response || '-')}</p>
+        <p class="text-zinc-900">${escapeHtml(a.answer_text || a.answer || a.response || 'Javob berilmagan')}</p>
         <p class="text-xs text-zinc-400 mt-1">${formatTimeAgo(a.created_at)}</p>
       </div>
     `).join('');
@@ -3837,27 +3906,13 @@ async function exportPayments() {
   showToast('To\'lovlar tayyorlanmoqda...', 'info');
 
   try {
-    const payments = await fetch('/api/payments?limit=10000', { headers: { Authorization: auth } }).then(r => r.json());
-
-    if (!payments || payments.length === 0) {
-      showToast('To\'lovlar topilmadi', 'warning');
-      return;
-    }
-
-    // Create CSV
-    let csv = 'ID,User,Telegram ID,Summa,Status,Sana\n';
-    payments.forEach(p => {
-      const name = (p.full_name || p.first_name || 'User').replace(/,/g, ' ');
-      const date = new Date(p.created_at).toLocaleDateString('uz-UZ');
-      csv += `${p.id},${name},${p.telegram_id},${p.amount},${p.state},${date}\n`;
-    });
-
-    // Download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const res = await fetch('/api/sales/export', { headers: { Authorization: auth } });
+    if (!res.ok) throw new Error('export failed');
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `sales_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -3874,26 +3929,9 @@ async function exportUsers() {
   showToast('Userlar tayyorlanmoqda...', 'info');
 
   try {
-    const users = await fetch('/api/users?limit=10000', { headers: { Authorization: auth } }).then(r => r.json());
-
-    if (!users || users.length === 0) {
-      showToast('Userlar topilmadi', 'warning');
-      return;
-    }
-
-    // Create CSV
-    let csv = 'Telegram ID,Ism,Username,Dars,To\'lov,Ro\'yxatdan\n';
-    users.forEach(u => {
-      const name = (u.full_name || u.first_name || 'User').replace(/,/g, ' ');
-      const username = u.username || '-';
-      const lesson = u.current_lesson || 0;
-      const paid = u.is_paid ? 'Ha' : 'Yo\'q';
-      const date = new Date(u.created_at).toLocaleDateString('uz-UZ');
-      csv += `${u.telegram_id},${name},${username},${lesson},${paid},${date}\n`;
-    });
-
-    // Download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const res = await fetch('/api/users/export', { headers: { Authorization: auth } });
+    if (!res.ok) throw new Error('export failed');
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -4168,7 +4206,7 @@ function renderConversationsList() {
   listEl.innerHTML = allConversations.map((c, i) => {
     const color = colors[i % colors.length];
     const isActive = c.telegram_id === currentChatUserId;
-    const name = c.full_name || c.first_name || 'User';
+    const name = getDisplayName(c);
     const initial = name[0].toUpperCase();
     const timeAgo = formatTimeAgo(c.last_message_at || c.created_at);
 
@@ -4200,12 +4238,12 @@ async function selectChat(telegramId) {
   if (user) {
     const headerEl = document.querySelector('#audience-chats .lg\\:col-span-2 .p-4.border-b');
     if (headerEl) {
-      const name = user.full_name || user.first_name || 'User';
+      const name = getDisplayName(user);
       headerEl.innerHTML = `
         <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">${name[0].toUpperCase()}</div>
         <div class="flex-1">
           <p class="font-medium text-zinc-900">${escapeHtml(name)}</p>
-          <p class="text-sm text-zinc-500">${user.username ? '@' + user.username : telegramId}</p>
+          <p class="text-sm text-zinc-500">${user.username ? '@' + user.username : 'No username'}</p>
         </div>
         <button onclick="openUserModal('${telegramId}')" class="btn btn-secondary text-sm">
           <span class="material-symbols-outlined text-lg">person</span>
@@ -4261,7 +4299,7 @@ async function loadChatMessages(telegramId) {
         </div>`;
       } else {
         const user = allConversations.find(c => c.telegram_id === currentChatUserId);
-        const initial = (user?.full_name || user?.first_name || 'U')[0].toUpperCase();
+        const initial = getDisplayName(user || { telegram_id: currentChatUserId })[0].toUpperCase();
         return `
         <div class="flex gap-3">
           <div class="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-600 font-semibold text-sm shrink-0">${initial}</div>
@@ -4334,7 +4372,7 @@ async function loadFeedback() {
     if (posEl) posEl.textContent = stats.positive || 0;
     if (neuEl) neuEl.textContent = stats.neutral || 0;
     if (negEl) negEl.textContent = stats.negative || 0;
-    if (totalEl) totalEl.textContent = (stats.positive || 0) + (stats.neutral || 0) + (stats.negative || 0);
+    if (totalEl) totalEl.textContent = stats.total || ((stats.positive || 0) + (stats.neutral || 0) + (stats.negative || 0));
 
     // Render feedback list
     renderFeedbackList(feedback);
@@ -4360,18 +4398,19 @@ function renderFeedbackList(feedback) {
 
   listEl.innerHTML = feedback.slice(0, 20).map(f => {
     const type = typeConfig[f.feedback_type] || typeConfig.neutral;
+    const displayName = getDisplayName(f);
     return `
-    <div class="p-4 hover:bg-zinc-50 transition-all">
+    <div class="p-4 hover:bg-zinc-50 transition-all cursor-pointer" onclick="openUserModal('${f.telegram_id}')">
       <div class="flex items-start gap-4">
         <div class="w-10 h-10 bg-${type.color}-100 rounded-xl flex items-center justify-center text-${type.color}-600">
           <span class="material-symbols-outlined">${type.icon}</span>
         </div>
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-1">
-            <p class="font-medium text-zinc-900">${escapeHtml(f.full_name || 'User')}</p>
+            <p class="font-medium text-zinc-900">${escapeHtml(displayName)}</p>
             <span class="text-xs text-zinc-400">• ${formatTimeAgo(f.created_at)}</span>
           </div>
-          <p class="text-zinc-600">"${escapeHtml(f.comment || f.message || 'Fikr bildirilmagan')}"</p>
+          <p class="text-zinc-600">"${escapeHtml(f.feedback_text || f.comment || f.message || 'Fikr bildirilmagan')}"</p>
           <div class="flex items-center gap-2 mt-2">
             <span class="badge ${type.badge}" ${type.style ? 'style="' + type.style + '"' : ''}>${type.text}</span>
             <span class="text-xs text-zinc-400">${f.lesson_number ? f.lesson_number + '-dars haqida' : ''}</span>
@@ -4480,15 +4519,17 @@ function renderLessonsList(lessons) {
 
     // Delay display
     let delayText = '';
-    const delayHours = l.delay_hours || 24;
-    if (delayHours === 0) {
+    const delaySeconds = Number.isFinite(l.delay_seconds) ? l.delay_seconds : Math.round((l.delay_hours || 24) * 3600);
+    if (delaySeconds === 0) {
       delayText = 'Darxol';
-    } else if (delayHours < 1) {
-      delayText = Math.round(delayHours * 60) + ' daqiqa';
-    } else if (delayHours >= 24 && delayHours % 24 === 0) {
-      delayText = (delayHours / 24) + ' kun';
+    } else if (delaySeconds < 60) {
+      delayText = delaySeconds + ' soniya';
+    } else if (delaySeconds < 3600) {
+      delayText = Math.round(delaySeconds / 60) + ' daqiqa';
+    } else if (delaySeconds >= 86400 && delaySeconds % 86400 === 0) {
+      delayText = (delaySeconds / 86400) + ' kun';
     } else {
-      delayText = delayHours + ' soat';
+      delayText = Math.round(delaySeconds / 3600) + ' soat';
     }
 
     return `
@@ -4553,19 +4594,25 @@ async function editLesson(lessonId) {
     document.getElementById('editLessonDocumentFileId').value = lesson.document_file_id || '';
 
     // Parse delay to value and unit
-    const delayHours = lesson.delay_hours || 24;
-    let delayValue = delayHours;
+    const delaySeconds = Number.isFinite(lesson.delay_seconds) ? lesson.delay_seconds : Math.round((lesson.delay_hours || 24) * 3600);
+    let delayValue = Math.round(delaySeconds / 3600);
     let delayUnit = 'hours';
 
-    if (delayHours === 0) {
+    if (delaySeconds === 0) {
       delayValue = 0;
       delayUnit = 'immediately';
-    } else if (delayHours >= 24 && delayHours % 24 === 0) {
-      delayValue = delayHours / 24;
-      delayUnit = 'days';
-    } else if (delayHours < 1) {
-      delayValue = Math.round(delayHours * 60);
+    } else if (delaySeconds < 60) {
+      delayValue = delaySeconds;
+      delayUnit = 'seconds';
+    } else if (delaySeconds < 3600) {
+      delayValue = Math.round(delaySeconds / 60);
       delayUnit = 'minutes';
+    } else if (delaySeconds % 86400 === 0) {
+      delayValue = delaySeconds / 86400;
+      delayUnit = 'days';
+    } else if (delaySeconds % 3600 === 0) {
+      delayValue = delaySeconds / 3600;
+      delayUnit = 'hours';
     }
 
     document.getElementById('editLessonDelayValue').value = delayValue;
@@ -4587,23 +4634,27 @@ async function saveLesson() {
   const lessonId = document.getElementById('editLessonId').value;
   if (!lessonId) return;
 
-  // Calculate delay in hours
+  // Calculate delay in seconds
   const delayValue = parseInt(document.getElementById('editLessonDelayValue').value) || 0;
   const delayUnit = document.getElementById('editLessonDelayUnit').value;
 
-  let delayHours = delayValue;
+  let delaySeconds = delayValue * 3600;
   if (delayUnit === 'immediately') {
-    delayHours = 0;
+    delaySeconds = 0;
+  } else if (delayUnit === 'seconds') {
+    delaySeconds = delayValue;
   } else if (delayUnit === 'minutes') {
-    delayHours = delayValue / 60;
+    delaySeconds = delayValue * 60;
+  } else if (delayUnit === 'hours') {
+    delaySeconds = delayValue * 3600;
   } else if (delayUnit === 'days') {
-    delayHours = delayValue * 24;
+    delaySeconds = delayValue * 86400;
   }
 
   const data = {
     title: document.getElementById('editLessonTitle').value,
     content: document.getElementById('editLessonContent').value,
-    delay_hours: delayHours,
+    delay_seconds: delaySeconds,
     show_watched_button: document.getElementById('editLessonShowButton').checked,
     watched_button_text: document.getElementById('editLessonButtonText').value,
     watched_message: document.getElementById('editLessonMessage').value,
@@ -4750,12 +4801,12 @@ async function loadTests() {
 
   try {
     // Load tests
-    const tests = await fetch('/api/tests', { headers: { Authorization: auth } }).then(r => r.json());
+    const tests = await fetchJsonWithTimeout('/api/tests', { headers: { Authorization: auth } }, 5000);
     allTests = tests || [];
 
     // Update lesson filter options
     if (filterEl && filterEl.options.length <= 1) {
-      const lessons = await fetch('/api/lessons', { headers: { Authorization: auth } }).then(r => r.json());
+      const lessons = await fetchJsonWithTimeout('/api/lessons', { headers: { Authorization: auth } }, 5000);
       lessons.forEach(l => {
         const opt = document.createElement('option');
         opt.value = l.lesson_number;
@@ -4811,7 +4862,7 @@ async function loadTests() {
 
   } catch (e) {
     console.error('loadTests error:', e);
-    listEl.innerHTML = '<div class="text-center py-4 text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
+    listEl.innerHTML = '<div class="text-center py-4 text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Failed to load. Try again.</p><button class="btn btn-secondary text-sm mt-2" onclick="loadTests()">Retry</button></div>';
   }
 }
 
@@ -4831,12 +4882,7 @@ async function loadTestSubmissions() {
   if (!container) return;
 
   try {
-    const res = await fetch('/api/tests/submissions?limit=20', { headers: { Authorization: auth } });
-    const submissions = await res.json();
-
-    if (!res.ok || submissions.error) {
-      throw new Error(submissions.error || 'API error');
-    }
+    const submissions = await fetchJsonWithTimeout('/api/tests/submissions?limit=20', { headers: { Authorization: auth } }, 5000);
 
     if (!Array.isArray(submissions) || submissions.length === 0) {
       container.innerHTML = '<div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">quiz</span><p class="text-sm">Hali topshiriqlar yo\'q</p></div>';
@@ -4863,7 +4909,7 @@ async function loadTestSubmissions() {
     `}).join('');
   } catch (e) {
     console.error('loadTestSubmissions error:', e);
-    container.innerHTML = '<div class="p-4 text-center text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
+    container.innerHTML = '<div class="p-4 text-center text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Failed to load. Try again.</p><button class="btn btn-secondary text-sm mt-2" onclick="loadTestSubmissions()">Retry</button></div>';
   }
 }
 
@@ -4966,8 +5012,9 @@ async function loadCustdev() {
 
   try {
     // Load questions
-    const res = await fetch('/api/custdev', { headers: { Authorization: auth } });
-    const questions = await res.json();
+    const res = await fetch('/api/custdev/questions', { headers: { Authorization: auth } });
+    const payload = await res.json();
+    const questions = payload?.data || [];
 
     // Handle error response
     if (!res.ok || questions.error) {
@@ -4997,6 +5044,7 @@ async function loadCustdev() {
               </div>
               <p class="font-medium text-zinc-900 mb-1">${escapeHtml(q.question_text || '')}</p>
               ${optionsArray.length ? `<p class="text-sm text-zinc-500">${optionsArray.join(', ')}</p>` : ''}
+              <p class="text-xs text-zinc-400 mt-1">${q.response_count || 0}/${q.total_users || 0} javob</p>
             </div>
             <div class="flex items-center gap-1">
               <button onclick="event.stopPropagation(); editCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-purple-600">
@@ -5043,8 +5091,8 @@ async function loadCustdevAnswers() {
 
     countEl.textContent = answers.length;
     answersEl.innerHTML = answers.map(a => {
-      const displayName = a.full_name || 'Foydalanuvchi';
-      const answerText = a.answer || a.answer_text || '';
+      const displayName = getDisplayName(a);
+      const answerText = a.answer || a.answer_text || 'Javob berilmagan';
       return `
       <div class="p-4 hover:bg-zinc-50 cursor-pointer" onclick="openUserModal('${a.telegram_id}')">
         <div class="flex items-start gap-3">
@@ -5366,6 +5414,24 @@ function formatNumber(num) {
   return new Intl.NumberFormat('uz-UZ').format(num);
 }
 
+function getDisplayName(user) {
+  if (!user || typeof user !== 'object') return 'User';
+  const full = String(user.display_name || user.full_name || '').trim();
+  if (full) return full;
+  const first = String(user.first_name || '').trim();
+  const last = String(user.last_name || '').trim();
+  const fio = `${first} ${last}`.trim();
+  if (fio) return fio;
+  if (user.username) return user.username;
+  if (user.telegram_id || user.id) return `User #${user.telegram_id || user.id}`;
+  return 'User';
+}
+
+function getPhone(user) {
+  const phone = String(user?.phone_number || user?.phone || '').trim();
+  return phone || 'Not provided';
+}
+
 function formatDate(date) {
   if (!date) return '-';
   return new Date(date).toLocaleDateString('uz-UZ');
@@ -5381,6 +5447,19 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text || '';
   return div.innerHTML;
+}
+
+async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `${res.status} ${res.statusText}`);
+    return data;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // Keyboard shortcuts
