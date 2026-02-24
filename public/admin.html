@@ -4009,53 +4009,7 @@ async function loadAIAgentStats() {
   }
 }
 
-// ============ SALES ANALYTICS ============
-async function loadSalesAnalytics() {
-  try {
-    const [funnel, analytics] = await Promise.all([
-      fetch('/api/analytics/funnel', { headers: { Authorization: auth } }).then(r => r.json()),
-      fetch('/api/analytics/payments', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => ({}))
-    ]);
-
-    // Update sales funnel
-    const total = funnel?.total || 0;
-    const lesson1 = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || 0;
-    const pitch = funnel?.stages?.find(s => s.stage === 'pitch')?.users || 0;
-    const paid = funnel?.stages?.find(s => s.stage === 'paid')?.users || 0;
-
-    document.getElementById('salesFunnelTotal').textContent = formatNumber(total);
-    document.getElementById('salesFunnelLesson').textContent = formatNumber(lesson1);
-    document.getElementById('salesFunnelPitch').textContent = formatNumber(pitch);
-    document.getElementById('salesFunnelPaid').textContent = formatNumber(paid);
-
-    // Update bars with percentages
-    const setPct = (id, count, showPct = true) => {
-      const pct = total > 0 ? Math.max((count / total * 100), count > 0 ? 5 : 0) : 0;
-      const el = document.getElementById(id);
-      if (el) {
-        el.style.width = pct + '%';
-        if (showPct) el.textContent = Math.round(pct) + '%';
-      }
-    };
-
-    setPct('salesFunnelTotalBar', total);
-    setPct('salesFunnelLessonBar', lesson1);
-    setPct('salesFunnelPitchBar', pitch);
-    setPct('salesFunnelPaidBar', paid);
-
-    // Update LTV, CAC, Retention
-    const ltv = analytics?.avg_payment || 0;
-    document.getElementById('analyticsLTV').textContent = formatNumber(ltv) + " so'm";
-
-    // Retention (users who came back within 7 days)
-    const retentionEl = document.getElementById('analyticsRetention');
-    if (retentionEl && analytics?.retention_rate) {
-      retentionEl.textContent = analytics.retention_rate + '%';
-    }
-  } catch (e) {
-    console.error('loadSalesAnalytics error:', e);
-  }
-}
+// ============ SALES ANALYTICS (duplicate removed - using function at line ~3025) ============
 
 // ============ PROGREV FUNCTIONS ============
 async function loadProgrev() {
