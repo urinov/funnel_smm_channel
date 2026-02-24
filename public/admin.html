@@ -169,45 +169,241 @@
     ::-webkit-scrollbar-thumb { background: #d7d9e3; border-radius: 6px; }
     ::-webkit-scrollbar-thumb:hover { background: #b8bcc9; }
 
-    /* Sidebar - Modern Purple Gradient */
-    .sidebar { width: 80px; background: var(--gradient-primary); border-right: none; box-shadow: 4px 0 24px rgba(99, 102, 241, 0.15); transition: width 0.28s ease; overflow: hidden; }
-    .sidebar.expanded { width: 200px; }
-    .sidebar-item { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.8) !important; transition: all 0.25s ease; cursor: pointer; font-size: 20px; gap: 12px; white-space: nowrap; margin-bottom: 8px; }
-    .sidebar.expanded .sidebar-item { width: 100%; justify-content: flex-start; padding: 0 16px; }
-    .sidebar-item:hover { background: rgba(255,255,255,0.2); color: #ffffff !important; transform: scale(1.02); }
-    .sidebar-item:hover .sidebar-label { color: #ffffff !important; }
-    .sidebar-item:hover .material-symbols-outlined { color: #ffffff !important; }
-    .sidebar-item.active { background: #ffffff; color: #6366F1 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: none; }
-    .sidebar-item.active .sidebar-label { color: #6366F1 !important; }
-    .sidebar-item.active .material-symbols-outlined { color: #6366F1 !important; }
-    .sidebar-label { display: none; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
-    .sidebar.expanded .sidebar-label { display: block; }
-    .sidebar-item .material-symbols-outlined { color: rgba(255,255,255,0.8); }
-    .sidebar-toggle { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.2); color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 12px; backdrop-filter: blur(10px); }
-    .sidebar-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-
-    /* Sidebar Tooltips */
-    .sidebar-item { position: relative; }
-    .sidebar-item[data-tooltip]::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      left: calc(100% + 12px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--gray-800);
-      color: white;
-      padding: 6px 12px;
-      border-radius: var(--radius-lg);
-      font-size: var(--text-xs);
-      font-weight: var(--font-semibold);
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--duration-fast) var(--ease-default);
-      z-index: var(--z-tooltip);
-      box-shadow: var(--shadow-lg);
+    /* ═══ FLOATING COMMAND NAV ═══ */
+    .cmd-nav {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     }
-    .sidebar:not(.expanded) .sidebar-item[data-tooltip]:hover::after { opacity: 1; }
+    .cmd-nav-brand {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 16px;
+      margin-right: 4px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    .cmd-nav-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .cmd-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .cmd-nav-btn:hover {
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--primary-600);
+    }
+    .cmd-nav-btn.active {
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+    }
+    .cmd-nav-btn .material-symbols-outlined {
+      font-size: 18px;
+    }
+    .cmd-nav-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) scale(0.95);
+      min-width: 200px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+      padding: 6px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1001;
+    }
+    .cmd-nav-group:hover .cmd-nav-dropdown,
+    .cmd-nav-group.open .cmd-nav-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) scale(1);
+    }
+    .cmd-nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cmd-nav-dropdown-item:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      color: var(--primary-600);
+    }
+    .cmd-nav-dropdown-item.active {
+      background: var(--gradient-primary);
+      color: white;
+    }
+    .cmd-nav-dropdown-item .material-symbols-outlined {
+      font-size: 18px;
+      opacity: 0.8;
+    }
+    .cmd-nav-dropdown-divider {
+      height: 1px;
+      background: var(--gray-200);
+      margin: 6px 10px;
+    }
+    .cmd-nav-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--gray-100);
+      border-radius: 10px;
+      color: var(--gray-500);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 4px;
+    }
+    .cmd-nav-search:hover {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+    .cmd-nav-search kbd {
+      font-size: 11px;
+      padding: 2px 6px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .cmd-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+      padding-left: 8px;
+      border-left: 1px solid var(--gray-200);
+    }
+    .cmd-nav-action {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--gray-500);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .cmd-nav-action:hover {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+    .cmd-nav-action.primary {
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    .cmd-nav-action.primary:hover {
+      transform: scale(1.05);
+    }
+    .cmd-nav-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      min-width: 16px;
+      height: 16px;
+      background: #EF4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    /* Mobile Command Nav */
+    @media (max-width: 768px) {
+      .cmd-nav {
+        top: auto;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        transform: none;
+        padding: 8px;
+        border-radius: 20px;
+        justify-content: space-around;
+      }
+      .cmd-nav-brand { display: none; }
+      .cmd-nav-btn span:not(.material-symbols-outlined) { display: none; }
+      .cmd-nav-btn { padding: 10px; border-radius: 12px; }
+      .cmd-nav-search { display: none; }
+      .cmd-nav-dropdown {
+        position: fixed;
+        bottom: 80px;
+        left: 16px;
+        right: 16px;
+        top: auto;
+        transform: none;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+      .cmd-nav-group:hover .cmd-nav-dropdown { opacity: 0; visibility: hidden; }
+      .cmd-nav-group.open .cmd-nav-dropdown { opacity: 1; visibility: visible; }
+    }
+
+    /* Hide old sidebar */
+    .sidebar { display: none !important; }
+
+    /* Adjust main content for new nav */
+    .main-content {
+      margin-left: 0 !important;
+      padding-top: 80px !important;
+    }
+    @media (max-width: 768px) {
+      .main-content {
+        padding-top: 20px !important;
+        padding-bottom: 100px !important;
+      }
+    }
 
     /* Toast Notifications */
     .toast-container { position: fixed; top: var(--space-4); right: var(--space-4); z-index: var(--z-toast); display: flex; flex-direction: column; gap: var(--space-2); pointer-events: none; }
@@ -568,7 +764,7 @@
       .right-panel { width: 320px; }
     }
 
-    .mobile-nav { display: none; position: fixed; bottom: 12px; left: 12px; right: 12px; height: var(--mobile-nav-h); background: #fff; border: 1px solid rgba(0,0,0,0.06); padding: 8px; z-index: 50; box-shadow: 0 8px 32px rgba(0,0,0,0.12); border-radius: 20px; }
+    .mobile-nav { display: none !important; /* Replaced by cmd-nav */ }
     .mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px; color: #6B7280; font-size: 10px; font-weight: 500; transition: all 0.2s; }
     .mobile-nav-item.active { color: #fff; background: var(--gradient-primary); box-shadow: 0 6px 16px rgba(99,102,241,0.36); }
     .mobile-nav-item:active { transform: scale(0.95); }
@@ -3420,7 +3616,138 @@
 <!-- Main Dashboard -->
 <div id="dashboard" class="hidden flex min-h-screen">
 
-  <!-- Left Sidebar - Icons Only Purple Gradient -->
+  <!-- Floating Command Nav -->
+  <nav class="cmd-nav" id="cmdNav">
+    <div class="cmd-nav-brand">F</div>
+
+    <!-- Analytics Group -->
+    <div class="cmd-nav-group" id="navGroupAnalytics">
+      <button class="cmd-nav-btn active" onclick="toggleNavGroup('navGroupAnalytics')" data-group="analytics">
+        <span class="material-symbols-outlined">analytics</span>
+        <span>Monitoring</span>
+      </button>
+      <div class="cmd-nav-dropdown">
+        <div class="cmd-nav-dropdown-item active" onclick="showTab('overview')">
+          <span class="material-symbols-outlined">dashboard</span>
+          Umumiy ko'rinish
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('analytics')">
+          <span class="material-symbols-outlined">insights</span>
+          Analitika
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('payments')">
+          <span class="material-symbols-outlined">payments</span>
+          To'lovlar
+        </div>
+      </div>
+    </div>
+
+    <!-- Audience Group -->
+    <div class="cmd-nav-group" id="navGroupAudience">
+      <button class="cmd-nav-btn" onclick="toggleNavGroup('navGroupAudience')" data-group="audience">
+        <span class="material-symbols-outlined">group</span>
+        <span>Auditoriya</span>
+      </button>
+      <div class="cmd-nav-dropdown">
+        <div class="cmd-nav-dropdown-item" onclick="showTab('users')">
+          <span class="material-symbols-outlined">person_search</span>
+          Foydalanuvchilar
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('conversations')">
+          <span class="material-symbols-outlined">forum</span>
+          Suhbatlar
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('custdev')">
+          <span class="material-symbols-outlined">psychology</span>
+          CustDev
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('feedback')">
+          <span class="material-symbols-outlined">rate_review</span>
+          Feedback
+        </div>
+        <div class="cmd-nav-dropdown-divider"></div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('referrals')">
+          <span class="material-symbols-outlined">share</span>
+          Referallar
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Group -->
+    <div class="cmd-nav-group" id="navGroupContent">
+      <button class="cmd-nav-btn" onclick="toggleNavGroup('navGroupContent')" data-group="content">
+        <span class="material-symbols-outlined">school</span>
+        <span>Kontent</span>
+      </button>
+      <div class="cmd-nav-dropdown">
+        <div class="cmd-nav-dropdown-item" onclick="showTab('lessons')">
+          <span class="material-symbols-outlined">play_lesson</span>
+          Darslar
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('tests')">
+          <span class="material-symbols-outlined">quiz</span>
+          Testlar
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('library')">
+          <span class="material-symbols-outlined">video_library</span>
+          Kutubxona
+        </div>
+        <div class="cmd-nav-dropdown-divider"></div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('progrev')">
+          <span class="material-symbols-outlined">local_fire_department</span>
+          Progrev
+        </div>
+      </div>
+    </div>
+
+    <!-- Marketing Group -->
+    <div class="cmd-nav-group" id="navGroupMarketing">
+      <button class="cmd-nav-btn" onclick="toggleNavGroup('navGroupMarketing')" data-group="marketing">
+        <span class="material-symbols-outlined">campaign</span>
+        <span>Marketing</span>
+      </button>
+      <div class="cmd-nav-dropdown">
+        <div class="cmd-nav-dropdown-item" onclick="showTab('ai-agent')">
+          <span class="material-symbols-outlined">smart_toy</span>
+          AI Sales Agent
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('promo')">
+          <span class="material-symbols-outlined">confirmation_number</span>
+          Promokodlar
+        </div>
+        <div class="cmd-nav-dropdown-item" onclick="showTab('renewal')">
+          <span class="material-symbols-outlined">autorenew</span>
+          Yangilash
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="cmd-nav-search" onclick="openCommandPalette()">
+      <span class="material-symbols-outlined" style="font-size: 16px;">search</span>
+      <span>Qidirish...</span>
+      <kbd>⌘K</kbd>
+    </div>
+
+    <!-- Actions -->
+    <div class="cmd-nav-actions">
+      <button class="cmd-nav-action" onclick="toggleNotificationsPanel()" title="Bildirishnomalar">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="cmd-nav-badge" id="cmdNavNotifBadge" style="display: none;">0</span>
+      </button>
+      <button class="cmd-nav-action" onclick="showTab('settings')" title="Sozlamalar">
+        <span class="material-symbols-outlined">settings</span>
+      </button>
+      <button class="cmd-nav-action" onclick="showTab('audit')" title="Audit">
+        <span class="material-symbols-outlined">history</span>
+      </button>
+      <button class="cmd-nav-action primary" onclick="openModal('broadcastModal')" title="Xabar yuborish">
+        <span class="material-symbols-outlined">send</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Left Sidebar - Icons Only Purple Gradient (HIDDEN - replaced by cmd-nav) -->
   <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 flex flex-col items-center py-5 z-40">
     <!-- Logo & Toggle -->
     <div class="mb-6 flex flex-col items-center gap-3">
@@ -7825,9 +8152,73 @@ function showTab(tab) {
   document.querySelectorAll('.mobile-nav-item[data-tab]').forEach(el => el.classList.remove('active'));
   document.querySelector('.mobile-nav-item[data-tab="' + tab + '"]')?.classList.add('active');
 
+  // Update command nav
+  updateCmdNav(tab);
+
+  // Close any open dropdowns
+  document.querySelectorAll('.cmd-nav-group').forEach(g => g.classList.remove('open'));
+
   ensureTabData(tab).catch((e) => console.error(`ensureTabData(${tab}) error:`, e));
   addNotification(`Tab ochildi: ${TAB_META[tab]?.title || tab}`, 'info');
 }
+
+// Command Nav Functions
+const CMD_NAV_GROUPS = {
+  analytics: ['overview', 'analytics', 'payments'],
+  audience: ['users', 'conversations', 'custdev', 'feedback', 'referrals'],
+  content: ['lessons', 'tests', 'library', 'progrev'],
+  marketing: ['ai-agent', 'promo', 'renewal']
+};
+
+function toggleNavGroup(groupId) {
+  const group = document.getElementById(groupId);
+  const isOpen = group.classList.contains('open');
+
+  // Close all groups first
+  document.querySelectorAll('.cmd-nav-group').forEach(g => g.classList.remove('open'));
+
+  // Toggle this group (for mobile)
+  if (!isOpen && window.innerWidth <= 768) {
+    group.classList.add('open');
+  }
+}
+
+function updateCmdNav(tab) {
+  // Find which group this tab belongs to
+  let activeGroup = null;
+  for (const [group, tabs] of Object.entries(CMD_NAV_GROUPS)) {
+    if (tabs.includes(tab)) {
+      activeGroup = group;
+      break;
+    }
+  }
+
+  // Update group buttons
+  document.querySelectorAll('.cmd-nav-btn[data-group]').forEach(btn => {
+    const group = btn.getAttribute('data-group');
+    btn.classList.toggle('active', group === activeGroup);
+  });
+
+  // Update dropdown items
+  document.querySelectorAll('.cmd-nav-dropdown-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Find and highlight active dropdown item
+  document.querySelectorAll('.cmd-nav-dropdown-item').forEach(item => {
+    const onclick = item.getAttribute('onclick');
+    if (onclick && onclick.includes(`'${tab}'`)) {
+      item.classList.add('active');
+    }
+  });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.cmd-nav-group')) {
+    document.querySelectorAll('.cmd-nav-group').forEach(g => g.classList.remove('open'));
+  }
+});
 
 async function loadSettingsForm() {
   try {
@@ -8512,28 +8903,21 @@ async function loadCustomEmojiLibrary(forceRefresh = false) {
   const countEl = document.getElementById('emojiBankCount');
   const progrevListEl = document.getElementById('emojiBankProgrevList');
   const progrevCountEl = document.getElementById('emojiBankProgrevCount');
-  try {
-    const refreshFlag = forceRefresh ? '1' : '0';
-    const [customResp, unicodeResp] = await Promise.all([
-      fetch('/api/custom-emojis?limit=400&refresh=' + refreshFlag, { headers: { Authorization: auth } }),
-      fetch('/api/unicode-emojis?limit=4000&top=180', { headers: { Authorization: auth } })
-    ]);
-    if (!customResp.ok) throw new Error('Custom emoji API error: ' + customResp.status);
-    if (!unicodeResp.ok) throw new Error('Unicode emoji API error: ' + unicodeResp.status);
-    const customData = await customResp.json();
-    const unicodeData = await unicodeResp.json();
-    customEmojiLibrary = Array.isArray(customData) ? customData : [];
-    unicodeEmojiLibrary = Array.isArray(unicodeData) ? unicodeData : [];
-    renderCustomEmojiLibrary();
-  } catch (e) {
-    console.error('loadCustomEmojiLibrary error:', e);
-    customEmojiLibrary = [];
-    unicodeEmojiLibrary = [];
-    if (countEl) countEl.textContent = '0 ta emoji';
-    if (listEl) listEl.innerHTML = '<div class="text-xs text-red-500">Emoji bank yuklanmadi</div>';
-    if (progrevCountEl) progrevCountEl.textContent = '0 ta emoji';
-    if (progrevListEl) progrevListEl.innerHTML = '<div class="text-xs text-red-500">Emoji bank yuklanmadi</div>';
-  }
+
+  // Emoji bank feature disabled - show manual entry tip instead
+  customEmojiLibrary = [];
+  unicodeEmojiLibrary = [];
+
+  const tipHtml = `<div class="text-xs text-gray-500 p-3 bg-gray-50 rounded-lg">
+    <p class="font-medium text-gray-700 mb-1">💡 Custom emoji qo'shish:</p>
+    <p>Telegram'dan emoji ID'sini oling va quyidagi formatda qo'shing:</p>
+    <code class="text-xs bg-white px-2 py-1 rounded mt-1 block">&lt;tg-emoji emoji-id="ID"&gt;✨&lt;/tg-emoji&gt;</code>
+  </div>`;
+
+  if (countEl) countEl.textContent = '';
+  if (listEl) listEl.innerHTML = tipHtml;
+  if (progrevCountEl) progrevCountEl.textContent = '';
+  if (progrevListEl) progrevListEl.innerHTML = tipHtml;
 }
 
 function renderCustomEmojiLibrary() {
