@@ -4178,6 +4178,29 @@ export async function getTestStatistics() {
   };
 }
 
+// Get recent test submissions for dashboard
+export async function getRecentTestSubmissions(limit = 20) {
+  const { rows } = await pool.query(`
+    SELECT
+      utr.id,
+      utr.telegram_id,
+      utr.lesson_number,
+      utr.question_order,
+      utr.user_answer,
+      utr.is_correct,
+      utr.answered_at,
+      u.full_name,
+      u.username,
+      lt.question_text
+    FROM user_test_results utr
+    LEFT JOIN users u ON u.telegram_id = utr.telegram_id
+    LEFT JOIN lesson_tests lt ON lt.id = utr.question_id
+    ORDER BY utr.answered_at DESC
+    LIMIT $1
+  `, [limit]);
+  return rows;
+}
+
 // Get users who need test reminders (started but didn't finish)
 export async function getUsersWithIncompleteTests() {
   const { rows } = await pool.query(`

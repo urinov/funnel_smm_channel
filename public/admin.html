@@ -987,7 +987,7 @@
                 <span class="material-symbols-outlined text-purple-600">share</span>
               </div>
               <div>
-                <p class="text-2xl font-bold">234</p>
+                <p class="text-2xl font-bold" id="refTotalReferrals">-</p>
                 <p class="text-sm text-zinc-500">Jami referallar</p>
               </div>
             </div>
@@ -998,7 +998,7 @@
                 <span class="material-symbols-outlined text-green-600">group_add</span>
               </div>
               <div>
-                <p class="text-2xl font-bold">156</p>
+                <p class="text-2xl font-bold" id="refTotalReferrers">-</p>
                 <p class="text-sm text-zinc-500">Faol taklif qiluvchilar</p>
               </div>
             </div>
@@ -1006,11 +1006,11 @@
           <div class="stat-card">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-outlined text-orange-600">emoji_events</span>
+                <span class="material-symbols-outlined text-orange-600">discount</span>
               </div>
               <div>
-                <p class="text-2xl font-bold">1.5</p>
-                <p class="text-sm text-zinc-500">O'rtacha referal</p>
+                <p class="text-2xl font-bold" id="refDiscountsUsed">-</p>
+                <p class="text-sm text-zinc-500">Chegirmalar ishlatildi</p>
               </div>
             </div>
           </div>
@@ -1021,88 +1021,13 @@
           <div class="p-6 border-b border-zinc-100">
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-zinc-900">Top taklif qiluvchilar</h3>
-              <span class="badge badge-info">Bu oy</span>
+              <span class="badge badge-info">Jami</span>
             </div>
           </div>
           <div class="divide-y divide-zinc-100" id="referralLeaderboard">
-            <!-- 1st place -->
-            <div class="p-4 bg-gradient-to-r from-yellow-50 to-transparent">
-              <div class="flex items-center gap-4">
-                <div class="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center text-white font-bold">1</div>
-                <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600 font-bold">👑</div>
-                <div class="flex-1">
-                  <p class="font-semibold text-zinc-900">Sardor Alimov</p>
-                  <p class="text-sm text-zinc-500">@sardor_a</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-2xl font-bold text-yellow-600">23</p>
-                  <p class="text-xs text-zinc-400">referal</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 2nd place -->
-            <div class="p-4 bg-gradient-to-r from-zinc-100 to-transparent">
-              <div class="flex items-center gap-4">
-                <div class="w-8 h-8 bg-zinc-400 rounded-lg flex items-center justify-center text-white font-bold">2</div>
-                <div class="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center text-zinc-600 font-bold">🥈</div>
-                <div class="flex-1">
-                  <p class="font-semibold text-zinc-900">Dilnoza Rahimova</p>
-                  <p class="text-sm text-zinc-500">@dilnoza_r</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-2xl font-bold text-zinc-600">18</p>
-                  <p class="text-xs text-zinc-400">referal</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 3rd place -->
-            <div class="p-4 bg-gradient-to-r from-orange-50 to-transparent">
-              <div class="flex items-center gap-4">
-                <div class="w-8 h-8 bg-orange-400 rounded-lg flex items-center justify-center text-white font-bold">3</div>
-                <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 font-bold">🥉</div>
-                <div class="flex-1">
-                  <p class="font-semibold text-zinc-900">Jasur Toshev</p>
-                  <p class="text-sm text-zinc-500">@jasur_t</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-2xl font-bold text-orange-600">12</p>
-                  <p class="text-xs text-zinc-400">referal</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 4th place -->
-            <div class="p-4">
-              <div class="flex items-center gap-4">
-                <div class="w-8 h-8 bg-zinc-200 rounded-lg flex items-center justify-center text-zinc-600 font-bold">4</div>
-                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-bold">N</div>
-                <div class="flex-1">
-                  <p class="font-semibold text-zinc-900">Nilufar Mo'minova</p>
-                  <p class="text-sm text-zinc-500">@nilufar_m</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-2xl font-bold text-zinc-600">9</p>
-                  <p class="text-xs text-zinc-400">referal</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 5th place -->
-            <div class="p-4">
-              <div class="flex items-center gap-4">
-                <div class="w-8 h-8 bg-zinc-200 rounded-lg flex items-center justify-center text-zinc-600 font-bold">5</div>
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-bold">A</div>
-                <div class="flex-1">
-                  <p class="font-semibold text-zinc-900">Aziz Karimov</p>
-                  <p class="text-sm text-zinc-500">@aziz_k</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-2xl font-bold text-zinc-600">7</p>
-                  <p class="text-xs text-zinc-400">referal</p>
-                </div>
-              </div>
+            <div class="p-8 text-center text-zinc-400">
+              <span class="material-symbols-outlined animate-pulse">hourglass_empty</span>
+              <p class="text-sm">Yuklanmoqda...</p>
             </div>
           </div>
         </div>
@@ -2798,6 +2723,7 @@ function showSubTab(parent, subtab) {
     if (subtab === 'chats') loadConversations();
     if (subtab === 'custdev') loadCustdev();
     if (subtab === 'feedback') loadFeedback();
+    if (subtab === 'referrals') loadReferrals();
   }
   if (parent === 'content') {
     if (subtab === 'lessons') loadLessons();
@@ -3037,32 +2963,48 @@ async function loadAudienceData() {
 
 // Load sales data
 async function loadSalesData() {
+  const tbody = document.getElementById('paymentsTableBody');
+  const revenueEl = document.getElementById('salesMonthlyRevenue');
+  const totalEl = document.getElementById('salesTotalPayments');
+  const pendingEl = document.getElementById('salesPending');
+
   try {
+    // Show loading state
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div></td></tr>';
+
     // Load payments
-    const payments = await fetch('/api/payments?limit=50', { headers: { Authorization: auth } }).then(r => r.json());
-    if (payments && payments.length) {
-      renderPaymentsTable(payments);
+    const res = await fetch('/api/payments?limit=50', { headers: { Authorization: auth } });
+    const payments = await res.json();
 
-      // Update sales stats
-      const completed = payments.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2').length;
-      const pending = payments.filter(p => p.status === 'pending' || p.state === 'pending' || p.state === '1').length;
-      const totalRevenue = payments.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2')
-        .reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
-
-      const revenueEl = document.getElementById('salesMonthlyRevenue');
-      const totalEl = document.getElementById('salesTotalPayments');
-      const pendingEl = document.getElementById('salesPending');
-
-      if (revenueEl) revenueEl.textContent = formatNumber(totalRevenue / 100);
-      if (totalEl) totalEl.textContent = payments.length;
-      if (pendingEl) pendingEl.textContent = pending;
+    // Handle API error
+    if (!res.ok || payments.error) {
+      throw new Error(payments.error || 'API error');
     }
+
+    const paymentsArr = Array.isArray(payments) ? payments : [];
+
+    // Update stats
+    const completed = paymentsArr.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed').length;
+    const pending = paymentsArr.filter(p => p.status === 'pending' || p.state === 'pending' || p.state === '1' || p.state === 'new').length;
+    const totalRevenue = paymentsArr.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed')
+      .reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
+
+    if (revenueEl) revenueEl.textContent = formatNumber(totalRevenue / 100);
+    if (totalEl) totalEl.textContent = paymentsArr.length;
+    if (pendingEl) pendingEl.textContent = pending;
+
+    // Render table
+    renderPaymentsTable(paymentsArr);
 
     // Load analytics for charts
     loadSalesAnalytics();
 
   } catch (e) {
     console.error('loadSalesData error:', e);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></td></tr>';
+    if (revenueEl) revenueEl.textContent = '0';
+    if (totalEl) totalEl.textContent = '0';
+    if (pendingEl) pendingEl.textContent = '0';
   }
 }
 
@@ -3938,19 +3880,34 @@ async function exportUsers() {
 // ============ BOT MESSAGES ============
 async function loadBotMessages() {
   try {
-    const messages = await fetch('/api/bot-messages', { headers: { Authorization: auth } }).then(r => r.json());
+    const res = await fetch('/api/bot-messages', { headers: { Authorization: auth } });
+    const messages = await res.json();
 
-    document.getElementById('botMsgCongrats').value = messages.post_lesson_congrats || '';
-    document.getElementById('botMsgSalesPitch').value = messages.sales_pitch || '';
-    document.getElementById('botMsgSoftAttack').value = messages.soft_attack || '';
-    document.getElementById('botMsgSalesDelay').value = messages.sales_delay || 1;
-    document.getElementById('botMsgSoftDelay').value = messages.soft_attack_delay || 24;
-    document.getElementById('botMsgSoftDisabled').checked = messages.soft_attack_disabled || false;
+    if (!res.ok || messages.error) {
+      console.error('Bot messages API error:', messages.error);
+      showToast('Bot xabarlarini yuklashda xato', 'error');
+      return;
+    }
+
+    const congratsEl = document.getElementById('botMsgCongrats');
+    const pitchEl = document.getElementById('botMsgSalesPitch');
+    const softEl = document.getElementById('botMsgSoftAttack');
+    const salesDelayEl = document.getElementById('botMsgSalesDelay');
+    const softDelayEl = document.getElementById('botMsgSoftDelay');
+    const softDisabledEl = document.getElementById('botMsgSoftDisabled');
+
+    if (congratsEl) congratsEl.value = messages.post_lesson_congrats || '';
+    if (pitchEl) pitchEl.value = messages.sales_pitch || '';
+    if (softEl) softEl.value = messages.soft_attack || '';
+    if (salesDelayEl) salesDelayEl.value = messages.sales_delay ?? 1;
+    if (softDelayEl) softDelayEl.value = messages.soft_attack_delay ?? 24;
+    if (softDisabledEl) softDisabledEl.checked = messages.soft_attack_disabled || false;
 
     // Also load subscription reminders
     loadSubReminders();
   } catch (e) {
     console.error('loadBotMessages error:', e);
+    showToast('Bot xabarlarini yuklashda xato', 'error');
   }
 }
 
@@ -4438,6 +4395,73 @@ function renderFeedbackList(feedback) {
   `}).join('');
 }
 
+// ============ REFERRALS FUNCTIONS ============
+async function loadReferrals() {
+  const totalEl = document.getElementById('refTotalReferrals');
+  const referrersEl = document.getElementById('refTotalReferrers');
+  const discountsEl = document.getElementById('refDiscountsUsed');
+  const leaderboardEl = document.getElementById('referralLeaderboard');
+
+  try {
+    const res = await fetch('/api/analytics/referrals', { headers: { Authorization: auth } });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'API error');
+    }
+
+    const stats = data.stats || {};
+    const leaderboard = data.leaderboard || [];
+
+    // Update stats
+    if (totalEl) totalEl.textContent = formatNumber(stats.total_referrals || 0);
+    if (referrersEl) referrersEl.textContent = formatNumber(stats.total_referrers || 0);
+    if (discountsEl) discountsEl.textContent = formatNumber(stats.discounts_used || 0);
+
+    // Render leaderboard
+    if (!leaderboardEl) return;
+
+    if (!leaderboard.length) {
+      leaderboardEl.innerHTML = '<div class="p-8 text-center text-zinc-400"><span class="material-symbols-outlined text-3xl mb-2">share</span><p>Hali referallar yo\'q</p></div>';
+      return;
+    }
+
+    const badges = [
+      { bg: 'bg-yellow-400', textBg: 'bg-yellow-100', textColor: 'text-yellow-600', rowBg: 'bg-gradient-to-r from-yellow-50 to-transparent', icon: '👑' },
+      { bg: 'bg-zinc-400', textBg: 'bg-zinc-100', textColor: 'text-zinc-600', rowBg: 'bg-gradient-to-r from-zinc-100 to-transparent', icon: '🥈' },
+      { bg: 'bg-orange-400', textBg: 'bg-orange-100', textColor: 'text-orange-600', rowBg: 'bg-gradient-to-r from-orange-50 to-transparent', icon: '🥉' }
+    ];
+    const defaultBadge = { bg: 'bg-zinc-200', textBg: 'bg-purple-100', textColor: 'text-zinc-600', rowBg: '', icon: '' };
+
+    leaderboardEl.innerHTML = leaderboard.map((r, i) => {
+      const badge = i < 3 ? badges[i] : defaultBadge;
+      const displayName = r.full_name || 'Foydalanuvchi';
+      const initial = displayName[0].toUpperCase();
+      return `
+      <div class="p-4 ${badge.rowBg} hover:bg-zinc-50 cursor-pointer" onclick="openUserModal('${r.telegram_id}')">
+        <div class="flex items-center gap-4">
+          <div class="w-8 h-8 ${badge.bg} rounded-lg flex items-center justify-center text-white font-bold">${i + 1}</div>
+          <div class="w-12 h-12 ${badge.textBg} rounded-xl flex items-center justify-center ${badge.textColor} font-bold">${badge.icon || initial}</div>
+          <div class="flex-1">
+            <p class="font-semibold text-zinc-900">${escapeHtml(displayName)}</p>
+            <p class="text-sm text-zinc-500">${r.username ? '@' + r.username : 'ID: ' + r.telegram_id}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-bold ${i < 3 ? badge.textColor : 'text-zinc-600'}">${r.referral_count}</p>
+            <p class="text-xs text-zinc-400">referal</p>
+          </div>
+        </div>
+      </div>
+    `}).join('');
+  } catch (e) {
+    console.error('loadReferrals error:', e);
+    if (leaderboardEl) leaderboardEl.innerHTML = '<div class="p-8 text-center text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
+    if (totalEl) totalEl.textContent = '0';
+    if (referrersEl) referrersEl.textContent = '0';
+    if (discountsEl) discountsEl.textContent = '0';
+  }
+}
+
 // ============ LESSONS FUNCTIONS ============
 async function loadLessons() {
   try {
@@ -4794,8 +4818,9 @@ async function loadTests() {
       </div>
     `).join('');
 
-    // Load stats
+    // Load stats and submissions
     loadTestStats();
+    loadTestSubmissions();
 
   } catch (e) {
     console.error('loadTests error:', e);
@@ -4811,6 +4836,47 @@ async function loadTestStats() {
     document.getElementById('testsSubmittedCount').textContent = stats.totalSubmissions || 0;
   } catch (e) {
     console.error('loadTestStats error:', e);
+  }
+}
+
+async function loadTestSubmissions() {
+  const container = document.getElementById('testSubmissions');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/tests/submissions?limit=20', { headers: { Authorization: auth } });
+    const submissions = await res.json();
+
+    if (!res.ok || submissions.error) {
+      throw new Error(submissions.error || 'API error');
+    }
+
+    if (!Array.isArray(submissions) || submissions.length === 0) {
+      container.innerHTML = '<div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">quiz</span><p class="text-sm">Hali topshiriqlar yo\'q</p></div>';
+      return;
+    }
+
+    container.innerHTML = submissions.map(s => {
+      const displayName = s.full_name || 'Foydalanuvchi';
+      const isCorrect = s.is_correct;
+      return `
+      <div class="p-3 flex items-center gap-3 hover:bg-zinc-50 cursor-pointer" onclick="openUserModal('${s.telegram_id}')">
+        <div class="w-8 h-8 ${isCorrect ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-sm ${isCorrect ? 'text-green-600' : 'text-red-500'}">${isCorrect ? 'check_circle' : 'cancel'}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-zinc-900 text-sm truncate">${escapeHtml(displayName)}</p>
+          <p class="text-xs text-zinc-400">${s.lesson_number}-dars, ${s.question_order}-savol</p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs ${isCorrect ? 'text-green-600' : 'text-red-500'}">${s.user_answer?.toUpperCase() || '-'}</span>
+          <p class="text-xs text-zinc-400">${formatTimeAgo(s.answered_at)}</p>
+        </div>
+      </div>
+    `}).join('');
+  } catch (e) {
+    console.error('loadTestSubmissions error:', e);
+    container.innerHTML = '<div class="p-4 text-center text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></div>';
   }
 }
 
@@ -4913,34 +4979,49 @@ async function loadCustdev() {
 
   try {
     // Load questions
-    const questions = await fetch('/api/custdev', { headers: { Authorization: auth } }).then(r => r.json());
-    allCustdevQuestions = questions || [];
+    const res = await fetch('/api/custdev', { headers: { Authorization: auth } });
+    const questions = await res.json();
+
+    // Handle error response
+    if (!res.ok || questions.error) {
+      throw new Error(questions.error || 'API error');
+    }
+
+    allCustdevQuestions = Array.isArray(questions) ? questions : [];
 
     if (!allCustdevQuestions.length) {
-      listEl.innerHTML = '<div class="text-center py-8 text-zinc-400"><span class="material-symbols-outlined text-3xl mb-2">help_outline</span><p>CustDev savollari yo\'q</p></div>';
+      listEl.innerHTML = '<div class="text-center py-8 text-zinc-400"><span class="material-symbols-outlined text-3xl mb-2">help_outline</span><p>CustDev savollari yo\'q</p><button onclick="openCustdevModal()" class="mt-2 btn btn-primary btn-sm">+ Savol qo\'shish</button></div>';
     } else {
-      listEl.innerHTML = allCustdevQuestions.map(q => `
-        <div class="p-4 bg-zinc-50 rounded-2xl">
+      listEl.innerHTML = allCustdevQuestions.map(q => {
+        // Parse options safely
+        let optionsArray = [];
+        if (q.options) {
+          try {
+            optionsArray = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+          } catch (e) { optionsArray = []; }
+        }
+        return `
+        <div class="p-4 bg-zinc-50 rounded-2xl hover:bg-zinc-100 transition-all cursor-pointer" onclick="editCustdev(${q.id})">
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-2">
-                <span class="badge badge-info">${q.after_lesson}-darsdan keyin</span>
+                <span class="badge badge-info">${q.after_lesson || 1}-darsdan keyin</span>
                 <span class="badge ${q.question_type === 'buttons' ? 'badge-success' : 'badge-warning'}">${q.question_type === 'buttons' ? 'Tugmalar' : 'Matn'}</span>
               </div>
-              <p class="font-medium text-zinc-900 mb-1">${escapeHtml(q.question_text)}</p>
-              ${q.options ? `<p class="text-sm text-zinc-500">${JSON.parse(q.options).join(', ')}</p>` : ''}
+              <p class="font-medium text-zinc-900 mb-1">${escapeHtml(q.question_text || '')}</p>
+              ${optionsArray.length ? `<p class="text-sm text-zinc-500">${optionsArray.join(', ')}</p>` : ''}
             </div>
             <div class="flex items-center gap-1">
-              <button onclick="editCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-purple-600">
+              <button onclick="event.stopPropagation(); editCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-purple-600">
                 <span class="material-symbols-outlined text-lg">edit</span>
               </button>
-              <button onclick="deleteCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-red-500">
+              <button onclick="event.stopPropagation(); deleteCustdev(${q.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-400 hover:text-red-500">
                 <span class="material-symbols-outlined text-lg">delete</span>
               </button>
             </div>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     // Load answers

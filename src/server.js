@@ -700,6 +700,18 @@ app.get('/api/tests/count', authMiddleware, async (req, res) => {
   }
 });
 
+// Recent test submissions
+app.get('/api/tests/submissions', authMiddleware, async (req, res) => {
+  try {
+    const { getRecentTestSubmissions } = await import('./database.js');
+    const limit = parseInt(req.query.limit) || 20;
+    const submissions = await getRecentTestSubmissions(limit);
+    res.json(submissions);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/custdev', authMiddleware, async (req, res) => {
   try {
     const { getAllCustDevQuestions } = await import('./database.js');
