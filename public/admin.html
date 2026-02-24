@@ -2963,35 +2963,48 @@ async function loadAudienceData() {
 
 // Load sales data
 async function loadSalesData() {
+  console.log('loadSalesData started');
   const tbody = document.getElementById('paymentsTableBody');
   const revenueEl = document.getElementById('salesMonthlyRevenue');
   const totalEl = document.getElementById('salesTotalPayments');
   const pendingEl = document.getElementById('salesPending');
+  const avgEl = document.querySelector('#tab-sales .stat-card:nth-child(3) .text-2xl');
 
   try {
     // Show loading state
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div></td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8"><div class="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div><p class="text-sm text-zinc-400 mt-2">Yuklanmoqda...</p></td></tr>';
 
     // Load payments
-    const res = await fetch('/api/payments?limit=50', { headers: { Authorization: auth } });
+    console.log('Fetching payments...');
+    const res = await fetch('/api/payments', { headers: { Authorization: auth } });
+    console.log('Response status:', res.status);
     const payments = await res.json();
+    console.log('Payments received:', payments?.length || 0);
 
     // Handle API error
     if (!res.ok || payments.error) {
-      throw new Error(payments.error || 'API error');
+      throw new Error(payments.error || 'API xatosi: ' + res.status);
     }
 
     const paymentsArr = Array.isArray(payments) ? payments : [];
 
     // Update stats
-    const completed = paymentsArr.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed').length;
-    const pending = paymentsArr.filter(p => p.status === 'pending' || p.state === 'pending' || p.state === '1' || p.state === 'new').length;
-    const totalRevenue = paymentsArr.filter(p => p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed')
-      .reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
+    const completedPayments = paymentsArr.filter(p =>
+      p.status === 'completed' || p.state === 'completed' || p.state === '2' || p.state === 'performed'
+    );
+    const pendingPayments = paymentsArr.filter(p =>
+      p.status === 'pending' || p.state === 'pending' || p.state === '1' || p.state === 'new' || p.state === 'created'
+    );
+
+    const totalRevenue = completedPayments.reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
+    const avgPayment = completedPayments.length > 0 ? totalRevenue / completedPayments.length : 0;
+
+    console.log('Stats:', { total: paymentsArr.length, completed: completedPayments.length, pending: pendingPayments.length, revenue: totalRevenue });
 
     if (revenueEl) revenueEl.textContent = formatNumber(totalRevenue / 100);
     if (totalEl) totalEl.textContent = paymentsArr.length;
-    if (pendingEl) pendingEl.textContent = pending;
+    if (pendingEl) pendingEl.textContent = pendingPayments.length;
+    if (avgEl) avgEl.textContent = formatNumber(avgPayment / 100);
 
     // Render table
     renderPaymentsTable(paymentsArr);
@@ -3001,7 +3014,7 @@ async function loadSalesData() {
 
   } catch (e) {
     console.error('loadSalesData error:', e);
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Yuklashda xato</p></td></tr>';
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-400"><span class="material-symbols-outlined text-3xl">error</span><p class="text-sm mt-2">Yuklashda xato: ${escapeHtml(e.message)}</p></td></tr>`;
     if (revenueEl) revenueEl.textContent = '0';
     if (totalEl) totalEl.textContent = '0';
     if (pendingEl) pendingEl.textContent = '0';
