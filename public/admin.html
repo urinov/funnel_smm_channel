@@ -2683,6 +2683,7 @@ function showTab(tab) {
 
 // Show sub tab
 function showSubTab(parent, subtab) {
+  console.log('showSubTab called:', parent, subtab);
   currentSubtabs[parent] = subtab;
 
   // Determine subtab container id
@@ -2702,20 +2703,24 @@ function showSubTab(parent, subtab) {
     });
   }
 
-  // Show/hide subtab content based on parent type
+  // Show/hide subtab content - simplified approach
   const prefix = parent + '-';
-  const allSubtabs = document.querySelectorAll(`[id^="${prefix}"]`);
-  allSubtabs.forEach(el => {
-    // Check if it's a subtab content (not something else like "audience-subtabs")
-    if (el.classList.contains(parent + '-subtab') ||
-        ['users', 'chats', 'custdev', 'feedback', 'referrals', 'lessons', 'tests', 'progrev', 'broadcast', 'bot-messages', 'payments', 'analytics', 'ai-agent', 'promo'].some(s => el.id === prefix + s)) {
-      el.classList.add('hidden');
-    }
+
+  // Hide all subtabs of this parent
+  document.querySelectorAll('.' + parent + '-subtab').forEach(el => {
+    el.classList.add('hidden');
+    el.style.display = 'none';
   });
 
+  // Show target subtab
   const targetEl = document.getElementById(prefix + subtab);
+  console.log('Target element:', prefix + subtab, targetEl);
   if (targetEl) {
     targetEl.classList.remove('hidden');
+    targetEl.style.display = 'block';
+    console.log('Subtab shown:', targetEl.id);
+  } else {
+    console.error('Subtab not found:', prefix + subtab);
   }
 
   // Load data for subtabs
