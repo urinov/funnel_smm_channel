@@ -2494,6 +2494,19 @@ function showSubTab(parent, subtab) {
     targetEl.classList.remove('hidden');
   }
 
+  // Load data for subtabs
+  if (parent === 'audience') {
+    if (subtab === 'chats') loadConversations();
+    if (subtab === 'feedback') loadFeedback();
+  }
+  if (parent === 'content') {
+    if (subtab === 'lessons') loadLessons();
+  }
+  if (parent === 'sales') {
+    if (subtab === 'promo') loadPromoCodes();
+    if (subtab === 'analytics') setTimeout(initRevenueChart, 100);
+  }
+
   // Initialize charts if needed
   if (parent === 'sales' && subtab === 'analytics') {
     setTimeout(initRevenueChart, 100);
@@ -2965,17 +2978,32 @@ async function sendModalBroadcast() {
 // User modal
 async function openUserModal(userId) {
   currentUserId = userId;
-  const user = allUsers.find(u => String(u.telegram_id) === String(userId));
+
+  // Try to find in local array first
+  let user = allUsers.find(u => String(u.telegram_id) === String(userId));
+
+  // If not found, fetch from API
+  if (!user) {
+    try {
+      user = await fetch(`/api/users/${userId}`, { headers: { Authorization: auth } }).then(r => r.json());
+    } catch (e) {
+      console.error('Error fetching user:', e);
+    }
+  }
 
   if (user) {
-    document.getElementById('userModalAvatar').textContent = (user.first_name || 'U')[0].toUpperCase();
-    document.getElementById('userModalName').textContent = `${user.first_name || 'User'} ${user.last_name || ''}`;
-    document.getElementById('userModalUsername').textContent = user.username ? '@' + user.username : user.telegram_id;
+    const name = user.full_name || `${user.first_name || 'User'} ${user.last_name || ''}`.trim();
+    document.getElementById('userModalAvatar').textContent = name[0].toUpperCase();
+    document.getElementById('userModalName').textContent = name;
+    document.getElementById('userModalUsername').textContent = user.username ? '@' + user.username : String(user.telegram_id);
     document.getElementById('userModalStatus').textContent = user.is_paid ? 'Pullik' : 'Bepul';
     document.getElementById('userModalStatus').className = 'badge ' + (user.is_paid ? 'badge-success' : 'badge-warning');
     document.getElementById('userModalLesson').textContent = user.current_lesson || 0;
+    document.getElementById('userModalTests').textContent = user.tests_passed || 0;
+    document.getElementById('userModalReferrals').textContent = user.referral_count || 0;
     document.getElementById('userModalTelegramId').textContent = user.telegram_id;
     document.getElementById('userModalCreated').textContent = formatDate(user.created_at);
+    document.getElementById('userModalLastActive').textContent = user.last_activity ? formatTimeAgo(user.last_activity) : 'Noma\'lum';
   }
 
   document.getElementById('userModal').classList.add('show');
@@ -3007,9 +3035,14 @@ async function grantPaidAccess() {
 }
 
 function sendMessageToUser() {
+  const userId = currentUserId;
   closeUserModal();
   showTab('audience');
   showSubTab('audience', 'chats');
+  // Select the user's chat after a short delay
+  if (userId) {
+    setTimeout(() => selectChat(userId), 300);
+  }
 }
 
 // Notifications
@@ -3082,23 +3115,153 @@ async function createPromoCode() {
   showToast('Promo kod yaratildi!', 'success');
 }
 
-// Chat functions
-function selectChat(chatId) {
-  // TODO: implement chat selection
+// ============ CHAT FUNCTIONS ============
+let allConversations = [];
+let currentChatUserId = null;
+
+// Load conversations list
+async function loadConversations() {
+  try {
+    const convos = await fetch('/api/conversations?limit=100', { headers: { Authorization: auth } }).then(r => r.json());
+    allConversations = convos || [];
+    renderConversationsList();
+  } catch (e) {
+    console.error('loadConversations error:', e);
+  }
 }
 
-function sendAdminMessage() {
+// Render conversations list
+function renderConversationsList() {
+  const listEl = document.getElementById('chatsList');
+  if (!listEl) return;
+
+  if (!allConversations.length) {
+    listEl.innerHTML = '<div class="p-4 text-center text-zinc-400">Suhbatlar yo\'q</div>';
+    return;
+  }
+
+  const colors = ['purple', 'blue', 'green', 'orange', 'pink'];
+  listEl.innerHTML = allConversations.map((c, i) => {
+    const color = colors[i % colors.length];
+    const isActive = c.telegram_id === currentChatUserId;
+    const name = c.full_name || c.first_name || 'User';
+    const initial = name[0].toUpperCase();
+    const timeAgo = formatTimeAgo(c.last_message_at || c.created_at);
+
+    return `
+    <div class="p-4 hover:bg-zinc-50 transition-all cursor-pointer ${isActive ? 'bg-purple-50 border-l-4 border-purple-500' : ''}"
+         onclick="selectChat(${c.telegram_id})">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-${color}-100 rounded-xl flex items-center justify-center text-${color}-600 font-semibold">${initial}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <p class="font-medium text-zinc-900 truncate">${escapeHtml(name)}</p>
+            <span class="text-xs text-zinc-400">${timeAgo}</span>
+          </div>
+          <p class="text-sm text-zinc-500 truncate">${escapeHtml(c.last_message || 'Yangi suhbat')}</p>
+        </div>
+        ${c.unread_count ? `<div class="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">${c.unread_count}</div>` : ''}
+      </div>
+    </div>
+  `}).join('');
+}
+
+// Select a chat
+async function selectChat(telegramId) {
+  currentChatUserId = telegramId;
+  renderConversationsList(); // Update active state
+
+  // Update header
+  const user = allConversations.find(c => c.telegram_id === telegramId) || allUsers.find(u => u.telegram_id === telegramId);
+  if (user) {
+    const headerEl = document.querySelector('#audience-chats .lg\\:col-span-2 .p-4.border-b');
+    if (headerEl) {
+      const name = user.full_name || user.first_name || 'User';
+      headerEl.innerHTML = `
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold">${name[0].toUpperCase()}</div>
+        <div class="flex-1">
+          <p class="font-medium text-zinc-900">${escapeHtml(name)}</p>
+          <p class="text-sm text-zinc-500">${user.username ? '@' + user.username : telegramId}</p>
+        </div>
+        <button onclick="openUserModal('${telegramId}')" class="btn btn-secondary text-sm">
+          <span class="material-symbols-outlined text-lg">person</span>
+          Profil
+        </button>
+      `;
+    }
+  }
+
+  // Load messages
+  await loadChatMessages(telegramId);
+}
+
+// Load chat messages
+async function loadChatMessages(telegramId) {
+  const messagesEl = document.getElementById('chatMessages');
+  if (!messagesEl) return;
+
+  messagesEl.innerHTML = '<div class="flex justify-center py-8"><div class="skeleton w-32 h-4"></div></div>';
+
+  try {
+    const messages = await fetch(`/api/conversations/${telegramId}?limit=100`, { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (!messages || !messages.length) {
+      messagesEl.innerHTML = '<div class="text-center py-8 text-zinc-400">Xabarlar yo\'q</div>';
+      return;
+    }
+
+    messagesEl.innerHTML = messages.map(m => {
+      const isOutgoing = m.direction === 'outgoing' || m.is_bot;
+      const time = new Date(m.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+
+      if (isOutgoing) {
+        return `
+        <div class="flex gap-3 justify-end">
+          <div class="bg-purple-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-[70%]">
+            <p>${escapeHtml(m.text || m.message || '')}</p>
+            <div class="flex items-center justify-end gap-1 mt-1">
+              <span class="text-xs text-purple-200">${time}</span>
+              <span class="material-symbols-outlined text-xs text-purple-200">done_all</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white shrink-0">
+            <span class="material-symbols-outlined text-sm">${m.is_ai ? 'smart_toy' : 'person'}</span>
+          </div>
+        </div>`;
+      } else {
+        return `
+        <div class="flex gap-3">
+          <div class="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-600 font-semibold text-sm shrink-0">U</div>
+          <div class="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-[70%]">
+            <p class="text-zinc-900">${escapeHtml(m.text || m.message || '')}</p>
+            <span class="text-xs text-zinc-400 mt-1 block">${time}</span>
+          </div>
+        </div>`;
+      }
+    }).join('');
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  } catch (e) {
+    console.error('loadChatMessages error:', e);
+    messagesEl.innerHTML = '<div class="text-center py-8 text-red-400">Xabarlarni yuklashda xato</div>';
+  }
+}
+
+// Send admin message
+async function sendAdminMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || !currentChatUserId) return;
 
+  // Add message to UI immediately
   const messagesEl = document.getElementById('chatMessages');
+  const time = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
   messagesEl.innerHTML += `
     <div class="flex gap-3 justify-end">
       <div class="bg-green-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-[70%]">
         <p>${escapeHtml(text)}</p>
         <div class="flex items-center justify-end gap-1 mt-1">
-          <span class="text-xs text-green-200">${new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>
+          <span class="text-xs text-green-200">${time}</span>
         </div>
       </div>
       <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white shrink-0">
@@ -3108,6 +3271,251 @@ function sendAdminMessage() {
   `;
   input.value = '';
   messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  // Send via API
+  try {
+    await fetch(`/api/conversations/${currentChatUserId}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify({ text })
+    });
+  } catch (e) {
+    showToast('Xabar yuborilmadi', 'error');
+  }
+}
+
+// ============ FEEDBACK FUNCTIONS ============
+async function loadFeedback() {
+  try {
+    const [feedback, stats] = await Promise.all([
+      fetch('/api/feedback', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/feedback/stats', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    // Update stats
+    const total = (stats.positive || 0) + (stats.neutral || 0) + (stats.negative || 0);
+    if (total > 0) {
+      const posEl = document.querySelector('#audience-feedback .stat-card:nth-child(1) .text-2xl');
+      const neuEl = document.querySelector('#audience-feedback .stat-card:nth-child(2) .text-2xl');
+      const negEl = document.querySelector('#audience-feedback .stat-card:nth-child(3) .text-2xl');
+
+      if (posEl) posEl.textContent = Math.round((stats.positive / total) * 100) + '%';
+      if (neuEl) neuEl.textContent = Math.round((stats.neutral / total) * 100) + '%';
+      if (negEl) negEl.textContent = Math.round((stats.negative / total) * 100) + '%';
+    }
+
+    // Render feedback list
+    renderFeedbackList(feedback);
+  } catch (e) {
+    console.error('loadFeedback error:', e);
+  }
+}
+
+function renderFeedbackList(feedback) {
+  const listEl = document.getElementById('feedbackList');
+  if (!listEl || !feedback) return;
+
+  if (!feedback.length) {
+    listEl.innerHTML = '<div class="p-4 text-center text-zinc-400">Feedbacklar yo\'q</div>';
+    return;
+  }
+
+  const typeConfig = {
+    positive: { icon: 'thumb_up', color: 'green', badge: 'badge-success', text: 'Ijobiy' },
+    neutral: { icon: 'thumbs_up_down', color: 'yellow', badge: 'badge-warning', text: 'Neytral' },
+    negative: { icon: 'thumb_down', color: 'red', badge: '', text: 'Salbiy', style: 'background:#fee2e2;color:#dc2626' }
+  };
+
+  listEl.innerHTML = feedback.slice(0, 20).map(f => {
+    const type = typeConfig[f.feedback_type] || typeConfig.neutral;
+    return `
+    <div class="p-4 hover:bg-zinc-50 transition-all">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-${type.color}-100 rounded-xl flex items-center justify-center text-${type.color}-600">
+          <span class="material-symbols-outlined">${type.icon}</span>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <p class="font-medium text-zinc-900">${escapeHtml(f.full_name || 'User')}</p>
+            <span class="text-xs text-zinc-400">• ${formatTimeAgo(f.created_at)}</span>
+          </div>
+          <p class="text-zinc-600">"${escapeHtml(f.comment || f.message || 'Fikr bildirilmagan')}"</p>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="badge ${type.badge}" ${type.style ? 'style="' + type.style + '"' : ''}>${type.text}</span>
+            <span class="text-xs text-zinc-400">${f.lesson_number ? f.lesson_number + '-dars haqida' : ''}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `}).join('');
+}
+
+// ============ LESSONS FUNCTIONS ============
+async function loadLessons() {
+  try {
+    const lessons = await fetch('/api/lessons', { headers: { Authorization: auth } }).then(r => r.json());
+    renderLessonsList(lessons);
+  } catch (e) {
+    console.error('loadLessons error:', e);
+  }
+}
+
+function renderLessonsList(lessons) {
+  const listEl = document.getElementById('lessonsList');
+  if (!listEl) return;
+
+  if (!lessons || !lessons.length) {
+    listEl.innerHTML = '<div class="p-4 text-center text-zinc-400">Darslar yo\'q</div>';
+    return;
+  }
+
+  const colors = ['purple', 'blue', 'green', 'orange', 'pink'];
+  listEl.innerHTML = lessons.map((l, i) => {
+    const color = colors[i % colors.length];
+    return `
+    <div class="p-4 flex items-center gap-4 hover:bg-zinc-50 transition-all">
+      <div class="w-16 h-16 bg-gradient-to-br from-${color}-500 to-${color}-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+        ${l.lesson_number || i + 1}
+      </div>
+      <div class="flex-1">
+        <h4 class="font-semibold text-zinc-900">${escapeHtml(l.title || 'Dars ' + (i + 1))}</h4>
+        <p class="text-sm text-zinc-500">${escapeHtml(l.description || '')}</p>
+        <div class="flex items-center gap-4 mt-2">
+          <span class="text-xs text-zinc-400 flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">visibility</span> ${l.views || 0} ko'rish
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="editLesson(${l.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-purple-600">
+          <span class="material-symbols-outlined">edit</span>
+        </button>
+        <button onclick="deleteLesson(${l.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-red-500">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    </div>
+  `}).join('');
+}
+
+async function editLesson(lessonId) {
+  showToast('Darsni tahrirlash modal tez orada...');
+  // TODO: Open edit modal
+}
+
+async function deleteLesson(lessonId) {
+  if (!confirm('Darsni o\'chirmoqchimisiz?')) return;
+  try {
+    await fetch(`/api/lessons/${lessonId}`, { method: 'DELETE', headers: { Authorization: auth } });
+    showToast('Dars o\'chirildi', 'success');
+    loadLessons();
+  } catch (e) {
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+// ============ PROMO CODES FUNCTIONS ============
+async function loadPromoCodes() {
+  try {
+    const codes = await fetch('/api/promo-codes', { headers: { Authorization: auth } }).then(r => r.json());
+    renderPromoCodesList(codes);
+  } catch (e) {
+    console.error('loadPromoCodes error:', e);
+  }
+}
+
+function renderPromoCodesList(codes) {
+  const listEl = document.getElementById('promoCodesList');
+  if (!listEl || !codes) return;
+
+  if (!codes.length) {
+    listEl.innerHTML = '<div class="p-4 text-center text-zinc-400">Promo kodlar yo\'q</div>';
+    return;
+  }
+
+  listEl.innerHTML = codes.map(p => {
+    const isActive = p.is_active && (!p.valid_until || new Date(p.valid_until) > new Date());
+    const daysLeft = p.valid_until ? Math.ceil((new Date(p.valid_until) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+
+    return `
+    <div class="p-4 flex items-center gap-4 hover:bg-zinc-50 transition-all ${!isActive ? 'opacity-50' : ''}">
+      <div class="w-12 h-12 bg-${isActive ? 'green' : 'zinc'}-100 rounded-xl flex items-center justify-center">
+        <span class="material-symbols-outlined text-${isActive ? 'green' : 'zinc'}-600">local_offer</span>
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center gap-2">
+          <span class="font-mono font-bold text-zinc-900">${escapeHtml(p.code)}</span>
+          <span class="badge ${isActive ? 'badge-success' : ''}" ${!isActive ? 'style="background:#fee2e2;color:#dc2626"' : ''}>${isActive ? 'Faol' : 'Tugagan'}</span>
+        </div>
+        <p class="text-sm text-zinc-500">${p.discount_percent}% chegirma • ${p.current_uses || 0}/${p.max_uses || '∞'} foydalanildi</p>
+      </div>
+      <div class="text-right">
+        ${daysLeft !== null ? `<p class="text-sm font-medium text-zinc-${daysLeft > 0 ? '900' : '400'}">${daysLeft > 0 ? daysLeft + ' kun qoldi' : 'Tugagan'}</p>` : ''}
+        ${p.valid_until ? `<p class="text-xs text-zinc-400">${formatDate(p.valid_until)} gacha</p>` : ''}
+      </div>
+      <button onclick="deletePromoCode(${p.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-red-500">
+        <span class="material-symbols-outlined">delete</span>
+      </button>
+    </div>
+  `}).join('');
+}
+
+async function createPromoCode() {
+  const code = document.getElementById('promoCode').value.trim().toUpperCase();
+  const discount = parseInt(document.getElementById('promoDiscount').value);
+  const limit = document.getElementById('promoLimit').value;
+  const expiry = document.getElementById('promoExpiry').value;
+
+  if (!code || !discount) {
+    showToast('Kod va chegirmani kiriting', 'error');
+    return;
+  }
+
+  try {
+    await fetch('/api/promo-codes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify({
+        code,
+        discount_percent: discount,
+        max_uses: limit ? parseInt(limit) : null,
+        valid_until: expiry || null
+      })
+    });
+    showToast('Promo kod yaratildi!', 'success');
+    document.getElementById('promoCode').value = '';
+    document.getElementById('promoDiscount').value = '';
+    document.getElementById('promoLimit').value = '';
+    document.getElementById('promoExpiry').value = '';
+    loadPromoCodes();
+  } catch (e) {
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+async function deletePromoCode(id) {
+  if (!confirm('Promo kodni o\'chirmoqchimisiz?')) return;
+  try {
+    await fetch(`/api/promo-codes/${id}`, { method: 'DELETE', headers: { Authorization: auth } });
+    showToast('Promo kod o\'chirildi', 'success');
+    loadPromoCodes();
+  } catch (e) {
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+// ============ HELPER FUNCTIONS ============
+function formatTimeAgo(date) {
+  if (!date) return '';
+  const now = new Date();
+  const d = new Date(date);
+  const diff = Math.floor((now - d) / 1000);
+
+  if (diff < 60) return 'hozir';
+  if (diff < 3600) return Math.floor(diff / 60) + ' min';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' soat';
+  if (diff < 604800) return Math.floor(diff / 86400) + ' kun';
+  return formatDate(date);
 }
 
 // Broadcast from content tab
