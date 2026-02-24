@@ -1199,51 +1199,60 @@ app.put('/api/media/:id', authMiddleware, async (req, res) => {
 
 app.post('/api/broadcast', authMiddleware, async (req, res) => {
   try {
-    const { text, filters, photo, video, button_text, button_url } = req.body;
+    const { text, filters, photo, video, button_text, button_url, target, media, buttons } = req.body;
     const { getAllActiveUsers, getLessonsCount } = await import('./database.js');
     const { Markup } = await import('telegraf');
+
+    // Support new target parameter as alternative to filters
+    const effectiveFilters = filters || (target ? { filter: target } : null);
 
     let users = await getAllActiveUsers();
     const totalLessons = await getLessonsCount();
 
     // Apply filters
-    if (filters) {
+    if (effectiveFilters) {
       // Quick filter or status filter
-      if (filters.filter === 'paid' || filters.status === 'paid') {
+      if (effectiveFilters.filter === 'paid' || effectiveFilters.status === 'paid') {
         users = users.filter(u => u.is_paid);
-      } else if (filters.filter === 'free' || filters.status === 'free') {
+      } else if (effectiveFilters.filter === 'free' || effectiveFilters.status === 'free') {
         users = users.filter(u => !u.is_paid);
+      } else if (effectiveFilters.filter === 'active') {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        users = users.filter(u => u.last_activity && new Date(u.last_activity) > weekAgo);
+      } else if (effectiveFilters.filter === 'inactive') {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        users = users.filter(u => !u.last_activity || new Date(u.last_activity) <= weekAgo);
       }
       
       // Lesson filter
-      if (filters.lesson && filters.lesson !== 'all') {
-        if (filters.lesson === 'completed') {
+      if (effectiveFilters.lesson && effectiveFilters.lesson !== 'all') {
+        if (effectiveFilters.lesson === 'completed') {
           users = users.filter(u => (u.current_lesson || 0) >= totalLessons);
         } else {
-          const lessonNum = parseInt(filters.lesson);
+          const lessonNum = parseInt(effectiveFilters.lesson);
           users = users.filter(u => (u.current_lesson || 0) === lessonNum);
         }
       }
-      
+
       // CustDev filter
-      if (filters.custdev && filters.custdev !== 'all') {
-        if (filters.custdev === 'completed') {
+      if (effectiveFilters.custdev && effectiveFilters.custdev !== 'all') {
+        if (effectiveFilters.custdev === 'completed') {
           users = users.filter(u => u.age_group || u.occupation || u.main_problem);
-        } else if (filters.custdev === 'not') {
+        } else if (effectiveFilters.custdev === 'not') {
           users = users.filter(u => !u.age_group && !u.occupation && !u.main_problem);
         }
       }
-      
+
       // Date filter
-      if (filters.date && filters.date !== 'all') {
+      if (effectiveFilters.date && effectiveFilters.date !== 'all') {
         const now = new Date();
         users = users.filter(u => {
           const created = new Date(u.created_at);
           const diff = now - created;
-          if (filters.date === 'today') return created.toDateString() === now.toDateString();
-          if (filters.date === 'week') return diff < 7 * 24 * 60 * 60 * 1000;
-          if (filters.date === 'month') return diff < 30 * 24 * 60 * 60 * 1000;
-          if (filters.date === 'old') return diff > 30 * 24 * 60 * 60 * 1000;
+          if (effectiveFilters.date === 'today') return created.toDateString() === now.toDateString();
+          if (effectiveFilters.date === 'week') return diff < 7 * 24 * 60 * 60 * 1000;
+          if (effectiveFilters.date === 'month') return diff < 30 * 24 * 60 * 60 * 1000;
+          if (effectiveFilters.date === 'old') return diff > 30 * 24 * 60 * 60 * 1000;
           return true;
         });
       }
@@ -1252,11 +1261,22 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
     let sent = 0;
     let failed = 0;
 
-    // Build inline keyboard if button provided
+    // Build inline keyboard
     let keyboard = null;
-    if (button_text && button_url) {
+    // Support new buttons array format
+    if (buttons && buttons.length > 0) {
+      const buttonRows = buttons.map(b => [Markup.button.url(b.text, b.url)]);
+      keyboard = Markup.inlineKeyboard(buttonRows);
+    }
+    // Legacy single button format
+    else if (button_text && button_url) {
       keyboard = Markup.inlineKeyboard([[Markup.button.url(button_text, button_url)]]);
     }
+
+    // Determine media file
+    const mediaFile = media?.file_id || (media?.type === 'photo' ? photo : null) || photo;
+    const videoFile = media?.type === 'video' ? media.file_id : video;
+    const documentFile = media?.type === 'document' ? media.file_id : null;
 
     for (const user of users) {
       try {
@@ -1269,10 +1289,12 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
 
         const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
 
-        if (video) {
-          await bot.telegram.sendVideo(user.telegram_id, video, { caption: personalizedText, ...opts });
-        } else if (photo) {
-          await bot.telegram.sendPhoto(user.telegram_id, photo, { caption: personalizedText, ...opts });
+        if (videoFile) {
+          await bot.telegram.sendVideo(user.telegram_id, videoFile, { caption: personalizedText, ...opts });
+        } else if (documentFile) {
+          await bot.telegram.sendDocument(user.telegram_id, documentFile, { caption: personalizedText, ...opts });
+        } else if (mediaFile) {
+          await bot.telegram.sendPhoto(user.telegram_id, mediaFile, { caption: personalizedText, ...opts });
         } else {
           await bot.telegram.sendMessage(user.telegram_id, personalizedText, opts);
         }
@@ -1942,6 +1964,17 @@ app.get('/api/users/:telegramId/custdev', authMiddleware, async (req, res) => {
     const db = await import('./database.js');
     const answers = await db.getUserCustDevAnswers(parseInt(req.params.telegramId));
     res.json(answers);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get user's referrals (users they invited)
+app.get('/api/users/:telegramId/referrals', authMiddleware, async (req, res) => {
+  try {
+    const db = await import('./database.js');
+    const referrals = await db.getUserReferrals(parseInt(req.params.telegramId));
+    res.json(referrals);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -674,55 +674,75 @@
         <div class="bg-white rounded-3xl p-6 shadow-card">
           <div class="flex items-center justify-between mb-6">
             <h3 class="font-semibold text-zinc-900">Sotuv voronkasi</h3>
-            <span class="badge badge-info">Bu oy</span>
+            <span class="badge badge-info">Real-time</span>
           </div>
 
-          <div class="space-y-4" id="funnelStats">
+          <div class="space-y-3" id="funnelStats">
             <div>
-              <div class="flex justify-between mb-2">
+              <div class="flex justify-between mb-1">
                 <span class="text-sm text-zinc-600">Jami userlar</span>
                 <span class="font-semibold" id="funnelTotal">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-purple-500 rounded-full" id="funnelTotalBar" style="width: 100%"></div>
+                <div class="h-full bg-purple-500 rounded-full transition-all" id="funnelTotalBar" style="width: 100%"></div>
               </div>
             </div>
 
             <div>
-              <div class="flex justify-between mb-2">
-                <span class="text-sm text-zinc-600">Dars ko'rgan</span>
-                <span class="font-semibold" id="funnelLesson">-</span>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm text-zinc-600">1-dars</span>
+                <span class="font-semibold" id="funnelLesson1">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-blue-500 rounded-full" id="funnelLessonBar" style="width: 0%"></div>
+                <div class="h-full bg-blue-400 rounded-full transition-all" id="funnelLesson1Bar" style="width: 0%"></div>
               </div>
             </div>
 
             <div>
-              <div class="flex justify-between mb-2">
+              <div class="flex justify-between mb-1">
+                <span class="text-sm text-zinc-600">2-dars</span>
+                <span class="font-semibold" id="funnelLesson2">-</span>
+              </div>
+              <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 rounded-full transition-all" id="funnelLesson2Bar" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm text-zinc-600">3-dars</span>
+                <span class="font-semibold" id="funnelLesson3">-</span>
+              </div>
+              <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-600 rounded-full transition-all" id="funnelLesson3Bar" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-1">
                 <span class="text-sm text-zinc-600">Pitch ko'rgan</span>
                 <span class="font-semibold" id="funnelPitch">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-green-500 rounded-full" id="funnelPitchBar" style="width: 0%"></div>
+                <div class="h-full bg-green-500 rounded-full transition-all" id="funnelPitchBar" style="width: 0%"></div>
               </div>
             </div>
 
             <div>
-              <div class="flex justify-between mb-2">
+              <div class="flex justify-between mb-1">
                 <span class="text-sm text-zinc-600">To'lov qilgan</span>
                 <span class="font-semibold" id="funnelPaid">-</span>
               </div>
               <div class="h-3 bg-zinc-100 rounded-full overflow-hidden">
-                <div class="h-full bg-orange-500 rounded-full" id="funnelPaidBar" style="width: 0%"></div>
+                <div class="h-full bg-orange-500 rounded-full transition-all" id="funnelPaidBar" style="width: 0%"></div>
               </div>
             </div>
           </div>
 
-          <div class="mt-6 p-4 bg-zinc-50 rounded-2xl">
+          <div class="mt-4 p-3 bg-zinc-50 rounded-xl">
             <div class="flex items-center gap-2 text-sm">
               <span class="material-symbols-outlined text-orange-500 text-lg">lightbulb</span>
-              <span class="text-zinc-600">Eng katta yo'qotish: <strong>Dars → Pitch</strong> (80%)</span>
+              <span class="text-zinc-600" id="funnelInsight">Eng katta yo'qotish: <strong>yuklanmoqda...</strong></span>
             </div>
           </div>
         </div>
@@ -746,6 +766,7 @@
       <div class="flex gap-2 mb-6 overflow-x-auto pb-2" id="audience-subtabs">
         <button class="nav-pill active" data-audience-subtab="users" onclick="showSubTab('audience', 'users')">Userlar</button>
         <button class="nav-pill" data-audience-subtab="chats" onclick="showSubTab('audience', 'chats')">Suhbatlar</button>
+        <button class="nav-pill" data-audience-subtab="custdev" onclick="showSubTab('audience', 'custdev')">CustDev</button>
         <button class="nav-pill" data-audience-subtab="feedback" onclick="showSubTab('audience', 'feedback')">Feedback</button>
         <button class="nav-pill" data-audience-subtab="referrals" onclick="showSubTab('audience', 'referrals')">Referallar</button>
       </div>
@@ -869,8 +890,8 @@
         </div>
       </div>
 
-      <!-- Feedback subtab -->
-      <div id="audience-feedback" class="audience-subtab hidden">
+      <!-- CustDev subtab -->
+      <div id="audience-custdev" class="audience-subtab hidden">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- CustDev Questions Management -->
           <div class="bg-white rounded-3xl shadow-card overflow-hidden">
@@ -900,6 +921,58 @@
                 <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">chat</span>
                 <p>Javoblar yuklanmoqda...</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback subtab -->
+      <div id="audience-feedback" class="audience-subtab hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div class="stat-card">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-green-600">thumb_up</span>
+              </div>
+              <div>
+                <p class="text-2xl font-bold text-zinc-900" id="feedbackPositiveCount">0</p>
+                <p class="text-sm text-zinc-500">Ijobiy</p>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-yellow-600">thumbs_up_down</span>
+              </div>
+              <div>
+                <p class="text-2xl font-bold text-zinc-900" id="feedbackNeutralCount">0</p>
+                <p class="text-sm text-zinc-500">Neytral</p>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-red-600">thumb_down</span>
+              </div>
+              <div>
+                <p class="text-2xl font-bold text-zinc-900" id="feedbackNegativeCount">0</p>
+                <p class="text-sm text-zinc-500">Salbiy</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+          <div class="p-6 border-b border-zinc-100 flex items-center justify-between">
+            <h3 class="font-semibold text-zinc-900">Foydalanuvchi fikrlari</h3>
+            <span class="badge badge-info" id="feedbackTotalCount">0</span>
+          </div>
+          <div class="divide-y divide-zinc-100 max-h-[600px] overflow-y-auto" id="feedbackList">
+            <div class="p-4 text-center text-zinc-400">
+              <span class="material-symbols-outlined text-3xl mb-2 animate-pulse">rate_review</span>
+              <p>Feedbacklar yuklanmoqda...</p>
             </div>
           </div>
         </div>
@@ -1055,6 +1128,7 @@
         <button class="nav-pill" data-content-subtab="tests" onclick="showSubTab('content', 'tests')">Testlar</button>
         <button class="nav-pill" data-content-subtab="progrev" onclick="showSubTab('content', 'progrev')">Progrev</button>
         <button class="nav-pill" data-content-subtab="broadcast" onclick="showSubTab('content', 'broadcast')">Xabar yuborish</button>
+        <button class="nav-pill" data-content-subtab="bot-messages" onclick="showSubTab('content', 'bot-messages')">Bot xabarlari</button>
       </div>
 
       <!-- Lessons Subtab -->
@@ -1292,91 +1366,84 @@
                   <span class="material-symbols-outlined text-purple-600">auto_awesome</span>
                 </div>
                 <div>
-                  <p class="text-2xl font-bold">12</p>
-                  <p class="text-sm text-zinc-500">Faol progrev</p>
+                  <p class="text-2xl font-bold" id="progrevTotalSent">-</p>
+                  <p class="text-sm text-zinc-500">Jami yuborilgan</p>
                 </div>
               </div>
             </div>
             <div class="stat-card">
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
-                  <span class="material-symbols-outlined text-green-600">send</span>
+                  <span class="material-symbols-outlined text-green-600">visibility</span>
                 </div>
                 <div>
-                  <p class="text-2xl font-bold">847</p>
-                  <p class="text-sm text-zinc-500">Yuborilgan xabarlar</p>
+                  <p class="text-2xl font-bold" id="progrevWatched">-</p>
+                  <p class="text-sm text-zinc-500">Darsni ko'rgan</p>
                 </div>
               </div>
             </div>
             <div class="stat-card">
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
-                  <span class="material-symbols-outlined text-blue-600">mark_email_read</span>
+                  <span class="material-symbols-outlined text-blue-600">percent</span>
                 </div>
                 <div>
-                  <p class="text-2xl font-bold">62%</p>
-                  <p class="text-sm text-zinc-500">O'qilgan</p>
+                  <p class="text-2xl font-bold" id="progrevEfficiency">-</p>
+                  <p class="text-sm text-zinc-500">Samaradorlik</p>
                 </div>
               </div>
             </div>
+
+            <!-- Enable/Disable toggle -->
+            <div class="bg-white rounded-2xl p-4 shadow-card">
+              <label class="flex items-center justify-between cursor-pointer">
+                <span class="font-medium text-zinc-900">Progrev yoqilgan</span>
+                <input type="checkbox" id="progrevEnabled" onchange="toggleProgrev()" class="w-5 h-5 rounded text-purple-600">
+              </label>
+            </div>
           </div>
 
-          <!-- Progrev Timeline -->
+          <!-- Progrev Messages Editor -->
           <div class="lg:col-span-2 bg-white rounded-3xl shadow-card p-6">
-            <h3 class="font-semibold text-zinc-900 mb-6">Progrev ketma-ketligi</h3>
-            <div class="space-y-4" id="progrevTimeline">
-              <div class="flex gap-4">
-                <div class="flex flex-col items-center">
-                  <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-sm">check</span>
-                  </div>
-                  <div class="w-0.5 h-full bg-zinc-200 mt-2"></div>
-                </div>
-                <div class="flex-1 pb-6">
-                  <div class="bg-zinc-50 rounded-2xl p-4">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="font-medium text-zinc-900">1-kun: Xush kelibsiz!</span>
-                      <span class="badge badge-success">Faol</span>
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-semibold text-zinc-900">Progrev xabarlari</h3>
+              <button onclick="saveProgrevMessages()" class="btn btn-primary text-sm">
+                <span class="material-symbols-outlined">save</span>
+                Saqlash
+              </button>
+            </div>
+            <div class="space-y-4" id="progrevMessages">
+              <!-- Reminder 1 -->
+              <div class="border border-zinc-200 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <span class="material-symbols-outlined text-yellow-600 text-sm">notifications</span>
                     </div>
-                    <p class="text-sm text-zinc-500">Ro'yxatdan o'tgandan keyin avtomatik yuboriladi</p>
+                    <span class="font-medium text-zinc-900">1-eslatma (1 kun keyin)</span>
                   </div>
+                  <span class="badge badge-warning">Faol</span>
                 </div>
+                <textarea id="progrevReminder1" class="input min-h-[80px] text-sm" placeholder="Eslatma matni..."></textarea>
               </div>
 
-              <div class="flex gap-4">
-                <div class="flex flex-col items-center">
-                  <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-sm">check</span>
-                  </div>
-                  <div class="w-0.5 h-full bg-zinc-200 mt-2"></div>
-                </div>
-                <div class="flex-1 pb-6">
-                  <div class="bg-zinc-50 rounded-2xl p-4">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="font-medium text-zinc-900">3-kun: Darslarni ko'ring</span>
-                      <span class="badge badge-success">Faol</span>
+              <!-- Reminder 2 -->
+              <div class="border border-zinc-200 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <span class="material-symbols-outlined text-orange-600 text-sm">priority_high</span>
                     </div>
-                    <p class="text-sm text-zinc-500">Foydalanuvchi hali darslarni ko'rmagan bo'lsa</p>
+                    <span class="font-medium text-zinc-900">2-eslatma (3 kun keyin)</span>
                   </div>
+                  <span class="badge badge-warning">Faol</span>
                 </div>
+                <textarea id="progrevReminder2" class="input min-h-[80px] text-sm" placeholder="Eslatma matni..."></textarea>
               </div>
 
-              <div class="flex gap-4">
-                <div class="flex flex-col items-center">
-                  <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-sm">schedule</span>
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <div class="bg-purple-50 rounded-2xl p-4">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="font-medium text-zinc-900">7-kun: Maxsus taklif</span>
-                      <span class="badge badge-info">Rejalashtirilgan</span>
-                    </div>
-                    <p class="text-sm text-zinc-500">Chegirma yoki bonus taklif</p>
-                  </div>
-                </div>
-              </div>
+              <p class="text-xs text-zinc-400 mt-4">
+                Progrev xabarlari darsni ko'rmagan userlarga avtomatik yuboriladi.
+              </p>
             </div>
           </div>
         </div>
@@ -1403,29 +1470,61 @@
 
               <div>
                 <label class="block text-sm font-medium text-zinc-700 mb-2">Xabar matni</label>
-                <textarea class="input min-h-[200px]" id="broadcastText" placeholder="Xabar matnini yozing..."></textarea>
+                <textarea class="input min-h-[150px]" id="broadcastText" placeholder="Xabar matnini yozing..." oninput="updateBroadcastPreview()"></textarea>
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-zinc-700 mb-2">Media (ixtiyoriy)</label>
-                <div class="border-2 border-dashed border-zinc-200 rounded-2xl p-8 text-center hover:border-purple-400 transition-all cursor-pointer">
-                  <span class="material-symbols-outlined text-4xl text-zinc-400 mb-2">cloud_upload</span>
-                  <p class="text-sm text-zinc-500">Rasm yoki video yuklash</p>
+                <select class="input mb-2" id="broadcastMediaType">
+                  <option value="">Media yo'q</option>
+                  <option value="photo">Rasm</option>
+                  <option value="video">Video</option>
+                  <option value="document">Fayl</option>
+                </select>
+                <input type="text" class="input" id="broadcastFileId" placeholder="File ID yoki URL" style="display:none;">
+                <p class="text-xs text-zinc-400 mt-1">Telegram File ID yoki URL kiriting</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Tugmalar (ixtiyoriy)</label>
+                <div class="space-y-2" id="broadcastButtons">
+                  <div class="flex gap-2">
+                    <input type="text" class="input flex-1" placeholder="Tugma matni" id="broadcastBtnText1">
+                    <input type="text" class="input flex-1" placeholder="URL" id="broadcastBtnUrl1">
+                  </div>
                 </div>
+                <button onclick="addBroadcastButton()" class="text-sm text-purple-600 mt-2 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">add</span>
+                  Tugma qo'shish
+                </button>
               </div>
 
               <div class="flex gap-3 pt-4">
+                <button onclick="previewBroadcast()" class="btn btn-secondary flex-1">
+                  <span class="material-symbols-outlined">visibility</span>
+                  Preview
+                </button>
                 <button onclick="sendBroadcast()" class="btn btn-primary flex-1">
                   <span class="material-symbols-outlined">send</span>
                   Yuborish
                 </button>
-                <button class="btn btn-secondary">
-                  <span class="material-symbols-outlined">schedule</span>
-                  Rejalashtirish
-                </button>
               </div>
             </div>
           </div>
+
+          <!-- Preview Panel -->
+          <div class="space-y-6">
+            <div class="bg-white rounded-3xl shadow-card p-6">
+              <h3 class="font-semibold text-zinc-900 mb-4">Preview</h3>
+              <div class="bg-[#1a1a2e] rounded-2xl p-4">
+                <div class="bg-[#2d2d44] rounded-xl p-3" id="broadcastPreviewContent">
+                  <p class="text-white text-sm whitespace-pre-wrap">Xabar matni bu yerda ko'rinadi...</p>
+                </div>
+                <div class="mt-2 space-y-1" id="broadcastPreviewButtons">
+                  <!-- Preview buttons will appear here -->
+                </div>
+              </div>
+            </div>
 
           <!-- Broadcast History -->
           <div class="bg-white rounded-3xl shadow-card overflow-hidden">
@@ -1456,6 +1555,88 @@
                   <span>756 o'qidi (85%)</span>
                   <span>5 kun oldin</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bot Messages Subtab -->
+      <div id="content-bot-messages" class="content-subtab hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Sales Messages -->
+          <div class="bg-white rounded-3xl shadow-card p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-semibold text-zinc-900">Sotuv xabarlari</h3>
+              <button onclick="saveBotMessages()" class="btn btn-primary text-sm">
+                <span class="material-symbols-outlined">save</span>
+                Saqlash
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Dars tugallash tabriki</label>
+                <textarea id="botMsgCongrats" class="input min-h-[80px]" placeholder="Dars tugagandan keyin yuboriladi"></textarea>
+                <p class="text-xs text-zinc-400 mt-1">Barcha darslar tugagandan keyin yuboriladi</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Sales Pitch</label>
+                <textarea id="botMsgSalesPitch" class="input min-h-[120px]" placeholder="Sotuv taklifi matni"></textarea>
+                <p class="text-xs text-zinc-400 mt-1">Asosiy sotuv xabari</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Soft Attack (qayta taklif)</label>
+                <textarea id="botMsgSoftAttack" class="input min-h-[80px]" placeholder="Qo'shimcha qayta taklif"></textarea>
+                <p class="text-xs text-zinc-400 mt-1">Sales pitch dan keyin yuboriladi</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timing Settings -->
+          <div class="space-y-6">
+            <div class="bg-white rounded-3xl shadow-card p-6">
+              <h3 class="font-semibold text-zinc-900 mb-6">Vaqt sozlamalari</h3>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-zinc-700 mb-2">Sales Pitch kechikishi (soat)</label>
+                  <input type="number" id="botMsgSalesDelay" class="input" min="0" max="72" placeholder="1">
+                  <p class="text-xs text-zinc-400 mt-1">Dars tugagandan keyin necha soatdan so'ng</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-zinc-700 mb-2">Soft Attack kechikishi (soat)</label>
+                  <input type="number" id="botMsgSoftDelay" class="input" min="0" max="72" placeholder="24">
+                  <p class="text-xs text-zinc-400 mt-1">Sales pitch dan keyin necha soatdan so'ng</p>
+                </div>
+
+                <div>
+                  <label class="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
+                    <div>
+                      <span class="font-medium text-zinc-900">Soft Attack o'chirish</span>
+                      <p class="text-xs text-zinc-500">Qayta taklif yuborilmasin</p>
+                    </div>
+                    <input type="checkbox" id="botMsgSoftDisabled" class="w-5 h-5 rounded text-purple-600">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Box -->
+            <div class="bg-white rounded-3xl shadow-card p-6">
+              <h3 class="font-semibold text-zinc-900 mb-4">Preview</h3>
+              <div class="bg-[#1a1a2e] rounded-2xl p-4 max-h-[200px] overflow-y-auto">
+                <div class="bg-[#2d2d44] rounded-xl p-3">
+                  <p class="text-white text-sm whitespace-pre-wrap" id="botMsgPreview">Xabar preview...</p>
+                </div>
+              </div>
+              <div class="flex gap-2 mt-3">
+                <button onclick="previewBotMessage('congrats')" class="btn btn-secondary text-xs flex-1">Tabrik</button>
+                <button onclick="previewBotMessage('pitch')" class="btn btn-secondary text-xs flex-1">Pitch</button>
+                <button onclick="previewBotMessage('soft')" class="btn btn-secondary text-xs flex-1">Soft</button>
               </div>
             </div>
           </div>
@@ -1716,18 +1897,28 @@
                   <span class="material-symbols-outlined text-blue-600">chat</span>
                 </div>
               </div>
-              <p class="text-2xl font-bold text-zinc-900">156</p>
+              <p class="text-2xl font-bold text-zinc-900" id="aiTotalChats">-</p>
               <p class="text-sm text-zinc-500">Jami suhbatlar</p>
             </div>
 
             <div class="stat-card">
               <div class="flex items-center gap-3 mb-3">
                 <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                  <span class="material-symbols-outlined text-green-600">check_circle</span>
+                  <span class="material-symbols-outlined text-green-600">payments</span>
                 </div>
               </div>
-              <p class="text-2xl font-bold text-zinc-900">89%</p>
-              <p class="text-sm text-zinc-500">Javob berildi</p>
+              <p class="text-2xl font-bold text-zinc-900" id="aiConversions">-</p>
+              <p class="text-sm text-zinc-500">AI orqali sotish</p>
+            </div>
+
+            <div class="stat-card">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <span class="material-symbols-outlined text-purple-600">local_offer</span>
+                </div>
+              </div>
+              <p class="text-2xl font-bold text-zinc-900" id="aiDiscountsGiven">-</p>
+              <p class="text-sm text-zinc-500">Chegirma berildi</p>
             </div>
           </div>
 
@@ -2078,6 +2269,30 @@
         <div class="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
           <span class="text-zinc-500">Oxirgi faollik</span>
           <span class="font-medium text-zinc-900" id="userModalLastActive">Bugun, 14:32</span>
+        </div>
+      </div>
+
+      <!-- CustDev Answers -->
+      <div class="mt-6" id="userModalCustdevSection">
+        <h4 class="font-semibold text-zinc-900 mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-purple-500">psychology</span>
+          CustDev javoblari
+        </h4>
+        <div id="userModalCustdevAnswers" class="space-y-3">
+          <div class="text-center py-4 text-zinc-400">
+            <span class="material-symbols-outlined text-2xl mb-2">hourglass_empty</span>
+            <p class="text-sm">Yuklanmoqda...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referrals List -->
+      <div class="mt-6" id="userModalReferralsSection" style="display: none;">
+        <h4 class="font-semibold text-zinc-900 mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-green-500">group_add</span>
+          Taklif qilganlar (<span id="userModalReferralsCount">0</span>)
+        </h4>
+        <div id="userModalReferralsList" class="space-y-2 max-h-40 overflow-y-auto">
         </div>
       </div>
     </div>
@@ -2459,7 +2674,7 @@ function showSubTab(parent, subtab) {
   allSubtabs.forEach(el => {
     // Check if it's a subtab content (not something else like "audience-subtabs")
     if (el.classList.contains(parent + '-subtab') ||
-        ['users', 'chats', 'feedback', 'referrals', 'lessons', 'tests', 'progrev', 'broadcast', 'payments', 'analytics', 'ai-agent', 'promo'].some(s => el.id === prefix + s)) {
+        ['users', 'chats', 'custdev', 'feedback', 'referrals', 'lessons', 'tests', 'progrev', 'broadcast', 'bot-messages', 'payments', 'analytics', 'ai-agent', 'promo'].some(s => el.id === prefix + s)) {
       el.classList.add('hidden');
     }
   });
@@ -2472,14 +2687,18 @@ function showSubTab(parent, subtab) {
   // Load data for subtabs
   if (parent === 'audience') {
     if (subtab === 'chats') loadConversations();
-    if (subtab === 'feedback') loadCustdev();
+    if (subtab === 'custdev') loadCustdev();
+    if (subtab === 'feedback') loadFeedback();
   }
   if (parent === 'content') {
     if (subtab === 'lessons') loadLessons();
+    if (subtab === 'progrev') loadProgrev();
+    if (subtab === 'bot-messages') loadBotMessages();
   }
   if (parent === 'sales') {
     if (subtab === 'promo') loadPromoCodes();
-    if (subtab === 'analytics') setTimeout(initRevenueChart, 100);
+    if (subtab === 'analytics') { loadSalesAnalytics(); setTimeout(initRevenueChart, 100); }
+    if (subtab === 'ai-agent') loadAIAgentStats();
   }
 
   // Initialize charts if needed
@@ -2628,27 +2847,51 @@ async function loadFunnelData(stats) {
     const funnel = await fetch('/api/analytics/funnel', { headers: { Authorization: auth } }).then(r => r.json());
 
     const total = stats.totalUsers || 0;
-    const lessonUsers = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || Math.floor(total * 0.5);
-    const pitchUsers = funnel?.stages?.find(s => s.stage === 'pitch')?.users || Math.floor(total * 0.1);
     const paidUsers = stats.paidUsers || 0;
+
+    // Get lesson counts from funnel stages or calculate from current_lesson
+    const lesson1 = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || 0;
+    const lesson2 = funnel?.stages?.find(s => s.stage === 'lesson_2')?.users || 0;
+    const lesson3 = funnel?.stages?.find(s => s.stage === 'lesson_3')?.users || 0;
+    const pitchUsers = funnel?.stages?.find(s => s.stage === 'pitch')?.users || 0;
 
     // Update funnel numbers
     document.getElementById('funnelTotal').textContent = formatNumber(total);
-    document.getElementById('funnelLesson').textContent = formatNumber(lessonUsers);
+    document.getElementById('funnelLesson1').textContent = formatNumber(lesson1);
+    document.getElementById('funnelLesson2').textContent = formatNumber(lesson2);
+    document.getElementById('funnelLesson3').textContent = formatNumber(lesson3);
     document.getElementById('funnelPitch').textContent = formatNumber(pitchUsers);
     document.getElementById('funnelPaid').textContent = formatNumber(paidUsers);
 
-    // Update funnel bars
-    const lessonPct = total > 0 ? (lessonUsers / total * 100) : 0;
-    const pitchPct = total > 0 ? (pitchUsers / total * 100) : 0;
-    const paidPct = total > 0 ? Math.max(paidUsers / total * 100, 1) : 0;
+    // Update funnel bars (relative to total)
+    const setPct = (id, count) => {
+      const pct = total > 0 ? Math.max((count / total * 100), count > 0 ? 2 : 0) : 0;
+      const el = document.getElementById(id);
+      if (el) el.style.width = pct + '%';
+    };
 
-    document.getElementById('funnelLessonBar').style.width = lessonPct + '%';
-    document.getElementById('funnelPitchBar').style.width = pitchPct + '%';
-    document.getElementById('funnelPaidBar').style.width = paidPct + '%';
+    setPct('funnelLesson1Bar', lesson1);
+    setPct('funnelLesson2Bar', lesson2);
+    setPct('funnelLesson3Bar', lesson3);
+    setPct('funnelPitchBar', pitchUsers);
+    setPct('funnelPaidBar', paidUsers);
+
+    // Calculate biggest drop and show insight
+    const drops = [
+      { from: 'Userlar', to: '1-dars', drop: total > 0 ? ((total - lesson1) / total * 100) : 0 },
+      { from: '1-dars', to: '2-dars', drop: lesson1 > 0 ? ((lesson1 - lesson2) / lesson1 * 100) : 0 },
+      { from: '2-dars', to: '3-dars', drop: lesson2 > 0 ? ((lesson2 - lesson3) / lesson2 * 100) : 0 },
+      { from: '3-dars', to: 'Pitch', drop: lesson3 > 0 ? ((lesson3 - pitchUsers) / lesson3 * 100) : 0 },
+      { from: 'Pitch', to: 'To\'lov', drop: pitchUsers > 0 ? ((pitchUsers - paidUsers) / pitchUsers * 100) : 0 }
+    ];
+    const biggestDrop = drops.reduce((max, d) => d.drop > max.drop ? d : max, { drop: 0 });
+    const insightEl = document.getElementById('funnelInsight');
+    if (insightEl && biggestDrop.drop > 0) {
+      insightEl.innerHTML = `Eng katta yo'qotish: <strong>${biggestDrop.from} → ${biggestDrop.to}</strong> (${Math.round(biggestDrop.drop)}%)`;
+    }
 
     // Update broadcast target counts
-    updateBroadcastCounts(total, paidUsers, lessonUsers);
+    updateBroadcastCounts(total, paidUsers, lesson1);
 
   } catch (e) {
     console.error('loadFunnelData error:', e);
@@ -3233,6 +3476,75 @@ async function openUserModal(userId) {
   }
 
   document.getElementById('userModal').classList.add('show');
+
+  // Load CustDev answers
+  loadUserCustdevAnswers(userId);
+
+  // Load referrals list
+  loadUserReferrals(userId);
+}
+
+async function loadUserCustdevAnswers(userId) {
+  const container = document.getElementById('userModalCustdevAnswers');
+  container.innerHTML = '<div class="text-center py-4 text-zinc-400"><span class="material-symbols-outlined text-2xl mb-2 animate-spin">progress_activity</span><p class="text-sm">Yuklanmoqda...</p></div>';
+
+  try {
+    const res = await fetch(`/api/users/${userId}/custdev`, { headers: { Authorization: auth } });
+    if (!res.ok) throw new Error('API error');
+    const answers = await res.json();
+
+    if (!answers || answers.length === 0) {
+      container.innerHTML = '<div class="text-center py-4 text-zinc-400"><span class="material-symbols-outlined text-2xl mb-2">quiz</span><p class="text-sm">Hali javob bermagan</p></div>';
+      return;
+    }
+
+    container.innerHTML = answers.map(a => `
+      <div class="p-3 bg-zinc-50 rounded-xl">
+        <p class="text-sm text-purple-600 font-medium mb-1">${escapeHtml(a.question || 'Savol')}</p>
+        <p class="text-zinc-900">${escapeHtml(a.answer || a.response || '-')}</p>
+        <p class="text-xs text-zinc-400 mt-1">${formatTimeAgo(a.answered_at || a.created_at)}</p>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading custdev answers:', e);
+    container.innerHTML = '<div class="text-center py-4 text-zinc-400"><p class="text-sm">Javoblarni yuklashda xatolik</p></div>';
+  }
+}
+
+async function loadUserReferrals(userId) {
+  const section = document.getElementById('userModalReferralsSection');
+  const container = document.getElementById('userModalReferralsList');
+  const countEl = document.getElementById('userModalReferralsCount');
+
+  try {
+    const res = await fetch(`/api/users/${userId}/referrals`, { headers: { Authorization: auth } });
+    if (!res.ok) throw new Error('API error');
+    const referrals = await res.json();
+
+    if (!referrals || referrals.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    countEl.textContent = referrals.length;
+
+    container.innerHTML = referrals.map(r => `
+      <div class="flex items-center gap-3 p-2 bg-zinc-50 rounded-lg hover:bg-zinc-100 cursor-pointer" onclick="openUserModal(${r.telegram_id})">
+        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-medium text-sm">
+          ${(r.first_name || r.full_name || 'U')[0].toUpperCase()}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-zinc-900 truncate">${escapeHtml(r.full_name || r.first_name || 'User')}</p>
+          <p class="text-xs text-zinc-500">${formatDate(r.created_at)}</p>
+        </div>
+        <span class="badge ${r.is_paid ? 'badge-success' : 'badge-warning'} text-xs">${r.is_paid ? 'Pullik' : 'Bepul'}</span>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading referrals:', e);
+    section.style.display = 'none';
+  }
 }
 
 function closeUserModal() {
@@ -3377,14 +3689,322 @@ function closeSettings() {
 }
 
 // Export functions
-function exportReport() {
-  showToast('Hisobot yuklanmoqda...');
-  // TODO: implement export
+async function exportReport() {
+  showToast('Hisobot tayyorlanmoqda...', 'info');
+
+  try {
+    // Fetch all necessary data
+    const [stats, funnel, users] = await Promise.all([
+      fetch('/api/stats', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/funnel', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/users?limit=10000', { headers: { Authorization: auth } }).then(r => r.json())
+    ]);
+
+    const today = new Date().toLocaleDateString('uz-UZ');
+    const lesson1 = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || 0;
+    const lesson2 = funnel?.stages?.find(s => s.stage === 'lesson_2')?.users || 0;
+    const lesson3 = funnel?.stages?.find(s => s.stage === 'lesson_3')?.users || 0;
+    const pitch = funnel?.stages?.find(s => s.stage === 'pitch')?.users || 0;
+    const paid = funnel?.stages?.find(s => s.stage === 'paid')?.users || 0;
+
+    // Create report content
+    let report = `📊 KUNLIK HISOBOT - ${today}\n`;
+    report += `${'='.repeat(40)}\n\n`;
+    report += `👥 USERLAR:\n`;
+    report += `   Jami: ${stats.totalUsers || 0}\n`;
+    report += `   Bugun yangi: ${stats.todayUsers || 0}\n`;
+    report += `   Aktiv (7 kun): ${stats.activeUsers || 0}\n\n`;
+    report += `📚 FUNNEL:\n`;
+    report += `   1-dars: ${lesson1}\n`;
+    report += `   2-dars: ${lesson2}\n`;
+    report += `   3-dars: ${lesson3}\n`;
+    report += `   Pitch: ${pitch}\n`;
+    report += `   To'lov: ${paid}\n\n`;
+    report += `💰 DAROMAD:\n`;
+    report += `   Jami: ${formatNumber(stats.totalRevenue || 0)} so'm\n`;
+    report += `   Bugungi: ${formatNumber(stats.todayRevenue || 0)} so'm\n`;
+    report += `   Bu oygi: ${formatNumber(stats.monthRevenue || 0)} so'm\n\n`;
+    report += `📈 KONVERSIYA:\n`;
+    const convRate = stats.totalUsers > 0 ? ((paid / stats.totalUsers) * 100).toFixed(1) : 0;
+    report += `   User → To'lov: ${convRate}%\n`;
+    report += `\n${'='.repeat(40)}\n`;
+    report += `Yaratildi: ${new Date().toLocaleString('uz-UZ')}`;
+
+    // Download as text file
+    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hisobot_${today.replace(/\./g, '-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('Hisobot yuklandi!', 'success');
+  } catch (e) {
+    console.error('Export error:', e);
+    showToast('Hisobot yuklanmadi', 'error');
+  }
 }
 
-function exportPayments() {
-  showToast('To\'lovlar yuklanmoqda...');
-  // TODO: implement export
+async function exportPayments() {
+  showToast('To\'lovlar tayyorlanmoqda...', 'info');
+
+  try {
+    const payments = await fetch('/api/payments?limit=10000', { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (!payments || payments.length === 0) {
+      showToast('To\'lovlar topilmadi', 'warning');
+      return;
+    }
+
+    // Create CSV
+    let csv = 'ID,User,Telegram ID,Summa,Status,Sana\n';
+    payments.forEach(p => {
+      const name = (p.full_name || p.first_name || 'User').replace(/,/g, ' ');
+      const date = new Date(p.created_at).toLocaleDateString('uz-UZ');
+      csv += `${p.id},${name},${p.telegram_id},${p.amount},${p.state},${date}\n`;
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('To\'lovlar yuklandi!', 'success');
+  } catch (e) {
+    console.error('Export payments error:', e);
+    showToast('To\'lovlar yuklanmadi', 'error');
+  }
+}
+
+async function exportUsers() {
+  showToast('Userlar tayyorlanmoqda...', 'info');
+
+  try {
+    const users = await fetch('/api/users?limit=10000', { headers: { Authorization: auth } }).then(r => r.json());
+
+    if (!users || users.length === 0) {
+      showToast('Userlar topilmadi', 'warning');
+      return;
+    }
+
+    // Create CSV
+    let csv = 'Telegram ID,Ism,Username,Dars,To\'lov,Ro\'yxatdan\n';
+    users.forEach(u => {
+      const name = (u.full_name || u.first_name || 'User').replace(/,/g, ' ');
+      const username = u.username || '-';
+      const lesson = u.current_lesson || 0;
+      const paid = u.is_paid ? 'Ha' : 'Yo\'q';
+      const date = new Date(u.created_at).toLocaleDateString('uz-UZ');
+      csv += `${u.telegram_id},${name},${username},${lesson},${paid},${date}\n`;
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('Userlar yuklandi!', 'success');
+  } catch (e) {
+    console.error('Export users error:', e);
+    showToast('Userlar yuklanmadi', 'error');
+  }
+}
+
+// ============ BOT MESSAGES ============
+async function loadBotMessages() {
+  try {
+    const messages = await fetch('/api/bot-messages', { headers: { Authorization: auth } }).then(r => r.json());
+
+    document.getElementById('botMsgCongrats').value = messages.post_lesson_congrats || '';
+    document.getElementById('botMsgSalesPitch').value = messages.sales_pitch || '';
+    document.getElementById('botMsgSoftAttack').value = messages.soft_attack || '';
+    document.getElementById('botMsgSalesDelay').value = messages.sales_delay || 1;
+    document.getElementById('botMsgSoftDelay').value = messages.soft_attack_delay || 24;
+    document.getElementById('botMsgSoftDisabled').checked = messages.soft_attack_disabled || false;
+  } catch (e) {
+    console.error('loadBotMessages error:', e);
+  }
+}
+
+async function saveBotMessages() {
+  try {
+    const data = {
+      post_lesson_congrats: document.getElementById('botMsgCongrats').value,
+      sales_pitch: document.getElementById('botMsgSalesPitch').value,
+      soft_attack: document.getElementById('botMsgSoftAttack').value,
+      sales_delay: parseInt(document.getElementById('botMsgSalesDelay').value) || 1,
+      soft_attack_delay: parseInt(document.getElementById('botMsgSoftDelay').value) || 24,
+      soft_attack_disabled: document.getElementById('botMsgSoftDisabled').checked
+    };
+
+    await fetch('/api/bot-messages', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify(data)
+    });
+
+    showToast('Bot xabarlari saqlandi!', 'success');
+  } catch (e) {
+    console.error('saveBotMessages error:', e);
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+function previewBotMessage(type) {
+  let text = '';
+  if (type === 'congrats') {
+    text = document.getElementById('botMsgCongrats').value || 'Tabrik matni...';
+  } else if (type === 'pitch') {
+    text = document.getElementById('botMsgSalesPitch').value || 'Sales pitch matni...';
+  } else if (type === 'soft') {
+    text = document.getElementById('botMsgSoftAttack').value || 'Soft attack matni...';
+  }
+  document.getElementById('botMsgPreview').textContent = text;
+}
+
+// ============ AI AGENT STATS ============
+async function loadAIAgentStats() {
+  try {
+    const stats = await fetch('/api/ai-stats', { headers: { Authorization: auth } }).then(r => r.json());
+
+    // Update stats
+    document.getElementById('aiTotalChats').textContent = stats.total_users || 0;
+    document.getElementById('aiConversions').textContent = stats.conversions || '-';
+    document.getElementById('aiDiscountsGiven').textContent = stats.ai_messages || 0;
+  } catch (e) {
+    console.error('loadAIAgentStats error:', e);
+  }
+}
+
+// ============ SALES ANALYTICS ============
+async function loadSalesAnalytics() {
+  try {
+    const [funnel, analytics] = await Promise.all([
+      fetch('/api/analytics/funnel', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/payments', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => ({}))
+    ]);
+
+    // Update sales funnel
+    const total = funnel?.total || 0;
+    const lesson1 = funnel?.stages?.find(s => s.stage === 'lesson_1')?.users || 0;
+    const pitch = funnel?.stages?.find(s => s.stage === 'pitch')?.users || 0;
+    const paid = funnel?.stages?.find(s => s.stage === 'paid')?.users || 0;
+
+    document.getElementById('salesFunnelTotal').textContent = formatNumber(total);
+    document.getElementById('salesFunnelLesson').textContent = formatNumber(lesson1);
+    document.getElementById('salesFunnelPitch').textContent = formatNumber(pitch);
+    document.getElementById('salesFunnelPaid').textContent = formatNumber(paid);
+
+    // Update bars with percentages
+    const setPct = (id, count, showPct = true) => {
+      const pct = total > 0 ? Math.max((count / total * 100), count > 0 ? 5 : 0) : 0;
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.width = pct + '%';
+        if (showPct) el.textContent = Math.round(pct) + '%';
+      }
+    };
+
+    setPct('salesFunnelTotalBar', total);
+    setPct('salesFunnelLessonBar', lesson1);
+    setPct('salesFunnelPitchBar', pitch);
+    setPct('salesFunnelPaidBar', paid);
+
+    // Update LTV, CAC, Retention
+    const ltv = analytics?.avg_payment || 0;
+    document.getElementById('analyticsLTV').textContent = formatNumber(ltv) + " so'm";
+
+    // Retention (users who came back within 7 days)
+    const retentionEl = document.getElementById('analyticsRetention');
+    if (retentionEl && analytics?.retention_rate) {
+      retentionEl.textContent = analytics.retention_rate + '%';
+    }
+  } catch (e) {
+    console.error('loadSalesAnalytics error:', e);
+  }
+}
+
+// ============ PROGREV FUNCTIONS ============
+async function loadProgrev() {
+  try {
+    // Load inactivity reminder settings and stats
+    const [settings, stats] = await Promise.all([
+      fetch('/api/settings', { headers: { Authorization: auth } }).then(r => r.json()),
+      fetch('/api/analytics/inactivity', { headers: { Authorization: auth } }).then(r => r.json()).catch(() => ({}))
+    ]);
+
+    // Update stats
+    const totalSent = (stats.reminder_1_sent || 0) + (stats.reminder_2_sent || 0);
+    document.getElementById('progrevTotalSent').textContent = totalSent;
+    document.getElementById('progrevWatched').textContent = stats.watched_after_reminder || 0;
+    const efficiency = totalSent > 0 ? Math.round((stats.watched_after_reminder || 0) / totalSent * 100) : 0;
+    document.getElementById('progrevEfficiency').textContent = efficiency + '%';
+
+    // Update toggle
+    const enabled = settings.inactivity_reminder_enabled === 'true' || settings.inactivity_reminder_enabled === true;
+    document.getElementById('progrevEnabled').checked = enabled;
+
+    // Load messages
+    const reminder1 = settings.inactivity_reminder_1 || "👋 Hey! Darsni hali ko'rmadingizmi? Davom eting, siz zo'rsiz!";
+    const reminder2 = settings.inactivity_reminder_2 || "📚 Dars sizni kutmoqda! Nimaga to'xtab qoldingiz? Davom eting!";
+
+    document.getElementById('progrevReminder1').value = reminder1;
+    document.getElementById('progrevReminder2').value = reminder2;
+  } catch (e) {
+    console.error('loadProgrev error:', e);
+  }
+}
+
+async function saveProgrevMessages() {
+  try {
+    const data = {
+      inactivity_reminder_1: document.getElementById('progrevReminder1').value,
+      inactivity_reminder_2: document.getElementById('progrevReminder2').value
+    };
+
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify(data)
+    });
+
+    showToast('Progrev xabarlari saqlandi!', 'success');
+  } catch (e) {
+    console.error('saveProgrevMessages error:', e);
+    showToast('Xato yuz berdi', 'error');
+  }
+}
+
+async function toggleProgrev() {
+  try {
+    const enabled = document.getElementById('progrevEnabled').checked;
+
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify({ inactivity_reminder_enabled: enabled })
+    });
+
+    showToast(enabled ? 'Progrev yoqildi' : 'Progrev o\'chirildi', 'success');
+  } catch (e) {
+    console.error('toggleProgrev error:', e);
+    showToast('Xato yuz berdi', 'error');
+  }
 }
 
 // AI Settings
@@ -3522,30 +4142,38 @@ async function loadChatMessages(telegramId) {
       return;
     }
 
-    messagesEl.innerHTML = messages.map(m => {
-      const isOutgoing = m.direction === 'outgoing' || m.is_bot;
+    // Reverse to show oldest first
+    const sortedMessages = [...messages].reverse();
+
+    messagesEl.innerHTML = sortedMessages.map(m => {
+      const meta = typeof m.meta === 'string' ? JSON.parse(m.meta || '{}') : (m.meta || {});
+      const isOutgoing = m.message_type === 'bot_response' || m.message_type === 'admin_message' || meta.is_bot;
+      const isAI = m.message_type === 'bot_response' || meta.is_ai;
       const time = new Date(m.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+      const content = m.text_content || m.text || m.message || '';
 
       if (isOutgoing) {
         return `
         <div class="flex gap-3 justify-end">
           <div class="bg-purple-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-[70%]">
-            <p>${escapeHtml(m.text || m.message || '')}</p>
+            <p class="whitespace-pre-wrap">${escapeHtml(content)}</p>
             <div class="flex items-center justify-end gap-1 mt-1">
               <span class="text-xs text-purple-200">${time}</span>
               <span class="material-symbols-outlined text-xs text-purple-200">done_all</span>
             </div>
           </div>
-          <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white shrink-0">
-            <span class="material-symbols-outlined text-sm">${m.is_ai ? 'smart_toy' : 'person'}</span>
+          <div class="w-8 h-8 ${isAI ? 'bg-purple-500' : 'bg-green-500'} rounded-lg flex items-center justify-center text-white shrink-0">
+            <span class="material-symbols-outlined text-sm">${isAI ? 'smart_toy' : 'person'}</span>
           </div>
         </div>`;
       } else {
+        const user = allConversations.find(c => c.telegram_id === currentChatUserId);
+        const initial = (user?.full_name || user?.first_name || 'U')[0].toUpperCase();
         return `
         <div class="flex gap-3">
-          <div class="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-600 font-semibold text-sm shrink-0">U</div>
+          <div class="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center text-zinc-600 font-semibold text-sm shrink-0">${initial}</div>
           <div class="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-[70%]">
-            <p class="text-zinc-900">${escapeHtml(m.text || m.message || '')}</p>
+            <p class="text-zinc-900 whitespace-pre-wrap">${escapeHtml(content)}</p>
             <span class="text-xs text-zinc-400 mt-1 block">${time}</span>
           </div>
         </div>`;
@@ -3604,17 +4232,16 @@ async function loadFeedback() {
       fetch('/api/feedback/stats', { headers: { Authorization: auth } }).then(r => r.json())
     ]);
 
-    // Update stats
-    const total = (stats.positive || 0) + (stats.neutral || 0) + (stats.negative || 0);
-    if (total > 0) {
-      const posEl = document.querySelector('#audience-feedback .stat-card:nth-child(1) .text-2xl');
-      const neuEl = document.querySelector('#audience-feedback .stat-card:nth-child(2) .text-2xl');
-      const negEl = document.querySelector('#audience-feedback .stat-card:nth-child(3) .text-2xl');
+    // Update stats with counts
+    const posEl = document.getElementById('feedbackPositiveCount');
+    const neuEl = document.getElementById('feedbackNeutralCount');
+    const negEl = document.getElementById('feedbackNegativeCount');
+    const totalEl = document.getElementById('feedbackTotalCount');
 
-      if (posEl) posEl.textContent = Math.round((stats.positive / total) * 100) + '%';
-      if (neuEl) neuEl.textContent = Math.round((stats.neutral / total) * 100) + '%';
-      if (negEl) negEl.textContent = Math.round((stats.negative / total) * 100) + '%';
-    }
+    if (posEl) posEl.textContent = stats.positive || 0;
+    if (neuEl) neuEl.textContent = stats.neutral || 0;
+    if (negEl) negEl.textContent = stats.negative || 0;
+    if (totalEl) totalEl.textContent = (stats.positive || 0) + (stats.neutral || 0) + (stats.negative || 0);
 
     // Render feedback list
     renderFeedbackList(feedback);
@@ -3731,7 +4358,7 @@ async function editLesson(lessonId) {
     document.getElementById('editLessonMessage').value = lesson.watched_message || '';
 
     // Show modal
-    document.getElementById('editLessonModal').classList.add('active');
+    document.getElementById('editLessonModal').classList.add('show');
   } catch (e) {
     console.error('editLesson error:', e);
     showToast('Darsni yuklashda xato', 'error');
@@ -3739,7 +4366,7 @@ async function editLesson(lessonId) {
 }
 
 function closeEditLesson() {
-  document.getElementById('editLessonModal').classList.remove('active');
+  document.getElementById('editLessonModal').classList.remove('show');
 }
 
 async function saveLesson() {
@@ -3994,11 +4621,11 @@ function openTestModal(testId = null) {
     document.getElementById('testCorrectAnswer').value = 'a';
   }
 
-  document.getElementById('testModal').classList.add('active');
+  document.getElementById('testModal').classList.add('show');
 }
 
 function closeTestModal() {
-  document.getElementById('testModal').classList.remove('active');
+  document.getElementById('testModal').classList.remove('show');
 }
 
 function editTest(testId) {
@@ -4166,11 +4793,11 @@ function openCustdevModal(questionId = null) {
     document.getElementById('custdevFieldName').value = '';
   }
 
-  document.getElementById('custdevModal').classList.add('active');
+  document.getElementById('custdevModal').classList.add('show');
 }
 
 function closeCustdevModal() {
-  document.getElementById('custdevModal').classList.remove('active');
+  document.getElementById('custdevModal').classList.remove('show');
 }
 
 function editCustdev(questionId) {
@@ -4244,9 +4871,66 @@ function formatTimeAgo(date) {
 }
 
 // Broadcast from content tab
+let broadcastButtonCount = 1;
+
+function updateBroadcastPreview() {
+  const text = document.getElementById('broadcastText').value || 'Xabar matni bu yerda ko\'rinadi...';
+  document.getElementById('broadcastPreviewContent').innerHTML = `<p class="text-white text-sm whitespace-pre-wrap">${escapeHtml(text)}</p>`;
+
+  // Update button previews
+  const buttonsContainer = document.getElementById('broadcastPreviewButtons');
+  buttonsContainer.innerHTML = '';
+
+  for (let i = 1; i <= broadcastButtonCount; i++) {
+    const btnText = document.getElementById(`broadcastBtnText${i}`)?.value;
+    if (btnText) {
+      buttonsContainer.innerHTML += `<button class="w-full bg-[#5865f2] text-white text-sm py-2 px-4 rounded-lg">${escapeHtml(btnText)}</button>`;
+    }
+  }
+}
+
+function addBroadcastButton() {
+  if (broadcastButtonCount >= 5) {
+    showToast('Maksimum 5 ta tugma', 'warning');
+    return;
+  }
+  broadcastButtonCount++;
+  const container = document.getElementById('broadcastButtons');
+  const newRow = document.createElement('div');
+  newRow.className = 'flex gap-2';
+  newRow.innerHTML = `
+    <input type="text" class="input flex-1" placeholder="Tugma matni" id="broadcastBtnText${broadcastButtonCount}" oninput="updateBroadcastPreview()">
+    <input type="text" class="input flex-1" placeholder="URL" id="broadcastBtnUrl${broadcastButtonCount}">
+    <button onclick="this.parentElement.remove();updateBroadcastPreview()" class="btn btn-secondary px-2">
+      <span class="material-symbols-outlined text-sm">close</span>
+    </button>
+  `;
+  container.appendChild(newRow);
+}
+
+function previewBroadcast() {
+  updateBroadcastPreview();
+  showToast('Preview yangilandi', 'info');
+}
+
+function getBroadcastButtons() {
+  const buttons = [];
+  for (let i = 1; i <= broadcastButtonCount; i++) {
+    const text = document.getElementById(`broadcastBtnText${i}`)?.value;
+    const url = document.getElementById(`broadcastBtnUrl${i}`)?.value;
+    if (text && url) {
+      buttons.push({ text, url });
+    }
+  }
+  return buttons;
+}
+
 async function sendBroadcast() {
   const target = document.getElementById('broadcastTarget').value;
   const text = document.getElementById('broadcastText').value;
+  const mediaType = document.getElementById('broadcastMediaType').value;
+  const fileId = document.getElementById('broadcastFileId').value;
+  const buttons = getBroadcastButtons();
 
   if (!text.trim()) {
     showToast('Xabar matnini kiriting', 'error');
@@ -4254,19 +4938,52 @@ async function sendBroadcast() {
   }
 
   try {
+    const payload = { target, text };
+    if (mediaType && fileId) {
+      payload.media = { type: mediaType, file_id: fileId };
+    }
+    if (buttons.length > 0) {
+      payload.buttons = buttons;
+    }
+
     const res = await fetch('/api/broadcast', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: auth },
-      body: JSON.stringify({ target, text })
+      body: JSON.stringify(payload)
     });
     if (res.ok) {
-      showToast('Xabar yuborildi!', 'success');
+      const result = await res.json();
+      showToast(`Xabar yuborildi! ${result.sent || 0} ta userga`, 'success');
       document.getElementById('broadcastText').value = '';
+      document.getElementById('broadcastFileId').value = '';
+      // Clear buttons
+      document.getElementById('broadcastButtons').innerHTML = `
+        <div class="flex gap-2">
+          <input type="text" class="input flex-1" placeholder="Tugma matni" id="broadcastBtnText1" oninput="updateBroadcastPreview()">
+          <input type="text" class="input flex-1" placeholder="URL" id="broadcastBtnUrl1">
+        </div>
+      `;
+      broadcastButtonCount = 1;
+      updateBroadcastPreview();
+    } else {
+      showToast('Xabar yuborilmadi', 'error');
     }
   } catch (e) {
+    console.error('Broadcast error:', e);
     showToast('Xabar yuborilmadi', 'error');
   }
 }
+
+// Show/hide file ID input based on media type
+document.addEventListener('DOMContentLoaded', () => {
+  const mediaTypeSelect = document.getElementById('broadcastMediaType');
+  if (mediaTypeSelect) {
+    mediaTypeSelect.addEventListener('change', (e) => {
+      const fileIdInput = document.getElementById('broadcastFileId');
+      fileIdInput.style.display = e.target.value ? 'block' : 'none';
+    });
+  }
+});
 
 // Utility functions
 function formatNumber(num) {

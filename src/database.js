@@ -2157,37 +2157,30 @@ export async function updateChannelSettings(channelId, channelLink) {
 
 // ============ ENHANCED ANALYTICS ============
 export async function getFunnelAnalytics() {
+  // Get detailed funnel counts by current_lesson and funnel_step
   const { rows } = await pool.query(`
-    SELECT 
-      funnel_step,
-      COUNT(*) as count
+    SELECT
+      COUNT(*) FILTER (WHERE is_blocked = FALSE) as total_users,
+      COUNT(*) FILTER (WHERE is_blocked = FALSE AND current_lesson >= 1) as lesson_1,
+      COUNT(*) FILTER (WHERE is_blocked = FALSE AND current_lesson >= 2) as lesson_2,
+      COUNT(*) FILTER (WHERE is_blocked = FALSE AND current_lesson >= 3) as lesson_3,
+      COUNT(*) FILTER (WHERE is_blocked = FALSE AND (sales_pitch_seen_at IS NOT NULL OR funnel_step >= 9)) as pitch,
+      COUNT(*) FILTER (WHERE is_blocked = FALSE AND is_paid = TRUE) as paid
     FROM users
-    GROUP BY funnel_step
-    ORDER BY funnel_step
   `);
-  
-  const steps = {
-    0: { name: 'Yangi', count: 0 },
-    1: { name: 'Start', count: 0 },
-    2: { name: '1-Dars', count: 0 },
-    3: { name: 'CustDev 1', count: 0 },
-    4: { name: '2-Dars', count: 0 },
-    5: { name: 'CustDev 2', count: 0 },
-    6: { name: '3-Dars', count: 0 },
-    7: { name: 'CustDev 3', count: 0 },
-    8: { name: '4-Dars', count: 0 },
-    9: { name: 'Pitch', count: 0 },
-    10: { name: 'Sotish', count: 0 },
-    11: { name: 'Premium', count: 0 }
+
+  const data = rows[0] || {};
+
+  return {
+    total: parseInt(data.total_users) || 0,
+    stages: [
+      { stage: 'lesson_1', users: parseInt(data.lesson_1) || 0 },
+      { stage: 'lesson_2', users: parseInt(data.lesson_2) || 0 },
+      { stage: 'lesson_3', users: parseInt(data.lesson_3) || 0 },
+      { stage: 'pitch', users: parseInt(data.pitch) || 0 },
+      { stage: 'paid', users: parseInt(data.paid) || 0 }
+    ]
   };
-  
-  rows.forEach(r => {
-    if (steps[r.funnel_step]) {
-      steps[r.funnel_step].count = parseInt(r.count);
-    }
-  });
-  
-  return steps;
 }
 
 export async function getFunnelDiagnostics() {
@@ -3620,6 +3613,26 @@ export async function getReferralLeaderboard(limit = 10) {
     ORDER BY referral_count DESC
     LIMIT $1
   `, [limit]);
+  return rows;
+}
+
+// Get list of users referred by a specific user
+export async function getUserReferrals(telegramId) {
+  const { rows } = await pool.query(`
+    SELECT
+      u.telegram_id,
+      u.username,
+      u.full_name,
+      u.first_name,
+      u.is_paid,
+      u.created_at,
+      r.status as referral_status,
+      r.created_at as referred_at
+    FROM referrals r
+    JOIN users u ON r.referred_telegram_id = u.telegram_id
+    WHERE r.referrer_telegram_id = $1
+    ORDER BY r.created_at DESC
+  `, [telegramId]);
   return rows;
 }
 
