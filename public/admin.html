@@ -2663,11 +2663,26 @@ function logout() {
 
 // Show tab
 function showTab(tab) {
+  console.log('showTab called:', tab);
   currentTab = tab;
 
-  // Hide all tabs
-  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-  document.getElementById('tab-' + tab)?.classList.remove('hidden');
+  // Hide all tabs - use both class and inline style
+  document.querySelectorAll('[id^="tab-"]').forEach(el => {
+    if (el.id.startsWith('tab-')) {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    }
+  });
+
+  // Show target tab
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) {
+    tabEl.classList.remove('hidden');
+    tabEl.style.display = 'block';
+    console.log('Tab element shown:', tabEl.id);
+  } else {
+    console.error('Tab not found:', 'tab-' + tab);
+  }
 
   // Update nav pills
   document.querySelectorAll('.nav-pill[data-tab]').forEach(el => {
