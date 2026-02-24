@@ -1489,6 +1489,14 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
           users = users.filter(u => (u.current_lesson || 0) === lessonNum);
         }
       }
+      const lessonFrom = parseInt(effectiveFilters.lesson_from, 10);
+      const lessonTo = parseInt(effectiveFilters.lesson_to, 10);
+      if (Number.isFinite(lessonFrom)) {
+        users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) >= lessonFrom);
+      }
+      if (Number.isFinite(lessonTo)) {
+        users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) <= lessonTo);
+      }
 
       // CustDev filter
       if (effectiveFilters.custdev && effectiveFilters.custdev !== 'all') {
@@ -1541,6 +1549,7 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
           .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
           .replace(/\{\{telefon\}\}/gi, user.phone || '')
           .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
+          .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
           .replace(/\{\{dars\}\}/gi, String(user.current_lesson || 0));
 
         const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
@@ -2724,7 +2733,9 @@ app.get('/api/ai-settings', authMiddleware, async (req, res) => {
       discount_rules: await getBotMessage('ai_discount_rules') || '',
       sales_prompt: await getBotMessage('ai_sales_prompt') || '',
       fallback_message: await getBotMessage('ai_fallback_message') || '',
-      testimonials: await getBotMessage('ai_testimonials') || ''
+      testimonials: await getBotMessage('ai_testimonials') || '',
+      model: await getBotMessage('ai_model') || 'gemini',
+      tone: await getBotMessage('ai_tone') || 'friendly'
     };
     res.json(settings);
   } catch (e) {
@@ -2735,7 +2746,17 @@ app.get('/api/ai-settings', authMiddleware, async (req, res) => {
 app.put('/api/ai-settings', authMiddleware, async (req, res) => {
   try {
     const { updateBotMessage } = await import('./database.js');
-    const { enabled, max_discount, first_offer_discount, discount_rules, sales_prompt, fallback_message, testimonials } = req.body;
+    const {
+      enabled,
+      max_discount,
+      first_offer_discount,
+      discount_rules,
+      sales_prompt,
+      fallback_message,
+      testimonials,
+      model,
+      tone
+    } = req.body;
 
     if (enabled !== undefined) await updateBotMessage('ai_sales_enabled', String(enabled));
     if (max_discount !== undefined) await updateBotMessage('ai_max_discount', String(max_discount));
@@ -2744,6 +2765,8 @@ app.put('/api/ai-settings', authMiddleware, async (req, res) => {
     if (sales_prompt !== undefined) await updateBotMessage('ai_sales_prompt', sales_prompt);
     if (fallback_message !== undefined) await updateBotMessage('ai_fallback_message', fallback_message);
     if (testimonials !== undefined) await updateBotMessage('ai_testimonials', testimonials);
+    if (model !== undefined) await updateBotMessage('ai_model', model);
+    if (tone !== undefined) await updateBotMessage('ai_tone', tone);
 
     res.json({ success: true });
   } catch (e) {
