@@ -2906,20 +2906,31 @@ export async function getMonthlyGoal(goalType) {
     FROM goals
     WHERE goal_type = $1
       AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
+    ORDER BY updated_at DESC, id DESC
     LIMIT 1
   `, [goalType]);
   return rows[0] || null;
 }
 
 export async function setMonthlyGoal(goalType, targetValue) {
-  const { rows } = await pool.query(`
-    INSERT INTO goals (goal_type, target_value, month_start, created_at, updated_at)
-    VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE)::date, NOW(), NOW())
-    ON CONFLICT (goal_type, month_start)
-    DO UPDATE SET target_value = EXCLUDED.target_value, updated_at = NOW()
+  const { rows: updatedRows } = await pool.query(`
+    UPDATE goals
+    SET target_value = $2, updated_at = NOW()
+    WHERE goal_type = $1
+      AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
     RETURNING *
   `, [goalType, targetValue]);
-  return rows[0];
+
+  if (updatedRows.length > 0) {
+    return updatedRows[0];
+  }
+
+  const { rows: insertedRows } = await pool.query(`
+    INSERT INTO goals (goal_type, target_value, month_start, created_at, updated_at)
+    VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE)::date, NOW(), NOW())
+    RETURNING *
+  `, [goalType, targetValue]);
+  return insertedRows[0];
 }
 
 export async function getMonthlyGoalProgress(goalType) {
