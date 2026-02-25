@@ -2901,71 +2901,70 @@ export async function getFeedbackPage({
 }
 
 export async function getMonthlyGoal(goalType) {
-  await ensureGoalsSchema();
+  const key = await getCurrentMonthlyGoalKey(goalType);
+  const setting = await getSetting(key);
 
-  const { rows } = await pool.query(`
-    SELECT *
-    FROM goals
-    WHERE goal_type = $1
-      AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
-    ORDER BY updated_at DESC, id DESC
-    LIMIT 1
-  `, [goalType]);
-  return rows[0] || null;
+  if (setting && setting.value !== null && setting.value !== undefined) {
+    const targetValue = parseInt(setting.value, 10) || 0;
+    const { rows } = await pool.query(`SELECT DATE_TRUNC('month', CURRENT_DATE)::date AS month_start`);
+    return {
+      goal_type: goalType,
+      target_value: targetValue,
+      month_start: rows[0]?.month_start || null
+    };
+  }
+
+  // Legacy fallback for old deployments that already used goals table
+  try {
+    const { rows } = await pool.query(`
+      SELECT *
+      FROM goals
+      WHERE goal_type = $1
+        AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
+      ORDER BY updated_at DESC, id DESC
+      LIMIT 1
+    `, [goalType]);
+    return rows[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function setMonthlyGoal(goalType, targetValue) {
-  await ensureGoalsSchema();
+  const key = await getCurrentMonthlyGoalKey(goalType);
+  await setSetting(key, String(parseInt(targetValue, 10) || 0));
 
-  const { rows: updatedRows } = await pool.query(`
-    UPDATE goals
-    SET target_value = $2, updated_at = NOW()
-    WHERE goal_type = $1
-      AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
-    RETURNING *
-  `, [goalType, targetValue]);
+  // Optional legacy sync; never fail the request because of old goals table issues.
+  try {
+    const { rows: updatedRows } = await pool.query(`
+      UPDATE goals
+      SET target_value = $2, updated_at = NOW()
+      WHERE goal_type = $1
+        AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
+      RETURNING *
+    `, [goalType, targetValue]);
 
-  if (updatedRows.length > 0) {
-    return updatedRows[0];
+    if (updatedRows.length > 0) {
+      return updatedRows[0];
+    }
+
+    const { rows: insertedRows } = await pool.query(`
+      INSERT INTO goals (goal_type, target_value, month_start, created_at, updated_at)
+      VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE)::date, NOW(), NOW())
+      RETURNING *
+    `, [goalType, targetValue]);
+    return insertedRows[0];
+  } catch {
+    return getMonthlyGoal(goalType);
   }
-
-  const { rows: insertedRows } = await pool.query(`
-    INSERT INTO goals (goal_type, target_value, month_start, created_at, updated_at)
-    VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE)::date, NOW(), NOW())
-    RETURNING *
-  `, [goalType, targetValue]);
-  return insertedRows[0];
 }
 
-async function ensureGoalsSchema() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS goals (
-      id SERIAL PRIMARY KEY,
-      goal_type VARCHAR(50) NOT NULL,
-      target_value INTEGER NOT NULL,
-      month_start DATE NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW()
-    )
+async function getCurrentMonthlyGoalKey(goalType) {
+  const { rows } = await pool.query(`
+    SELECT TO_CHAR(DATE_TRUNC('month', CURRENT_DATE)::date, 'YYYY_MM') AS ym
   `);
-
-  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS goal_type VARCHAR(50)`);
-  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS target_value INTEGER`);
-  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS month_start DATE`);
-  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`);
-  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`);
-
-  await pool.query(`
-    UPDATE goals
-    SET month_start = DATE_TRUNC('month', CURRENT_DATE)::date
-    WHERE month_start IS NULL
-  `);
-
-  await pool.query(`
-    UPDATE goals
-    SET updated_at = NOW()
-    WHERE updated_at IS NULL
-  `);
+  const ym = rows[0]?.ym || 'current';
+  return `monthly_goal_${goalType}_${ym}`;
 }
 
 export async function getMonthlyGoalProgress(goalType) {
