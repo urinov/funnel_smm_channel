@@ -2914,49 +2914,13 @@ export async function getMonthlyGoal(goalType) {
     };
   }
 
-  // Legacy fallback for old deployments that already used goals table
-  try {
-    const { rows } = await pool.query(`
-      SELECT *
-      FROM goals
-      WHERE goal_type = $1
-        AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
-      ORDER BY updated_at DESC, id DESC
-      LIMIT 1
-    `, [goalType]);
-    return rows[0] || null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export async function setMonthlyGoal(goalType, targetValue) {
   const key = await getCurrentMonthlyGoalKey(goalType);
   await setSetting(key, String(parseInt(targetValue, 10) || 0));
-
-  // Optional legacy sync; never fail the request because of old goals table issues.
-  try {
-    const { rows: updatedRows } = await pool.query(`
-      UPDATE goals
-      SET target_value = $2, updated_at = NOW()
-      WHERE goal_type = $1
-        AND month_start = DATE_TRUNC('month', CURRENT_DATE)::date
-      RETURNING *
-    `, [goalType, targetValue]);
-
-    if (updatedRows.length > 0) {
-      return updatedRows[0];
-    }
-
-    const { rows: insertedRows } = await pool.query(`
-      INSERT INTO goals (goal_type, target_value, month_start, created_at, updated_at)
-      VALUES ($1, $2, DATE_TRUNC('month', CURRENT_DATE)::date, NOW(), NOW())
-      RETURNING *
-    `, [goalType, targetValue]);
-    return insertedRows[0];
-  } catch {
-    return getMonthlyGoal(goalType);
-  }
+  return getMonthlyGoal(goalType);
 }
 
 async function getCurrentMonthlyGoalKey(goalType) {
