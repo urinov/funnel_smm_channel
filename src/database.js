@@ -4760,6 +4760,13 @@ export async function resetUserLessonTest(telegramId, lessonNumber) {
 
 // Get test statistics (for admin dashboard)
 export async function getTestStatistics() {
+  const { rows: overallStats } = await pool.query(`
+    SELECT
+      COUNT(*)::int as total_submissions,
+      ROUND(COALESCE(AVG(CASE WHEN is_correct THEN 100 ELSE 0 END), 0), 1) as avg_score
+    FROM user_test_results
+  `);
+
   const { rows: lessonStats } = await pool.query(`
     SELECT
       lesson_number,
@@ -4798,7 +4805,11 @@ export async function getTestStatistics() {
     WHERE test_1_passed = TRUE OR test_2_passed = TRUE OR test_3_passed = TRUE OR test_mode = TRUE
   `);
 
+  const overall = overallStats[0] || {};
+
   return {
+    totalSubmissions: overall.total_submissions || 0,
+    avgScore: parseFloat(overall.avg_score) || 0,
     lessonStats,
     questionStats,
     passStats: passStats[0] || {}
