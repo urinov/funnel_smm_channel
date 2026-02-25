@@ -1279,6 +1279,34 @@
               </div>
             </div>
 
+            <div class="bg-white rounded-3xl shadow-card p-6">
+              <h4 class="font-semibold text-zinc-900 mb-4">Savol analitikasi</h4>
+              <div class="grid grid-cols-2 gap-2 mb-3">
+                <select class="input text-sm" id="analyticsLessonFilter" onchange="onAnalyticsLessonChange()">
+                  <option value="">Barcha darslar</option>
+                </select>
+                <select class="input text-sm" id="analyticsQuestionFilter" onchange="renderQuestionAnalytics()">
+                  <option value="">Barcha savollar</option>
+                </select>
+              </div>
+              <div class="text-xs text-zinc-500 mb-3" id="questionAnalyticsMeta">Yuklanmoqda...</div>
+              <div class="h-56">
+                <canvas id="testQuestionChart"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+              <div class="p-4 border-b border-zinc-100">
+                <h4 class="font-semibold text-zinc-900">Qiyin savollar</h4>
+              </div>
+              <div class="divide-y divide-zinc-100 max-h-64 overflow-y-auto" id="hardQuestionsList">
+                <div class="p-4 text-center text-zinc-400">
+                  <span class="material-symbols-outlined animate-pulse">analytics</span>
+                  <p class="text-sm">Yuklanmoqda...</p>
+                </div>
+              </div>
+            </div>
+
             <div class="bg-white rounded-3xl shadow-card overflow-hidden">
               <div class="p-4 border-b border-zinc-100">
                 <h4 class="font-semibold text-zinc-900">So'nggi topshiriqlar</h4>
@@ -5179,6 +5207,8 @@ async function deletePromoCode(id) {
 
 // ============ TEST MANAGEMENT FUNCTIONS ============
 let allTests = [];
+let questionAnalytics = [];
+let questionChartInstance = null;
 
 async function loadTests() {
   const listEl = document.getElementById('testsList');
@@ -5245,6 +5275,7 @@ async function loadTests() {
     // Load stats and submissions
     loadTestStats();
     loadTestSubmissions();
+    loadQuestionAnalytics();
 
   } catch (e) {
     console.error('loadTests error:', e);
@@ -5296,6 +5327,179 @@ async function loadTestSubmissions() {
   } catch (e) {
     console.error('loadTestSubmissions error:', e);
     container.innerHTML = '<div class="p-4 text-center text-red-400"><span class="material-symbols-outlined">error</span><p class="text-sm">Failed to load. Try again.</p><button class="btn btn-secondary text-sm mt-2" onclick="loadTestSubmissions()">Retry</button></div>';
+  }
+}
+
+function buildQuestionLabel(q) {
+  return `${q.lesson_number}-dars, ${q.question_order}-savol`;
+}
+
+function ensureQuestionChart() {
+  const ctx = document.getElementById('testQuestionChart')?.getContext('2d');
+  if (!ctx) return null;
+  if (questionChartInstance) {
+    questionChartInstance.destroy();
+  }
+  questionChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: [], datasets: [] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom' } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#71717a' } },
+        y: { beginAtZero: true, grid: { color: '#f4f4f5' }, ticks: { color: '#71717a' } }
+      }
+    }
+  });
+  return questionChartInstance;
+}
+
+function populateAnalyticsLessons() {
+  const lessonEl = document.getElementById('analyticsLessonFilter');
+  if (!lessonEl) return;
+
+  const existing = lessonEl.value;
+  const lessons = [...new Set(questionAnalytics.map(q => q.lesson_number))];
+  lessonEl.innerHTML = '<option value="">Barcha darslar</option>' +
+    lessons.map(n => `<option value="${n}">${n}-dars</option>`).join('');
+
+  if (existing && lessons.includes(parseInt(existing, 10))) {
+    lessonEl.value = existing;
+  }
+}
+
+function populateAnalyticsQuestions() {
+  const lessonValue = document.getElementById('analyticsLessonFilter')?.value || '';
+  const questionEl = document.getElementById('analyticsQuestionFilter');
+  if (!questionEl) return;
+
+  const selectedLesson = lessonValue ? parseInt(lessonValue, 10) : null;
+  const data = selectedLesson
+    ? questionAnalytics.filter(q => q.lesson_number === selectedLesson)
+    : questionAnalytics;
+
+  const previous = questionEl.value;
+  questionEl.innerHTML = '<option value="">Barcha savollar</option>' +
+    data.map(q => `<option value="${q.id}">${buildQuestionLabel(q)}</option>`).join('');
+
+  if (previous && data.some(q => String(q.id) === previous)) {
+    questionEl.value = previous;
+  }
+}
+
+function onAnalyticsLessonChange() {
+  populateAnalyticsQuestions();
+  renderQuestionAnalytics();
+}
+
+function renderHardQuestions(data) {
+  const listEl = document.getElementById('hardQuestionsList');
+  if (!listEl) return;
+
+  const hard = data
+    .filter(q => (q.total_attempts || 0) > 0)
+    .sort((a, b) => (a.success_rate || 0) - (b.success_rate || 0))
+    .slice(0, 6);
+
+  if (!hard.length) {
+    listEl.innerHTML = '<div class="p-4 text-center text-zinc-400"><p class="text-sm">Hali urinishlar yo\'q</p></div>';
+    return;
+  }
+
+  listEl.innerHTML = hard.map(q => `
+    <div class="p-3">
+      <div class="flex items-center justify-between gap-2">
+        <p class="text-sm font-medium text-zinc-900">${buildQuestionLabel(q)}</p>
+        <span class="text-xs font-semibold ${q.success_rate < 50 ? 'text-red-500' : q.success_rate < 70 ? 'text-amber-500' : 'text-green-600'}">${q.success_rate || 0}%</span>
+      </div>
+      <p class="text-xs text-zinc-500 truncate">${escapeHtml(q.question_text || '')}</p>
+      <p class="text-xs text-zinc-400 mt-1">${q.total_attempts || 0} urinish</p>
+    </div>
+  `).join('');
+}
+
+function renderQuestionAnalytics() {
+  const chart = ensureQuestionChart();
+  const metaEl = document.getElementById('questionAnalyticsMeta');
+  if (!chart || !metaEl) return;
+
+  const lessonValue = document.getElementById('analyticsLessonFilter')?.value || '';
+  const questionValue = document.getElementById('analyticsQuestionFilter')?.value || '';
+  const selectedLesson = lessonValue ? parseInt(lessonValue, 10) : null;
+
+  const scopedData = selectedLesson
+    ? questionAnalytics.filter(q => q.lesson_number === selectedLesson)
+    : questionAnalytics;
+
+  renderHardQuestions(scopedData);
+
+  if (!scopedData.length) {
+    chart.data.labels = [];
+    chart.data.datasets = [];
+    chart.update();
+    metaEl.textContent = 'Analitika uchun ma\'lumot yo\'q';
+    return;
+  }
+
+  if (questionValue) {
+    const q = scopedData.find(x => String(x.id) === questionValue);
+    if (!q) return;
+
+    const counts = [q.answer_a || 0, q.answer_b || 0, q.answer_c || 0, q.answer_d || 0];
+    const labels = ['A', 'B', 'C', 'D'];
+    const colors = labels.map(l => l.toLowerCase() === q.correct_answer ? '#16a34a' : '#8b5cf6');
+
+    chart.data.labels = labels;
+    chart.data.datasets = [{
+      label: `${buildQuestionLabel(q)} javoblar`,
+      data: counts,
+      backgroundColor: colors,
+      borderRadius: 8
+    }];
+    chart.update();
+
+    metaEl.textContent = `${q.total_attempts || 0} urinish • To'g'ri javob: ${(q.correct_answer || '').toUpperCase()} • Success rate: ${q.success_rate || 0}%`;
+    return;
+  }
+
+  chart.data.labels = scopedData.map(buildQuestionLabel);
+  chart.data.datasets = [{
+    label: 'Success rate (%)',
+    data: scopedData.map(q => q.success_rate || 0),
+    backgroundColor: scopedData.map(q => (q.success_rate || 0) < 50 ? '#ef4444' : (q.success_rate || 0) < 70 ? '#f59e0b' : '#22c55e'),
+    borderRadius: 8
+  }];
+  chart.update();
+
+  metaEl.textContent = `Barcha savollar bo'yicha muvaffaqiyat foizi. Savolni tanlasangiz A/B/C/D taqsimoti chiqadi.`;
+}
+
+async function loadQuestionAnalytics() {
+  try {
+    const data = await fetchJsonWithTimeout('/api/tests/question-stats', { headers: { Authorization: auth } }, 5000);
+    questionAnalytics = Array.isArray(data) ? data.map(q => ({
+      ...q,
+      lesson_number: parseInt(q.lesson_number, 10),
+      question_order: parseInt(q.question_order, 10),
+      total_attempts: parseInt(q.total_attempts, 10) || 0,
+      success_rate: parseFloat(q.success_rate) || 0,
+      answer_a: parseInt(q.answer_a, 10) || 0,
+      answer_b: parseInt(q.answer_b, 10) || 0,
+      answer_c: parseInt(q.answer_c, 10) || 0,
+      answer_d: parseInt(q.answer_d, 10) || 0
+    })) : [];
+
+    populateAnalyticsLessons();
+    populateAnalyticsQuestions();
+    renderQuestionAnalytics();
+  } catch (e) {
+    console.error('loadQuestionAnalytics error:', e);
+    const metaEl = document.getElementById('questionAnalyticsMeta');
+    if (metaEl) metaEl.textContent = 'Analitika yuklanmadi';
+    const listEl = document.getElementById('hardQuestionsList');
+    if (listEl) listEl.innerHTML = '<div class="p-4 text-center text-red-400"><p class="text-sm">Xato yuz berdi</p></div>';
   }
 }
 

@@ -779,6 +779,17 @@ app.get('/api/tests/stats', authMiddleware, async (req, res) => {
   }
 });
 
+// Per-question answer analytics
+app.get('/api/tests/question-stats', authMiddleware, async (req, res) => {
+  try {
+    const { getTestQuestionStats } = await import('./database.js');
+    const stats = await getTestQuestionStats();
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Get test questions count per lesson
 app.get('/api/tests/count', authMiddleware, async (req, res) => {
   try {

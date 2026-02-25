@@ -4827,6 +4827,35 @@ export async function getTestStatistics() {
   };
 }
 
+// Get per-question answer distribution for admin analytics
+export async function getTestQuestionStats() {
+  const { rows } = await pool.query(`
+    SELECT
+      lt.id,
+      lt.lesson_number,
+      lt.question_order,
+      lt.question_text,
+      lt.correct_answer,
+      COUNT(utr.id)::int AS total_attempts,
+      COUNT(*) FILTER (WHERE utr.is_correct = TRUE)::int AS correct_count,
+      COUNT(*) FILTER (WHERE LOWER(utr.user_answer) = 'a')::int AS answer_a,
+      COUNT(*) FILTER (WHERE LOWER(utr.user_answer) = 'b')::int AS answer_b,
+      COUNT(*) FILTER (WHERE LOWER(utr.user_answer) = 'c')::int AS answer_c,
+      COUNT(*) FILTER (WHERE LOWER(utr.user_answer) = 'd')::int AS answer_d,
+      ROUND(
+        100.0 * COUNT(*) FILTER (WHERE utr.is_correct = TRUE) / NULLIF(COUNT(utr.id), 0),
+        1
+      ) AS success_rate
+    FROM lesson_tests lt
+    LEFT JOIN user_test_results utr ON lt.id = utr.question_id
+    WHERE lt.is_active = TRUE
+    GROUP BY lt.id, lt.lesson_number, lt.question_order, lt.question_text, lt.correct_answer
+    ORDER BY lt.lesson_number, lt.question_order
+  `);
+
+  return rows;
+}
+
 // Get recent test submissions for dashboard
 export async function getRecentTestSubmissions(limit = 20) {
   const { rows } = await pool.query(`
