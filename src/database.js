@@ -2901,6 +2901,8 @@ export async function getFeedbackPage({
 }
 
 export async function getMonthlyGoal(goalType) {
+  await ensureGoalsSchema();
+
   const { rows } = await pool.query(`
     SELECT *
     FROM goals
@@ -2913,6 +2915,8 @@ export async function getMonthlyGoal(goalType) {
 }
 
 export async function setMonthlyGoal(goalType, targetValue) {
+  await ensureGoalsSchema();
+
   const { rows: updatedRows } = await pool.query(`
     UPDATE goals
     SET target_value = $2, updated_at = NOW()
@@ -2931,6 +2935,37 @@ export async function setMonthlyGoal(goalType, targetValue) {
     RETURNING *
   `, [goalType, targetValue]);
   return insertedRows[0];
+}
+
+async function ensureGoalsSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS goals (
+      id SERIAL PRIMARY KEY,
+      goal_type VARCHAR(50) NOT NULL,
+      target_value INTEGER NOT NULL,
+      month_start DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS goal_type VARCHAR(50)`);
+  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS target_value INTEGER`);
+  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS month_start DATE`);
+  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`);
+  await pool.query(`ALTER TABLE goals ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`);
+
+  await pool.query(`
+    UPDATE goals
+    SET month_start = DATE_TRUNC('month', CURRENT_DATE)::date
+    WHERE month_start IS NULL
+  `);
+
+  await pool.query(`
+    UPDATE goals
+    SET updated_at = NOW()
+    WHERE updated_at IS NULL
+  `);
 }
 
 export async function getMonthlyGoalProgress(goalType) {

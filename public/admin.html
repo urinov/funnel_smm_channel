@@ -2976,12 +2976,12 @@ async function setMonthlyGoalPrompt() {
       body: JSON.stringify({ goal_type: 'users', target_value: target })
     });
     const payload = await res.json();
-    if (!res.ok || payload.error) throw new Error(payload.error || 'Saqlab bo\'lmadi');
+    if (!res.ok || payload.error) throw new Error(payload.error || `HTTP ${res.status}`);
     showToast('Oylik maqsad saqlandi', 'success');
     loadMonthlyGoal();
   } catch (e) {
     console.error('setMonthlyGoalPrompt error:', e);
-    showToast('Maqsadni saqlashda xatolik', 'error');
+    showToast(e.message || 'Maqsadni saqlashda xatolik', 'error');
   }
 }
 
