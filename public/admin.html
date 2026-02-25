@@ -2948,11 +2948,16 @@ async function loadMonthlyGoal() {
       return;
     }
 
-    const current = goal.current_value || 0;
-    const target = goal.target_value || 0;
-    const percent = goal.percent || 0;
+    const current = parseInt(goal.current_value, 10) || 0;
+    const target = parseInt(goal.target_value, 10) || 0;
+    const percent = parseInt(goal.percent, 10) || 0;
+    const remaining = Math.max(target - current, 0);
     if (labelEl) labelEl.textContent = 'Oylik user maqsadi';
-    if (valueEl) valueEl.textContent = `${formatNumber(current)} / ${formatNumber(target)} users (${percent}%)`;
+    if (valueEl) {
+      valueEl.textContent = remaining > 0
+        ? `Bu oy: +${formatNumber(current)} | Maqsad: ${formatNumber(target)} | Qoldi: ${formatNumber(remaining)}`
+        : `Bu oy: +${formatNumber(current)} | Maqsad bajarildi`;
+    }
     if (pctEl) pctEl.textContent = `${percent}%`;
     if (barEl) barEl.style.width = `${Math.min(percent, 100)}%`;
   } catch (e) {
@@ -2962,7 +2967,7 @@ async function loadMonthlyGoal() {
 }
 
 async function setMonthlyGoalPrompt() {
-  const raw = prompt('Oylik user maqsadini kiriting (masalan: 100)');
+  const raw = prompt('Bu oyda qo\'shiladigan yangi user maqsadini kiriting (masalan: 100)');
   if (raw === null) return;
   const target = parseInt(raw, 10);
   if (!Number.isFinite(target) || target <= 0) {
@@ -2979,6 +2984,7 @@ async function setMonthlyGoalPrompt() {
     if (!res.ok || payload.error) throw new Error(payload.error || `HTTP ${res.status}`);
     showToast('Oylik maqsad saqlandi', 'success');
     loadMonthlyGoal();
+    loadHomeData();
   } catch (e) {
     console.error('setMonthlyGoalPrompt error:', e);
     showToast(e.message || 'Maqsadni saqlashda xatolik', 'error');
