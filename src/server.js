@@ -2620,7 +2620,16 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
 // Test broadcast (send to admin)
 app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
   try {
-    const { type, text, media_id, button, buttons } = req.body;
+    const {
+      type,
+      text,
+      media_id,
+      media,
+      button,
+      buttons,
+      payment_amount,
+      payment_duration
+    } = req.body;
     const { getLatestPendingPaymentForUser, getUser, getSubscriptionPlan, createPayment } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
@@ -2633,20 +2642,28 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
     const adminUser = Number.isFinite(adminNumericId)
       ? await getUser(adminNumericId)
       : null;
+    const selectedMediaType = media?.type || type || '';
+    const selectedMediaId = media?.file_id || media_id || '';
+    const planId = String(payment_duration || '1month');
+    const amountSom = parseInt(payment_amount, 10) || 97000;
+    const amountTiyin = amountSom * 100;
+
     let pendingPayment = Number.isFinite(adminNumericId)
       ? await getLatestPendingPaymentForUser(adminNumericId)
       : null;
     const fallbackButtons = button && button.text && button.url ? [button] : [];
     const buttonDefs = Array.isArray(buttons) && buttons.length > 0 ? buttons : fallbackButtons;
+    const hasPaymentButtons = buttonDefs.some((b) => b?.type === 'payme' || b?.type === 'click');
     const usesCheckoutPlaceholders = buttonDefs.some((b) => {
       const u = String(b?.url || '').toLowerCase();
       return u.includes('{{payme_checkout_url}}') || u.includes('{{click_checkout_url}}');
-    });
-    if (!pendingPayment && Number.isFinite(adminNumericId) && usesCheckoutPlaceholders) {
+    }) || hasPaymentButtons;
+    if ((!pendingPayment || String(pendingPayment.plan_id || '') !== planId || (parseInt(pendingPayment.amount, 10) || 0) !== amountTiyin)
+      && Number.isFinite(adminNumericId) && usesCheckoutPlaceholders) {
       const defaultPlan = await getSubscriptionPlan('1month');
       if (defaultPlan?.price) {
         const autoOrderId = (`ADM${adminNumericId}${Date.now().toString().slice(-7)}`).slice(0, 20);
-        await createPayment(autoOrderId, adminNumericId, defaultPlan.price, defaultPlan.id || '1month');
+        await createPayment(autoOrderId, adminNumericId, amountTiyin, planId);
         pendingPayment = await getLatestPendingPaymentForUser(adminNumericId);
       }
     }
@@ -2677,9 +2694,12 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
     const mappedButtons = buttonDefs
       .map((b) => {
         const btnText = String(b?.text || '').trim();
-        const rawUrl = String(b?.url || '').trim();
+        let rawUrl = '';
+        if (b?.type === 'payme') rawUrl = paymeCheckoutUrl;
+        else if (b?.type === 'click') rawUrl = clickCheckoutUrl;
+        else rawUrl = String(b?.url || '').trim();
         if (!btnText || !rawUrl) return null;
-        const mappedUrl = rawUrl
+        const mappedUrl = String(rawUrl)
           .replace(/\{\{tg\}\}/gi, sampleTg)
           .replace(/\{\{username\}\}/gi, sampleUsername)
           .replace(/\{\{phone\}\}/gi, samplePhone)
@@ -2696,12 +2716,14 @@ app.post('/api/broadcast/test', authMiddleware, async (req, res) => {
 
     const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
 
-    if (type === 'video' && media_id) {
-      await bot.telegram.sendVideo(adminId, media_id, { caption: personalizedText, ...opts });
-    } else if (type === 'photo' && media_id) {
-      await bot.telegram.sendPhoto(adminId, media_id, { caption: personalizedText, ...opts });
-    } else if (type === 'voice' && media_id) {
-      await bot.telegram.sendVoice(adminId, media_id, { caption: personalizedText, ...opts });
+    if (selectedMediaType === 'video' && selectedMediaId) {
+      await bot.telegram.sendVideo(adminId, selectedMediaId, { caption: personalizedText, ...opts });
+    } else if (selectedMediaType === 'photo' && selectedMediaId) {
+      await bot.telegram.sendPhoto(adminId, selectedMediaId, { caption: personalizedText, ...opts });
+    } else if (selectedMediaType === 'voice' && selectedMediaId) {
+      await bot.telegram.sendVoice(adminId, selectedMediaId, { caption: personalizedText, ...opts });
+    } else if (selectedMediaType === 'document' && selectedMediaId) {
+      await bot.telegram.sendDocument(adminId, selectedMediaId, { caption: personalizedText, ...opts });
     } else {
       await bot.telegram.sendMessage(adminId, personalizedText, opts);
     }

@@ -1457,6 +1457,10 @@
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('spoiler')">Spoiler</button>
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('code')">Code</button>
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastLink()">Link</button>
+                  <button id="broadcastEmojiToggle" class="btn btn-secondary text-xs px-3 py-1" onclick="toggleBroadcastEmojiPicker()">😊 Emoji</button>
+                </div>
+                <div id="broadcastEmojiPicker" class="hidden mt-2 p-3 border border-zinc-200 rounded-xl bg-white max-h-48 overflow-y-auto">
+                  <div class="grid grid-cols-10 gap-1" id="broadcastEmojiGrid"></div>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-2">
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="insertVariable('broadcastText','{{fio}}')">{{fio}}</button>
@@ -1542,6 +1546,10 @@
                 <button onclick="previewBroadcast()" class="btn btn-secondary flex-1">
                   <span class="material-symbols-outlined">visibility</span>
                   Preview
+                </button>
+                <button onclick="sendBroadcastTest()" class="btn btn-secondary flex-1">
+                  <span class="material-symbols-outlined">science</span>
+                  Test (menga)
                 </button>
                 <button onclick="sendBroadcast()" class="btn btn-primary flex-1">
                   <span class="material-symbols-outlined">send</span>
@@ -5838,11 +5846,37 @@ function formatTimeAgo(date) {
 
 // Broadcast from content tab
 let broadcastButtonCount = 1;
+const BROADCAST_EMOJIS = [
+  '🔥','⚡','🎁','💎','🚀','✅','❗','⏰','🎯','💰',
+  '📈','📌','📣','💳','💠','⭐','✨','🎉','🙌','🧠',
+  '😍','😎','🤝','👏','😉','😮','😢','🤔','🤑','😇',
+  '🥳','😁','😅','😴','😡','😱','🤗','🙏','👌','👍',
+  '👎','💪','👀','📚','📱','💬','🔒','🔓','🏆','🎬',
+  '📢','☎️','💥','🌟','🛍️','⌛','🎓','🧾','🔔','❤️'
+];
 
 function renderBroadcastPreviewHtml(text) {
   // Admin controls this input; render simple HTML preview close to Telegram output.
   return String(text || '')
     .replace(/\n/g, '<br>');
+}
+
+function toggleBroadcastEmojiPicker() {
+  const picker = document.getElementById('broadcastEmojiPicker');
+  if (!picker) return;
+  picker.classList.toggle('hidden');
+}
+
+function addBroadcastEmoji(emoji) {
+  insertTextAtCursor('broadcastText', emoji);
+}
+
+function initBroadcastEmojiPicker() {
+  const grid = document.getElementById('broadcastEmojiGrid');
+  if (!grid) return;
+  grid.innerHTML = BROADCAST_EMOJIS
+    .map((e) => `<button type="button" class="w-8 h-8 rounded hover:bg-zinc-100 text-lg" onclick="addBroadcastEmoji('${e}')">${e}</button>`)
+    .join('');
 }
 
 function updateBroadcastPreview() {
@@ -5904,6 +5938,20 @@ function formatBroadcastLink() {
     return;
   }
   wrapSelectionWithTags('broadcastText', `<a href="${safeUrl}">`, '</a>');
+}
+
+function insertTextAtCursor(textareaId, text) {
+  const el = document.getElementById(textareaId);
+  if (!el) return;
+  const start = Number.isInteger(el.selectionStart) ? el.selectionStart : el.value.length;
+  const end = Number.isInteger(el.selectionEnd) ? el.selectionEnd : el.value.length;
+  el.value = `${el.value.slice(0, start)}${text}${el.value.slice(end)}`;
+  const cursor = start + text.length;
+  el.focus();
+  el.setSelectionRange(cursor, cursor);
+  if (typeof updateBroadcastPreview === 'function' && textareaId === 'broadcastText') {
+    updateBroadcastPreview();
+  }
 }
 
 function addBroadcastButton() {
@@ -5996,7 +6044,7 @@ function getBroadcastButtons() {
   return buttons;
 }
 
-async function sendBroadcast() {
+function buildBroadcastPayloadFromForm() {
   const target = document.getElementById('broadcastTarget').value;
   const text = document.getElementById('broadcastText').value;
   const mediaType = document.getElementById('broadcastMediaType').value;
@@ -6011,31 +6059,55 @@ async function sendBroadcast() {
 
   if (!text.trim()) {
     showToast('Xabar matnini kiriting', 'error');
-    return;
+    return null;
   }
 
-  try {
-    const payload = { target, text };
-    const filters = { filter: target };
-    if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
-    if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
-    payload.filters = filters;
-    if (Number.isFinite(autoDeleteHours) && autoDeleteHours > 0) {
-      payload.auto_delete_hours = autoDeleteHours;
+  const payload = { target, text };
+  const filters = { filter: target };
+  if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
+  if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
+  payload.filters = filters;
+  if (Number.isFinite(autoDeleteHours) && autoDeleteHours > 0) {
+    payload.auto_delete_hours = autoDeleteHours;
+  }
+  if (mediaType && fileId) {
+    payload.media = { type: mediaType, file_id: fileId };
+  }
+  if (buttons.length > 0) {
+    payload.buttons = buttons;
+    const hasPaymentBtn = buttons.some(b => b.type === 'payme' || b.type === 'click');
+    if (hasPaymentBtn) {
+      payload.payment_amount = parseInt(document.getElementById('broadcastPaymentAmount').value) || 97000;
+      payload.payment_duration = document.getElementById('broadcastPaymentDuration').value || '1month';
     }
-    if (mediaType && fileId) {
-      payload.media = { type: mediaType, file_id: fileId };
-    }
-    if (buttons.length > 0) {
-      payload.buttons = buttons;
+  }
+  return payload;
+}
 
-      // Check if there are payment buttons and include payment settings
-      const hasPaymentBtn = buttons.some(b => b.type === 'payme' || b.type === 'click');
-      if (hasPaymentBtn) {
-        payload.payment_amount = parseInt(document.getElementById('broadcastPaymentAmount').value) || 97000;
-        payload.payment_duration = document.getElementById('broadcastPaymentDuration').value || '1month';
-      }
+async function sendBroadcastTest() {
+  const payload = buildBroadcastPayloadFromForm();
+  if (!payload) return;
+  try {
+    const res = await fetch('/api/broadcast/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
     }
+    showToast('Test xabar sizga yuborildi', 'success');
+  } catch (e) {
+    console.error('Broadcast test error:', e);
+    showToast(e.message || 'Test yuborilmadi', 'error');
+  }
+}
+
+async function sendBroadcast() {
+  const payload = buildBroadcastPayloadFromForm();
+  if (!payload) return;
+  try {
 
     const res = await fetch('/api/broadcast', {
       method: 'POST',
@@ -6075,6 +6147,8 @@ async function sendBroadcast() {
 
 // Show/hide file ID input based on media type
 document.addEventListener('DOMContentLoaded', () => {
+  initBroadcastEmojiPicker();
+
   const mediaTypeSelect = document.getElementById('broadcastMediaType');
   if (mediaTypeSelect) {
     mediaTypeSelect.addEventListener('change', (e) => {
@@ -6090,6 +6164,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const aiEnabledToggle = document.getElementById('aiEnabled');
   if (aiEnabledToggle) aiEnabledToggle.addEventListener('change', saveAISettings);
+
+  document.addEventListener('click', (e) => {
+    const picker = document.getElementById('broadcastEmojiPicker');
+    const toggle = document.getElementById('broadcastEmojiToggle');
+    if (!picker || picker.classList.contains('hidden')) return;
+    if (picker.contains(e.target) || (toggle && toggle.contains(e.target))) return;
+    picker.classList.add('hidden');
+  });
 });
 
 // Utility functions
@@ -6133,17 +6215,7 @@ function escapeHtml(text) {
 }
 
 function insertVariable(textareaId, token) {
-  const el = document.getElementById(textareaId);
-  if (!el) return;
-  const start = Number.isInteger(el.selectionStart) ? el.selectionStart : el.value.length;
-  const end = Number.isInteger(el.selectionEnd) ? el.selectionEnd : el.value.length;
-  el.value = `${el.value.slice(0, start)}${token}${el.value.slice(end)}`;
-  const caret = start + token.length;
-  el.focus();
-  el.setSelectionRange(caret, caret);
-  if (typeof updateBroadcastPreview === 'function' && textareaId === 'broadcastText') {
-    updateBroadcastPreview();
-  }
+  insertTextAtCursor(textareaId, token);
 }
 
 async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
