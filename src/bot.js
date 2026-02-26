@@ -18,11 +18,7 @@ export const bot = new Telegraf(BOT_TOKEN);
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 const isAdmin = (id) => {
   const numId = Number(id);
-  const result = ADMIN_IDS.includes(numId);
-  if (!result && ADMIN_IDS.length > 0) {
-    console.log(`🔍 isAdmin check: ${id} (type: ${typeof id}) not in [${ADMIN_IDS.join(', ')}]`);
-  }
-  return result;
+  return ADMIN_IDS.includes(numId);
 };
 const formatMoney = (t) => (t / 100).toLocaleString('uz-UZ') + " so'm";
 

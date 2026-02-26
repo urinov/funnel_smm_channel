@@ -7,6 +7,15 @@ import { sendRenewalReminder, handleExpiredSubscription } from './payments/payme
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id.trim())).filter(Boolean);
 const REPORT_TIMEZONE = 'Asia/Tashkent';
 const BASE_URL = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/+$/, '') : '';
+const SCHEDULER_VERBOSE = process.env.SCHEDULER_VERBOSE === 'true';
+
+function isExpectedDeliveryError(message = '') {
+  const m = String(message || '').toLowerCase();
+  return m.includes('chat not found')
+    || m.includes('bot was blocked by the user')
+    || m.includes('user is deactivated')
+    || m.includes('forbidden');
+}
 
 function formatMoney(t) {
   return (Number(t || 0) / 100).toLocaleString('uz-UZ') + " so'm";
@@ -81,7 +90,9 @@ async function processScheduledMessages() {
         const { telegram_id, message_type, data } = msg;
         const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
 
-        console.log(`Processing scheduled message: ${message_type} for ${telegram_id}`);
+        if (SCHEDULER_VERBOSE) {
+          console.log(`Processing scheduled message: ${message_type} for ${telegram_id}`);
+        }
 
         if (message_type.startsWith('payment_reminder_')) {
           const orderId = parsedData?.order_id;
@@ -92,6 +103,7 @@ async function processScheduledMessages() {
 
           const payment = await db.getPaymentByOrderId(orderId);
           if (!payment || ['performed', '2', 'cancelled', '-1', '-2'].includes(String(payment.state))) {
+            await db.cancelPaymentReminders(telegram_id, orderId);
             await db.markScheduledMessageSent(msg.id);
             continue;
           }
@@ -114,12 +126,21 @@ async function processScheduledMessages() {
           if (paymeUrl) inlineKeyboard.push({ text: "💳 Payme orqali to'lash", url: paymeUrl });
           if (clickUrl) inlineKeyboard.push({ text: "💠 Click orqali to'lash", url: clickUrl });
 
-          await bot.telegram.sendMessage(telegram_id, text, {
-            parse_mode: 'HTML',
-            ...(inlineKeyboard.length > 0
-              ? { reply_markup: { inline_keyboard: [inlineKeyboard] } }
-              : {})
-          });
+          try {
+            await bot.telegram.sendMessage(telegram_id, text, {
+              parse_mode: 'HTML',
+              ...(inlineKeyboard.length > 0
+                ? { reply_markup: { inline_keyboard: [inlineKeyboard] } }
+                : {})
+            });
+          } catch (e) {
+            if (isExpectedDeliveryError(e.message)) {
+              console.warn(`payment reminder skipped for ${telegram_id}: ${e.message}`);
+              await db.cancelPaymentReminders(telegram_id, orderId);
+            } else {
+              throw e;
+            }
+          }
 
           await db.markScheduledMessageSent(msg.id);
           await new Promise(r => setTimeout(r, 100));
@@ -378,6 +399,12 @@ async function sendReferralOffers() {
 // ==================== START SCHEDULER ====================
 export function startScheduler() {
   console.log('🕐 Starting scheduler...');
+
+  db.cleanupStalePaymentReminders(14)
+    .then((n) => {
+      if (n > 0) console.log(`🧹 Cleaned stale payment reminders: ${n}`);
+    })
+    .catch((e) => console.error('cleanupStalePaymentReminders error:', e.message));
 
   // Har daqiqada scheduled messages ni tekshirish
   cron.schedule('* * * * *', () => {

@@ -1531,13 +1531,18 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
           users = users.filter(u => (u.current_lesson || 0) === lessonNum);
         }
       }
-      const lessonFrom = parseInt(effectiveFilters.lesson_from, 10);
-      const lessonTo = parseInt(effectiveFilters.lesson_to, 10);
-      if (Number.isFinite(lessonFrom)) {
-        users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) >= lessonFrom);
-      }
-      if (Number.isFinite(lessonTo)) {
-        users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) <= lessonTo);
+      const lessonExact = parseInt(effectiveFilters.lesson_exact, 10);
+      if (Number.isFinite(lessonExact)) {
+        users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) === lessonExact);
+      } else {
+        const lessonFrom = parseInt(effectiveFilters.lesson_from, 10);
+        const lessonTo = parseInt(effectiveFilters.lesson_to, 10);
+        if (Number.isFinite(lessonFrom)) {
+          users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) >= lessonFrom);
+        }
+        if (Number.isFinite(lessonTo)) {
+          users = users.filter(u => (parseInt(u.current_lesson, 10) || 0) <= lessonTo);
+        }
       }
 
       // CustDev filter
@@ -2559,7 +2564,7 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 // ============ NEW: Enhanced Broadcast API ============
 app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
   try {
-    const { target, type, text, media_id, button, buttons, user_ids, lesson_from, lesson_to } = req.body;
+    const { target, type, text, media_id, button, buttons, user_ids, lesson_from, lesson_to, lesson_exact } = req.body;
     const { getAllActiveUsers, getLatestPendingPaymentForUser, getSubscriptionPlan, createPayment } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
@@ -2577,9 +2582,14 @@ app.post('/api/broadcast/advanced', authMiddleware, async (req, res) => {
     } else if (target === 'active') {
       users = allUsers.filter(u => u.current_lesson > 0 && !u.is_paid);
     } else if (target === 'lesson') {
-      const from = lesson_from || 0;
-      const to = lesson_to || 999;
-      users = allUsers.filter(u => u.current_lesson >= from && u.current_lesson <= to);
+      const exact = Number(lesson_exact);
+      if (Number.isFinite(exact)) {
+        users = allUsers.filter(u => Number(u.current_lesson || 0) === exact);
+      } else {
+        const from = Number(lesson_from ?? 0);
+        const to = Number(lesson_to ?? 999);
+        users = allUsers.filter(u => Number(u.current_lesson || 0) >= from && Number(u.current_lesson || 0) <= to);
+      }
     } else {
       users = allUsers;
     }

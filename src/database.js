@@ -1815,6 +1815,18 @@ export async function cancelPaymentReminders(telegramId, orderId = null) {
   `, [telegramId]);
 }
 
+export async function cleanupStalePaymentReminders(olderThanDays = 7) {
+  const days = Math.max(parseInt(olderThanDays, 10) || 7, 1);
+  const { rowCount } = await pool.query(`
+    UPDATE scheduled_messages
+    SET sent = TRUE
+    WHERE sent = FALSE
+      AND message_type LIKE 'payment_reminder_%'
+      AND scheduled_at < NOW() - INTERVAL '1 day' * $1
+  `, [days]);
+  return rowCount || 0;
+}
+
 export async function getPaymentByTransactionId(transactionId, paymentMethod) {
   const { rows } = await pool.query(
     'SELECT * FROM payments WHERE transaction_id = $1 AND payment_method = $2',

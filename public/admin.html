@@ -792,13 +792,19 @@
               </select>
               <select class="input w-auto" id="userLessonFilter" onchange="filterUsersByLesson(this.value)">
                 <option value="all">Barcha darslar</option>
-                <option value="0">0-darsgacha</option>
-                <option value="1">1-darsgacha</option>
-                <option value="2">2-darsgacha</option>
-                <option value="3">3-darsgacha</option>
-                <option value="4">4-darsgacha</option>
-                <option value="5">5-darsgacha</option>
-                <option value="10">10-darsgacha</option>
+                <option value="eq:0">0-dars (aniq)</option>
+                <option value="eq:1">1-dars (aniq)</option>
+                <option value="eq:2">2-dars (aniq)</option>
+                <option value="eq:3">3-dars (aniq)</option>
+                <option value="eq:4">4-dars (aniq)</option>
+                <option value="eq:5">5-dars (aniq)</option>
+                <option value="lte:0">0-darsgacha (<=)</option>
+                <option value="lte:1">1-darsgacha (<=)</option>
+                <option value="lte:2">2-darsgacha (<=)</option>
+                <option value="lte:3">3-darsgacha (<=)</option>
+                <option value="lte:4">4-darsgacha (<=)</option>
+                <option value="lte:5">5-darsgacha (<=)</option>
+                <option value="gte:3">3-darsdan (>=)</option>
               </select>
             </div>
           </div>
@@ -1490,6 +1496,11 @@
                   <label class="block text-sm font-medium text-zinc-700 mb-2">Darsgacha (<=)</label>
                   <input type="number" class="input" id="broadcastLessonTo" min="0" placeholder="3">
                 </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Aynan dars (=)</label>
+                <input type="number" class="input" id="broadcastLessonExact" min="0" placeholder="Masalan: 2">
+                <p class="text-xs text-zinc-500 mt-1">To'ldirilsa, yuqoridagi intervaldan ustun bo'ladi.</p>
               </div>
 
               <div>
@@ -2311,6 +2322,10 @@
           <label class="block text-sm font-medium text-zinc-700 mb-2">Darsgacha (<=)</label>
           <input type="number" class="input" id="modalBroadcastLessonTo" min="0" placeholder="3">
         </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-zinc-700 mb-2">Aynan dars (=)</label>
+        <input type="number" class="input" id="modalBroadcastLessonExact" min="0" placeholder="Masalan: 2">
       </div>
 
       <div>
@@ -3676,13 +3691,28 @@ function applyUserFilters() {
   const searchQ = (document.getElementById('userSearch')?.value || '').toLowerCase().trim();
   const statusFilter = document.getElementById('userFilter')?.value || 'all';
   const lessonFilterRaw = document.getElementById('userLessonFilter')?.value || 'all';
-  const maxLesson = lessonFilterRaw === 'all' ? null : parseInt(lessonFilterRaw, 10);
+
+  let lessonFilterMode = 'all';
+  let lessonFilterValue = null;
+  if (lessonFilterRaw !== 'all') {
+    const [mode, valueRaw] = String(lessonFilterRaw).split(':');
+    const parsedValue = parseInt(valueRaw, 10);
+    if (Number.isFinite(parsedValue)) {
+      lessonFilterMode = mode || 'eq';
+      lessonFilterValue = parsedValue;
+    }
+  }
 
   filteredUsers = allUsers.filter((u) => {
     if (statusFilter === 'paid' && !u.is_paid) return false;
     if (statusFilter === 'free' && u.is_paid) return false;
     if (statusFilter === 'active' && !(u.current_lesson > 0)) return false;
-    if (Number.isFinite(maxLesson) && (parseInt(u.current_lesson, 10) || 0) > maxLesson) return false;
+    const userLesson = parseInt(u.current_lesson, 10) || 0;
+    if (Number.isFinite(lessonFilterValue)) {
+      if (lessonFilterMode === 'eq' && userLesson !== lessonFilterValue) return false;
+      if (lessonFilterMode === 'lte' && userLesson > lessonFilterValue) return false;
+      if (lessonFilterMode === 'gte' && userLesson < lessonFilterValue) return false;
+    }
 
     if (!searchQ) return true;
     return (
@@ -3816,8 +3846,10 @@ async function sendModalBroadcast() {
   const text = document.getElementById('modalBroadcastText').value;
   const lessonFromRaw = document.getElementById('modalBroadcastLessonFrom')?.value;
   const lessonToRaw = document.getElementById('modalBroadcastLessonTo')?.value;
+  const lessonExactRaw = document.getElementById('modalBroadcastLessonExact')?.value;
   const lessonFrom = lessonFromRaw === '' ? null : parseInt(lessonFromRaw, 10);
   const lessonTo = lessonToRaw === '' ? null : parseInt(lessonToRaw, 10);
+  const lessonExact = lessonExactRaw === '' ? null : parseInt(lessonExactRaw, 10);
 
   if (!text.trim()) {
     showToast('Xabar matnini kiriting', 'error');
@@ -3826,8 +3858,12 @@ async function sendModalBroadcast() {
 
   try {
     const filters = { filter: target };
-    if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
-    if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
+    if (Number.isFinite(lessonExact)) {
+      filters.lesson_exact = lessonExact;
+    } else {
+      if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
+      if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
+    }
 
     const res = await fetch('/api/broadcast', {
       method: 'POST',
@@ -3838,6 +3874,8 @@ async function sendModalBroadcast() {
       showToast('Xabar yuborildi!', 'success');
       closeBroadcast();
       document.getElementById('modalBroadcastText').value = '';
+      const modalExactInput = document.getElementById('modalBroadcastLessonExact');
+      if (modalExactInput) modalExactInput.value = '';
     } else {
       throw new Error('Failed');
     }
@@ -6329,9 +6367,11 @@ function buildBroadcastPayloadFromForm() {
   const fileId = document.getElementById('broadcastFileId').value;
   const lessonFromRaw = document.getElementById('broadcastLessonFrom')?.value;
   const lessonToRaw = document.getElementById('broadcastLessonTo')?.value;
+  const lessonExactRaw = document.getElementById('broadcastLessonExact')?.value;
   const autoDeleteRaw = document.getElementById('broadcastAutoDeleteHours')?.value;
   const lessonFrom = lessonFromRaw === '' ? null : parseInt(lessonFromRaw, 10);
   const lessonTo = lessonToRaw === '' ? null : parseInt(lessonToRaw, 10);
+  const lessonExact = lessonExactRaw === '' ? null : parseInt(lessonExactRaw, 10);
   const autoDeleteHours = autoDeleteRaw === '' ? 0 : parseInt(autoDeleteRaw, 10);
   const buttons = getBroadcastButtons();
 
@@ -6342,8 +6382,12 @@ function buildBroadcastPayloadFromForm() {
 
   const payload = { target, text };
   const filters = { filter: target };
-  if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
-  if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
+  if (Number.isFinite(lessonExact)) {
+    filters.lesson_exact = lessonExact;
+  } else {
+    if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
+    if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
+  }
   payload.filters = filters;
   if (Number.isFinite(autoDeleteHours) && autoDeleteHours > 0) {
     payload.auto_delete_hours = autoDeleteHours;
@@ -6416,6 +6460,8 @@ async function sendBroadcast() {
       document.getElementById('broadcastText').value = '';
       document.getElementById('broadcastFileId').value = '';
       document.getElementById('broadcastAutoDeleteHours').value = '0';
+      const exactInput = document.getElementById('broadcastLessonExact');
+      if (exactInput) exactInput.value = '';
       document.getElementById('broadcastPaymentSettings').style.display = 'none';
       // Clear buttons
       document.getElementById('broadcastButtons').innerHTML = `
