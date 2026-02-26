@@ -1450,6 +1450,15 @@
                 <label class="block text-sm font-medium text-zinc-700 mb-2">Xabar matni</label>
                 <textarea class="input min-h-[150px]" id="broadcastText" placeholder="Xabar matnini yozing..." oninput="updateBroadcastPreview()"></textarea>
                 <div class="mt-2 flex flex-wrap gap-2">
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('bold')"><b>B</b></button>
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('italic')"><i>I</i></button>
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('underline')"><u>U</u></button>
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('strike')"><s>S</s></button>
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('spoiler')">Spoiler</button>
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastText('code')">Code</button>
+                  <button class="btn btn-secondary text-xs px-3 py-1" onclick="formatBroadcastLink()">Link</button>
+                </div>
+                <div class="mt-2 flex flex-wrap gap-2">
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="insertVariable('broadcastText','{{fio}}')">{{fio}}</button>
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="insertVariable('broadcastText','{{ism}}')">{{ism}}</button>
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="insertVariable('broadcastText','{{username}}')">{{username}}</button>
@@ -1457,7 +1466,7 @@
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="insertVariable('broadcastText','{{dars}}')">{{dars}}</button>
                   <button class="btn btn-secondary text-xs px-3 py-1" onclick="insertVariable('broadcastText','{{tg}}')">{{tg}}</button>
                 </div>
-                <p class="text-xs text-zinc-500 mt-2">Peremenniylar user ma'lumotlariga almashtiriladi.</p>
+                <p class="text-xs text-zinc-500 mt-2">Peremenniylar user ma'lumotlariga almashtiriladi. Format: HTML (`&lt;b&gt;`, `&lt;i&gt;`, `&lt;tg-spoiler&gt;` va hk).</p>
               </div>
 
               <div>
@@ -1513,6 +1522,20 @@
                   </div>
                 </div>
                 <p class="text-xs text-green-600">Maxsus narx va muddat bilan to'lov havolasi yaratiladi</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Avto-o'chirish (ixtiyoriy)</label>
+                <select class="input" id="broadcastAutoDeleteHours">
+                  <option value="0">O'chirilmasin</option>
+                  <option value="1">1 soatdan keyin</option>
+                  <option value="3">3 soatdan keyin</option>
+                  <option value="6">6 soatdan keyin</option>
+                  <option value="12">12 soatdan keyin</option>
+                  <option value="24">24 soatdan keyin</option>
+                  <option value="48">48 soatdan keyin</option>
+                </select>
+                <p class="text-xs text-zinc-500 mt-1">Yuborilgan xabar belgilangan vaqtdan keyin user chatidan bot tomonidan o‘chiriladi.</p>
               </div>
 
               <div class="flex gap-3 pt-4">
@@ -5816,9 +5839,15 @@ function formatTimeAgo(date) {
 // Broadcast from content tab
 let broadcastButtonCount = 1;
 
+function renderBroadcastPreviewHtml(text) {
+  // Admin controls this input; render simple HTML preview close to Telegram output.
+  return String(text || '')
+    .replace(/\n/g, '<br>');
+}
+
 function updateBroadcastPreview() {
   const text = document.getElementById('broadcastText').value || 'Xabar matni bu yerda ko\'rinadi...';
-  document.getElementById('broadcastPreviewContent').innerHTML = `<p class="text-white text-sm whitespace-pre-wrap">${escapeHtml(text)}</p>`;
+  document.getElementById('broadcastPreviewContent').innerHTML = `<p class="text-white text-sm whitespace-pre-wrap">${renderBroadcastPreviewHtml(text)}</p>`;
 
   // Update button previews
   const buttonsContainer = document.getElementById('broadcastPreviewButtons');
@@ -5840,6 +5869,41 @@ function updateBroadcastPreview() {
       buttonsContainer.innerHTML += `<button class="w-full ${btnClass} text-white text-sm py-2 px-4 rounded-lg">${icon}${escapeHtml(btnText)}</button>`;
     }
   }
+}
+
+function wrapSelectionWithTags(textareaId, openTag, closeTag) {
+  const el = document.getElementById(textareaId);
+  if (!el) return;
+  const start = Number.isInteger(el.selectionStart) ? el.selectionStart : el.value.length;
+  const end = Number.isInteger(el.selectionEnd) ? el.selectionEnd : el.value.length;
+  const selected = el.value.slice(start, end);
+  const fallback = selected || 'matn';
+  const inserted = `${openTag}${fallback}${closeTag}`;
+  el.value = `${el.value.slice(0, start)}${inserted}${el.value.slice(end)}`;
+  const cursor = start + inserted.length;
+  el.focus();
+  el.setSelectionRange(cursor, cursor);
+  updateBroadcastPreview();
+}
+
+function formatBroadcastText(type) {
+  if (type === 'bold') return wrapSelectionWithTags('broadcastText', '<b>', '</b>');
+  if (type === 'italic') return wrapSelectionWithTags('broadcastText', '<i>', '</i>');
+  if (type === 'underline') return wrapSelectionWithTags('broadcastText', '<u>', '</u>');
+  if (type === 'strike') return wrapSelectionWithTags('broadcastText', '<s>', '</s>');
+  if (type === 'spoiler') return wrapSelectionWithTags('broadcastText', '<tg-spoiler>', '</tg-spoiler>');
+  if (type === 'code') return wrapSelectionWithTags('broadcastText', '<code>', '</code>');
+}
+
+function formatBroadcastLink() {
+  const url = prompt('Link kiriting (https://...)');
+  if (!url) return;
+  const safeUrl = String(url).trim();
+  if (!/^https?:\/\//i.test(safeUrl)) {
+    showToast('Link http:// yoki https:// bilan boshlansin', 'error');
+    return;
+  }
+  wrapSelectionWithTags('broadcastText', `<a href="${safeUrl}">`, '</a>');
 }
 
 function addBroadcastButton() {
@@ -5939,8 +6003,10 @@ async function sendBroadcast() {
   const fileId = document.getElementById('broadcastFileId').value;
   const lessonFromRaw = document.getElementById('broadcastLessonFrom')?.value;
   const lessonToRaw = document.getElementById('broadcastLessonTo')?.value;
+  const autoDeleteRaw = document.getElementById('broadcastAutoDeleteHours')?.value;
   const lessonFrom = lessonFromRaw === '' ? null : parseInt(lessonFromRaw, 10);
   const lessonTo = lessonToRaw === '' ? null : parseInt(lessonToRaw, 10);
+  const autoDeleteHours = autoDeleteRaw === '' ? 0 : parseInt(autoDeleteRaw, 10);
   const buttons = getBroadcastButtons();
 
   if (!text.trim()) {
@@ -5954,6 +6020,9 @@ async function sendBroadcast() {
     if (Number.isFinite(lessonFrom)) filters.lesson_from = lessonFrom;
     if (Number.isFinite(lessonTo)) filters.lesson_to = lessonTo;
     payload.filters = filters;
+    if (Number.isFinite(autoDeleteHours) && autoDeleteHours > 0) {
+      payload.auto_delete_hours = autoDeleteHours;
+    }
     if (mediaType && fileId) {
       payload.media = { type: mediaType, file_id: fileId };
     }
@@ -5978,6 +6047,7 @@ async function sendBroadcast() {
       showToast(`Xabar yuborildi! ${result.sent || 0} ta userga`, 'success');
       document.getElementById('broadcastText').value = '';
       document.getElementById('broadcastFileId').value = '';
+      document.getElementById('broadcastAutoDeleteHours').value = '0';
       document.getElementById('broadcastPaymentSettings').style.display = 'none';
       // Clear buttons
       document.getElementById('broadcastButtons').innerHTML = `
@@ -5994,11 +6064,12 @@ async function sendBroadcast() {
       broadcastButtonCount = 1;
       updateBroadcastPreview();
     } else {
-      showToast('Xabar yuborilmadi', 'error');
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || `Xabar yuborilmadi (HTTP ${res.status})`, 'error');
     }
   } catch (e) {
     console.error('Broadcast error:', e);
-    showToast('Xabar yuborilmadi', 'error');
+    showToast(e.message || 'Xabar yuborilmadi', 'error');
   }
 }
 

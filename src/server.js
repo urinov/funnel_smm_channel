@@ -1466,8 +1466,27 @@ app.put('/api/media/:id', authMiddleware, async (req, res) => {
 
 app.post('/api/broadcast', authMiddleware, async (req, res) => {
   try {
-    const { text, filters, photo, video, button_text, button_url, target, media, buttons } = req.body;
-    const { getAllActiveUsers, getLessonsCount } = await import('./database.js');
+    const {
+      text,
+      filters,
+      photo,
+      video,
+      button_text,
+      button_url,
+      target,
+      media,
+      buttons,
+      payment_amount,
+      payment_duration,
+      auto_delete_hours
+    } = req.body;
+    const {
+      getAllActiveUsers,
+      getLessonsCount,
+      getLatestPendingPaymentForUser,
+      createPayment,
+      scheduleMessage
+    } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
     // Support new target parameter as alternative to filters
@@ -1536,43 +1555,107 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
     let sent = 0;
     let failed = 0;
 
-    // Build inline keyboard
-    let keyboard = null;
-    // Support new buttons array format
-    if (buttons && buttons.length > 0) {
-      const buttonRows = buttons.map(b => [Markup.button.url(b.text, b.url)]);
-      keyboard = Markup.inlineKeyboard(buttonRows);
-    }
-    // Legacy single button format
-    else if (button_text && button_url) {
-      keyboard = Markup.inlineKeyboard([[Markup.button.url(button_text, button_url)]]);
-    }
-
     // Determine media file
     const mediaFile = media?.file_id || (media?.type === 'photo' ? photo : null) || photo;
     const videoFile = media?.type === 'video' ? media.file_id : video;
     const documentFile = media?.type === 'document' ? media.file_id : null;
+    const baseUrl = (process.env.BASE_URL || '').replace(/\/+$/, '');
+
+    const buttonDefs = Array.isArray(buttons) && buttons.length > 0
+      ? buttons
+      : (button_text && button_url ? [{ text: button_text, url: button_url, type: 'url' }] : []);
+    const hasPaymentButton = buttonDefs.some((b) => b?.type === 'payme' || b?.type === 'click');
+    const planId = String(payment_duration || '1month');
+    const amountSom = parseInt(payment_amount, 10) || 97000;
+    const amountTiyin = amountSom * 100;
+    const autoDeleteHours = parseInt(auto_delete_hours, 10);
+    const enableAutoDelete = Number.isFinite(autoDeleteHours) && autoDeleteHours > 0;
 
     for (const user of users) {
       try {
+        let paymeCheckoutUrl = '';
+        let clickCheckoutUrl = '';
+
+        if (hasPaymentButton && baseUrl) {
+          let pendingPayment = await getLatestPendingPaymentForUser(user.telegram_id);
+          const mustCreateNew = !pendingPayment
+            || (parseInt(pendingPayment.amount, 10) || 0) !== amountTiyin
+            || String(pendingPayment.plan_id || '') !== planId;
+
+          if (mustCreateNew) {
+            const generatedOrderId = (`BRD${user.telegram_id}${Date.now().toString().slice(-7)}`).slice(0, 20);
+            await createPayment(generatedOrderId, user.telegram_id, amountTiyin, planId);
+            pendingPayment = await getLatestPendingPaymentForUser(user.telegram_id);
+          }
+
+          if (pendingPayment) {
+            const pid = encodeURIComponent(pendingPayment.order_id);
+            const amount = pendingPayment.amount;
+            const plan = encodeURIComponent(pendingPayment.plan_id || planId);
+            paymeCheckoutUrl = `${baseUrl}/payme/api/checkout-url?order_id=${pid}&amount=${amount}&plan=${plan}&redirect=1`;
+            clickCheckoutUrl = `${baseUrl}/click/api/checkout-url?order_id=${pid}&amount=${amount}&plan=${plan}&redirect=1`;
+          }
+        }
+
         const personalizedText = text
           .replace(/\{\{fio\}\}/gi, user.full_name || "do'st")
           .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
           .replace(/\{\{telefon\}\}/gi, user.phone || '')
           .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
           .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
+          .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
+          .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl)
           .replace(/\{\{dars\}\}/gi, String(user.current_lesson || 0));
+
+        let keyboard = null;
+        if (buttonDefs.length > 0) {
+          const buttonRows = buttonDefs
+            .map((b) => {
+              const btnText = String(b?.text || '').trim();
+              if (!btnText) return null;
+
+              let targetUrl = '';
+              if (b?.type === 'payme') targetUrl = paymeCheckoutUrl;
+              else if (b?.type === 'click') targetUrl = clickCheckoutUrl;
+              else targetUrl = String(b?.url || '').trim();
+
+              targetUrl = targetUrl
+                .replace(/\{\{tg\}\}/gi, String(user.telegram_id))
+                .replace(/\{\{username\}\}/gi, user.username ? '@' + user.username : '')
+                .replace(/\{\{telefon\}\}/gi, user.phone || '')
+                .replace(/\{\{ism\}\}/gi, (user.full_name || "do'st").split(' ')[0])
+                .replace(/\{\{payme_checkout_url\}\}/gi, paymeCheckoutUrl)
+                .replace(/\{\{click_checkout_url\}\}/gi, clickCheckoutUrl);
+
+              if (!targetUrl || targetUrl.includes('{{')) return null;
+              return [Markup.button.url(btnText, targetUrl)];
+            })
+            .filter(Boolean);
+
+          if (buttonRows.length > 0) {
+            keyboard = Markup.inlineKeyboard(buttonRows);
+          }
+        }
 
         const opts = { parse_mode: 'HTML', ...(keyboard || {}) };
 
+        let sentMessage = null;
         if (videoFile) {
-          await bot.telegram.sendVideo(user.telegram_id, videoFile, { caption: personalizedText, ...opts });
+          sentMessage = await bot.telegram.sendVideo(user.telegram_id, videoFile, { caption: personalizedText, ...opts });
         } else if (documentFile) {
-          await bot.telegram.sendDocument(user.telegram_id, documentFile, { caption: personalizedText, ...opts });
+          sentMessage = await bot.telegram.sendDocument(user.telegram_id, documentFile, { caption: personalizedText, ...opts });
         } else if (mediaFile) {
-          await bot.telegram.sendPhoto(user.telegram_id, mediaFile, { caption: personalizedText, ...opts });
+          sentMessage = await bot.telegram.sendPhoto(user.telegram_id, mediaFile, { caption: personalizedText, ...opts });
         } else {
-          await bot.telegram.sendMessage(user.telegram_id, personalizedText, opts);
+          sentMessage = await bot.telegram.sendMessage(user.telegram_id, personalizedText, opts);
+        }
+
+        if (enableAutoDelete && sentMessage?.message_id) {
+          const deleteAt = new Date(Date.now() + autoDeleteHours * 60 * 60 * 1000);
+          await scheduleMessage(user.telegram_id, 'broadcast_delete', deleteAt, {
+            message_id: sentMessage.message_id,
+            delete_if_unpaid: hasPaymentButton === true
+          });
         }
         sent++;
       } catch (e) {

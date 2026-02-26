@@ -134,6 +134,20 @@ async function processScheduledMessages() {
             }
             break;
 
+          case 'broadcast_delete':
+            if (parsedData?.message_id) {
+              try {
+                if (parsedData?.delete_if_unpaid) {
+                  const u = await db.getUser(telegram_id);
+                  if (u?.is_paid) break;
+                }
+                await bot.telegram.deleteMessage(telegram_id, parsedData.message_id);
+              } catch (e) {
+                console.log(`broadcast_delete skip for ${telegram_id}:`, e.message);
+              }
+            }
+            break;
+
           case 'video_pitch':
             await sendVideoPitch(telegram_id);
             break;
