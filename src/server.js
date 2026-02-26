@@ -1485,7 +1485,9 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
       getLessonsCount,
       getLatestPendingPaymentForUser,
       createPayment,
-      scheduleMessage
+      scheduleMessage,
+      createBroadcastLog,
+      completeBroadcastLog
     } = await import('./database.js');
     const { Markup } = await import('telegraf');
 
@@ -1570,6 +1572,15 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
     const amountTiyin = amountSom * 100;
     const autoDeleteHours = parseInt(auto_delete_hours, 10);
     const enableAutoDelete = Number.isFinite(autoDeleteHours) && autoDeleteHours > 0;
+    const broadcastLog = await createBroadcastLog({
+      adminId: req.adminTelegramId || null,
+      messageType: media?.type || (videoFile ? 'video' : (documentFile ? 'document' : (mediaFile ? 'photo' : 'text'))),
+      content: text || '',
+      fileId: media?.file_id || null,
+      targetFilter: effectiveFilters?.filter || target || 'all',
+      totalCount: users.length
+    });
+    const failedUsers = [];
 
     for (const user of users) {
       try {
@@ -1660,12 +1671,46 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
         sent++;
       } catch (e) {
         console.log('Broadcast failed:', user.telegram_id, e.message);
+        failedUsers.push({
+          telegram_id: user.telegram_id,
+          name: user.full_name || user.username || '',
+          error: e.message
+        });
         failed++;
       }
       await new Promise(r => setTimeout(r, 50));
     }
 
-    res.json({ sent, failed, total: users.length });
+    if (broadcastLog?.id) {
+      await completeBroadcastLog(broadcastLog.id, {
+        sentCount: sent,
+        failedCount: failed,
+        totalCount: users.length,
+        details: {
+          auto_delete_hours: enableAutoDelete ? autoDeleteHours : 0,
+          failed_users: failedUsers.slice(0, 100)
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      broadcast_id: broadcastLog?.id || null,
+      sent,
+      failed,
+      total: users.length,
+      failed_users: failedUsers.slice(0, 30)
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/broadcasts/recent', authMiddleware, async (req, res) => {
+  try {
+    const { getRecentBroadcastLogs } = await import('./database.js');
+    const logs = await getRecentBroadcastLogs(parseInt(req.query.limit, 10) || 20);
+    res.json(logs);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

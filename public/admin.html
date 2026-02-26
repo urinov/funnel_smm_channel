@@ -1547,15 +1547,17 @@
                   <span class="material-symbols-outlined">visibility</span>
                   Preview
                 </button>
-                <button onclick="sendBroadcastTest()" class="btn btn-secondary flex-1">
+                <button id="broadcastTestBtn" onclick="sendBroadcastTest()" class="btn btn-secondary flex-1">
                   <span class="material-symbols-outlined">science</span>
                   Test (menga)
                 </button>
-                <button onclick="sendBroadcast()" class="btn btn-primary flex-1">
+                <button id="broadcastSendBtn" onclick="sendBroadcast()" class="btn btn-primary flex-1">
                   <span class="material-symbols-outlined">send</span>
                   Yuborish
                 </button>
               </div>
+              <div id="broadcastSendStatus" class="hidden mt-3 text-xs rounded-lg px-3 py-2 bg-zinc-100 text-zinc-600"></div>
+              <div id="broadcastLastReport" class="hidden mt-3 text-xs rounded-lg px-3 py-2 bg-emerald-50 text-emerald-700"></div>
             </div>
           </div>
 
@@ -1579,29 +1581,9 @@
               <h3 class="font-semibold text-zinc-900">Yuborilgan xabarlar</h3>
             </div>
             <div class="divide-y divide-zinc-100" id="broadcastHistory">
-              <div class="p-4 hover:bg-zinc-50 transition-all">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="font-medium text-zinc-900">Yangi dars e'loni</span>
-                  <span class="badge badge-success">Yuborildi</span>
-                </div>
-                <p class="text-sm text-zinc-500 mb-2">Assalomu alaykum! Yangi dars qo'shildi...</p>
-                <div class="flex items-center gap-4 text-xs text-zinc-400">
-                  <span>847 qabul qildi</span>
-                  <span>623 o'qidi (73%)</span>
-                  <span>2 kun oldin</span>
-                </div>
-              </div>
-              <div class="p-4 hover:bg-zinc-50 transition-all">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="font-medium text-zinc-900">Chegirma e'loni</span>
-                  <span class="badge badge-success">Yuborildi</span>
-                </div>
-                <p class="text-sm text-zinc-500 mb-2">50% chegirma faqat bugun!</p>
-                <div class="flex items-center gap-4 text-xs text-zinc-400">
-                  <span>892 qabul qildi</span>
-                  <span>756 o'qidi (85%)</span>
-                  <span>5 kun oldin</span>
-                </div>
+              <div class="p-4 text-center text-zinc-400">
+                <span class="material-symbols-outlined animate-pulse">hourglass_empty</span>
+                <p class="text-sm">Yuklanmoqda...</p>
               </div>
             </div>
           </div>
@@ -2911,6 +2893,7 @@ function showSubTab(parent, subtab) {
   if (parent === 'content') {
     if (subtab === 'lessons') loadLessons();
     if (subtab === 'progrev') loadProgrev();
+    if (subtab === 'broadcast') loadBroadcastHistory();
     if (subtab === 'bot-messages') loadBotMessages();
   }
   if (parent === 'sales') {
@@ -5846,6 +5829,9 @@ function formatTimeAgo(date) {
 
 // Broadcast from content tab
 let broadcastButtonCount = 1;
+let broadcastSending = false;
+let broadcastSendTick = null;
+let broadcastSendStartedAt = 0;
 const BROADCAST_EMOJIS = [
   '🔥','⚡','🎁','💎','🚀','✅','❗','⏰','🎯','💰',
   '📈','📌','📣','💳','💠','⭐','✨','🎉','🙌','🧠',
@@ -6023,6 +6009,94 @@ function previewBroadcast() {
   showToast('Preview yangilandi', 'info');
 }
 
+function setBroadcastSendingState(isSending, mode = 'send') {
+  const sendBtn = document.getElementById('broadcastSendBtn');
+  const testBtn = document.getElementById('broadcastTestBtn');
+  const statusEl = document.getElementById('broadcastSendStatus');
+  if (!sendBtn || !testBtn || !statusEl) return;
+
+  sendBtn.disabled = isSending;
+  testBtn.disabled = isSending;
+  broadcastSending = isSending;
+
+  if (isSending) {
+    broadcastSendStartedAt = Date.now();
+    statusEl.classList.remove('hidden');
+    statusEl.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-blue-50 text-blue-700';
+    statusEl.textContent = mode === 'test' ? 'Test yuborilmoqda...' : 'Xabar yuborilmoqda... bu bir necha soniya olishi mumkin.';
+    sendBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">progress_activity</span> Yuborilmoqda...`;
+    if (broadcastSendTick) clearInterval(broadcastSendTick);
+    broadcastSendTick = setInterval(() => {
+      const sec = Math.max(1, Math.floor((Date.now() - broadcastSendStartedAt) / 1000));
+      statusEl.textContent = mode === 'test'
+        ? `Test yuborilmoqda... ${sec}s`
+        : `Xabar yuborilmoqda... ${sec}s`;
+    }, 1000);
+    return;
+  }
+
+  sendBtn.innerHTML = `<span class="material-symbols-outlined">send</span> Yuborish`;
+  if (broadcastSendTick) {
+    clearInterval(broadcastSendTick);
+    broadcastSendTick = null;
+  }
+}
+
+function renderBroadcastLastReport(result) {
+  const reportEl = document.getElementById('broadcastLastReport');
+  if (!reportEl) return;
+  const sent = result?.sent || 0;
+  const failed = result?.failed || 0;
+  const total = result?.total || (sent + failed);
+  const failedUsers = Array.isArray(result?.failed_users) ? result.failed_users : [];
+  const failSample = failedUsers.slice(0, 3).map(u => `${u.telegram_id}${u.error ? ' (' + u.error + ')' : ''}`).join(', ');
+  reportEl.classList.remove('hidden');
+  reportEl.className = failed > 0
+    ? 'mt-3 text-xs rounded-lg px-3 py-2 bg-amber-50 text-amber-700'
+    : 'mt-3 text-xs rounded-lg px-3 py-2 bg-emerald-50 text-emerald-700';
+  reportEl.textContent = failed > 0
+    ? `Oxirgi yuborish: ${sent}/${total} muvaffaqiyatli, ${failed} xato. ${failSample ? 'Misol: ' + failSample : ''}`
+    : `Oxirgi yuborish: ${sent}/${total} muvaffaqiyatli.`;
+}
+
+async function loadBroadcastHistory() {
+  const container = document.getElementById('broadcastHistory');
+  if (!container) return;
+  try {
+    const rows = await fetchJsonWithTimeout('/api/broadcasts/recent?limit=20', { headers: { Authorization: auth } }, 7000);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      container.innerHTML = '<div class="p-4 text-center text-zinc-400"><p class="text-sm">Hali yuborilgan xabarlar yo\'q</p></div>';
+      return;
+    }
+
+    container.innerHTML = rows.map((r) => {
+      const sent = parseInt(r.sent_count, 10) || 0;
+      const failed = parseInt(r.failed_count, 10) || 0;
+      const total = parseInt(r.total_count, 10) || (sent + failed);
+      const cr = total > 0 ? Math.round((sent / total) * 100) : 0;
+      const body = escapeHtml((r.content || '').slice(0, 120));
+      const badge = failed > 0 ? 'badge-warning' : 'badge-success';
+      const status = failed > 0 ? 'Qisman' : 'Yuborildi';
+      return `
+        <div class="p-4 hover:bg-zinc-50 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium text-zinc-900">${escapeHtml(r.target_filter || 'all')} ga yuborish</span>
+            <span class="badge ${badge}">${status}</span>
+          </div>
+          <p class="text-sm text-zinc-500 mb-2">${body || '[Matn yo\'q]'}</p>
+          <div class="flex items-center gap-4 text-xs text-zinc-400">
+            <span>${sent}/${total} yetkazildi (${cr}%)</span>
+            <span>${failed} xato</span>
+            <span>${formatTimeAgo(r.created_at)} oldin</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = `<div class="p-4 text-center text-red-400"><p class="text-sm">History yuklanmadi: ${escapeHtml(e.message || 'xato')}</p></div>`;
+  }
+}
+
 function getBroadcastButtons() {
   const buttons = [];
   for (let i = 1; i <= broadcastButtonCount; i++) {
@@ -6085,9 +6159,11 @@ function buildBroadcastPayloadFromForm() {
 }
 
 async function sendBroadcastTest() {
+  if (broadcastSending) return;
   const payload = buildBroadcastPayloadFromForm();
   if (!payload) return;
   try {
+    setBroadcastSendingState(true, 'test');
     const res = await fetch('/api/broadcast/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: auth },
@@ -6098,16 +6174,30 @@ async function sendBroadcastTest() {
       throw new Error(err.error || `HTTP ${res.status}`);
     }
     showToast('Test xabar sizga yuborildi', 'success');
+    const statusEl = document.getElementById('broadcastSendStatus');
+    if (statusEl) {
+      statusEl.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-emerald-50 text-emerald-700';
+      statusEl.textContent = 'Test muvaffaqiyatli yuborildi.';
+    }
   } catch (e) {
     console.error('Broadcast test error:', e);
     showToast(e.message || 'Test yuborilmadi', 'error');
+    const statusEl = document.getElementById('broadcastSendStatus');
+    if (statusEl) {
+      statusEl.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-red-50 text-red-700';
+      statusEl.textContent = e.message || 'Test yuborishda xatolik';
+    }
+  } finally {
+    setBroadcastSendingState(false);
   }
 }
 
 async function sendBroadcast() {
+  if (broadcastSending) return;
   const payload = buildBroadcastPayloadFromForm();
   if (!payload) return;
   try {
+    setBroadcastSendingState(true, 'send');
 
     const res = await fetch('/api/broadcast', {
       method: 'POST',
@@ -6117,6 +6207,8 @@ async function sendBroadcast() {
     if (res.ok) {
       const result = await res.json();
       showToast(`Xabar yuborildi! ${result.sent || 0} ta userga`, 'success');
+      renderBroadcastLastReport(result);
+      loadBroadcastHistory();
       document.getElementById('broadcastText').value = '';
       document.getElementById('broadcastFileId').value = '';
       document.getElementById('broadcastAutoDeleteHours').value = '0';
@@ -6135,13 +6227,30 @@ async function sendBroadcast() {
       `;
       broadcastButtonCount = 1;
       updateBroadcastPreview();
+      const statusEl = document.getElementById('broadcastSendStatus');
+      if (statusEl) {
+        statusEl.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-emerald-50 text-emerald-700';
+        statusEl.textContent = `Yuborish yakunlandi: ${result.sent || 0} sent, ${result.failed || 0} failed`;
+      }
     } else {
       const err = await res.json().catch(() => ({}));
       showToast(err.error || `Xabar yuborilmadi (HTTP ${res.status})`, 'error');
+      const statusEl = document.getElementById('broadcastSendStatus');
+      if (statusEl) {
+        statusEl.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-red-50 text-red-700';
+        statusEl.textContent = err.error || `Xabar yuborilmadi (HTTP ${res.status})`;
+      }
     }
   } catch (e) {
     console.error('Broadcast error:', e);
     showToast(e.message || 'Xabar yuborilmadi', 'error');
+    const statusEl = document.getElementById('broadcastSendStatus');
+    if (statusEl) {
+      statusEl.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-red-50 text-red-700';
+      statusEl.textContent = e.message || 'Xabar yuborilmadi';
+    }
+  } finally {
+    setBroadcastSendingState(false);
   }
 }
 

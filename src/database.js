@@ -194,6 +194,9 @@ export async function initDatabase() {
         file_id VARCHAR(255),
         sent_count INTEGER DEFAULT 0,
         failed_count INTEGER DEFAULT 0,
+        total_count INTEGER DEFAULT 0,
+        target_filter VARCHAR(100),
+        details JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
@@ -417,6 +420,19 @@ export async function initDatabase() {
     ];
     
     for (const sql of subscriptionMigrations) {
+      try {
+        await client.query(sql);
+      } catch (e) {
+        // Ignore if column already exists
+      }
+    }
+
+    const broadcastMigrations = [
+      `ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS total_count INTEGER DEFAULT 0`,
+      `ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS target_filter VARCHAR(100)`,
+      `ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'::jsonb`
+    ];
+    for (const sql of broadcastMigrations) {
       try {
         await client.query(sql);
       } catch (e) {
@@ -1514,6 +1530,49 @@ export async function updateBotMessage(key, text) {
     VALUES ($1, $2, NOW())
     ON CONFLICT (key) DO UPDATE SET text = $2, updated_at = NOW()
   `, [key, text]);
+}
+
+export async function createBroadcastLog({
+  adminId = null,
+  messageType = 'text',
+  content = '',
+  fileId = null,
+  targetFilter = null,
+  totalCount = 0
+}) {
+  const { rows } = await pool.query(`
+    INSERT INTO broadcasts (admin_id, message_type, content, file_id, target_filter, total_count, details)
+    VALUES ($1, $2, $3, $4, $5, $6, '{}'::jsonb)
+    RETURNING *
+  `, [adminId, messageType, content, fileId, targetFilter, totalCount]);
+  return rows[0] || null;
+}
+
+export async function completeBroadcastLog(id, {
+  sentCount = 0,
+  failedCount = 0,
+  totalCount = 0,
+  details = {}
+} = {}) {
+  await pool.query(`
+    UPDATE broadcasts
+    SET sent_count = $2,
+        failed_count = $3,
+        total_count = $4,
+        details = $5::jsonb
+    WHERE id = $1
+  `, [id, sentCount, failedCount, totalCount, JSON.stringify(details || {})]);
+}
+
+export async function getRecentBroadcastLogs(limit = 20) {
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const { rows } = await pool.query(`
+    SELECT id, admin_id, message_type, content, file_id, sent_count, failed_count, total_count, target_filter, details, created_at
+    FROM broadcasts
+    ORDER BY created_at DESC
+    LIMIT $1
+  `, [safeLimit]);
+  return rows;
 }
 
 export async function scheduleMessage(telegramId, messageType, scheduledAt, data) {
