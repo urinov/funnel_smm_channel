@@ -906,6 +906,16 @@ app.delete('/api/custdev/:id', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/custdev/analytics', authMiddleware, async (req, res) => {
+  try {
+    const { getCustdevAnalytics } = await import('./database.js');
+    const analytics = await getCustdevAnalytics();
+    res.json(analytics);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/pitch', authMiddleware, async (req, res) => {
   try {
     const { getPitchMedia } = await import('./database.js');

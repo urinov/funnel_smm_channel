@@ -906,6 +906,52 @@
 
       <!-- CustDev subtab -->
       <div id="audience-custdev" class="audience-subtab hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+          <div class="stat-card">
+            <p class="text-sm text-zinc-500">Jami javoblar</p>
+            <p class="text-3xl font-bold text-zinc-900 animate-number" id="custdevTotalAnswers">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-zinc-500">Javob bergan userlar</p>
+            <p class="text-3xl font-bold text-zinc-900 animate-number" id="custdevUniqueRespondents">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-zinc-500">O'rtacha / savol</p>
+            <p class="text-3xl font-bold text-zinc-900 animate-number" id="custdevAvgPerQuestion">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-zinc-500">Oxirgi 24 soat</p>
+            <p class="text-3xl font-bold text-green-600 animate-number" id="custdevAnswers24h">0</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div class="lg:col-span-2 bg-white rounded-3xl shadow-card p-6">
+            <h3 class="font-semibold text-zinc-900 mb-4">CustDev trend (14 kun)</h3>
+            <div class="h-64">
+              <canvas id="custdevTrendChart"></canvas>
+            </div>
+          </div>
+          <div class="bg-white rounded-3xl shadow-card p-6">
+            <h3 class="font-semibold text-zinc-900 mb-4">Qisqa insightlar</h3>
+            <div class="space-y-3 max-h-64 overflow-y-auto" id="custdevInsightsList">
+              <div class="text-zinc-400 text-sm">Yuklanmoqda...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-card p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-zinc-900">Savol bo'yicha javob taqsimoti</h3>
+            <select class="input w-full max-w-sm" id="custdevQuestionAnalyticsSelect" onchange="renderCustdevQuestionChart()">
+              <option value="">Savol tanlang...</option>
+            </select>
+          </div>
+          <div class="h-64">
+            <canvas id="custdevQuestionChart"></canvas>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- CustDev Questions Management -->
           <div class="bg-white rounded-3xl shadow-card overflow-hidden">
@@ -5614,6 +5660,163 @@ async function deleteTest(testId) {
 
 // ============ CUSTDEV MANAGEMENT FUNCTIONS ============
 let allCustdevQuestions = [];
+let custdevAnalytics = null;
+let custdevTrendChartInstance = null;
+let custdevQuestionChartInstance = null;
+
+function formatShortDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit' });
+}
+
+function renderCustdevInsights(data) {
+  const el = document.getElementById('custdevInsightsList');
+  if (!el) return;
+
+  const questions = data?.questions || [];
+  const topAnswers = data?.top_answers || [];
+  const lowCoverage = questions
+    .filter(q => (q.response_count || 0) > 0)
+    .sort((a, b) => (a.response_rate || 0) - (b.response_rate || 0))
+    .slice(0, 3);
+
+  const blocks = [];
+  if (lowCoverage.length) {
+    blocks.push(`
+      <div class="p-3 bg-amber-50 rounded-xl">
+        <p class="text-xs font-semibold text-amber-700 mb-1">Eng past qamrovli savollar</p>
+        ${lowCoverage.map(q => `<p class="text-xs text-amber-800 truncate">${q.after_lesson}-dars: ${escapeHtml(q.question_text || '')} (${q.response_rate || 0}%)</p>`).join('')}
+      </div>
+    `);
+  }
+
+  if (topAnswers.length) {
+    blocks.push(`
+      <div class="p-3 bg-purple-50 rounded-xl">
+        <p class="text-xs font-semibold text-purple-700 mb-1">Eng ko'p uchraydigan javoblar</p>
+        ${topAnswers.slice(0, 5).map(a => `<p class="text-xs text-purple-800 truncate">${escapeHtml(a.answer_value)} — ${a.answer_count}</p>`).join('')}
+      </div>
+    `);
+  }
+
+  if (!blocks.length) {
+    el.innerHTML = '<p class="text-zinc-400 text-sm">Hali analitika uchun javoblar yetarli emas</p>';
+    return;
+  }
+
+  el.innerHTML = blocks.join('');
+}
+
+function renderCustdevTrendChart(data) {
+  const ctx = document.getElementById('custdevTrendChart')?.getContext('2d');
+  if (!ctx) return;
+  if (custdevTrendChartInstance) custdevTrendChartInstance.destroy();
+
+  const trend = data?.trend || [];
+  custdevTrendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: trend.map(t => formatShortDate(t.day)),
+      datasets: [{
+        label: 'Javoblar soni',
+        data: trend.map(t => t.answers || 0),
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139, 92, 246, 0.12)',
+        fill: true,
+        tension: 0.35,
+        borderWidth: 3,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#71717a' } },
+        y: { beginAtZero: true, grid: { color: '#f4f4f5' }, ticks: { color: '#71717a' } }
+      }
+    }
+  });
+}
+
+function renderCustdevQuestionChart() {
+  const ctx = document.getElementById('custdevQuestionChart')?.getContext('2d');
+  const selectEl = document.getElementById('custdevQuestionAnalyticsSelect');
+  if (!ctx || !selectEl || !custdevAnalytics) return;
+
+  if (custdevQuestionChartInstance) custdevQuestionChartInstance.destroy();
+
+  const all = custdevAnalytics.questions || [];
+  const selectedId = parseInt(selectEl.value, 10);
+  const selected = all.find(q => q.id === selectedId) || all[0];
+
+  if (!selected) return;
+
+  const breakdown = (selected.breakdown || []).slice(0, 8);
+  const labels = breakdown.length ? breakdown.map(b => b.answer) : ['Javoblar yo\'q'];
+  const values = breakdown.length ? breakdown.map(b => b.count || 0) : [0];
+
+  custdevQuestionChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: `${selected.after_lesson}-dars savoli`,
+        data: values,
+        backgroundColor: '#8b5cf6',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: '#f4f4f5' }, ticks: { color: '#71717a' } },
+        y: { grid: { display: false }, ticks: { color: '#71717a' } }
+      }
+    }
+  });
+}
+
+async function loadCustdevAnalytics() {
+  try {
+    const data = await fetchJsonWithTimeout('/api/custdev/analytics', { headers: { Authorization: auth } }, 7000);
+    custdevAnalytics = data || {};
+
+    const overview = data?.overview || {};
+    const totalAnswers = overview.total_answers || 0;
+    const totalQuestions = overview.total_questions || 0;
+    const avgPerQuestion = totalQuestions > 0 ? (totalAnswers / totalQuestions) : 0;
+
+    const totalEl = document.getElementById('custdevTotalAnswers');
+    const uniqueEl = document.getElementById('custdevUniqueRespondents');
+    const avgEl = document.getElementById('custdevAvgPerQuestion');
+    const d24El = document.getElementById('custdevAnswers24h');
+
+    if (totalEl) totalEl.textContent = formatNumber(totalAnswers);
+    if (uniqueEl) uniqueEl.textContent = formatNumber(overview.unique_respondents || 0);
+    if (avgEl) avgEl.textContent = avgPerQuestion.toFixed(1);
+    if (d24El) d24El.textContent = formatNumber(overview.answers_24h || 0);
+
+    const selectEl = document.getElementById('custdevQuestionAnalyticsSelect');
+    if (selectEl) {
+      const prev = selectEl.value;
+      selectEl.innerHTML = (data?.questions || []).map(q => `
+        <option value="${q.id}">${q.after_lesson}-dars: ${(q.question_text || '').slice(0, 70)}</option>
+      `).join('');
+      if (prev && [...selectEl.options].some(o => o.value === prev)) selectEl.value = prev;
+    }
+
+    renderCustdevTrendChart(data);
+    renderCustdevQuestionChart();
+    renderCustdevInsights(data);
+  } catch (e) {
+    console.error('loadCustdevAnalytics error:', e);
+  }
+}
 
 async function loadCustdev() {
   const listEl = document.getElementById('custdevList');
@@ -5669,8 +5872,9 @@ async function loadCustdev() {
       `}).join('');
     }
 
-    // Load answers
+    // Load answers + analytics
     loadCustdevAnswers();
+    loadCustdevAnalytics();
 
   } catch (e) {
     console.error('loadCustdev error:', e);

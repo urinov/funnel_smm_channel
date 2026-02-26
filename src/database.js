@@ -1478,6 +1478,109 @@ export async function getCustdevAnswersByQuestion(questionId, { q = null, limit 
   };
 }
 
+export async function getCustdevAnalytics() {
+  const { rows: overviewRows } = await pool.query(`
+    SELECT
+      (SELECT COUNT(*)::int FROM custdev_answers) AS total_answers,
+      (SELECT COUNT(DISTINCT telegram_id)::int FROM custdev_answers) AS unique_respondents,
+      (SELECT COUNT(*)::int FROM custdev_questions WHERE is_active = TRUE) AS total_questions,
+      (SELECT COUNT(*)::int FROM users WHERE is_blocked = FALSE) AS total_users,
+      (SELECT COUNT(*)::int FROM custdev_answers WHERE created_at >= NOW() - INTERVAL '24 hours') AS answers_24h
+  `);
+
+  const { rows: dailyRows } = await pool.query(`
+    WITH days AS (
+      SELECT generate_series(
+        DATE_TRUNC('day', NOW() - INTERVAL '13 days')::date,
+        DATE_TRUNC('day', NOW())::date,
+        INTERVAL '1 day'
+      )::date AS day
+    )
+    SELECT
+      d.day,
+      COALESCE(a.cnt, 0)::int AS answers
+    FROM days d
+    LEFT JOIN (
+      SELECT DATE(created_at) AS day, COUNT(*)::int AS cnt
+      FROM custdev_answers
+      WHERE created_at >= NOW() - INTERVAL '14 days'
+      GROUP BY DATE(created_at)
+    ) a ON a.day = d.day
+    ORDER BY d.day
+  `);
+
+  const { rows: questionRows } = await pool.query(`
+    SELECT
+      q.id,
+      q.after_lesson,
+      q.question_text,
+      q.question_type,
+      q.options,
+      COUNT(a.id)::int AS response_count,
+      COUNT(DISTINCT a.telegram_id)::int AS unique_respondents
+    FROM custdev_questions q
+    LEFT JOIN custdev_answers a ON a.question_id = q.id
+    WHERE q.is_active = TRUE
+    GROUP BY q.id, q.after_lesson, q.question_text, q.question_type, q.options, q.sort_order, q.step
+    ORDER BY q.after_lesson, q.sort_order, q.step
+  `);
+
+  const { rows: breakdownRows } = await pool.query(`
+    SELECT
+      question_id,
+      COALESCE(NULLIF(TRIM(answer), ''), '[bo''sh]') AS answer_value,
+      COUNT(*)::int AS answer_count
+    FROM custdev_answers
+    GROUP BY question_id, answer_value
+    ORDER BY question_id, answer_count DESC
+  `);
+
+  const { rows: topAnswersRows } = await pool.query(`
+    SELECT
+      COALESCE(NULLIF(TRIM(answer), ''), '[bo''sh]') AS answer_value,
+      COUNT(*)::int AS answer_count
+    FROM custdev_answers
+    GROUP BY answer_value
+    ORDER BY answer_count DESC
+    LIMIT 10
+  `);
+
+  const overview = overviewRows[0] || {};
+  const breakdownByQuestion = {};
+  for (const row of breakdownRows) {
+    const qid = row.question_id;
+    if (!breakdownByQuestion[qid]) breakdownByQuestion[qid] = [];
+    breakdownByQuestion[qid].push({
+      answer: row.answer_value,
+      count: row.answer_count
+    });
+  }
+
+  const totalUsers = overview.total_users || 0;
+  const questions = questionRows.map((q) => {
+    const responses = q.response_count || 0;
+    const responseRate = totalUsers > 0 ? Math.round((responses / totalUsers) * 1000) / 10 : 0;
+    return {
+      ...q,
+      response_rate: responseRate,
+      breakdown: breakdownByQuestion[q.id] || []
+    };
+  });
+
+  return {
+    overview: {
+      total_answers: overview.total_answers || 0,
+      unique_respondents: overview.unique_respondents || 0,
+      total_questions: overview.total_questions || 0,
+      total_users: totalUsers,
+      answers_24h: overview.answers_24h || 0
+    },
+    trend: dailyRows,
+    questions,
+    top_answers: topAnswersRows
+  };
+}
+
 export async function saveCustDevAnswer(telegramId, questionId, answer) {
   await pool.query(`
     INSERT INTO custdev_answers (telegram_id, question_id, answer)
