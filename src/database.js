@@ -2852,61 +2852,128 @@ export async function getUserMessages(telegramId, limit = 300) {
 }
 
 export async function getDailyReportStats() {
+  const reportTz = process.env.REPORT_TIMEZONE || 'Asia/Tashkent';
+
   const { rows: userRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $1::text AS tz,
+        (NOW() AT TIME ZONE $1)::date AS today_local
+    )
     SELECT
-      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) AS new_users_today,
-      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE - INTERVAL '1 day') AS new_users_yesterday,
+      COUNT(*) FILTER (
+        WHERE ((created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p))
+      ) AS new_users_today,
+      COUNT(*) FILTER (
+        WHERE ((created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p) - INTERVAL '1 day')
+      ) AS new_users_yesterday,
       COUNT(*) AS total_users,
-      COUNT(*) FILTER (WHERE DATE(last_activity) = CURRENT_DATE) AS active_users_today,
+      COUNT(*) FILTER (
+        WHERE ((last_activity AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p))
+      ) AS active_users_today,
       COUNT(*) FILTER (WHERE is_paid = TRUE) AS total_paid
     FROM users
     WHERE is_blocked = FALSE
-  `);
+  `, [reportTz]);
 
   const { rows: messageRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $1::text AS tz,
+        (NOW() AT TIME ZONE $1)::date AS today_local
+    )
     SELECT COUNT(*) AS messages_today
     FROM user_messages
-    WHERE DATE(created_at) = CURRENT_DATE
-  `);
+    WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
+  `, [reportTz]);
 
   const { rows: paymentRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $2::text AS tz,
+        (NOW() AT TIME ZONE $2)::date AS today_local
+    )
     SELECT
       COUNT(*) AS successful_payments_today,
       COALESCE(SUM(amount), 0) AS revenue_today
     FROM payments
-    WHERE state = ANY($1) AND DATE(created_at) = CURRENT_DATE
-  `, [SUCCESS_PAYMENT_STATES]);
+    WHERE state = ANY($1)
+      AND (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
+  `, [SUCCESS_PAYMENT_STATES, reportTz]);
 
   const { rows: yesterdayPaymentRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $2::text AS tz,
+        (NOW() AT TIME ZONE $2)::date AS today_local
+    )
     SELECT
       COUNT(*) AS successful_payments_yesterday,
       COALESCE(SUM(amount), 0) AS revenue_yesterday
     FROM payments
-    WHERE state = ANY($1) AND DATE(created_at) = CURRENT_DATE - INTERVAL '1 day'
-  `, [SUCCESS_PAYMENT_STATES]);
+    WHERE state = ANY($1)
+      AND (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p) - INTERVAL '1 day'
+  `, [SUCCESS_PAYMENT_STATES, reportTz]);
 
   const { rows: subscriptionRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $1::text AS tz,
+        (NOW() AT TIME ZONE $1)::date AS today_local
+    )
     SELECT COUNT(*) AS new_subscriptions_today
     FROM subscriptions
-    WHERE DATE(created_at) = CURRENT_DATE
-  `);
+    WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
+  `, [reportTz]);
 
   const { rows: feedbackRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $1::text AS tz,
+        (NOW() AT TIME ZONE $1)::date AS today_local
+    )
     SELECT
       COUNT(*) AS feedback_total_today,
       COUNT(*) FILTER (WHERE feedback_type IN ('positive', 'liked')) AS feedback_positive_today,
       COUNT(*) FILTER (WHERE feedback_type IN ('negative', 'disliked', 'disliked_reason')) AS feedback_negative_today
     FROM user_feedback
-    WHERE DATE(created_at) = CURRENT_DATE
-  `);
+    WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
+  `, [reportTz]);
 
   const { rows: milestoneRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $1::text AS tz,
+        (NOW() AT TIME ZONE $1)::date AS today_local
+    )
     SELECT telegram_id, full_name, username, phone, created_at
     FROM users
-    WHERE DATE(created_at) = CURRENT_DATE
+    WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
     ORDER BY created_at DESC
     LIMIT 10
-  `);
+  `, [reportTz]);
+
+  const { rows: paymentListRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $2::text AS tz,
+        (NOW() AT TIME ZONE $2)::date AS today_local
+    )
+    SELECT
+      pay.telegram_id,
+      pay.amount,
+      pay.created_at,
+      pay.order_id,
+      pay.payment_method,
+      u.full_name,
+      u.username
+    FROM payments pay
+    LEFT JOIN users u ON u.telegram_id = pay.telegram_id
+    WHERE pay.state = ANY($1)
+      AND (pay.created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
+    ORDER BY pay.created_at DESC
+    LIMIT 7
+  `, [SUCCESS_PAYMENT_STATES, reportTz]);
 
   // Funnel stats
   const { rows: funnelRows } = await pool.query(`
@@ -2921,11 +2988,18 @@ export async function getDailyReportStats() {
 
   // Referral stats
   const { rows: referralRows } = await pool.query(`
+    WITH p AS (
+      SELECT
+        $1::text AS tz,
+        (NOW() AT TIME ZONE $1)::date AS today_local
+    )
     SELECT
       COUNT(*) AS total_referrals,
-      COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) AS referrals_today
+      COUNT(*) FILTER (
+        WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE (SELECT tz FROM p))::date = (SELECT today_local FROM p)
+      ) AS referrals_today
     FROM referrals
-  `);
+  `, [reportTz]);
 
   return {
     newUsersToday: parseInt(userRows[0]?.new_users_today) || 0,
@@ -2943,6 +3017,7 @@ export async function getDailyReportStats() {
     feedbackPositiveToday: parseInt(feedbackRows[0]?.feedback_positive_today) || 0,
     feedbackNegativeToday: parseInt(feedbackRows[0]?.feedback_negative_today) || 0,
     recentNewUsers: milestoneRows,
+    recentPaymentsToday: paymentListRows,
     funnel: {
       lesson1: parseInt(funnelRows[0]?.lesson_1) || 0,
       lesson2: parseInt(funnelRows[0]?.lesson_2) || 0,

@@ -24,16 +24,22 @@ function formatMoney(t) {
 async function sendDailyAdminReport() {
   try {
     const stats = await db.getDailyReportStats();
+    const nowInTz = new Date().toLocaleString('uz-UZ', {
+      timeZone: REPORT_TIMEZONE,
+      hour12: false
+    });
     const day = new Date().toLocaleDateString('uz-UZ', { timeZone: REPORT_TIMEZONE });
 
     // Calculate changes from yesterday
     const userChange = stats.newUsersToday - stats.newUsersYesterday;
-    const userChangeIcon = userChange > 0 ? '📈' : userChange < 0 ? '📉' : '➡️';
     const revenueChange = stats.revenueToday - stats.revenueYesterday;
-    const revenueChangeIcon = revenueChange > 0 ? '📈' : revenueChange < 0 ? '📉' : '➡️';
+    const paymentChange = stats.successfulPaymentsToday - stats.successfulPaymentsYesterday;
 
     // Conversion rate
     const conversionRate = stats.totalUsers > 0 ? ((stats.totalPaid / stats.totalUsers) * 100).toFixed(1) : 0;
+    const lesson3ToPaid = stats.funnel.lesson3 > 0
+      ? ((stats.totalPaid / stats.funnel.lesson3) * 100).toFixed(1)
+      : '0.0';
 
     const latestUsersText = stats.recentNewUsers.length
       ? stats.recentNewUsers
@@ -45,28 +51,52 @@ async function sendDailyAdminReport() {
           .join('\n')
       : 'Bugun yangi user yo\'q';
 
+    const todayPaymentsText = Array.isArray(stats.recentPaymentsToday) && stats.recentPaymentsToday.length
+      ? stats.recentPaymentsToday
+          .map((p, i) => {
+            const name = p.full_name || p.username || String(p.telegram_id);
+            const amount = formatMoney(p.amount);
+            const time = new Date(p.created_at).toLocaleTimeString('uz-UZ', {
+              timeZone: REPORT_TIMEZONE,
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return `${i + 1}) ${time} | ${amount} | ${name}`;
+          })
+          .join('\n')
+      : 'Bugun to\'lov qayd etilmadi';
+
+    const usersTrend = userChange > 0 ? `+${userChange}` : String(userChange);
+    const revenueTrend = revenueChange > 0 ? `+${formatMoney(revenueChange)}` : (revenueChange < 0 ? `-${formatMoney(Math.abs(revenueChange))}` : "0 so'm");
+    const paymentsTrend = paymentChange > 0 ? `+${paymentChange}` : String(paymentChange);
+
     const report =
-      `📊 <b>Kunlik hisobot (${day})</b>\n\n` +
-      `<b>👥 USERLAR</b>\n` +
-      `├ Bugun yangi: <b>${stats.newUsersToday}</b> ${userChangeIcon}\n` +
-      `├ Jami: <b>${stats.totalUsers}</b>\n` +
-      `├ Pullik: <b>${stats.totalPaid}</b>\n` +
-      `└ Konversiya: <b>${conversionRate}%</b>\n\n` +
-      `<b>📚 FUNNEL</b>\n` +
-      `├ 1-dars: <b>${stats.funnel.lesson1}</b>\n` +
-      `├ 2-dars: <b>${stats.funnel.lesson2}</b>\n` +
-      `├ 3-dars: <b>${stats.funnel.lesson3}</b>\n` +
-      `└ Pitch: <b>${stats.funnel.pitchSeen}</b>\n\n` +
-      `<b>💰 DAROMAD</b>\n` +
-      `├ Bugun: <b>${formatMoney(stats.revenueToday)}</b> ${revenueChangeIcon}\n` +
-      `├ To'lovlar: <b>${stats.successfulPaymentsToday}</b>\n` +
-      `└ Yangi obunalar: <b>${stats.newSubscriptionsToday}</b>\n\n` +
-      `<b>📈 FAOLLIK</b>\n` +
-      `├ Aktiv userlar: <b>${stats.activeUsersToday}</b>\n` +
-      `├ Xabarlar: <b>${stats.messagesToday}</b>\n` +
-      `├ Referallar: <b>${stats.referrals.today}</b>/${stats.referrals.total}\n` +
-      `└ Feedback: ✅${stats.feedbackPositiveToday} / ❌${stats.feedbackNegativeToday}\n\n` +
-      `<b>🆕 Yangi userlar:</b>\n${latestUsersText}`;
+      `📊 <b>Kunlik hisobot</b>\n` +
+      `📅 <b>Sana:</b> ${day}\n` +
+      `🕒 <b>Vaqt:</b> ${nowInTz} (${REPORT_TIMEZONE})\n\n` +
+      `<b>1) Umumiy natija</b>\n` +
+      `• Yangi userlar (bugun): <b>${stats.newUsersToday}</b> (kechaga nisbatan ${usersTrend})\n` +
+      `• Jami userlar: <b>${stats.totalUsers}</b>\n` +
+      `• Pullik userlar: <b>${stats.totalPaid}</b>\n` +
+      `• Umumiy konversiya: <b>${conversionRate}%</b>\n\n` +
+      `<b>2) To'lovlar (bugun)</b>\n` +
+      `• Jami tushum: <b>${formatMoney(stats.revenueToday)}</b>\n` +
+      `• Muvaffaqiyatli to'lovlar: <b>${stats.successfulPaymentsToday}</b> (kechaga nisbatan ${paymentsTrend})\n` +
+      `• Tushum o'zgarishi: <b>${revenueTrend}</b>\n` +
+      `• Yangi obunalar: <b>${stats.newSubscriptionsToday}</b>\n\n` +
+      `<b>3) Funnel holati</b>\n` +
+      `• 1-darsgacha yetganlar: <b>${stats.funnel.lesson1}</b>\n` +
+      `• 2-darsgacha yetganlar: <b>${stats.funnel.lesson2}</b>\n` +
+      `• 3-darsgacha yetganlar: <b>${stats.funnel.lesson3}</b>\n` +
+      `• Pitch ko'rganlar: <b>${stats.funnel.pitchSeen}</b>\n` +
+      `• 3-darsdan to'lovga konversiya: <b>${lesson3ToPaid}%</b>\n\n` +
+      `<b>4) Faollik</b>\n` +
+      `• Aktiv userlar (bugun): <b>${stats.activeUsersToday}</b>\n` +
+      `• Xabarlar soni: <b>${stats.messagesToday}</b>\n` +
+      `• Referral (bugun/jami): <b>${stats.referrals.today}/${stats.referrals.total}</b>\n` +
+      `• Feedback: ✅<b>${stats.feedbackPositiveToday}</b> / ❌<b>${stats.feedbackNegativeToday}</b>\n\n` +
+      `<b>5) Bugungi to'lovlar ro'yxati</b>\n${todayPaymentsText}\n\n` +
+      `<b>6) Bugungi yangi userlar</b>\n${latestUsersText}`;
 
     for (const adminId of ADMIN_IDS) {
       try {
